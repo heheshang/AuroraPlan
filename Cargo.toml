@@ -1,0 +1,32 @@
+[workspace]
+members = ["aurora-api", "aurora-proto"]
+
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+description = "AuroraPlan is your go-to scheduling and planning tool. It helps you manage your tasks and appointments effortlessly. With AuroraPlan, you can stay organized, save time, and enjoy a stress-free schedule."
+repository = "https://github.com/heheshang/AuroraPlan"
+keywords = [
+    "aurora",
+    "plan",
+    "schedule",
+    "task",
+    "calendar",
+    "planner",
+    "organize",
+    "management",
+    "productivity",
+    "time",
+    "free",
+    "project",
+]
+categories = ["science"]
+license = "MIT OR Apache-2.0"
+
+[workspace.dependencies]
+
+
+[profile.release-with-debug]
+inherits = "release"
+debug = true
