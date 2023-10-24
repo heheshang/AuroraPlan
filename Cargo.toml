@@ -24,8 +24,11 @@ keywords = [
 categories = ["science"]
 license = "MIT OR Apache-2.0"
 
+
 [workspace.dependencies]
 
+
+[workspace.dev-dependencies]
 
 [profile.release-with-debug]
 inherits = "release"
