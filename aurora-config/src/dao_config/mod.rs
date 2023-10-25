@@ -101,7 +101,7 @@ mod tests {
         let run_mode = env::var("RUN_MODE").unwrap_or_else(|_| "development".into());
         // get dolphin-api-config path from env
         let config_path = get_dao_config_path();
-        eprintln!("config_path: {:?}", config_path);
+        println!("config_path: {:?}", config_path);
         let s = Config::builder()
             // Start off by merging in the "default" configuration file
             .add_source(File::with_name(
@@ -132,6 +132,6 @@ mod tests {
 
         // You can deserialize (and thus freeze) the entire configuration as
         let config = s.try_deserialize::<Settings>();
-        eprintln!("config{:?}", config);
+        println!("config{:?}", config);
     }
 }
