@@ -34,13 +34,13 @@ fn glb_config_dir() -> PathBuf {
             let full_path_string = full_path.to_str().unwrap();
             println!("full_path_string: {:?}", full_path_string);
             let path = full_path_string
-                .split("AuroraPlan")
+                .split("aurora-config")
                 .collect::<Vec<_>>()
                 .first()
                 .unwrap()
                 .to_string();
             println!("path: {:?}", path);
-            Path::new(&path).join("AuroraPlan").join("aurora-config")
+            Path::new(&path).join("aurora-config")
         }
     }
 }
