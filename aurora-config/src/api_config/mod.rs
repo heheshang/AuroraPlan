@@ -108,7 +108,7 @@ mod tests {
         let s = Config::builder()
             // Start off by merging in the "default" configuration file
             .add_source(File::with_name(
-                config_path.join("default").to_str().unwrap(),
+                config_path.join("default.toml").to_str().unwrap(),
             ))
             // Add in the current environment file
             // Default to 'development' env
