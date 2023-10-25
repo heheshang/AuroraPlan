@@ -42,6 +42,8 @@ jobs:
         uses: taiki-e/install-action@cargo-llvm-cov
       - name: Install cargo fmt
         run: rustup component add rustfmt
+      - name: Install cargo clippy 
+        run: rustup component add clippy
       - name: install nextest
         uses: taiki-e/install-action@nextest
       - uses: Swatinem/rust-cache@v1
