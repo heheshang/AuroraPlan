@@ -21,7 +21,7 @@ fn glb_config_dir() -> PathBuf {
     // 获取当前工作目录
     let value = dotenvy::var("CURRENT_DIR");
     match value {
-        Ok(v) => Path::new(&v).join("dolphin-config"),
+        Ok(v) => Path::new(&v).join("aurora-config"),
         Err(_) => {
             let current_dir = env::current_dir().unwrap();
 
@@ -33,13 +33,13 @@ fn glb_config_dir() -> PathBuf {
             // 将完整路径转换为字符串并打印
             let full_path_string = full_path.to_str().unwrap();
             let path = full_path_string
-                .split("dolphin-rs")
+                .split("AuroraPlan")
                 .collect::<Vec<_>>()
                 .first()
                 .unwrap()
                 .to_string();
 
-            Path::new(&path).join("dolphin-rs").join("dolphin-config")
+            Path::new(&path).join("AuroraPlan").join("aurora-config")
         }
     }
 }
