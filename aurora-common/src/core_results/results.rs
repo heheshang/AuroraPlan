@@ -1,4 +1,4 @@
-use crate::core_error::error::{DolphinErrorInfo, Error};
+use crate::core_error::error::{AuroraErrorInfo, Error};
 use axum::{response::IntoResponse, Json};
 use serde::{Deserialize, Serialize};
 
@@ -31,7 +31,7 @@ pub struct ApiResult<T> {
 
 impl<T> ApiResult<T> {
     pub fn build(data: Option<T>) -> Self {
-        let errmsg = DolphinErrorInfo::default();
+        let errmsg = AuroraErrorInfo::default();
         Self {
             data,
             code: errmsg.code,
@@ -44,7 +44,7 @@ impl<T> ApiResult<T> {
 
 impl<T> Default for ApiResult<T> {
     fn default() -> Self {
-        let errmsg = DolphinErrorInfo::default();
+        let errmsg = AuroraErrorInfo::default();
         Self {
             data: None,
             code: errmsg.code,

@@ -390,7 +390,7 @@ impl From<serde_json::Error> for Error {
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
         error!("{:<12} - model::Error {self:?}", "INTO_RES");
-        let error: DolphinErrorInfo = self.into();
+        let error: AuroraErrorInfo = self.into();
         let mut ext = Extensions::new();
         ext.insert(error);
         ext.into_response()
@@ -404,7 +404,7 @@ impl From<Error> for tonic::Status {
             _ => {
                 let code = tonic::Code::Unknown;
 
-                let info: DolphinErrorInfo = value.into();
+                let info: AuroraErrorInfo = value.into();
                 let mut metadata = tonic::metadata::MetadataMap::new();
                 metadata.insert("error_code", format!("{}", info.code).parse().unwrap());
                 metadata.insert("cn_msg", info.cn_msg.parse().unwrap());
@@ -416,8 +416,8 @@ impl From<Error> for tonic::Status {
     }
 }
 
-impl From<DolphinErrorInfo> for String {
-    fn from(value: DolphinErrorInfo) -> Self {
+impl From<AuroraErrorInfo> for String {
+    fn from(value: AuroraErrorInfo) -> Self {
         serde_json::to_string(&value).unwrap()
     }
 }
@@ -443,7 +443,7 @@ impl From<tonic::Status> for Error {
             let cn_msg = metadata.get("cn_msg").unwrap().to_str().unwrap();
             let en_msg = metadata.get("en_msg").unwrap().to_str().unwrap();
             let error_code: i32 = error_code.parse().unwrap();
-            let error = DolphinErrorInfo {
+            let error = AuroraErrorInfo {
                 code: error_code,
                 cn_msg: cn_msg.to_string(),
                 en_msg: en_msg.to_string(),
@@ -459,1420 +459,1420 @@ impl core::fmt::Display for Error {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
             Error::SUCCESS => {
-                let ss: DolphinErrorInfo = Error::SUCCESS.into();
+                let ss: AuroraErrorInfo = Error::SUCCESS.into();
                 write!(f, "{}", ss)
             }
             Error::InternalServerErrorArgs => {
-                let ss: DolphinErrorInfo = Error::InternalServerErrorArgs.into();
+                let ss: AuroraErrorInfo = Error::InternalServerErrorArgs.into();
                 write!(f, "{}", ss)
             }
             Error::RequestParamsNotValidError => {
-                let ss: DolphinErrorInfo = Error::RequestParamsNotValidError.into();
+                let ss: AuroraErrorInfo = Error::RequestParamsNotValidError.into();
                 write!(f, "{}", ss)
             }
 
             Error::TaskTimeoutParamsError => {
-                let ss: DolphinErrorInfo = Error::TaskTimeoutParamsError.into();
+                let ss: AuroraErrorInfo = Error::TaskTimeoutParamsError.into();
                 write!(f, "{}", ss)
             }
             Error::UserNameExist => {
-                let ss: DolphinErrorInfo = Error::RequestParamsNotValidError.into();
+                let ss: AuroraErrorInfo = Error::RequestParamsNotValidError.into();
                 write!(f, "{}", ss)
             }
             Error::UserNameNull => {
-                let ss: DolphinErrorInfo = Error::UserNameNull.into();
+                let ss: AuroraErrorInfo = Error::UserNameNull.into();
                 write!(f, "{}", ss)
             }
             Error::HdfsOperationError => {
-                let ss: DolphinErrorInfo = Error::HdfsOperationError.into();
+                let ss: AuroraErrorInfo = Error::HdfsOperationError.into();
                 write!(f, "{}", ss)
             }
             Error::TaskInstanceNotFound => {
-                let ss: DolphinErrorInfo = Error::TaskInstanceNotFound.into();
+                let ss: AuroraErrorInfo = Error::TaskInstanceNotFound.into();
                 write!(f, "{}", ss)
             }
             Error::OsTenantCodeExist => {
-                let ss: DolphinErrorInfo = Error::OsTenantCodeExist.into();
+                let ss: AuroraErrorInfo = Error::OsTenantCodeExist.into();
                 write!(f, "{}", ss)
             }
             Error::UserNotExist => {
-                let ss: DolphinErrorInfo = Error::UserNotExist.into();
+                let ss: AuroraErrorInfo = Error::UserNotExist.into();
                 write!(f, "{}", ss)
             }
             Error::AlertGroupNotExist => {
-                let ss: DolphinErrorInfo = Error::AlertGroupNotExist.into();
+                let ss: AuroraErrorInfo = Error::AlertGroupNotExist.into();
                 write!(f, "{}", ss)
             }
             Error::AlertGroupExist => {
-                let ss: DolphinErrorInfo = Error::AlertGroupExist.into();
+                let ss: AuroraErrorInfo = Error::AlertGroupExist.into();
                 write!(f, "{}", ss)
             }
             Error::UserNamePasswdError => {
-                let ss: DolphinErrorInfo = Error::UserNamePasswdError.into();
+                let ss: AuroraErrorInfo = Error::UserNamePasswdError.into();
                 write!(f, "{}", ss)
             }
             Error::LoginSessionFailed => {
-                let ss: DolphinErrorInfo = Error::LoginSessionFailed.into();
+                let ss: AuroraErrorInfo = Error::LoginSessionFailed.into();
                 write!(f, "{}", ss)
             }
             Error::DatasourceExist => {
-                let ss: DolphinErrorInfo = Error::DatasourceExist.into();
+                let ss: AuroraErrorInfo = Error::DatasourceExist.into();
                 write!(f, "{}", ss)
             }
             Error::DatasourceConnectFailed => {
-                let ss: DolphinErrorInfo = Error::DatasourceConnectFailed.into();
+                let ss: AuroraErrorInfo = Error::DatasourceConnectFailed.into();
                 write!(f, "{}", ss)
             }
             Error::TenantNotExist => {
-                let ss: DolphinErrorInfo = Error::TenantNotExist.into();
+                let ss: AuroraErrorInfo = Error::TenantNotExist.into();
                 write!(f, "{}", ss)
             }
             Error::ProjectNotFound => {
-                let ss: DolphinErrorInfo = Error::ProjectNotFound.into();
+                let ss: AuroraErrorInfo = Error::ProjectNotFound.into();
                 write!(f, "{}", ss)
             }
             Error::ProjectAlreadyExists => {
-                let ss: DolphinErrorInfo = Error::ProjectAlreadyExists.into();
+                let ss: AuroraErrorInfo = Error::ProjectAlreadyExists.into();
                 write!(f, "{}", ss)
             }
             Error::TaskInstanceNotExists => {
-                let ss: DolphinErrorInfo = Error::TaskInstanceNotExists.into();
+                let ss: AuroraErrorInfo = Error::TaskInstanceNotExists.into();
                 write!(f, "{}", ss)
             }
             Error::TaskInstanceNotSubWorkflowInstance => {
-                let ss: DolphinErrorInfo = Error::TaskInstanceNotSubWorkflowInstance.into();
+                let ss: AuroraErrorInfo = Error::TaskInstanceNotSubWorkflowInstance.into();
                 write!(f, "{}", ss)
             }
             Error::ScheduleCronNotExists => {
-                let ss: DolphinErrorInfo = Error::ScheduleCronNotExists.into();
+                let ss: AuroraErrorInfo = Error::ScheduleCronNotExists.into();
                 write!(f, "{}", ss)
             }
             Error::ScheduleCronOnlineForbidUpdate => {
-                let ss: DolphinErrorInfo = Error::ScheduleCronOnlineForbidUpdate.into();
+                let ss: AuroraErrorInfo = Error::ScheduleCronOnlineForbidUpdate.into();
                 write!(f, "{}", ss)
             }
             Error::ScheduleCronCheckFailed => {
-                let ss: DolphinErrorInfo = Error::ScheduleCronCheckFailed.into();
+                let ss: AuroraErrorInfo = Error::ScheduleCronCheckFailed.into();
                 write!(f, "{}", ss)
             }
             Error::MasterNotExists => {
-                let ss: DolphinErrorInfo = Error::MasterNotExists.into();
+                let ss: AuroraErrorInfo = Error::MasterNotExists.into();
                 write!(f, "{}", ss)
             }
             Error::ScheduleStatusUnknown => {
-                let ss: DolphinErrorInfo = Error::ScheduleStatusUnknown.into();
+                let ss: AuroraErrorInfo = Error::ScheduleStatusUnknown.into();
                 write!(f, "{}", ss)
             }
             Error::CreateAlertGroupError => {
-                let ss: DolphinErrorInfo = Error::CreateAlertGroupError.into();
+                let ss: AuroraErrorInfo = Error::CreateAlertGroupError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryAllAlertgroupError => {
-                let ss: DolphinErrorInfo = Error::QueryAllAlertgroupError.into();
+                let ss: AuroraErrorInfo = Error::QueryAllAlertgroupError.into();
                 write!(f, "{}", ss)
             }
             Error::ListPagingAlertGroupError => {
-                let ss: DolphinErrorInfo = Error::ListPagingAlertGroupError.into();
+                let ss: AuroraErrorInfo = Error::ListPagingAlertGroupError.into();
                 write!(f, "{}", ss)
             }
             Error::UpdateAlertGroupError => {
-                let ss: DolphinErrorInfo = Error::UpdateAlertGroupError.into();
+                let ss: AuroraErrorInfo = Error::UpdateAlertGroupError.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteAlertGroupError => {
-                let ss: DolphinErrorInfo = Error::DeleteAlertGroupError.into();
+                let ss: AuroraErrorInfo = Error::DeleteAlertGroupError.into();
                 write!(f, "{}", ss)
             }
             Error::AlertGroupGrantUserError => {
-                let ss: DolphinErrorInfo = Error::AlertGroupGrantUserError.into();
+                let ss: AuroraErrorInfo = Error::AlertGroupGrantUserError.into();
                 write!(f, "{}", ss)
             }
             Error::CreateDatasourceError => {
-                let ss: DolphinErrorInfo = Error::CreateDatasourceError.into();
+                let ss: AuroraErrorInfo = Error::CreateDatasourceError.into();
                 write!(f, "{}", ss)
             }
             Error::UpdateDatasourceError => {
-                let ss: DolphinErrorInfo = Error::UpdateDatasourceError.into();
+                let ss: AuroraErrorInfo = Error::UpdateDatasourceError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryDatasourceError => {
-                let ss: DolphinErrorInfo = Error::QueryDatasourceError.into();
+                let ss: AuroraErrorInfo = Error::QueryDatasourceError.into();
                 write!(f, "{}", ss)
             }
             Error::ConnectDatasourceFailure => {
-                let ss: DolphinErrorInfo = Error::ConnectDatasourceFailure.into();
+                let ss: AuroraErrorInfo = Error::ConnectDatasourceFailure.into();
                 write!(f, "{}", ss)
             }
             Error::ConnectionTestFailure => {
-                let ss: DolphinErrorInfo = Error::ConnectionTestFailure.into();
+                let ss: AuroraErrorInfo = Error::ConnectionTestFailure.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteDataSourceFailure => {
-                let ss: DolphinErrorInfo = Error::DeleteDataSourceFailure.into();
+                let ss: AuroraErrorInfo = Error::DeleteDataSourceFailure.into();
                 write!(f, "{}", ss)
             }
             Error::VerifyDatasourceNameFailure => {
-                let ss: DolphinErrorInfo = Error::VerifyDatasourceNameFailure.into();
+                let ss: AuroraErrorInfo = Error::VerifyDatasourceNameFailure.into();
                 write!(f, "{}", ss)
             }
             Error::UnauthorizedDatasource => {
-                let ss: DolphinErrorInfo = Error::UnauthorizedDatasource.into();
+                let ss: AuroraErrorInfo = Error::UnauthorizedDatasource.into();
                 write!(f, "{}", ss)
             }
             Error::AuthorizedDataSource => {
-                let ss: DolphinErrorInfo = Error::AuthorizedDataSource.into();
+                let ss: AuroraErrorInfo = Error::AuthorizedDataSource.into();
                 write!(f, "{}", ss)
             }
             Error::LoginSuccess => {
-                let ss: DolphinErrorInfo = Error::LoginSuccess.into();
+                let ss: AuroraErrorInfo = Error::LoginSuccess.into();
                 write!(f, "{}", ss)
             }
             Error::UserLoginFailure => {
-                let ss: DolphinErrorInfo = Error::UserLoginFailure.into();
+                let ss: AuroraErrorInfo = Error::UserLoginFailure.into();
                 write!(f, "{}", ss)
             }
             Error::ListWorkersError => {
-                let ss: DolphinErrorInfo = Error::ListWorkersError.into();
+                let ss: AuroraErrorInfo = Error::ListWorkersError.into();
                 write!(f, "{}", ss)
             }
             Error::ListMastersError => {
-                let ss: DolphinErrorInfo = Error::ListMastersError.into();
+                let ss: AuroraErrorInfo = Error::ListMastersError.into();
                 write!(f, "{}", ss)
             }
             Error::UpdateProjectError => {
-                let ss: DolphinErrorInfo = Error::UpdateProjectError.into();
+                let ss: AuroraErrorInfo = Error::UpdateProjectError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryProjectDetailsByCodeError => {
-                let ss: DolphinErrorInfo = Error::QueryProjectDetailsByCodeError.into();
+                let ss: AuroraErrorInfo = Error::QueryProjectDetailsByCodeError.into();
                 write!(f, "{}", ss)
             }
             Error::CreateProjectError => {
-                let ss: DolphinErrorInfo = Error::CreateProjectError.into();
+                let ss: AuroraErrorInfo = Error::CreateProjectError.into();
                 write!(f, "{}", ss)
             }
             Error::LoginUserQueryProjectListPagingError => {
-                let ss: DolphinErrorInfo = Error::LoginUserQueryProjectListPagingError.into();
+                let ss: AuroraErrorInfo = Error::LoginUserQueryProjectListPagingError.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteProjectError => {
-                let ss: DolphinErrorInfo = Error::DeleteProjectError.into();
+                let ss: AuroraErrorInfo = Error::DeleteProjectError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryUnauthorizedProjectError => {
-                let ss: DolphinErrorInfo = Error::QueryUnauthorizedProjectError.into();
+                let ss: AuroraErrorInfo = Error::QueryUnauthorizedProjectError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryAuthorizedProject => {
-                let ss: DolphinErrorInfo = Error::QueryAuthorizedProject.into();
+                let ss: AuroraErrorInfo = Error::QueryAuthorizedProject.into();
                 write!(f, "{}", ss)
             }
             Error::QueryQueueListError => {
-                let ss: DolphinErrorInfo = Error::QueryQueueListError.into();
+                let ss: AuroraErrorInfo = Error::QueryQueueListError.into();
                 write!(f, "{}", ss)
             }
             Error::CreateResourceError => {
-                let ss: DolphinErrorInfo = Error::CreateResourceError.into();
+                let ss: AuroraErrorInfo = Error::CreateResourceError.into();
                 write!(f, "{}", ss)
             }
             Error::UpdateResourceError => {
-                let ss: DolphinErrorInfo = Error::UpdateResourceError.into();
+                let ss: AuroraErrorInfo = Error::UpdateResourceError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryResourcesListError => {
-                let ss: DolphinErrorInfo = Error::QueryResourcesListError.into();
+                let ss: AuroraErrorInfo = Error::QueryResourcesListError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryResourcesListPaging => {
-                let ss: DolphinErrorInfo = Error::QueryResourcesListPaging.into();
+                let ss: AuroraErrorInfo = Error::QueryResourcesListPaging.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteResourceError => {
-                let ss: DolphinErrorInfo = Error::DeleteResourceError.into();
+                let ss: AuroraErrorInfo = Error::DeleteResourceError.into();
                 write!(f, "{}", ss)
             }
             Error::VerifyResourceByNameAndTypeError => {
-                let ss: DolphinErrorInfo = Error::VerifyResourceByNameAndTypeError.into();
+                let ss: AuroraErrorInfo = Error::VerifyResourceByNameAndTypeError.into();
                 write!(f, "{}", ss)
             }
             Error::ViewResourceFileOnLineError => {
-                let ss: DolphinErrorInfo = Error::ViewResourceFileOnLineError.into();
+                let ss: AuroraErrorInfo = Error::ViewResourceFileOnLineError.into();
                 write!(f, "{}", ss)
             }
             Error::CreateResourceFileOnLineError => {
-                let ss: DolphinErrorInfo = Error::CreateResourceFileOnLineError.into();
+                let ss: AuroraErrorInfo = Error::CreateResourceFileOnLineError.into();
                 write!(f, "{}", ss)
             }
             Error::ResourceFileIsEmpty => {
-                let ss: DolphinErrorInfo = Error::ResourceFileIsEmpty.into();
+                let ss: AuroraErrorInfo = Error::ResourceFileIsEmpty.into();
                 write!(f, "{}", ss)
             }
             Error::EditResourceFileOnLineError => {
-                let ss: DolphinErrorInfo = Error::EditResourceFileOnLineError.into();
+                let ss: AuroraErrorInfo = Error::EditResourceFileOnLineError.into();
                 write!(f, "{}", ss)
             }
             Error::DownloadResourceFileError => {
-                let ss: DolphinErrorInfo = Error::DownloadResourceFileError.into();
+                let ss: AuroraErrorInfo = Error::DownloadResourceFileError.into();
                 write!(f, "{}", ss)
             }
             Error::CreateUdfFunctionError => {
-                let ss: DolphinErrorInfo = Error::CreateUdfFunctionError.into();
+                let ss: AuroraErrorInfo = Error::CreateUdfFunctionError.into();
                 write!(f, "{}", ss)
             }
             Error::ViewUdfFunctionError => {
-                let ss: DolphinErrorInfo = Error::ViewUdfFunctionError.into();
+                let ss: AuroraErrorInfo = Error::ViewUdfFunctionError.into();
                 write!(f, "{}", ss)
             }
             Error::UpdateUdfFunctionError => {
-                let ss: DolphinErrorInfo = Error::UpdateUdfFunctionError.into();
+                let ss: AuroraErrorInfo = Error::UpdateUdfFunctionError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryUdfFunctionListPagingError => {
-                let ss: DolphinErrorInfo = Error::QueryUdfFunctionListPagingError.into();
+                let ss: AuroraErrorInfo = Error::QueryUdfFunctionListPagingError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryDatasourceByTypeError => {
-                let ss: DolphinErrorInfo = Error::QueryDatasourceByTypeError.into();
+                let ss: AuroraErrorInfo = Error::QueryDatasourceByTypeError.into();
                 write!(f, "{}", ss)
             }
             Error::VerifyUdfFunctionNameError => {
-                let ss: DolphinErrorInfo = Error::VerifyUdfFunctionNameError.into();
+                let ss: AuroraErrorInfo = Error::VerifyUdfFunctionNameError.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteUdfFunctionError => {
-                let ss: DolphinErrorInfo = Error::DeleteUdfFunctionError.into();
+                let ss: AuroraErrorInfo = Error::DeleteUdfFunctionError.into();
                 write!(f, "{}", ss)
             }
             Error::AuthorizedFileResourceError => {
-                let ss: DolphinErrorInfo = Error::AuthorizedFileResourceError.into();
+                let ss: AuroraErrorInfo = Error::AuthorizedFileResourceError.into();
                 write!(f, "{}", ss)
             }
             Error::AuthorizeResourceTree => {
-                let ss: DolphinErrorInfo = Error::AuthorizeResourceTree.into();
+                let ss: AuroraErrorInfo = Error::AuthorizeResourceTree.into();
                 write!(f, "{}", ss)
             }
             Error::UnauthorizedUdfFunctionError => {
-                let ss: DolphinErrorInfo = Error::UnauthorizedUdfFunctionError.into();
+                let ss: AuroraErrorInfo = Error::UnauthorizedUdfFunctionError.into();
                 write!(f, "{}", ss)
             }
             Error::AuthorizedUdfFunctionError => {
-                let ss: DolphinErrorInfo = Error::AuthorizedUdfFunctionError.into();
+                let ss: AuroraErrorInfo = Error::AuthorizedUdfFunctionError.into();
                 write!(f, "{}", ss)
             }
             Error::CreateScheduleError => {
-                let ss: DolphinErrorInfo = Error::CreateScheduleError.into();
+                let ss: AuroraErrorInfo = Error::CreateScheduleError.into();
                 write!(f, "{}", ss)
             }
             Error::UpdateScheduleError => {
-                let ss: DolphinErrorInfo = Error::UpdateScheduleError.into();
+                let ss: AuroraErrorInfo = Error::UpdateScheduleError.into();
                 write!(f, "{}", ss)
             }
             Error::PublishScheduleOnlineError => {
-                let ss: DolphinErrorInfo = Error::PublishScheduleOnlineError.into();
+                let ss: AuroraErrorInfo = Error::PublishScheduleOnlineError.into();
                 write!(f, "{}", ss)
             }
             Error::OfflineScheduleError => {
-                let ss: DolphinErrorInfo = Error::OfflineScheduleError.into();
+                let ss: AuroraErrorInfo = Error::OfflineScheduleError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryScheduleListPagingError => {
-                let ss: DolphinErrorInfo = Error::QueryScheduleListPagingError.into();
+                let ss: AuroraErrorInfo = Error::QueryScheduleListPagingError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryScheduleListError => {
-                let ss: DolphinErrorInfo = Error::QueryScheduleListError.into();
+                let ss: AuroraErrorInfo = Error::QueryScheduleListError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryTaskListPagingError => {
-                let ss: DolphinErrorInfo = Error::QueryTaskListPagingError.into();
+                let ss: AuroraErrorInfo = Error::QueryTaskListPagingError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryTaskRecordListPagingError => {
-                let ss: DolphinErrorInfo = Error::QueryTaskRecordListPagingError.into();
+                let ss: AuroraErrorInfo = Error::QueryTaskRecordListPagingError.into();
                 write!(f, "{}", ss)
             }
             Error::CreateTenantError => {
-                let ss: DolphinErrorInfo = Error::CreateTenantError.into();
+                let ss: AuroraErrorInfo = Error::CreateTenantError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryTenantListPagingError => {
-                let ss: DolphinErrorInfo = Error::QueryTenantListPagingError.into();
+                let ss: AuroraErrorInfo = Error::QueryTenantListPagingError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryTenantListError => {
-                let ss: DolphinErrorInfo = Error::QueryTenantListError.into();
+                let ss: AuroraErrorInfo = Error::QueryTenantListError.into();
                 write!(f, "{}", ss)
             }
             Error::UpdateTenantError => {
-                let ss: DolphinErrorInfo = Error::UpdateTenantError.into();
+                let ss: AuroraErrorInfo = Error::UpdateTenantError.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteTenantByIdError => {
-                let ss: DolphinErrorInfo = Error::DeleteTenantByIdError.into();
+                let ss: AuroraErrorInfo = Error::DeleteTenantByIdError.into();
                 write!(f, "{}", ss)
             }
             Error::VerifyOsTenantCodeError => {
-                let ss: DolphinErrorInfo = Error::VerifyOsTenantCodeError.into();
+                let ss: AuroraErrorInfo = Error::VerifyOsTenantCodeError.into();
                 write!(f, "{}", ss)
             }
             Error::CreateUserError => {
-                let ss: DolphinErrorInfo = Error::CreateUserError.into();
+                let ss: AuroraErrorInfo = Error::CreateUserError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryUserListPagingError => {
-                let ss: DolphinErrorInfo = Error::QueryUserListPagingError.into();
+                let ss: AuroraErrorInfo = Error::QueryUserListPagingError.into();
                 write!(f, "{}", ss)
             }
             Error::UpdateUserError => {
-                let ss: DolphinErrorInfo = Error::UpdateUserError.into();
+                let ss: AuroraErrorInfo = Error::UpdateUserError.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteUserByIdError => {
-                let ss: DolphinErrorInfo = Error::DeleteUserByIdError.into();
+                let ss: AuroraErrorInfo = Error::DeleteUserByIdError.into();
                 write!(f, "{}", ss)
             }
             Error::GrantProjectError => {
-                let ss: DolphinErrorInfo = Error::GrantProjectError.into();
+                let ss: AuroraErrorInfo = Error::GrantProjectError.into();
                 write!(f, "{}", ss)
             }
             Error::GrantResourceError => {
-                let ss: DolphinErrorInfo = Error::GrantResourceError.into();
+                let ss: AuroraErrorInfo = Error::GrantResourceError.into();
                 write!(f, "{}", ss)
             }
             Error::GrantUdfFunctionError => {
-                let ss: DolphinErrorInfo = Error::GrantUdfFunctionError.into();
+                let ss: AuroraErrorInfo = Error::GrantUdfFunctionError.into();
                 write!(f, "{}", ss)
             }
             Error::GrantDatasourceError => {
-                let ss: DolphinErrorInfo = Error::GrantDatasourceError.into();
+                let ss: AuroraErrorInfo = Error::GrantDatasourceError.into();
                 write!(f, "{}", ss)
             }
             Error::GetUserInfoError => {
-                let ss: DolphinErrorInfo = Error::GetUserInfoError.into();
+                let ss: AuroraErrorInfo = Error::GetUserInfoError.into();
                 write!(f, "{}", ss)
             }
             Error::UserListError => {
-                let ss: DolphinErrorInfo = Error::UserListError.into();
+                let ss: AuroraErrorInfo = Error::UserListError.into();
                 write!(f, "{}", ss)
             }
             Error::VerifyUsernameError => {
-                let ss: DolphinErrorInfo = Error::VerifyUsernameError.into();
+                let ss: AuroraErrorInfo = Error::VerifyUsernameError.into();
                 write!(f, "{}", ss)
             }
             Error::UnauthorizedUserError => {
-                let ss: DolphinErrorInfo = Error::UnauthorizedUserError.into();
+                let ss: AuroraErrorInfo = Error::UnauthorizedUserError.into();
                 write!(f, "{}", ss)
             }
             Error::AuthorizedUserError => {
-                let ss: DolphinErrorInfo = Error::AuthorizedUserError.into();
+                let ss: AuroraErrorInfo = Error::AuthorizedUserError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryTaskInstanceLogError => {
-                let ss: DolphinErrorInfo = Error::QueryTaskInstanceLogError.into();
+                let ss: AuroraErrorInfo = Error::QueryTaskInstanceLogError.into();
                 write!(f, "{}", ss)
             }
             Error::DownloadTaskInstanceLogFileError => {
-                let ss: DolphinErrorInfo = Error::DownloadTaskInstanceLogFileError.into();
+                let ss: AuroraErrorInfo = Error::DownloadTaskInstanceLogFileError.into();
                 write!(f, "{}", ss)
             }
             Error::CreateProcessDefinitionError => {
-                let ss: DolphinErrorInfo = Error::CreateProcessDefinitionError.into();
+                let ss: AuroraErrorInfo = Error::CreateProcessDefinitionError.into();
                 write!(f, "{}", ss)
             }
             Error::VerifyProcessDefinitionNameUniqueError => {
-                let ss: DolphinErrorInfo = Error::VerifyProcessDefinitionNameUniqueError.into();
+                let ss: AuroraErrorInfo = Error::VerifyProcessDefinitionNameUniqueError.into();
                 write!(f, "{}", ss)
             }
             Error::UpdateProcessDefinitionError => {
-                let ss: DolphinErrorInfo = Error::UpdateProcessDefinitionError.into();
+                let ss: AuroraErrorInfo = Error::UpdateProcessDefinitionError.into();
                 write!(f, "{}", ss)
             }
             Error::ReleaseProcessDefinitionError => {
-                let ss: DolphinErrorInfo = Error::ReleaseProcessDefinitionError.into();
+                let ss: AuroraErrorInfo = Error::ReleaseProcessDefinitionError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryDetailOfProcessDefinitionError => {
-                let ss: DolphinErrorInfo = Error::QueryDetailOfProcessDefinitionError.into();
+                let ss: AuroraErrorInfo = Error::QueryDetailOfProcessDefinitionError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryProcessDefinitionList => {
-                let ss: DolphinErrorInfo = Error::QueryProcessDefinitionList.into();
+                let ss: AuroraErrorInfo = Error::QueryProcessDefinitionList.into();
                 write!(f, "{}", ss)
             }
             Error::EncapsulationTreeviewStructureError => {
-                let ss: DolphinErrorInfo = Error::EncapsulationTreeviewStructureError.into();
+                let ss: AuroraErrorInfo = Error::EncapsulationTreeviewStructureError.into();
                 write!(f, "{}", ss)
             }
             Error::GetTasksListByProcessDefinitionIdError => {
-                let ss: DolphinErrorInfo = Error::GetTasksListByProcessDefinitionIdError.into();
+                let ss: AuroraErrorInfo = Error::GetTasksListByProcessDefinitionIdError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryProcessInstanceListPagingError => {
-                let ss: DolphinErrorInfo = Error::QueryProcessInstanceListPagingError.into();
+                let ss: AuroraErrorInfo = Error::QueryProcessInstanceListPagingError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryTaskListByProcessInstanceIdError => {
-                let ss: DolphinErrorInfo = Error::QueryTaskListByProcessInstanceIdError.into();
+                let ss: AuroraErrorInfo = Error::QueryTaskListByProcessInstanceIdError.into();
                 write!(f, "{}", ss)
             }
             Error::UpdateProcessInstanceError => {
-                let ss: DolphinErrorInfo = Error::UpdateProcessInstanceError.into();
+                let ss: AuroraErrorInfo = Error::UpdateProcessInstanceError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryProcessInstanceByIdError => {
-                let ss: DolphinErrorInfo = Error::QueryProcessInstanceByIdError.into();
+                let ss: AuroraErrorInfo = Error::QueryProcessInstanceByIdError.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteProcessInstanceByIdError => {
-                let ss: DolphinErrorInfo = Error::DeleteProcessInstanceByIdError.into();
+                let ss: AuroraErrorInfo = Error::DeleteProcessInstanceByIdError.into();
                 write!(f, "{}", ss)
             }
             Error::QuerySubProcessInstanceDetailInfoByTaskIdError => {
-                let ss: DolphinErrorInfo =
+                let ss: AuroraErrorInfo =
                     Error::QuerySubProcessInstanceDetailInfoByTaskIdError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryParentProcessInstanceDetailInfoBySubProcessInstanceIdError => {
-                let ss: DolphinErrorInfo =
+                let ss: AuroraErrorInfo =
                     Error::QueryParentProcessInstanceDetailInfoBySubProcessInstanceIdError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryProcessInstanceAllVariablesError => {
-                let ss: DolphinErrorInfo = Error::QueryProcessInstanceAllVariablesError.into();
+                let ss: AuroraErrorInfo = Error::QueryProcessInstanceAllVariablesError.into();
                 write!(f, "{}", ss)
             }
             Error::EncapsulationProcessInstanceGanttStructureError => {
-                let ss: DolphinErrorInfo =
+                let ss: AuroraErrorInfo =
                     Error::EncapsulationProcessInstanceGanttStructureError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryProcessDefinitionListPagingError => {
-                let ss: DolphinErrorInfo = Error::QueryProcessDefinitionListPagingError.into();
+                let ss: AuroraErrorInfo = Error::QueryProcessDefinitionListPagingError.into();
                 write!(f, "{}", ss)
             }
             Error::SignOutError => {
-                let ss: DolphinErrorInfo = Error::SignOutError.into();
+                let ss: AuroraErrorInfo = Error::SignOutError.into();
                 write!(f, "{}", ss)
             }
             Error::OsTenantCodeHasAlreadyExists => {
-                let ss: DolphinErrorInfo = Error::OsTenantCodeHasAlreadyExists.into();
+                let ss: AuroraErrorInfo = Error::OsTenantCodeHasAlreadyExists.into();
                 write!(f, "{}", ss)
             }
             Error::IpIsEmpty => {
-                let ss: DolphinErrorInfo = Error::IpIsEmpty.into();
+                let ss: AuroraErrorInfo = Error::IpIsEmpty.into();
                 write!(f, "{}", ss)
             }
             Error::ScheduleCronReleaseNeedNotChange => {
-                let ss: DolphinErrorInfo = Error::ScheduleCronReleaseNeedNotChange.into();
+                let ss: AuroraErrorInfo = Error::ScheduleCronReleaseNeedNotChange.into();
                 write!(f, "{}", ss)
             }
             Error::CreateQueueError => {
-                let ss: DolphinErrorInfo = Error::CreateQueueError.into();
+                let ss: AuroraErrorInfo = Error::CreateQueueError.into();
                 write!(f, "{}", ss)
             }
             Error::QueueNotExist => {
-                let ss: DolphinErrorInfo = Error::QueueNotExist.into();
+                let ss: AuroraErrorInfo = Error::QueueNotExist.into();
                 write!(f, "{}", ss)
             }
             Error::QueueValueExist => {
-                let ss: DolphinErrorInfo = Error::QueueValueExist.into();
+                let ss: AuroraErrorInfo = Error::QueueValueExist.into();
                 write!(f, "{}", ss)
             }
             Error::QueueNameExist => {
-                let ss: DolphinErrorInfo = Error::QueueNameExist.into();
+                let ss: AuroraErrorInfo = Error::QueueNameExist.into();
                 write!(f, "{}", ss)
             }
             Error::UpdateQueueError => {
-                let ss: DolphinErrorInfo = Error::UpdateQueueError.into();
+                let ss: AuroraErrorInfo = Error::UpdateQueueError.into();
                 write!(f, "{}", ss)
             }
             Error::NeedNotUpdateQueue => {
-                let ss: DolphinErrorInfo = Error::NeedNotUpdateQueue.into();
+                let ss: AuroraErrorInfo = Error::NeedNotUpdateQueue.into();
                 write!(f, "{}", ss)
             }
             Error::VerifyQueueError => {
-                let ss: DolphinErrorInfo = Error::VerifyQueueError.into();
+                let ss: AuroraErrorInfo = Error::VerifyQueueError.into();
                 write!(f, "{}", ss)
             }
             Error::NameNull => {
-                let ss: DolphinErrorInfo = Error::NameNull.into();
+                let ss: AuroraErrorInfo = Error::NameNull.into();
                 write!(f, "{}", ss)
             }
             Error::NameExist => {
-                let ss: DolphinErrorInfo = Error::NameExist.into();
+                let ss: AuroraErrorInfo = Error::NameExist.into();
                 write!(f, "{}", ss)
             }
             Error::SaveError => {
-                let ss: DolphinErrorInfo = Error::SaveError.into();
+                let ss: AuroraErrorInfo = Error::SaveError.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteProjectErrorDefinesNotNull => {
-                let ss: DolphinErrorInfo = Error::DeleteProjectErrorDefinesNotNull.into();
+                let ss: AuroraErrorInfo = Error::DeleteProjectErrorDefinesNotNull.into();
                 write!(f, "{}", ss)
             }
             Error::BatchDeleteProcessInstanceByIdsError => {
-                let ss: DolphinErrorInfo = Error::BatchDeleteProcessInstanceByIdsError.into();
+                let ss: AuroraErrorInfo = Error::BatchDeleteProcessInstanceByIdsError.into();
                 write!(f, "{}", ss)
             }
             Error::PreviewScheduleError => {
-                let ss: DolphinErrorInfo = Error::PreviewScheduleError.into();
+                let ss: AuroraErrorInfo = Error::PreviewScheduleError.into();
                 write!(f, "{}", ss)
             }
             Error::ParseToCronExpressionError => {
-                let ss: DolphinErrorInfo = Error::ParseToCronExpressionError.into();
+                let ss: AuroraErrorInfo = Error::ParseToCronExpressionError.into();
                 write!(f, "{}", ss)
             }
             Error::ScheduleStartTimeEndTimeSame => {
-                let ss: DolphinErrorInfo = Error::ScheduleStartTimeEndTimeSame.into();
+                let ss: AuroraErrorInfo = Error::ScheduleStartTimeEndTimeSame.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteTenantByIdFail => {
-                let ss: DolphinErrorInfo = Error::DeleteTenantByIdFail.into();
+                let ss: AuroraErrorInfo = Error::DeleteTenantByIdFail.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteTenantByIdFailDefines => {
-                let ss: DolphinErrorInfo = Error::DeleteTenantByIdFailDefines.into();
+                let ss: AuroraErrorInfo = Error::DeleteTenantByIdFailDefines.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteTenantByIdFailUsers => {
-                let ss: DolphinErrorInfo = Error::DeleteTenantByIdFailUsers.into();
+                let ss: AuroraErrorInfo = Error::DeleteTenantByIdFailUsers.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteWorkerGroupByIdFail => {
-                let ss: DolphinErrorInfo = Error::DeleteWorkerGroupByIdFail.into();
+                let ss: AuroraErrorInfo = Error::DeleteWorkerGroupByIdFail.into();
                 write!(f, "{}", ss)
             }
             Error::QueryWorkerGroupFail => {
-                let ss: DolphinErrorInfo = Error::QueryWorkerGroupFail.into();
+                let ss: AuroraErrorInfo = Error::QueryWorkerGroupFail.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteWorkerGroupFail => {
-                let ss: DolphinErrorInfo = Error::DeleteWorkerGroupFail.into();
+                let ss: AuroraErrorInfo = Error::DeleteWorkerGroupFail.into();
                 write!(f, "{}", ss)
             }
             Error::UserDisabled => {
-                let ss: DolphinErrorInfo = Error::UserDisabled.into();
+                let ss: AuroraErrorInfo = Error::UserDisabled.into();
                 write!(f, "{}", ss)
             }
             Error::CopyProcessDefinitionError => {
-                let ss: DolphinErrorInfo = Error::CopyProcessDefinitionError.into();
+                let ss: AuroraErrorInfo = Error::CopyProcessDefinitionError.into();
                 write!(f, "{}", ss)
             }
             Error::MoveProcessDefinitionError => {
-                let ss: DolphinErrorInfo = Error::MoveProcessDefinitionError.into();
+                let ss: AuroraErrorInfo = Error::MoveProcessDefinitionError.into();
                 write!(f, "{}", ss)
             }
             Error::SwitchProcessDefinitionVersionError => {
-                let ss: DolphinErrorInfo = Error::SwitchProcessDefinitionVersionError.into();
+                let ss: AuroraErrorInfo = Error::SwitchProcessDefinitionVersionError.into();
                 write!(f, "{}", ss)
             }
             Error::SwitchProcessDefinitionVersionNotExistProcessDefinitionError => {
-                let ss: DolphinErrorInfo =
+                let ss: AuroraErrorInfo =
                     Error::SwitchProcessDefinitionVersionNotExistProcessDefinitionError.into();
                 write!(f, "{}", ss)
             }
             Error::SwitchProcessDefinitionVersionNotExistProcessDefinitionVersionError => {
-                let ss: DolphinErrorInfo =
+                let ss: AuroraErrorInfo =
                     Error::SwitchProcessDefinitionVersionNotExistProcessDefinitionVersionError
                         .into();
                 write!(f, "{}", ss)
             }
             Error::QueryProcessDefinitionVersionsError => {
-                let ss: DolphinErrorInfo = Error::QueryProcessDefinitionVersionsError.into();
+                let ss: AuroraErrorInfo = Error::QueryProcessDefinitionVersionsError.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteProcessDefinitionVersionError => {
-                let ss: DolphinErrorInfo = Error::DeleteProcessDefinitionVersionError.into();
+                let ss: AuroraErrorInfo = Error::DeleteProcessDefinitionVersionError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryUserCreatedProjectError => {
-                let ss: DolphinErrorInfo = Error::QueryUserCreatedProjectError.into();
+                let ss: AuroraErrorInfo = Error::QueryUserCreatedProjectError.into();
                 write!(f, "{}", ss)
             }
             Error::ProcessDefinitionCodesIsEmpty => {
-                let ss: DolphinErrorInfo = Error::ProcessDefinitionCodesIsEmpty.into();
+                let ss: AuroraErrorInfo = Error::ProcessDefinitionCodesIsEmpty.into();
                 write!(f, "{}", ss)
             }
             Error::BatchCopyProcessDefinitionError => {
-                let ss: DolphinErrorInfo = Error::BatchCopyProcessDefinitionError.into();
+                let ss: AuroraErrorInfo = Error::BatchCopyProcessDefinitionError.into();
                 write!(f, "{}", ss)
             }
             Error::BatchMoveProcessDefinitionError => {
-                let ss: DolphinErrorInfo = Error::BatchMoveProcessDefinitionError.into();
+                let ss: AuroraErrorInfo = Error::BatchMoveProcessDefinitionError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryWorkflowLineageError => {
-                let ss: DolphinErrorInfo = Error::QueryWorkflowLineageError.into();
+                let ss: AuroraErrorInfo = Error::QueryWorkflowLineageError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryAuthorizedAndUserCreatedProjectError => {
-                let ss: DolphinErrorInfo = Error::QueryAuthorizedAndUserCreatedProjectError.into();
+                let ss: AuroraErrorInfo = Error::QueryAuthorizedAndUserCreatedProjectError.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteProcessDefinitionByCodeFail => {
-                let ss: DolphinErrorInfo = Error::DeleteProcessDefinitionByCodeFail.into();
+                let ss: AuroraErrorInfo = Error::DeleteProcessDefinitionByCodeFail.into();
                 write!(f, "{}", ss)
             }
             Error::CheckOsTenantCodeError => {
-                let ss: DolphinErrorInfo = Error::CheckOsTenantCodeError.into();
+                let ss: AuroraErrorInfo = Error::CheckOsTenantCodeError.into();
                 write!(f, "{}", ss)
             }
             Error::ForceTaskSuccessError => {
-                let ss: DolphinErrorInfo = Error::ForceTaskSuccessError.into();
+                let ss: AuroraErrorInfo = Error::ForceTaskSuccessError.into();
                 write!(f, "{}", ss)
             }
             Error::TaskInstanceStateOperationError => {
-                let ss: DolphinErrorInfo = Error::TaskInstanceStateOperationError.into();
+                let ss: AuroraErrorInfo = Error::TaskInstanceStateOperationError.into();
                 write!(f, "{}", ss)
             }
             Error::DatasourceTypeNotExist => {
-                let ss: DolphinErrorInfo = Error::DatasourceTypeNotExist.into();
+                let ss: AuroraErrorInfo = Error::DatasourceTypeNotExist.into();
                 write!(f, "{}", ss)
             }
             Error::ProcessDefinitionNameExist => {
-                let ss: DolphinErrorInfo = Error::ProcessDefinitionNameExist.into();
+                let ss: AuroraErrorInfo = Error::ProcessDefinitionNameExist.into();
                 write!(f, "{}", ss)
             }
             Error::DatasourceDbTypeIllegal => {
-                let ss: DolphinErrorInfo = Error::DatasourceDbTypeIllegal.into();
+                let ss: AuroraErrorInfo = Error::DatasourceDbTypeIllegal.into();
                 write!(f, "{}", ss)
             }
             Error::DatasourcePortIllegal => {
-                let ss: DolphinErrorInfo = Error::DatasourcePortIllegal.into();
+                let ss: AuroraErrorInfo = Error::DatasourcePortIllegal.into();
                 write!(f, "{}", ss)
             }
             Error::DatasourceOtherParamsIllegal => {
-                let ss: DolphinErrorInfo = Error::DatasourceOtherParamsIllegal.into();
+                let ss: AuroraErrorInfo = Error::DatasourceOtherParamsIllegal.into();
                 write!(f, "{}", ss)
             }
             Error::DatasourceNameIllegal => {
-                let ss: DolphinErrorInfo = Error::DatasourceNameIllegal.into();
+                let ss: AuroraErrorInfo = Error::DatasourceNameIllegal.into();
                 write!(f, "{}", ss)
             }
             Error::DatasourceHostIllegal => {
-                let ss: DolphinErrorInfo = Error::DatasourceHostIllegal.into();
+                let ss: AuroraErrorInfo = Error::DatasourceHostIllegal.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteWorkerGroupNotExist => {
-                let ss: DolphinErrorInfo = Error::DeleteWorkerGroupNotExist.into();
+                let ss: AuroraErrorInfo = Error::DeleteWorkerGroupNotExist.into();
                 write!(f, "{}", ss)
             }
             Error::CreateWorkerGroupForbiddenInDocker => {
-                let ss: DolphinErrorInfo = Error::CreateWorkerGroupForbiddenInDocker.into();
+                let ss: AuroraErrorInfo = Error::CreateWorkerGroupForbiddenInDocker.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteWorkerGroupForbiddenInDocker => {
-                let ss: DolphinErrorInfo = Error::DeleteWorkerGroupForbiddenInDocker.into();
+                let ss: AuroraErrorInfo = Error::DeleteWorkerGroupForbiddenInDocker.into();
                 write!(f, "{}", ss)
             }
             Error::WorkerAddressInvalid => {
-                let ss: DolphinErrorInfo = Error::WorkerAddressInvalid.into();
+                let ss: AuroraErrorInfo = Error::WorkerAddressInvalid.into();
                 write!(f, "{}", ss)
             }
             Error::QueryWorkerAddressListFail => {
-                let ss: DolphinErrorInfo = Error::QueryWorkerAddressListFail.into();
+                let ss: AuroraErrorInfo = Error::QueryWorkerAddressListFail.into();
                 write!(f, "{}", ss)
             }
             Error::TransformProjectOwnership => {
-                let ss: DolphinErrorInfo = Error::TransformProjectOwnership.into();
+                let ss: AuroraErrorInfo = Error::TransformProjectOwnership.into();
                 write!(f, "{}", ss)
             }
             Error::QueryAlertGroupError => {
-                let ss: DolphinErrorInfo = Error::QueryAlertGroupError.into();
+                let ss: AuroraErrorInfo = Error::QueryAlertGroupError.into();
                 write!(f, "{}", ss)
             }
             Error::CurrentLoginUserTenantNotExist => {
-                let ss: DolphinErrorInfo = Error::CurrentLoginUserTenantNotExist.into();
+                let ss: AuroraErrorInfo = Error::CurrentLoginUserTenantNotExist.into();
                 write!(f, "{}", ss)
             }
             Error::RevokeProjectError => {
-                let ss: DolphinErrorInfo = Error::RevokeProjectError.into();
+                let ss: AuroraErrorInfo = Error::RevokeProjectError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryAuthorizedUser => {
-                let ss: DolphinErrorInfo = Error::QueryAuthorizedUser.into();
+                let ss: AuroraErrorInfo = Error::QueryAuthorizedUser.into();
                 write!(f, "{}", ss)
             }
             Error::ProjectNotExist => {
-                let ss: DolphinErrorInfo = Error::ProjectNotExist.into();
+                let ss: AuroraErrorInfo = Error::ProjectNotExist.into();
                 write!(f, "{}", ss)
             }
             Error::TaskInstanceHostIsNull => {
-                let ss: DolphinErrorInfo = Error::TaskInstanceHostIsNull.into();
+                let ss: AuroraErrorInfo = Error::TaskInstanceHostIsNull.into();
                 write!(f, "{}", ss)
             }
             Error::QueryExecutingWorkflowError => {
-                let ss: DolphinErrorInfo = Error::QueryExecutingWorkflowError.into();
+                let ss: AuroraErrorInfo = Error::QueryExecutingWorkflowError.into();
                 write!(f, "{}", ss)
             }
             Error::UdfFunctionNotExist => {
-                let ss: DolphinErrorInfo = Error::UdfFunctionNotExist.into();
+                let ss: AuroraErrorInfo = Error::UdfFunctionNotExist.into();
                 write!(f, "{}", ss)
             }
             Error::UdfFunctionExists => {
-                let ss: DolphinErrorInfo = Error::UdfFunctionExists.into();
+                let ss: AuroraErrorInfo = Error::UdfFunctionExists.into();
                 write!(f, "{}", ss)
             }
             Error::ResourceNotExist => {
-                let ss: DolphinErrorInfo = Error::ResourceNotExist.into();
+                let ss: AuroraErrorInfo = Error::ResourceNotExist.into();
                 write!(f, "{}", ss)
             }
             Error::ResourceExist => {
-                let ss: DolphinErrorInfo = Error::ResourceExist.into();
+                let ss: AuroraErrorInfo = Error::ResourceExist.into();
                 write!(f, "{}", ss)
             }
             Error::ResourceSuffixNotSupportView => {
-                let ss: DolphinErrorInfo = Error::ResourceSuffixNotSupportView.into();
+                let ss: AuroraErrorInfo = Error::ResourceSuffixNotSupportView.into();
                 write!(f, "{}", ss)
             }
             Error::ResourceSizeExceedLimit => {
-                let ss: DolphinErrorInfo = Error::ResourceSizeExceedLimit.into();
+                let ss: AuroraErrorInfo = Error::ResourceSizeExceedLimit.into();
                 write!(f, "{}", ss)
             }
             Error::ResourceSuffixForbidChange => {
-                let ss: DolphinErrorInfo = Error::ResourceSuffixForbidChange.into();
+                let ss: AuroraErrorInfo = Error::ResourceSuffixForbidChange.into();
                 write!(f, "{}", ss)
             }
             Error::UdfResourceSuffixNotJar => {
-                let ss: DolphinErrorInfo = Error::UdfResourceSuffixNotJar.into();
+                let ss: AuroraErrorInfo = Error::UdfResourceSuffixNotJar.into();
                 write!(f, "{}", ss)
             }
             Error::HdfsCopyFail => {
-                let ss: DolphinErrorInfo = Error::HdfsCopyFail.into();
+                let ss: AuroraErrorInfo = Error::HdfsCopyFail.into();
                 write!(f, "{}", ss)
             }
             Error::ResourceFileExist => {
-                let ss: DolphinErrorInfo = Error::ResourceFileExist.into();
+                let ss: AuroraErrorInfo = Error::ResourceFileExist.into();
                 write!(f, "{}", ss)
             }
             Error::ResourceFileNotExist => {
-                let ss: DolphinErrorInfo = Error::ResourceFileNotExist.into();
+                let ss: AuroraErrorInfo = Error::ResourceFileNotExist.into();
                 write!(f, "{}", ss)
             }
             Error::UdfResourceIsBound => {
-                let ss: DolphinErrorInfo = Error::UdfResourceIsBound.into();
+                let ss: AuroraErrorInfo = Error::UdfResourceIsBound.into();
                 write!(f, "{}", ss)
             }
             Error::ResourceIsUsed => {
-                let ss: DolphinErrorInfo = Error::ResourceIsUsed.into();
+                let ss: AuroraErrorInfo = Error::ResourceIsUsed.into();
                 write!(f, "{}", ss)
             }
             Error::ParentResourceNotExist => {
-                let ss: DolphinErrorInfo = Error::ParentResourceNotExist.into();
+                let ss: AuroraErrorInfo = Error::ParentResourceNotExist.into();
                 write!(f, "{}", ss)
             }
             Error::ResourceNotExistOrNoPermission => {
-                let ss: DolphinErrorInfo = Error::ResourceNotExistOrNoPermission.into();
+                let ss: AuroraErrorInfo = Error::ResourceNotExistOrNoPermission.into();
                 write!(f, "{}", ss)
             }
             Error::ResourceIsAuthorized => {
-                let ss: DolphinErrorInfo = Error::ResourceIsAuthorized.into();
+                let ss: AuroraErrorInfo = Error::ResourceIsAuthorized.into();
                 write!(f, "{}", ss)
             }
             Error::UserNoOperationPerm => {
-                let ss: DolphinErrorInfo = Error::UserNoOperationPerm.into();
+                let ss: AuroraErrorInfo = Error::UserNoOperationPerm.into();
                 write!(f, "{}", ss)
             }
             Error::UserNoOperationProjectPerm => {
-                let ss: DolphinErrorInfo = Error::UserNoOperationProjectPerm.into();
+                let ss: AuroraErrorInfo = Error::UserNoOperationProjectPerm.into();
                 write!(f, "{}", ss)
             }
             Error::ProcessInstanceNotExist => {
-                let ss: DolphinErrorInfo = Error::ProcessInstanceNotExist.into();
+                let ss: AuroraErrorInfo = Error::ProcessInstanceNotExist.into();
                 write!(f, "{}", ss)
             }
             Error::ProcessInstanceExist => {
-                let ss: DolphinErrorInfo = Error::ProcessInstanceExist.into();
+                let ss: AuroraErrorInfo = Error::ProcessInstanceExist.into();
                 write!(f, "{}", ss)
             }
             Error::ProcessDefineNotExist => {
-                let ss: DolphinErrorInfo = Error::ProcessDefineNotExist.into();
+                let ss: AuroraErrorInfo = Error::ProcessDefineNotExist.into();
                 write!(f, "{}", ss)
             }
             Error::ProcessDefineNotRelease => {
-                let ss: DolphinErrorInfo = Error::ProcessDefineNotRelease.into();
+                let ss: AuroraErrorInfo = Error::ProcessDefineNotRelease.into();
                 write!(f, "{}", ss)
             }
             Error::SubProcessDefineNotRelease => {
-                let ss: DolphinErrorInfo = Error::SubProcessDefineNotRelease.into();
+                let ss: AuroraErrorInfo = Error::SubProcessDefineNotRelease.into();
                 write!(f, "{}", ss)
             }
             Error::ProcessInstanceAlreadyChanged => {
-                let ss: DolphinErrorInfo = Error::ProcessInstanceAlreadyChanged.into();
+                let ss: AuroraErrorInfo = Error::ProcessInstanceAlreadyChanged.into();
                 write!(f, "{}", ss)
             }
             Error::ProcessInstanceStateOperationError => {
-                let ss: DolphinErrorInfo = Error::ProcessInstanceStateOperationError.into();
+                let ss: AuroraErrorInfo = Error::ProcessInstanceStateOperationError.into();
                 write!(f, "{}", ss)
             }
             Error::SubProcessInstanceNotExist => {
-                let ss: DolphinErrorInfo = Error::SubProcessInstanceNotExist.into();
+                let ss: AuroraErrorInfo = Error::SubProcessInstanceNotExist.into();
                 write!(f, "{}", ss)
             }
             Error::ProcessDefineNotAllowedEdit => {
-                let ss: DolphinErrorInfo = Error::ProcessDefineNotAllowedEdit.into();
+                let ss: AuroraErrorInfo = Error::ProcessDefineNotAllowedEdit.into();
                 write!(f, "{}", ss)
             }
             Error::ProcessInstanceExecutingCommand => {
-                let ss: DolphinErrorInfo = Error::ProcessInstanceExecutingCommand.into();
+                let ss: AuroraErrorInfo = Error::ProcessInstanceExecutingCommand.into();
                 write!(f, "{}", ss)
             }
             Error::ProcessInstanceNotSubProcessInstance => {
-                let ss: DolphinErrorInfo = Error::ProcessInstanceNotSubProcessInstance.into();
+                let ss: AuroraErrorInfo = Error::ProcessInstanceNotSubProcessInstance.into();
                 write!(f, "{}", ss)
             }
             Error::TaskInstanceStateCountError => {
-                let ss: DolphinErrorInfo = Error::TaskInstanceStateCountError.into();
+                let ss: AuroraErrorInfo = Error::TaskInstanceStateCountError.into();
                 write!(f, "{}", ss)
             }
             Error::CountProcessInstanceStateError => {
-                let ss: DolphinErrorInfo = Error::CountProcessInstanceStateError.into();
+                let ss: AuroraErrorInfo = Error::CountProcessInstanceStateError.into();
                 write!(f, "{}", ss)
             }
             Error::CountProcessDefinitionUserError => {
-                let ss: DolphinErrorInfo = Error::CountProcessDefinitionUserError.into();
+                let ss: AuroraErrorInfo = Error::CountProcessDefinitionUserError.into();
                 write!(f, "{}", ss)
             }
             Error::StartProcessInstanceError => {
-                let ss: DolphinErrorInfo = Error::StartProcessInstanceError.into();
+                let ss: AuroraErrorInfo = Error::StartProcessInstanceError.into();
                 write!(f, "{}", ss)
             }
             Error::BatchStartProcessInstanceError => {
-                let ss: DolphinErrorInfo = Error::BatchStartProcessInstanceError.into();
+                let ss: AuroraErrorInfo = Error::BatchStartProcessInstanceError.into();
                 write!(f, "{}", ss)
             }
             Error::ProcessInstanceError => {
-                let ss: DolphinErrorInfo = Error::ProcessInstanceError.into();
+                let ss: AuroraErrorInfo = Error::ProcessInstanceError.into();
                 write!(f, "{}", ss)
             }
             Error::ExecuteProcessInstanceError => {
-                let ss: DolphinErrorInfo = Error::ExecuteProcessInstanceError.into();
+                let ss: AuroraErrorInfo = Error::ExecuteProcessInstanceError.into();
                 write!(f, "{}", ss)
             }
             Error::CheckProcessDefinitionError => {
-                let ss: DolphinErrorInfo = Error::CheckProcessDefinitionError.into();
+                let ss: AuroraErrorInfo = Error::CheckProcessDefinitionError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryRecipientsAndCopyersByProcessDefinitionError => {
-                let ss: DolphinErrorInfo =
+                let ss: AuroraErrorInfo =
                     Error::QueryRecipientsAndCopyersByProcessDefinitionError.into();
                 write!(f, "{}", ss)
             }
             Error::DataIsNotValid => {
-                let ss: DolphinErrorInfo = Error::DataIsNotValid.into();
+                let ss: AuroraErrorInfo = Error::DataIsNotValid.into();
                 write!(f, "{}", ss)
             }
             Error::DataIsNull => {
-                let ss: DolphinErrorInfo = Error::DataIsNull.into();
+                let ss: AuroraErrorInfo = Error::DataIsNull.into();
                 write!(f, "{}", ss)
             }
             Error::ProcessNodeHasCycle => {
-                let ss: DolphinErrorInfo = Error::ProcessNodeHasCycle.into();
+                let ss: AuroraErrorInfo = Error::ProcessNodeHasCycle.into();
                 write!(f, "{}", ss)
             }
             Error::ProcessNodeSParameterInvalid => {
-                let ss: DolphinErrorInfo = Error::ProcessNodeSParameterInvalid.into();
+                let ss: AuroraErrorInfo = Error::ProcessNodeSParameterInvalid.into();
                 write!(f, "{}", ss)
             }
             Error::ProcessDefineStateOnline => {
-                let ss: DolphinErrorInfo = Error::ProcessDefineStateOnline.into();
+                let ss: AuroraErrorInfo = Error::ProcessDefineStateOnline.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteProcessDefineByCodeError => {
-                let ss: DolphinErrorInfo = Error::DeleteProcessDefineByCodeError.into();
+                let ss: AuroraErrorInfo = Error::DeleteProcessDefineByCodeError.into();
                 write!(f, "{}", ss)
             }
             Error::ScheduleCronStateOnline => {
-                let ss: DolphinErrorInfo = Error::ScheduleCronStateOnline.into();
+                let ss: AuroraErrorInfo = Error::ScheduleCronStateOnline.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteScheduleCronByIdError => {
-                let ss: DolphinErrorInfo = Error::DeleteScheduleCronByIdError.into();
+                let ss: AuroraErrorInfo = Error::DeleteScheduleCronByIdError.into();
                 write!(f, "{}", ss)
             }
             Error::BatchDeleteProcessDefineError => {
-                let ss: DolphinErrorInfo = Error::BatchDeleteProcessDefineError.into();
+                let ss: AuroraErrorInfo = Error::BatchDeleteProcessDefineError.into();
                 write!(f, "{}", ss)
             }
             Error::BatchDeleteProcessDefineByCodesError => {
-                let ss: DolphinErrorInfo = Error::BatchDeleteProcessDefineByCodesError.into();
+                let ss: AuroraErrorInfo = Error::BatchDeleteProcessDefineByCodesError.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteProcessDefineByCodesError => {
-                let ss: DolphinErrorInfo = Error::DeleteProcessDefineByCodesError.into();
+                let ss: AuroraErrorInfo = Error::DeleteProcessDefineByCodesError.into();
                 write!(f, "{}", ss)
             }
             Error::TenantNotSuitable => {
-                let ss: DolphinErrorInfo = Error::TenantNotSuitable.into();
+                let ss: AuroraErrorInfo = Error::TenantNotSuitable.into();
                 write!(f, "{}", ss)
             }
             Error::ExportProcessDefineByIdError => {
-                let ss: DolphinErrorInfo = Error::ExportProcessDefineByIdError.into();
+                let ss: AuroraErrorInfo = Error::ExportProcessDefineByIdError.into();
                 write!(f, "{}", ss)
             }
             Error::BatchExportProcessDefineByIdsError => {
-                let ss: DolphinErrorInfo = Error::BatchExportProcessDefineByIdsError.into();
+                let ss: AuroraErrorInfo = Error::BatchExportProcessDefineByIdsError.into();
                 write!(f, "{}", ss)
             }
             Error::ImportProcessDefineError => {
-                let ss: DolphinErrorInfo = Error::ImportProcessDefineError.into();
+                let ss: AuroraErrorInfo = Error::ImportProcessDefineError.into();
                 write!(f, "{}", ss)
             }
             Error::TaskDefineNotExist => {
-                let ss: DolphinErrorInfo = Error::RequestParamsNotValidError.into();
+                let ss: AuroraErrorInfo = Error::RequestParamsNotValidError.into();
                 write!(f, "{}", ss)
             }
             Error::CreateProcessTaskRelationError => {
-                let ss: DolphinErrorInfo = Error::CreateProcessTaskRelationError.into();
+                let ss: AuroraErrorInfo = Error::CreateProcessTaskRelationError.into();
                 write!(f, "{}", ss)
             }
             Error::ProcessTaskRelationNotExist => {
-                let ss: DolphinErrorInfo = Error::ProcessTaskRelationNotExist.into();
+                let ss: AuroraErrorInfo = Error::ProcessTaskRelationNotExist.into();
                 write!(f, "{}", ss)
             }
             Error::ProcessTaskRelationExist => {
-                let ss: DolphinErrorInfo = Error::ProcessTaskRelationExist.into();
+                let ss: AuroraErrorInfo = Error::ProcessTaskRelationExist.into();
                 write!(f, "{}", ss)
             }
             Error::ProcessDagIsEmpty => {
-                let ss: DolphinErrorInfo = Error::ProcessDagIsEmpty.into();
+                let ss: AuroraErrorInfo = Error::ProcessDagIsEmpty.into();
                 write!(f, "{}", ss)
             }
             Error::CheckProcessTaskRelationError => {
-                let ss: DolphinErrorInfo = Error::CheckProcessTaskRelationError.into();
+                let ss: AuroraErrorInfo = Error::CheckProcessTaskRelationError.into();
                 write!(f, "{}", ss)
             }
             Error::CreateTaskDefinitionError => {
-                let ss: DolphinErrorInfo = Error::CreateTaskDefinitionError.into();
+                let ss: AuroraErrorInfo = Error::CreateTaskDefinitionError.into();
                 write!(f, "{}", ss)
             }
             Error::UpdateTaskDefinitionError => {
-                let ss: DolphinErrorInfo = Error::UpdateTaskDefinitionError.into();
+                let ss: AuroraErrorInfo = Error::UpdateTaskDefinitionError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryTaskDefinitionVersionsError => {
-                let ss: DolphinErrorInfo = Error::QueryTaskDefinitionVersionsError.into();
+                let ss: AuroraErrorInfo = Error::QueryTaskDefinitionVersionsError.into();
                 write!(f, "{}", ss)
             }
             Error::SwitchTaskDefinitionVersionError => {
-                let ss: DolphinErrorInfo = Error::SwitchTaskDefinitionVersionError.into();
+                let ss: AuroraErrorInfo = Error::SwitchTaskDefinitionVersionError.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteTaskDefinitionVersionError => {
-                let ss: DolphinErrorInfo = Error::DeleteTaskDefinitionVersionError.into();
+                let ss: AuroraErrorInfo = Error::DeleteTaskDefinitionVersionError.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteTaskDefineByCodeError => {
-                let ss: DolphinErrorInfo = Error::DeleteTaskDefineByCodeError.into();
+                let ss: AuroraErrorInfo = Error::DeleteTaskDefineByCodeError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryDetailOfTaskDefinitionError => {
-                let ss: DolphinErrorInfo = Error::QueryDetailOfTaskDefinitionError.into();
+                let ss: AuroraErrorInfo = Error::QueryDetailOfTaskDefinitionError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryTaskDefinitionListPagingError => {
-                let ss: DolphinErrorInfo = Error::QueryTaskDefinitionListPagingError.into();
+                let ss: AuroraErrorInfo = Error::QueryTaskDefinitionListPagingError.into();
                 write!(f, "{}", ss)
             }
             Error::TaskDefinitionNameExisted => {
-                let ss: DolphinErrorInfo = Error::TaskDefinitionNameExisted.into();
+                let ss: AuroraErrorInfo = Error::TaskDefinitionNameExisted.into();
                 write!(f, "{}", ss)
             }
             Error::ReleaseTaskDefinitionError => {
-                let ss: DolphinErrorInfo = Error::ReleaseTaskDefinitionError.into();
+                let ss: AuroraErrorInfo = Error::ReleaseTaskDefinitionError.into();
                 write!(f, "{}", ss)
             }
             Error::MoveProcessTaskRelationError => {
-                let ss: DolphinErrorInfo = Error::MoveProcessTaskRelationError.into();
+                let ss: AuroraErrorInfo = Error::MoveProcessTaskRelationError.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteTaskProcessRelationError => {
-                let ss: DolphinErrorInfo = Error::DeleteTaskProcessRelationError.into();
+                let ss: AuroraErrorInfo = Error::DeleteTaskProcessRelationError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryTaskProcessRelationError => {
-                let ss: DolphinErrorInfo = Error::QueryTaskProcessRelationError.into();
+                let ss: AuroraErrorInfo = Error::QueryTaskProcessRelationError.into();
                 write!(f, "{}", ss)
             }
             Error::TaskDefineStateOnline => {
-                let ss: DolphinErrorInfo = Error::TaskDefineStateOnline.into();
+                let ss: AuroraErrorInfo = Error::TaskDefineStateOnline.into();
                 write!(f, "{}", ss)
             }
             Error::TaskHasDownstream => {
-                let ss: DolphinErrorInfo = Error::TaskHasDownstream.into();
+                let ss: AuroraErrorInfo = Error::TaskHasDownstream.into();
                 write!(f, "{}", ss)
             }
             Error::TaskHasUpstream => {
-                let ss: DolphinErrorInfo = Error::TaskHasUpstream.into();
+                let ss: AuroraErrorInfo = Error::TaskHasUpstream.into();
                 write!(f, "{}", ss)
             }
             Error::MainTableUsingVersion => {
-                let ss: DolphinErrorInfo = Error::MainTableUsingVersion.into();
+                let ss: AuroraErrorInfo = Error::MainTableUsingVersion.into();
                 write!(f, "{}", ss)
             }
             Error::ProjectProcessNotMatch => {
-                let ss: DolphinErrorInfo = Error::ProjectProcessNotMatch.into();
+                let ss: AuroraErrorInfo = Error::ProjectProcessNotMatch.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteEdgeError => {
-                let ss: DolphinErrorInfo = Error::DeleteEdgeError.into();
+                let ss: AuroraErrorInfo = Error::DeleteEdgeError.into();
                 write!(f, "{}", ss)
             }
             Error::NotSupportUpdateTaskDefinition => {
-                let ss: DolphinErrorInfo = Error::NotSupportUpdateTaskDefinition.into();
+                let ss: AuroraErrorInfo = Error::NotSupportUpdateTaskDefinition.into();
                 write!(f, "{}", ss)
             }
             Error::NotSupportCopyTaskType => {
-                let ss: DolphinErrorInfo = Error::NotSupportCopyTaskType.into();
+                let ss: AuroraErrorInfo = Error::NotSupportCopyTaskType.into();
                 write!(f, "{}", ss)
             }
             Error::HdfsNotStartup => {
-                let ss: DolphinErrorInfo = Error::HdfsNotStartup.into();
+                let ss: AuroraErrorInfo = Error::HdfsNotStartup.into();
                 write!(f, "{}", ss)
             }
             Error::StorageNotStartup => {
-                let ss: DolphinErrorInfo = Error::StorageNotStartup.into();
+                let ss: AuroraErrorInfo = Error::StorageNotStartup.into();
                 write!(f, "{}", ss)
             }
             Error::S3CannotRename => {
-                let ss: DolphinErrorInfo = Error::S3CannotRename.into();
+                let ss: AuroraErrorInfo = Error::S3CannotRename.into();
                 write!(f, "{}", ss)
             }
             Error::QueryDatabaseStateError => {
-                let ss: DolphinErrorInfo = Error::QueryDatabaseStateError.into();
+                let ss: AuroraErrorInfo = Error::QueryDatabaseStateError.into();
                 write!(f, "{}", ss)
             }
             Error::CreateAccessTokenError => {
-                let ss: DolphinErrorInfo = Error::CreateAccessTokenError.into();
+                let ss: AuroraErrorInfo = Error::CreateAccessTokenError.into();
                 write!(f, "{}", ss)
             }
             Error::GenerateTokenError => {
-                let ss: DolphinErrorInfo = Error::GenerateTokenError.into();
+                let ss: AuroraErrorInfo = Error::GenerateTokenError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryAccesstokenListPagingError => {
-                let ss: DolphinErrorInfo = Error::QueryAccesstokenListPagingError.into();
+                let ss: AuroraErrorInfo = Error::QueryAccesstokenListPagingError.into();
                 write!(f, "{}", ss)
             }
             Error::UpdateAccessTokenError => {
-                let ss: DolphinErrorInfo = Error::UpdateAccessTokenError.into();
+                let ss: AuroraErrorInfo = Error::UpdateAccessTokenError.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteAccessTokenError => {
-                let ss: DolphinErrorInfo = Error::DeleteAccessTokenError.into();
+                let ss: AuroraErrorInfo = Error::DeleteAccessTokenError.into();
                 write!(f, "{}", ss)
             }
             Error::AccessTokenNotExist => {
-                let ss: DolphinErrorInfo = Error::AccessTokenNotExist.into();
+                let ss: AuroraErrorInfo = Error::AccessTokenNotExist.into();
                 write!(f, "{}", ss)
             }
             Error::QueryAccesstokenByUserError => {
-                let ss: DolphinErrorInfo = Error::QueryAccesstokenByUserError.into();
+                let ss: AuroraErrorInfo = Error::QueryAccesstokenByUserError.into();
                 write!(f, "{}", ss)
             }
             Error::CommandStateCountError => {
-                let ss: DolphinErrorInfo = Error::CommandStateCountError.into();
+                let ss: AuroraErrorInfo = Error::CommandStateCountError.into();
                 write!(f, "{}", ss)
             }
             Error::NegativeSizeNumberError => {
-                let ss: DolphinErrorInfo = Error::NegativeSizeNumberError.into();
+                let ss: AuroraErrorInfo = Error::NegativeSizeNumberError.into();
                 write!(f, "{}", ss)
             }
             Error::StartTimeBiggerThanEndTimeError => {
-                let ss: DolphinErrorInfo = Error::StartTimeBiggerThanEndTimeError.into();
+                let ss: AuroraErrorInfo = Error::StartTimeBiggerThanEndTimeError.into();
                 write!(f, "{}", ss)
             }
             Error::QueueCountError => {
-                let ss: DolphinErrorInfo = Error::QueueCountError.into();
+                let ss: AuroraErrorInfo = Error::QueueCountError.into();
                 write!(f, "{}", ss)
             }
             Error::KerberosStartupState => {
-                let ss: DolphinErrorInfo = Error::KerberosStartupState.into();
+                let ss: AuroraErrorInfo = Error::KerberosStartupState.into();
                 write!(f, "{}", ss)
             }
             Error::QueryAuditLogListPaging => {
-                let ss: DolphinErrorInfo = Error::QueryAuditLogListPaging.into();
+                let ss: AuroraErrorInfo = Error::QueryAuditLogListPaging.into();
                 write!(f, "{}", ss)
             }
             Error::PluginNotAUiComponent => {
-                let ss: DolphinErrorInfo = Error::PluginNotAUiComponent.into();
+                let ss: AuroraErrorInfo = Error::PluginNotAUiComponent.into();
                 write!(f, "{}", ss)
             }
             Error::QueryPluginsResultIsNull => {
-                let ss: DolphinErrorInfo = Error::QueryPluginsResultIsNull.into();
+                let ss: AuroraErrorInfo = Error::QueryPluginsResultIsNull.into();
                 write!(f, "{}", ss)
             }
             Error::QueryPluginsError => {
-                let ss: DolphinErrorInfo = Error::QueryPluginsError.into();
+                let ss: AuroraErrorInfo = Error::QueryPluginsError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryPluginDetailResultIsNull => {
-                let ss: DolphinErrorInfo = Error::QueryPluginDetailResultIsNull.into();
+                let ss: AuroraErrorInfo = Error::QueryPluginDetailResultIsNull.into();
                 write!(f, "{}", ss)
             }
             Error::UpdateAlertPluginInstanceError => {
-                let ss: DolphinErrorInfo = Error::UpdateAlertPluginInstanceError.into();
+                let ss: AuroraErrorInfo = Error::UpdateAlertPluginInstanceError.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteAlertPluginInstanceError => {
-                let ss: DolphinErrorInfo = Error::DeleteAlertPluginInstanceError.into();
+                let ss: AuroraErrorInfo = Error::DeleteAlertPluginInstanceError.into();
                 write!(f, "{}", ss)
             }
             Error::GetAlertPluginInstanceError => {
-                let ss: DolphinErrorInfo = Error::GetAlertPluginInstanceError.into();
+                let ss: AuroraErrorInfo = Error::GetAlertPluginInstanceError.into();
                 write!(f, "{}", ss)
             }
             Error::CreateAlertPluginInstanceError => {
-                let ss: DolphinErrorInfo = Error::CreateAlertPluginInstanceError.into();
+                let ss: AuroraErrorInfo = Error::CreateAlertPluginInstanceError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryAllAlertPluginInstanceError => {
-                let ss: DolphinErrorInfo = Error::QueryAllAlertPluginInstanceError.into();
+                let ss: AuroraErrorInfo = Error::QueryAllAlertPluginInstanceError.into();
                 write!(f, "{}", ss)
             }
             Error::PluginInstanceAlreadyExit => {
-                let ss: DolphinErrorInfo = Error::PluginInstanceAlreadyExit.into();
+                let ss: AuroraErrorInfo = Error::PluginInstanceAlreadyExit.into();
                 write!(f, "{}", ss)
             }
             Error::ListPagingAlertPluginInstanceError => {
-                let ss: DolphinErrorInfo = Error::ListPagingAlertPluginInstanceError.into();
+                let ss: AuroraErrorInfo = Error::ListPagingAlertPluginInstanceError.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteAlertPluginInstanceErrorHasAlertGroupAssociated => {
-                let ss: DolphinErrorInfo =
+                let ss: AuroraErrorInfo =
                     Error::DeleteAlertPluginInstanceErrorHasAlertGroupAssociated.into();
                 write!(f, "{}", ss)
             }
             Error::ProcessDefinitionVersionIsUsed => {
-                let ss: DolphinErrorInfo = Error::ProcessDefinitionVersionIsUsed.into();
+                let ss: AuroraErrorInfo = Error::ProcessDefinitionVersionIsUsed.into();
                 write!(f, "{}", ss)
             }
             Error::CreateEnvironmentError => {
-                let ss: DolphinErrorInfo = Error::CreateEnvironmentError.into();
+                let ss: AuroraErrorInfo = Error::CreateEnvironmentError.into();
                 write!(f, "{}", ss)
             }
             Error::EnvironmentNameExists => {
-                let ss: DolphinErrorInfo = Error::EnvironmentNameExists.into();
+                let ss: AuroraErrorInfo = Error::EnvironmentNameExists.into();
                 write!(f, "{}", ss)
             }
             Error::EnvironmentNameIsNull => {
-                let ss: DolphinErrorInfo = Error::EnvironmentNameIsNull.into();
+                let ss: AuroraErrorInfo = Error::EnvironmentNameIsNull.into();
                 write!(f, "{}", ss)
             }
             Error::EnvironmentConfigIsNull => {
-                let ss: DolphinErrorInfo = Error::EnvironmentConfigIsNull.into();
+                let ss: AuroraErrorInfo = Error::EnvironmentConfigIsNull.into();
                 write!(f, "{}", ss)
             }
             Error::UpdateEnvironmentError => {
-                let ss: DolphinErrorInfo = Error::UpdateEnvironmentError.into();
+                let ss: AuroraErrorInfo = Error::UpdateEnvironmentError.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteEnvironmentError => {
-                let ss: DolphinErrorInfo = Error::DeleteEnvironmentError.into();
+                let ss: AuroraErrorInfo = Error::DeleteEnvironmentError.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteEnvironmentRelatedTaskExists => {
-                let ss: DolphinErrorInfo = Error::DeleteEnvironmentRelatedTaskExists.into();
+                let ss: AuroraErrorInfo = Error::DeleteEnvironmentRelatedTaskExists.into();
                 write!(f, "{}", ss)
             }
             Error::QueryEnvironmentByNameError => {
-                let ss: DolphinErrorInfo = Error::QueryEnvironmentByNameError.into();
+                let ss: AuroraErrorInfo = Error::QueryEnvironmentByNameError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryEnvironmentByCodeError => {
-                let ss: DolphinErrorInfo = Error::QueryEnvironmentByCodeError.into();
+                let ss: AuroraErrorInfo = Error::QueryEnvironmentByCodeError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryEnvironmentError => {
-                let ss: DolphinErrorInfo = Error::QueryEnvironmentError.into();
+                let ss: AuroraErrorInfo = Error::QueryEnvironmentError.into();
                 write!(f, "{}", ss)
             }
             Error::VerifyEnvironmentError => {
-                let ss: DolphinErrorInfo = Error::VerifyEnvironmentError.into();
+                let ss: AuroraErrorInfo = Error::VerifyEnvironmentError.into();
                 write!(f, "{}", ss)
             }
             Error::GetRuleFormCreateJsonError => {
-                let ss: DolphinErrorInfo = Error::GetRuleFormCreateJsonError.into();
+                let ss: AuroraErrorInfo = Error::GetRuleFormCreateJsonError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryRuleListPagingError => {
-                let ss: DolphinErrorInfo = Error::QueryRuleListPagingError.into();
+                let ss: AuroraErrorInfo = Error::QueryRuleListPagingError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryRuleListError => {
-                let ss: DolphinErrorInfo = Error::QueryRuleListError.into();
+                let ss: AuroraErrorInfo = Error::QueryRuleListError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryRuleInputEntryListError => {
-                let ss: DolphinErrorInfo = Error::QueryRuleInputEntryListError.into();
+                let ss: AuroraErrorInfo = Error::QueryRuleInputEntryListError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryExecuteResultListPagingError => {
-                let ss: DolphinErrorInfo = Error::QueryExecuteResultListPagingError.into();
+                let ss: AuroraErrorInfo = Error::QueryExecuteResultListPagingError.into();
                 write!(f, "{}", ss)
             }
             Error::GetDatasourceOptionsError => {
-                let ss: DolphinErrorInfo = Error::GetDatasourceOptionsError.into();
+                let ss: AuroraErrorInfo = Error::GetDatasourceOptionsError.into();
                 write!(f, "{}", ss)
             }
             Error::GetDatasourceTablesError => {
-                let ss: DolphinErrorInfo = Error::GetDatasourceTablesError.into();
+                let ss: AuroraErrorInfo = Error::GetDatasourceTablesError.into();
                 write!(f, "{}", ss)
             }
             Error::GetDatasourceTableColumnsError => {
-                let ss: DolphinErrorInfo = Error::GetDatasourceTableColumnsError.into();
+                let ss: AuroraErrorInfo = Error::GetDatasourceTableColumnsError.into();
                 write!(f, "{}", ss)
             }
             Error::TaskGroupNameExist => {
-                let ss: DolphinErrorInfo = Error::TaskGroupNameExist.into();
+                let ss: AuroraErrorInfo = Error::TaskGroupNameExist.into();
                 write!(f, "{}", ss)
             }
             Error::TaskGroupSizeError => {
-                let ss: DolphinErrorInfo = Error::TaskGroupSizeError.into();
+                let ss: AuroraErrorInfo = Error::TaskGroupSizeError.into();
                 write!(f, "{}", ss)
             }
             Error::TaskGroupStatusError => {
-                let ss: DolphinErrorInfo = Error::TaskGroupStatusError.into();
+                let ss: AuroraErrorInfo = Error::TaskGroupStatusError.into();
                 write!(f, "{}", ss)
             }
             Error::TaskGroupFull => {
-                let ss: DolphinErrorInfo = Error::TaskGroupFull.into();
+                let ss: AuroraErrorInfo = Error::TaskGroupFull.into();
                 write!(f, "{}", ss)
             }
             Error::TaskGroupUsedSizeError => {
-                let ss: DolphinErrorInfo = Error::TaskGroupUsedSizeError.into();
+                let ss: AuroraErrorInfo = Error::TaskGroupUsedSizeError.into();
                 write!(f, "{}", ss)
             }
             Error::TaskGroupQueueReleaseError => {
-                let ss: DolphinErrorInfo = Error::TaskGroupQueueReleaseError.into();
+                let ss: AuroraErrorInfo = Error::TaskGroupQueueReleaseError.into();
                 write!(f, "{}", ss)
             }
             Error::TaskGroupQueueAwakeError => {
-                let ss: DolphinErrorInfo = Error::TaskGroupQueueAwakeError.into();
+                let ss: AuroraErrorInfo = Error::TaskGroupQueueAwakeError.into();
                 write!(f, "{}", ss)
             }
             Error::CreateTaskGroupError => {
-                let ss: DolphinErrorInfo = Error::CreateTaskGroupError.into();
+                let ss: AuroraErrorInfo = Error::CreateTaskGroupError.into();
                 write!(f, "{}", ss)
             }
             Error::UpdateTaskGroupError => {
-                let ss: DolphinErrorInfo = Error::UpdateTaskGroupError.into();
+                let ss: AuroraErrorInfo = Error::UpdateTaskGroupError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryTaskGroupListError => {
-                let ss: DolphinErrorInfo = Error::QueryTaskGroupListError.into();
+                let ss: AuroraErrorInfo = Error::QueryTaskGroupListError.into();
                 write!(f, "{}", ss)
             }
             Error::CloseTaskGroupError => {
-                let ss: DolphinErrorInfo = Error::CloseTaskGroupError.into();
+                let ss: AuroraErrorInfo = Error::CloseTaskGroupError.into();
                 write!(f, "{}", ss)
             }
             Error::StartTaskGroupError => {
-                let ss: DolphinErrorInfo = Error::StartTaskGroupError.into();
+                let ss: AuroraErrorInfo = Error::StartTaskGroupError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryTaskGroupQueueListError => {
-                let ss: DolphinErrorInfo = Error::QueryTaskGroupQueueListError.into();
+                let ss: AuroraErrorInfo = Error::QueryTaskGroupQueueListError.into();
                 write!(f, "{}", ss)
             }
             Error::TaskGroupCacheStartFailed => {
-                let ss: DolphinErrorInfo = Error::TaskGroupCacheStartFailed.into();
+                let ss: AuroraErrorInfo = Error::TaskGroupCacheStartFailed.into();
                 write!(f, "{}", ss)
             }
             Error::EnvironmentWorkerGroupsIsInvalid => {
-                let ss: DolphinErrorInfo = Error::EnvironmentWorkerGroupsIsInvalid.into();
+                let ss: AuroraErrorInfo = Error::EnvironmentWorkerGroupsIsInvalid.into();
                 write!(f, "{}", ss)
             }
             Error::UpdateEnvironmentWorkerGroupRelationError => {
-                let ss: DolphinErrorInfo = Error::UpdateEnvironmentWorkerGroupRelationError.into();
+                let ss: AuroraErrorInfo = Error::UpdateEnvironmentWorkerGroupRelationError.into();
                 write!(f, "{}", ss)
             }
             Error::TaskGroupQueueAlreadyStart => {
-                let ss: DolphinErrorInfo = Error::TaskGroupQueueAlreadyStart.into();
+                let ss: AuroraErrorInfo = Error::TaskGroupQueueAlreadyStart.into();
                 write!(f, "{}", ss)
             }
             Error::TaskGroupStatusClosed => {
-                let ss: DolphinErrorInfo = Error::TaskGroupStatusClosed.into();
+                let ss: AuroraErrorInfo = Error::TaskGroupStatusClosed.into();
                 write!(f, "{}", ss)
             }
             Error::TaskGroupStatusOpened => {
-                let ss: DolphinErrorInfo = Error::TaskGroupStatusOpened.into();
+                let ss: AuroraErrorInfo = Error::TaskGroupStatusOpened.into();
                 write!(f, "{}", ss)
             }
             Error::NotAllowToDisableOwnAccount => {
-                let ss: DolphinErrorInfo = Error::NotAllowToDisableOwnAccount.into();
+                let ss: AuroraErrorInfo = Error::NotAllowToDisableOwnAccount.into();
                 write!(f, "{}", ss)
             }
             Error::NotAllowToDeleteDefaultAlarmGroup => {
-                let ss: DolphinErrorInfo = Error::NotAllowToDeleteDefaultAlarmGroup.into();
+                let ss: AuroraErrorInfo = Error::NotAllowToDeleteDefaultAlarmGroup.into();
                 write!(f, "{}", ss)
             }
             Error::TimeZoneIllegal => {
-                let ss: DolphinErrorInfo = Error::TimeZoneIllegal.into();
+                let ss: AuroraErrorInfo = Error::TimeZoneIllegal.into();
                 write!(f, "{}", ss)
             }
             Error::QueryK8sNamespaceListPagingError => {
-                let ss: DolphinErrorInfo = Error::QueryK8sNamespaceListPagingError.into();
+                let ss: AuroraErrorInfo = Error::QueryK8sNamespaceListPagingError.into();
                 write!(f, "{}", ss)
             }
             Error::K8sNamespaceExist => {
-                let ss: DolphinErrorInfo = Error::K8sNamespaceExist.into();
+                let ss: AuroraErrorInfo = Error::K8sNamespaceExist.into();
                 write!(f, "{}", ss)
             }
             Error::CreateK8sNamespaceError => {
-                let ss: DolphinErrorInfo = Error::CreateK8sNamespaceError.into();
+                let ss: AuroraErrorInfo = Error::CreateK8sNamespaceError.into();
                 write!(f, "{}", ss)
             }
             Error::UpdateK8sNamespaceError => {
-                let ss: DolphinErrorInfo = Error::UpdateK8sNamespaceError.into();
+                let ss: AuroraErrorInfo = Error::UpdateK8sNamespaceError.into();
                 write!(f, "{}", ss)
             }
             Error::K8sNamespaceNotExist => {
-                let ss: DolphinErrorInfo = Error::K8sNamespaceNotExist.into();
+                let ss: AuroraErrorInfo = Error::K8sNamespaceNotExist.into();
                 write!(f, "{}", ss)
             }
             Error::K8sClientOpsError => {
-                let ss: DolphinErrorInfo = Error::K8sClientOpsError.into();
+                let ss: AuroraErrorInfo = Error::K8sClientOpsError.into();
                 write!(f, "{}", ss)
             }
             Error::VerifyK8sNamespaceError => {
-                let ss: DolphinErrorInfo = Error::VerifyK8sNamespaceError.into();
+                let ss: AuroraErrorInfo = Error::VerifyK8sNamespaceError.into();
                 write!(f, "{}", ss)
             }
             Error::DeleteK8sNamespaceByIdError => {
-                let ss: DolphinErrorInfo = Error::DeleteK8sNamespaceByIdError.into();
+                let ss: AuroraErrorInfo = Error::DeleteK8sNamespaceByIdError.into();
                 write!(f, "{}", ss)
             }
             Error::VerifyParameterNameFailed => {
-                let ss: DolphinErrorInfo = Error::VerifyParameterNameFailed.into();
+                let ss: AuroraErrorInfo = Error::VerifyParameterNameFailed.into();
                 write!(f, "{}", ss)
             }
             Error::StoreOperateCreateError => {
-                let ss: DolphinErrorInfo = Error::StoreOperateCreateError.into();
+                let ss: AuroraErrorInfo = Error::StoreOperateCreateError.into();
                 write!(f, "{}", ss)
             }
             Error::GrantK8sNamespaceError => {
-                let ss: DolphinErrorInfo = Error::GrantK8sNamespaceError.into();
+                let ss: AuroraErrorInfo = Error::GrantK8sNamespaceError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryUnauthorizedNamespaceError => {
-                let ss: DolphinErrorInfo = Error::QueryUnauthorizedNamespaceError.into();
+                let ss: AuroraErrorInfo = Error::QueryUnauthorizedNamespaceError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryAuthorizedNamespaceError => {
-                let ss: DolphinErrorInfo = Error::QueryAuthorizedNamespaceError.into();
+                let ss: AuroraErrorInfo = Error::QueryAuthorizedNamespaceError.into();
                 write!(f, "{}", ss)
             }
             Error::QueryCanUseK8sClusterError => {
-                let ss: DolphinErrorInfo = Error::QueryCanUseK8sClusterError.into();
+                let ss: AuroraErrorInfo = Error::QueryCanUseK8sClusterError.into();
                 write!(f, "{}", ss)
             }
             Error::ResourceFullNameTooLongError => {
-                let ss: DolphinErrorInfo = Error::ResourceFullNameTooLongError.into();
+                let ss: AuroraErrorInfo = Error::ResourceFullNameTooLongError.into();
                 write!(f, "{}", ss)
             }
             Error::TenantFullNameTooLongError => {
-                let ss: DolphinErrorInfo = Error::TenantFullNameTooLongError.into();
+                let ss: AuroraErrorInfo = Error::TenantFullNameTooLongError.into();
                 write!(f, "{}", ss)
             }
         }
@@ -1882,7 +1882,7 @@ impl core::fmt::Display for Error {
 impl std::error::Error for Error {}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct DolphinErrorInfo {
+pub struct AuroraErrorInfo {
     pub code: i32,
     // #[cfg(feature = "en_msg")]
     pub en_msg: String,
@@ -1897,8 +1897,8 @@ pub struct DisplayErrorInfo {
     pub msg: String,
 }
 #[cfg(feature = "cn_msg")]
-impl From<DolphinErrorInfo> for DisplayErrorInfo {
-    fn from(value: DolphinErrorInfo) -> Self {
+impl From<AuroraErrorInfo> for DisplayErrorInfo {
+    fn from(value: AuroraErrorInfo) -> Self {
         Self {
             code: value.code,
             msg: value.cn_msg,
@@ -1906,8 +1906,8 @@ impl From<DolphinErrorInfo> for DisplayErrorInfo {
     }
 }
 #[cfg(feature = "en_msg")]
-impl From<DolphinErrorInfo> for DisplayErrorInfo {
-    fn from(value: DolphinErrorInfo) -> Self {
+impl From<AuroraErrorInfo> for DisplayErrorInfo {
+    fn from(value: AuroraErrorInfo) -> Self {
         Self {
             code: value.code,
             msg: value.en_msg,
@@ -1915,9 +1915,9 @@ impl From<DolphinErrorInfo> for DisplayErrorInfo {
     }
 }
 
-impl DolphinErrorInfo {
-    pub fn new(code: i32, en_msg: String, cn_msg: String) -> DolphinErrorInfo {
-        DolphinErrorInfo {
+impl AuroraErrorInfo {
+    pub fn new(code: i32, en_msg: String, cn_msg: String) -> AuroraErrorInfo {
+        AuroraErrorInfo {
             code,
             en_msg,
             cn_msg,
@@ -1926,10 +1926,10 @@ impl DolphinErrorInfo {
 }
 
 #[derive(Debug, PartialEq, PartialOrd)]
-pub struct ParseDolphinErrorInfoError;
+pub struct ParseAuroraErrorInfoError;
 
-impl FromStr for DolphinErrorInfo {
-    type Err = ParseDolphinErrorInfoError;
+impl FromStr for AuroraErrorInfo {
+    type Err = ParseAuroraErrorInfoError;
 
     fn from_str(msg: &str) -> Result<Self, Self::Err> {
         let code_info: Vec<_> = msg.split('~').collect();
@@ -1952,11 +1952,11 @@ impl FromStr for DolphinErrorInfo {
             .get(1)
             .unwrap_or(&"内部服务错误，请查看日志")
             .to_string();
-        Ok(DolphinErrorInfo::new(*code, en_msg, cn_msg))
+        Ok(AuroraErrorInfo::new(*code, en_msg, cn_msg))
     }
 }
 
-impl From<String> for DolphinErrorInfo {
+impl From<String> for AuroraErrorInfo {
     fn from(msg: String) -> Self {
         let code_info: Vec<_> = msg.split('~').collect();
         let code = &code_info[0]
@@ -1978,12 +1978,12 @@ impl From<String> for DolphinErrorInfo {
             .get(1)
             .unwrap_or(&"内部服务错误，请查看日志")
             .to_string();
-        DolphinErrorInfo::new(*code, en_msg, cn_msg)
+        AuroraErrorInfo::new(*code, en_msg, cn_msg)
     }
 }
 
-impl std::error::Error for DolphinErrorInfo {}
-impl core::fmt::Display for DolphinErrorInfo {
+impl std::error::Error for AuroraErrorInfo {}
+impl core::fmt::Display for AuroraErrorInfo {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         write!(
             f,
@@ -1993,7 +1993,7 @@ impl core::fmt::Display for DolphinErrorInfo {
     }
 }
 
-impl Default for DolphinErrorInfo {
+impl Default for AuroraErrorInfo {
     fn default() -> Self {
         Self {
             code: 0,
@@ -2003,8 +2003,8 @@ impl Default for DolphinErrorInfo {
     }
 }
 
-impl From<DolphinErrorInfo> for Error {
-    fn from(value: DolphinErrorInfo) -> Self {
+impl From<AuroraErrorInfo> for Error {
+    fn from(value: AuroraErrorInfo) -> Self {
         match (value.code, value.en_msg.as_str(), value.cn_msg.as_str()) {
             (0, ..) => Error::SUCCESS,
             (10000, ..) => Error::InternalServerErrorArgs,
@@ -2498,764 +2498,764 @@ impl From<DolphinErrorInfo> for Error {
     }
 }
 
-impl From<Error> for DolphinErrorInfo {
+impl From<Error> for AuroraErrorInfo {
     fn from(status: Error) -> Self {
         match status {
-            Error::SUCCESS => DolphinErrorInfo::new(0, "success".to_string(), "成功".to_string()),
-            Error::InternalServerErrorArgs => DolphinErrorInfo::new(
+            Error::SUCCESS => AuroraErrorInfo::new(0, "success".to_string(), "成功".to_string()),
+            Error::InternalServerErrorArgs => AuroraErrorInfo::new(
                 10000,
                 "internal server error please check the log".to_string(),
                 "内部服务错误，请查看日志".to_string(),
             ),
-            Error::RequestParamsNotValidError => DolphinErrorInfo::new(
+            Error::RequestParamsNotValidError => AuroraErrorInfo::new(
                 10001,
                 "request parameter {0} is not valid".to_string(),
                 "请求参数[{0}]无效".to_string(),
             ),
-            Error::TaskTimeoutParamsError => DolphinErrorInfo::new(
+            Error::TaskTimeoutParamsError => AuroraErrorInfo::new(
                 10002,
                 "task timeout parameter is not valid".to_string(),
                 "任务超时参数无效".to_string(),
             ),
-            Error::UserNameExist => DolphinErrorInfo::new(
+            Error::UserNameExist => AuroraErrorInfo::new(
                 10003,
                 "user name already exists".to_string(),
                 "用户名已存在".to_string(),
             ),
-            Error::UserNameNull => DolphinErrorInfo::new(
+            Error::UserNameNull => AuroraErrorInfo::new(
                 10004,
                 "user name is null".to_string(),
                 "用户名不能为空".to_string(),
             ),
-            Error::HdfsOperationError => DolphinErrorInfo::new(
+            Error::HdfsOperationError => AuroraErrorInfo::new(
                 10006,
                 "hdfs operation error".to_string(),
                 "hdfs操作错误".to_string(),
             ),
-            Error::TaskInstanceNotFound => DolphinErrorInfo::new(
+            Error::TaskInstanceNotFound => AuroraErrorInfo::new(
                 10008,
                 "task instance not found".to_string(),
                 "任务实例不存在".to_string(),
             ),
-            Error::OsTenantCodeExist => DolphinErrorInfo::new(
+            Error::OsTenantCodeExist => AuroraErrorInfo::new(
                 10009,
                 "os tenant code {0} already exists".to_string(),
                 "操作系统租户[{0}]已存在".to_string(),
             ),
-            Error::UserNotExist => DolphinErrorInfo::new(
+            Error::UserNotExist => AuroraErrorInfo::new(
                 10010,
                 "user {0} not exists".to_string(),
                 "用户[{0}]不存在".to_string(),
             ),
-            Error::AlertGroupNotExist => DolphinErrorInfo::new(
+            Error::AlertGroupNotExist => AuroraErrorInfo::new(
                 10011,
                 "alarm group not found".to_string(),
                 "告警组不存在".to_string(),
             ),
-            Error::AlertGroupExist => DolphinErrorInfo::new(
+            Error::AlertGroupExist => AuroraErrorInfo::new(
                 10012,
                 "alarm group already exists".to_string(),
                 "告警组名称已存在".to_string(),
             ),
-            Error::UserNamePasswdError => DolphinErrorInfo::new(
+            Error::UserNamePasswdError => AuroraErrorInfo::new(
                 10013,
                 "user name or password error".to_string(),
                 "用户名或密码错误".to_string(),
             ),
-            Error::LoginSessionFailed => DolphinErrorInfo::new(
+            Error::LoginSessionFailed => AuroraErrorInfo::new(
                 10014,
                 "create session failed!".to_string(),
                 "创建session失败".to_string(),
             ),
-            Error::DatasourceExist => DolphinErrorInfo::new(
+            Error::DatasourceExist => AuroraErrorInfo::new(
                 10015,
                 "data source name already exists".to_string(),
                 "数据源名称已存在".to_string(),
             ),
-            Error::DatasourceConnectFailed => DolphinErrorInfo::new(
+            Error::DatasourceConnectFailed => AuroraErrorInfo::new(
                 10016,
                 "data source connection failed".to_string(),
                 "建立数据源连接失败".to_string(),
             ),
-            Error::TenantNotExist => DolphinErrorInfo::new(
+            Error::TenantNotExist => AuroraErrorInfo::new(
                 10017,
                 "tenant not exists".to_string(),
                 "租户不存在".to_string(),
             ),
-            Error::ProjectNotFound => DolphinErrorInfo::new(
+            Error::ProjectNotFound => AuroraErrorInfo::new(
                 10018,
                 "project {0} not found ".to_string(),
                 "项目[{0}]不存在".to_string(),
             ),
-            Error::ProjectAlreadyExists => DolphinErrorInfo::new(
+            Error::ProjectAlreadyExists => AuroraErrorInfo::new(
                 10019,
                 "project {0} already exists".to_string(),
                 "项目名称[{0}]已存在".to_string(),
             ),
-            Error::TaskInstanceNotExists => DolphinErrorInfo::new(
+            Error::TaskInstanceNotExists => AuroraErrorInfo::new(
                 10020,
                 "task instance {0} does not exist".to_string(),
                 "任务实例[{0}]不存在".to_string(),
             ),
-            Error::TaskInstanceNotSubWorkflowInstance => DolphinErrorInfo::new(
+            Error::TaskInstanceNotSubWorkflowInstance => AuroraErrorInfo::new(
                 10021,
                 "task instance {0} is not sub process instance".to_string(),
                 "任务实例[{0}]不是子流程实例".to_string(),
             ),
-            Error::ScheduleCronNotExists => DolphinErrorInfo::new(
+            Error::ScheduleCronNotExists => AuroraErrorInfo::new(
                 10022,
                 "scheduler crontab {0} does not exist".to_string(),
                 "调度配置定时表达式[{0}]不存在".to_string(),
             ),
-            Error::ScheduleCronOnlineForbidUpdate => DolphinErrorInfo::new(
+            Error::ScheduleCronOnlineForbidUpdate => AuroraErrorInfo::new(
                 10023,
                 "online status does not allow update operations".to_string(),
                 "调度配置上线状态不允许修改".to_string(),
             ),
-            Error::ScheduleCronCheckFailed => DolphinErrorInfo::new(
+            Error::ScheduleCronCheckFailed => AuroraErrorInfo::new(
                 10024,
                 "scheduler crontab expression validation failure: {0}".to_string(),
                 "调度配置定时表达式验证失败: {0}".to_string(),
             ),
-            Error::MasterNotExists => DolphinErrorInfo::new(
+            Error::MasterNotExists => AuroraErrorInfo::new(
                 10025,
                 "master does not exist".to_string(),
                 "无可用master节点".to_string(),
             ),
-            Error::ScheduleStatusUnknown => DolphinErrorInfo::new(
+            Error::ScheduleStatusUnknown => AuroraErrorInfo::new(
                 10026,
                 "unknown status: {0}".to_string(),
                 "未知状态: {0}".to_string(),
             ),
-            Error::CreateAlertGroupError => DolphinErrorInfo::new(
+            Error::CreateAlertGroupError => AuroraErrorInfo::new(
                 10027,
                 "create alert group error".to_string(),
                 "创建告警组错误".to_string(),
             ),
-            Error::QueryAllAlertgroupError => DolphinErrorInfo::new(
+            Error::QueryAllAlertgroupError => AuroraErrorInfo::new(
                 10028,
                 "query all alertgroup error".to_string(),
                 "查询告警组错误".to_string(),
             ),
-            Error::ListPagingAlertGroupError => DolphinErrorInfo::new(
+            Error::ListPagingAlertGroupError => AuroraErrorInfo::new(
                 10029,
                 "list paging alert group error".to_string(),
                 "分页查询告警组错误".to_string(),
             ),
-            Error::UpdateAlertGroupError => DolphinErrorInfo::new(
+            Error::UpdateAlertGroupError => AuroraErrorInfo::new(
                 10030,
                 "update alert group error".to_string(),
                 "更新告警组错误".to_string(),
             ),
-            Error::DeleteAlertGroupError => DolphinErrorInfo::new(
+            Error::DeleteAlertGroupError => AuroraErrorInfo::new(
                 10031,
                 "delete alert group error".to_string(),
                 "删除告警组错误".to_string(),
             ),
-            Error::AlertGroupGrantUserError => DolphinErrorInfo::new(
+            Error::AlertGroupGrantUserError => AuroraErrorInfo::new(
                 10032,
                 "alert group grant user error".to_string(),
                 "告警组授权用户错误".to_string(),
             ),
-            Error::CreateDatasourceError => DolphinErrorInfo::new(
+            Error::CreateDatasourceError => AuroraErrorInfo::new(
                 10033,
                 "create datasource error".to_string(),
                 "创建数据源错误".to_string(),
             ),
-            Error::UpdateDatasourceError => DolphinErrorInfo::new(
+            Error::UpdateDatasourceError => AuroraErrorInfo::new(
                 10034,
                 "update datasource error".to_string(),
                 "更新数据源错误".to_string(),
             ),
-            Error::QueryDatasourceError => DolphinErrorInfo::new(
+            Error::QueryDatasourceError => AuroraErrorInfo::new(
                 10035,
                 "query datasource error".to_string(),
                 "查询数据源错误".to_string(),
             ),
-            Error::ConnectDatasourceFailure => DolphinErrorInfo::new(
+            Error::ConnectDatasourceFailure => AuroraErrorInfo::new(
                 10036,
                 "connect datasource failure".to_string(),
                 "建立数据源连接失败".to_string(),
             ),
-            Error::ConnectionTestFailure => DolphinErrorInfo::new(
+            Error::ConnectionTestFailure => AuroraErrorInfo::new(
                 10037,
                 "connection test failure".to_string(),
                 "测试数据源连接失败".to_string(),
             ),
-            Error::DeleteDataSourceFailure => DolphinErrorInfo::new(
+            Error::DeleteDataSourceFailure => AuroraErrorInfo::new(
                 10038,
                 "delete data source failure".to_string(),
                 "删除数据源失败".to_string(),
             ),
-            Error::VerifyDatasourceNameFailure => DolphinErrorInfo::new(
+            Error::VerifyDatasourceNameFailure => AuroraErrorInfo::new(
                 10039,
                 "verify datasource name failure".to_string(),
                 "验证数据源名称失败".to_string(),
             ),
-            Error::UnauthorizedDatasource => DolphinErrorInfo::new(
+            Error::UnauthorizedDatasource => AuroraErrorInfo::new(
                 10040,
                 "unauthorized datasource".to_string(),
                 "未经授权的数据源".to_string(),
             ),
-            Error::AuthorizedDataSource => DolphinErrorInfo::new(
+            Error::AuthorizedDataSource => AuroraErrorInfo::new(
                 10041,
                 "authorized data source".to_string(),
                 "授权数据源失败".to_string(),
             ),
             Error::LoginSuccess => {
-                DolphinErrorInfo::new(10042, "login success".to_string(), "登录成功".to_string())
+                AuroraErrorInfo::new(10042, "login success".to_string(), "登录成功".to_string())
             }
-            Error::UserLoginFailure => DolphinErrorInfo::new(
+            Error::UserLoginFailure => AuroraErrorInfo::new(
                 10043,
                 "user login failure".to_string(),
                 "用户登录失败".to_string(),
             ),
-            Error::ListWorkersError => DolphinErrorInfo::new(
+            Error::ListWorkersError => AuroraErrorInfo::new(
                 10044,
                 "list workers error".to_string(),
                 "查询worker列表错误".to_string(),
             ),
-            Error::ListMastersError => DolphinErrorInfo::new(
+            Error::ListMastersError => AuroraErrorInfo::new(
                 10045,
                 "list masters error".to_string(),
                 "查询master列表错误".to_string(),
             ),
-            Error::UpdateProjectError => DolphinErrorInfo::new(
+            Error::UpdateProjectError => AuroraErrorInfo::new(
                 10046,
                 "update project error".to_string(),
                 "更新项目信息错误".to_string(),
             ),
-            Error::QueryProjectDetailsByCodeError => DolphinErrorInfo::new(
+            Error::QueryProjectDetailsByCodeError => AuroraErrorInfo::new(
                 10047,
                 "query project details by code error".to_string(),
                 "查询项目详细信息错误".to_string(),
             ),
-            Error::CreateProjectError => DolphinErrorInfo::new(
+            Error::CreateProjectError => AuroraErrorInfo::new(
                 10048,
                 "create project error".to_string(),
                 "创建项目错误".to_string(),
             ),
-            Error::LoginUserQueryProjectListPagingError => DolphinErrorInfo::new(
+            Error::LoginUserQueryProjectListPagingError => AuroraErrorInfo::new(
                 10049,
                 "login user query project list paging error".to_string(),
                 "分页查询项目列表错误".to_string(),
             ),
-            Error::DeleteProjectError => DolphinErrorInfo::new(
+            Error::DeleteProjectError => AuroraErrorInfo::new(
                 10050,
                 "delete project error".to_string(),
                 "删除项目错误".to_string(),
             ),
-            Error::QueryUnauthorizedProjectError => DolphinErrorInfo::new(
+            Error::QueryUnauthorizedProjectError => AuroraErrorInfo::new(
                 10051,
                 "query unauthorized project error".to_string(),
                 "查询未授权项目错误".to_string(),
             ),
-            Error::QueryAuthorizedProject => DolphinErrorInfo::new(
+            Error::QueryAuthorizedProject => AuroraErrorInfo::new(
                 10052,
                 "query authorized project".to_string(),
                 "查询授权项目错误".to_string(),
             ),
-            Error::QueryQueueListError => DolphinErrorInfo::new(
+            Error::QueryQueueListError => AuroraErrorInfo::new(
                 10053,
                 "query queue list error".to_string(),
                 "查询队列列表错误".to_string(),
             ),
-            Error::CreateResourceError => DolphinErrorInfo::new(
+            Error::CreateResourceError => AuroraErrorInfo::new(
                 10054,
                 "create resource error".to_string(),
                 "创建资源错误".to_string(),
             ),
-            Error::UpdateResourceError => DolphinErrorInfo::new(
+            Error::UpdateResourceError => AuroraErrorInfo::new(
                 10055,
                 "update resource error".to_string(),
                 "更新资源错误".to_string(),
             ),
-            Error::QueryResourcesListError => DolphinErrorInfo::new(
+            Error::QueryResourcesListError => AuroraErrorInfo::new(
                 10056,
                 "query resources list error".to_string(),
                 "查询资源列表错误".to_string(),
             ),
-            Error::QueryResourcesListPaging => DolphinErrorInfo::new(
+            Error::QueryResourcesListPaging => AuroraErrorInfo::new(
                 10057,
                 "query resources list paging".to_string(),
                 "分页查询资源列表错误".to_string(),
             ),
-            Error::DeleteResourceError => DolphinErrorInfo::new(
+            Error::DeleteResourceError => AuroraErrorInfo::new(
                 10058,
                 "delete resource error".to_string(),
                 "删除资源错误".to_string(),
             ),
-            Error::VerifyResourceByNameAndTypeError => DolphinErrorInfo::new(
+            Error::VerifyResourceByNameAndTypeError => AuroraErrorInfo::new(
                 10059,
                 "verify resource by name and type error".to_string(),
                 "资源名称或类型验证错误".to_string(),
             ),
-            Error::ViewResourceFileOnLineError => DolphinErrorInfo::new(
+            Error::ViewResourceFileOnLineError => AuroraErrorInfo::new(
                 10060,
                 "view resource file online error".to_string(),
                 "查看资源文件错误".to_string(),
             ),
-            Error::CreateResourceFileOnLineError => DolphinErrorInfo::new(
+            Error::CreateResourceFileOnLineError => AuroraErrorInfo::new(
                 10061,
                 "create resource file online error".to_string(),
                 "创建资源文件错误".to_string(),
             ),
-            Error::ResourceFileIsEmpty => DolphinErrorInfo::new(
+            Error::ResourceFileIsEmpty => AuroraErrorInfo::new(
                 10062,
                 "resource file is empty".to_string(),
                 "资源文件内容不能为空".to_string(),
             ),
-            Error::EditResourceFileOnLineError => DolphinErrorInfo::new(
+            Error::EditResourceFileOnLineError => AuroraErrorInfo::new(
                 10063,
                 "edit resource file online error".to_string(),
                 "更新资源文件错误".to_string(),
             ),
-            Error::DownloadResourceFileError => DolphinErrorInfo::new(
+            Error::DownloadResourceFileError => AuroraErrorInfo::new(
                 10064,
                 "download resource file error".to_string(),
                 "下载资源文件错误".to_string(),
             ),
-            Error::CreateUdfFunctionError => DolphinErrorInfo::new(
+            Error::CreateUdfFunctionError => AuroraErrorInfo::new(
                 10065,
                 "create udf function error".to_string(),
                 "创建UDF函数错误".to_string(),
             ),
-            Error::ViewUdfFunctionError => DolphinErrorInfo::new(
+            Error::ViewUdfFunctionError => AuroraErrorInfo::new(
                 10066,
                 "view udf function error".to_string(),
                 "查询UDF函数错误".to_string(),
             ),
-            Error::UpdateUdfFunctionError => DolphinErrorInfo::new(
+            Error::UpdateUdfFunctionError => AuroraErrorInfo::new(
                 10067,
                 "update udf function error".to_string(),
                 "更新UDF函数错误".to_string(),
             ),
-            Error::QueryUdfFunctionListPagingError => DolphinErrorInfo::new(
+            Error::QueryUdfFunctionListPagingError => AuroraErrorInfo::new(
                 10068,
                 "query udf function list paging error".to_string(),
                 "分页查询UDF函数列表错误".to_string(),
             ),
-            Error::QueryDatasourceByTypeError => DolphinErrorInfo::new(
+            Error::QueryDatasourceByTypeError => AuroraErrorInfo::new(
                 10069,
                 "query datasource by type error".to_string(),
                 "查询数据源信息错误".to_string(),
             ),
-            Error::VerifyUdfFunctionNameError => DolphinErrorInfo::new(
+            Error::VerifyUdfFunctionNameError => AuroraErrorInfo::new(
                 10070,
                 "verify udf function name error".to_string(),
                 "UDF函数名称验证错误".to_string(),
             ),
-            Error::DeleteUdfFunctionError => DolphinErrorInfo::new(
+            Error::DeleteUdfFunctionError => AuroraErrorInfo::new(
                 10071,
                 "delete udf function error".to_string(),
                 "删除UDF函数错误".to_string(),
             ),
-            Error::AuthorizedFileResourceError => DolphinErrorInfo::new(
+            Error::AuthorizedFileResourceError => AuroraErrorInfo::new(
                 10072,
                 "authorized file resource error".to_string(),
                 "授权资源文件错误".to_string(),
             ),
-            Error::AuthorizeResourceTree => DolphinErrorInfo::new(
+            Error::AuthorizeResourceTree => AuroraErrorInfo::new(
                 10073,
                 "authorize resource tree display error".to_string(),
                 "授权资源目录树错误".to_string(),
             ),
-            Error::UnauthorizedUdfFunctionError => DolphinErrorInfo::new(
+            Error::UnauthorizedUdfFunctionError => AuroraErrorInfo::new(
                 10074,
                 "unauthorized udf function error".to_string(),
                 "查询未授权UDF函数错误".to_string(),
             ),
-            Error::AuthorizedUdfFunctionError => DolphinErrorInfo::new(
+            Error::AuthorizedUdfFunctionError => AuroraErrorInfo::new(
                 10075,
                 "authorized udf function error".to_string(),
                 "授权UDF函数错误".to_string(),
             ),
-            Error::CreateScheduleError => DolphinErrorInfo::new(
+            Error::CreateScheduleError => AuroraErrorInfo::new(
                 10076,
                 "create schedule error".to_string(),
                 "创建调度配置错误".to_string(),
             ),
-            Error::UpdateScheduleError => DolphinErrorInfo::new(
+            Error::UpdateScheduleError => AuroraErrorInfo::new(
                 10077,
                 "update schedule error".to_string(),
                 "更新调度配置错误".to_string(),
             ),
-            Error::PublishScheduleOnlineError => DolphinErrorInfo::new(
+            Error::PublishScheduleOnlineError => AuroraErrorInfo::new(
                 10078,
                 "publish schedule online error".to_string(),
                 "上线调度配置错误".to_string(),
             ),
-            Error::OfflineScheduleError => DolphinErrorInfo::new(
+            Error::OfflineScheduleError => AuroraErrorInfo::new(
                 10079,
                 "offline schedule error".to_string(),
                 "下线调度配置错误".to_string(),
             ),
-            Error::QueryScheduleListPagingError => DolphinErrorInfo::new(
+            Error::QueryScheduleListPagingError => AuroraErrorInfo::new(
                 10080,
                 "query schedule list paging error".to_string(),
                 "分页查询调度配置列表错误".to_string(),
             ),
-            Error::QueryScheduleListError => DolphinErrorInfo::new(
+            Error::QueryScheduleListError => AuroraErrorInfo::new(
                 10081,
                 "query schedule list error".to_string(),
                 "查询调度配置列表错误".to_string(),
             ),
-            Error::QueryTaskListPagingError => DolphinErrorInfo::new(
+            Error::QueryTaskListPagingError => AuroraErrorInfo::new(
                 10082,
                 "query task list paging error".to_string(),
                 "分页查询任务列表错误".to_string(),
             ),
-            Error::QueryTaskRecordListPagingError => DolphinErrorInfo::new(
+            Error::QueryTaskRecordListPagingError => AuroraErrorInfo::new(
                 10083,
                 "query task record list paging error".to_string(),
                 "分页查询任务记录错误".to_string(),
             ),
-            Error::CreateTenantError => DolphinErrorInfo::new(
+            Error::CreateTenantError => AuroraErrorInfo::new(
                 10084,
                 "create tenant error".to_string(),
                 "创建租户错误".to_string(),
             ),
-            Error::QueryTenantListPagingError => DolphinErrorInfo::new(
+            Error::QueryTenantListPagingError => AuroraErrorInfo::new(
                 10085,
                 "query tenant list paging error".to_string(),
                 "分页查询租户列表错误".to_string(),
             ),
-            Error::QueryTenantListError => DolphinErrorInfo::new(
+            Error::QueryTenantListError => AuroraErrorInfo::new(
                 10086,
                 "query tenant list error".to_string(),
                 "查询租户列表错误".to_string(),
             ),
-            Error::UpdateTenantError => DolphinErrorInfo::new(
+            Error::UpdateTenantError => AuroraErrorInfo::new(
                 10087,
                 "update tenant error".to_string(),
                 "更新租户错误".to_string(),
             ),
-            Error::DeleteTenantByIdError => DolphinErrorInfo::new(
+            Error::DeleteTenantByIdError => AuroraErrorInfo::new(
                 10088,
                 "delete tenant by id error".to_string(),
                 "删除租户错误".to_string(),
             ),
-            Error::VerifyOsTenantCodeError => DolphinErrorInfo::new(
+            Error::VerifyOsTenantCodeError => AuroraErrorInfo::new(
                 10089,
                 "verify os tenant code error".to_string(),
                 "操作系统租户验证错误".to_string(),
             ),
-            Error::CreateUserError => DolphinErrorInfo::new(
+            Error::CreateUserError => AuroraErrorInfo::new(
                 10090,
                 "create user error".to_string(),
                 "创建用户错误".to_string(),
             ),
-            Error::QueryUserListPagingError => DolphinErrorInfo::new(
+            Error::QueryUserListPagingError => AuroraErrorInfo::new(
                 10091,
                 "query user list paging error".to_string(),
                 "分页查询用户列表错误".to_string(),
             ),
-            Error::UpdateUserError => DolphinErrorInfo::new(
+            Error::UpdateUserError => AuroraErrorInfo::new(
                 10092,
                 "update user error".to_string(),
                 "更新用户错误".to_string(),
             ),
-            Error::DeleteUserByIdError => DolphinErrorInfo::new(
+            Error::DeleteUserByIdError => AuroraErrorInfo::new(
                 10093,
                 "delete user by id error".to_string(),
                 "删除用户错误".to_string(),
             ),
-            Error::GrantProjectError => DolphinErrorInfo::new(
+            Error::GrantProjectError => AuroraErrorInfo::new(
                 10094,
                 "grant project error".to_string(),
                 "授权项目错误".to_string(),
             ),
-            Error::GrantResourceError => DolphinErrorInfo::new(
+            Error::GrantResourceError => AuroraErrorInfo::new(
                 10095,
                 "grant resource error".to_string(),
                 "授权资源错误".to_string(),
             ),
-            Error::GrantUdfFunctionError => DolphinErrorInfo::new(
+            Error::GrantUdfFunctionError => AuroraErrorInfo::new(
                 10096,
                 "grant udf function error".to_string(),
                 "授权UDF函数错误".to_string(),
             ),
-            Error::GrantDatasourceError => DolphinErrorInfo::new(
+            Error::GrantDatasourceError => AuroraErrorInfo::new(
                 10097,
                 "grant datasource error".to_string(),
                 "授权数据源错误".to_string(),
             ),
-            Error::GetUserInfoError => DolphinErrorInfo::new(
+            Error::GetUserInfoError => AuroraErrorInfo::new(
                 10098,
                 "get user info error".to_string(),
                 "获取用户信息错误".to_string(),
             ),
-            Error::UserListError => DolphinErrorInfo::new(
+            Error::UserListError => AuroraErrorInfo::new(
                 10099,
                 "user list error".to_string(),
                 "查询用户列表错误".to_string(),
             ),
-            Error::VerifyUsernameError => DolphinErrorInfo::new(
+            Error::VerifyUsernameError => AuroraErrorInfo::new(
                 10100,
                 "verify username error".to_string(),
                 "用户名验证错误".to_string(),
             ),
-            Error::UnauthorizedUserError => DolphinErrorInfo::new(
+            Error::UnauthorizedUserError => AuroraErrorInfo::new(
                 10101,
                 "unauthorized user error".to_string(),
                 "查询未授权用户错误".to_string(),
             ),
-            Error::AuthorizedUserError => DolphinErrorInfo::new(
+            Error::AuthorizedUserError => AuroraErrorInfo::new(
                 10102,
                 "authorized user error".to_string(),
                 "查询授权用户错误".to_string(),
             ),
-            Error::QueryTaskInstanceLogError => DolphinErrorInfo::new(
+            Error::QueryTaskInstanceLogError => AuroraErrorInfo::new(
                 10103,
                 "view task instance log error".to_string(),
                 "查询任务实例日志错误".to_string(),
             ),
-            Error::DownloadTaskInstanceLogFileError => DolphinErrorInfo::new(
+            Error::DownloadTaskInstanceLogFileError => AuroraErrorInfo::new(
                 10104,
                 "download task instance log file error".to_string(),
                 "下载任务日志文件错误".to_string(),
             ),
-            Error::CreateProcessDefinitionError => DolphinErrorInfo::new(
+            Error::CreateProcessDefinitionError => AuroraErrorInfo::new(
                 10105,
                 "create process definition error".to_string(),
                 "创建工作流错误".to_string(),
             ),
-            Error::VerifyProcessDefinitionNameUniqueError => DolphinErrorInfo::new(
+            Error::VerifyProcessDefinitionNameUniqueError => AuroraErrorInfo::new(
                 10106,
                 "verify process definition name unique error".to_string(),
                 "工作流定义名称验证错误".to_string(),
             ),
-            Error::UpdateProcessDefinitionError => DolphinErrorInfo::new(
+            Error::UpdateProcessDefinitionError => AuroraErrorInfo::new(
                 10107,
                 "update process definition error".to_string(),
                 "更新工作流定义错误".to_string(),
             ),
-            Error::ReleaseProcessDefinitionError => DolphinErrorInfo::new(
+            Error::ReleaseProcessDefinitionError => AuroraErrorInfo::new(
                 10108,
                 "release process definition error".to_string(),
                 "上线工作流错误".to_string(),
             ),
-            Error::QueryDetailOfProcessDefinitionError => DolphinErrorInfo::new(
+            Error::QueryDetailOfProcessDefinitionError => AuroraErrorInfo::new(
                 10109,
                 "query detail of process definition error".to_string(),
                 "查询工作流详细信息错误".to_string(),
             ),
-            Error::QueryProcessDefinitionList => DolphinErrorInfo::new(
+            Error::QueryProcessDefinitionList => AuroraErrorInfo::new(
                 10110,
                 "query process definition list".to_string(),
                 "查询工作流列表错误".to_string(),
             ),
-            Error::EncapsulationTreeviewStructureError => DolphinErrorInfo::new(
+            Error::EncapsulationTreeviewStructureError => AuroraErrorInfo::new(
                 10111,
                 "encapsulation treeview structure error".to_string(),
                 "查询工作流树形图数据错误".to_string(),
             ),
-            Error::GetTasksListByProcessDefinitionIdError => DolphinErrorInfo::new(
+            Error::GetTasksListByProcessDefinitionIdError => AuroraErrorInfo::new(
                 10112,
                 "get tasks list by process definition id error".to_string(),
                 "查询工作流定义节点信息错误".to_string(),
             ),
-            Error::QueryProcessInstanceListPagingError => DolphinErrorInfo::new(
+            Error::QueryProcessInstanceListPagingError => AuroraErrorInfo::new(
                 10113,
                 "query process instance list paging error".to_string(),
                 "分页查询工作流实例列表错误".to_string(),
             ),
-            Error::QueryTaskListByProcessInstanceIdError => DolphinErrorInfo::new(
+            Error::QueryTaskListByProcessInstanceIdError => AuroraErrorInfo::new(
                 10114,
                 "query task list by process instance id error".to_string(),
                 "查询任务实例列表错误".to_string(),
             ),
-            Error::UpdateProcessInstanceError => DolphinErrorInfo::new(
+            Error::UpdateProcessInstanceError => AuroraErrorInfo::new(
                 10115,
                 "update process instance error".to_string(),
                 "更新工作流实例错误".to_string(),
             ),
-            Error::QueryProcessInstanceByIdError => DolphinErrorInfo::new(
+            Error::QueryProcessInstanceByIdError => AuroraErrorInfo::new(
                 10116,
                 "query process instance by id error".to_string(),
                 "查询工作流实例错误".to_string(),
             ),
-            Error::DeleteProcessInstanceByIdError => DolphinErrorInfo::new(
+            Error::DeleteProcessInstanceByIdError => AuroraErrorInfo::new(
                 10117,
                 "delete process instance by id error".to_string(),
                 "删除工作流实例错误".to_string(),
             ),
-            Error::QuerySubProcessInstanceDetailInfoByTaskIdError => DolphinErrorInfo::new(
+            Error::QuerySubProcessInstanceDetailInfoByTaskIdError => AuroraErrorInfo::new(
                 10118,
                 "query sub process instance detail info by task id error".to_string(),
                 "查询子流程任务实例错误".to_string(),
             ),
             Error::QueryParentProcessInstanceDetailInfoBySubProcessInstanceIdError => {
-                DolphinErrorInfo::new(
+                AuroraErrorInfo::new(
                     10119,
                     "query parent process instance detail info by sub process instance id error"
                         .to_string(),
                     "查询子流程该工作流实例错误".to_string(),
                 )
             }
-            Error::QueryProcessInstanceAllVariablesError => DolphinErrorInfo::new(
+            Error::QueryProcessInstanceAllVariablesError => AuroraErrorInfo::new(
                 10120,
                 "query process instance all variables error".to_string(),
                 "查询工作流自定义变量信息错误".to_string(),
             ),
-            Error::EncapsulationProcessInstanceGanttStructureError => DolphinErrorInfo::new(
+            Error::EncapsulationProcessInstanceGanttStructureError => AuroraErrorInfo::new(
                 10121,
                 "encapsulation process instance gantt structure error".to_string(),
                 "查询工作流实例甘特图数据错误".to_string(),
             ),
-            Error::QueryProcessDefinitionListPagingError => DolphinErrorInfo::new(
+            Error::QueryProcessDefinitionListPagingError => AuroraErrorInfo::new(
                 10122,
                 "query process definition list paging error".to_string(),
                 "分页查询工作流定义列表错误".to_string(),
             ),
             Error::SignOutError => {
-                DolphinErrorInfo::new(10123, "sign out error".to_string(), "退出错误".to_string())
+                AuroraErrorInfo::new(10123, "sign out error".to_string(), "退出错误".to_string())
             }
-            Error::OsTenantCodeHasAlreadyExists => DolphinErrorInfo::new(
+            Error::OsTenantCodeHasAlreadyExists => AuroraErrorInfo::new(
                 10124,
                 "os tenant code has already exists".to_string(),
                 "操作系统租户已存在".to_string(),
             ),
-            Error::IpIsEmpty => DolphinErrorInfo::new(
+            Error::IpIsEmpty => AuroraErrorInfo::new(
                 10125,
                 "ip is empty".to_string(),
                 "IP地址不能为空".to_string(),
             ),
-            Error::ScheduleCronReleaseNeedNotChange => DolphinErrorInfo::new(
+            Error::ScheduleCronReleaseNeedNotChange => AuroraErrorInfo::new(
                 10126,
                 "schedule release is already {0}".to_string(),
                 "调度配置上线错误[{0}]".to_string(),
             ),
-            Error::CreateQueueError => DolphinErrorInfo::new(
+            Error::CreateQueueError => AuroraErrorInfo::new(
                 10127,
                 "create queue error".to_string(),
                 "创建队列错误".to_string(),
             ),
-            Error::QueueNotExist => DolphinErrorInfo::new(
+            Error::QueueNotExist => AuroraErrorInfo::new(
                 10128,
                 "queue {0} not exists".to_string(),
                 "队列ID[{0}]不存在".to_string(),
             ),
-            Error::QueueValueExist => DolphinErrorInfo::new(
+            Error::QueueValueExist => AuroraErrorInfo::new(
                 10129,
                 "queue value {0} already exists".to_string(),
                 "队列值[{0}]已存在".to_string(),
             ),
-            Error::QueueNameExist => DolphinErrorInfo::new(
+            Error::QueueNameExist => AuroraErrorInfo::new(
                 10130,
                 "queue name {0} already exists".to_string(),
                 "队列名称[{0}]已存在".to_string(),
             ),
-            Error::UpdateQueueError => DolphinErrorInfo::new(
+            Error::UpdateQueueError => AuroraErrorInfo::new(
                 10131,
                 "update queue error".to_string(),
                 "更新队列信息错误".to_string(),
             ),
-            Error::NeedNotUpdateQueue => DolphinErrorInfo::new(
+            Error::NeedNotUpdateQueue => AuroraErrorInfo::new(
                 10132,
                 "need not update queue".to_string(),
                 "无需更新队列信息".to_string(),
             ),
-            Error::VerifyQueueError => DolphinErrorInfo::new(
+            Error::VerifyQueueError => AuroraErrorInfo::new(
                 10133,
                 "verify queue error".to_string(),
                 "验证队列信息错误".to_string(),
             ),
-            Error::NameNull => DolphinErrorInfo::new(
+            Error::NameNull => AuroraErrorInfo::new(
                 10134,
                 "name must be not null".to_string(),
                 "名称不能为空".to_string(),
             ),
-            Error::NameExist => DolphinErrorInfo::new(
+            Error::NameExist => AuroraErrorInfo::new(
                 10135,
                 "name {0} already exists".to_string(),
                 "名称[{0}]已存在".to_string(),
             ),
             Error::SaveError => {
-                DolphinErrorInfo::new(10136, "save error".to_string(), "保存错误".to_string())
+                AuroraErrorInfo::new(10136, "save error".to_string(), "保存错误".to_string())
             }
-            Error::DeleteProjectErrorDefinesNotNull => DolphinErrorInfo::new(
+            Error::DeleteProjectErrorDefinesNotNull => AuroraErrorInfo::new(
                 10117,
                 "please delete the process definitions in project first!".to_string(),
                 "请先删除全部工作流定义".to_string(),
             ),
-            Error::BatchDeleteProcessInstanceByIdsError => DolphinErrorInfo::new(
+            Error::BatchDeleteProcessInstanceByIdsError => AuroraErrorInfo::new(
                 10138,
                 "batch delete process instance by ids {0} error".to_string(),
                 "批量删除工作流实例错误: {0}".to_string(),
             ),
-            Error::PreviewScheduleError => DolphinErrorInfo::new(
+            Error::PreviewScheduleError => AuroraErrorInfo::new(
                 10139,
                 "preview schedule error".to_string(),
                 "预览调度配置错误".to_string(),
             ),
-            Error::ParseToCronExpressionError => DolphinErrorInfo::new(
+            Error::ParseToCronExpressionError => AuroraErrorInfo::new(
                 10140,
                 "parse cron to cron expression error".to_string(),
                 "解析调度表达式错误".to_string(),
             ),
-            Error::ScheduleStartTimeEndTimeSame => DolphinErrorInfo::new(
+            Error::ScheduleStartTimeEndTimeSame => AuroraErrorInfo::new(
                 10141,
                 "The start time must not be the same as the end".to_string(),
                 "开始时间不能和结束时间一样".to_string(),
             ),
-            Error::DeleteTenantByIdFail => DolphinErrorInfo::new(
+            Error::DeleteTenantByIdFail => AuroraErrorInfo::new(
                 10142,
                 "delete tenant by id fail:for there are {0} process instances in executing using \
                  it"
                 .to_string(),
                 "删除租户失败，有[{0}]个运行中的工作流实例正在使用".to_string(),
             ),
-            Error::DeleteTenantByIdFailDefines => DolphinErrorInfo::new(
+            Error::DeleteTenantByIdFailDefines => AuroraErrorInfo::new(
                 10143,
                 "delete tenant by id fail:for there are {0} process definitions using it"
                     .to_string(),
                 "删除租户失败，有[{0}]个工作流定义正在使用".to_string(),
             ),
-            Error::DeleteTenantByIdFailUsers => DolphinErrorInfo::new(
+            Error::DeleteTenantByIdFailUsers => AuroraErrorInfo::new(
                 10144,
                 "delete tenant by id fail: for there are {0} users using it".to_string(),
                 "删除租户失败，有[{0}]个用户正在使用".to_string(),
             ),
-            Error::DeleteWorkerGroupByIdFail => DolphinErrorInfo::new(
+            Error::DeleteWorkerGroupByIdFail => AuroraErrorInfo::new(
                 10145,
                 "delete worker group by id failfor there are {0} process instances in executing \
                  using it"
                     .to_string(),
                 "删除Worker分组失败，有[{0}]个运行中的工作流实例正在使用".to_string(),
             ),
-            Error::QueryWorkerGroupFail => DolphinErrorInfo::new(
+            Error::QueryWorkerGroupFail => AuroraErrorInfo::new(
                 10146,
                 "query worker group fail ".to_string(),
                 "查询worker分组失败".to_string(),
             ),
-            Error::DeleteWorkerGroupFail => DolphinErrorInfo::new(
+            Error::DeleteWorkerGroupFail => AuroraErrorInfo::new(
                 10147,
                 "delete worker group fail ".to_string(),
                 "删除worker分组失败".to_string(),
             ),
-            Error::UserDisabled => DolphinErrorInfo::new(
+            Error::UserDisabled => AuroraErrorInfo::new(
                 10148,
                 "The current user is disabled".to_string(),
                 "当前用户已停用".to_string(),
             ),
-            Error::CopyProcessDefinitionError => DolphinErrorInfo::new(
+            Error::CopyProcessDefinitionError => AuroraErrorInfo::new(
                 10149,
                 "copy process definition from {0} to {1} error : {2}".to_string(),
                 "从{0}复制工作流到{1}错误 : {2}".to_string(),
             ),
-            Error::MoveProcessDefinitionError => DolphinErrorInfo::new(
+            Error::MoveProcessDefinitionError => AuroraErrorInfo::new(
                 10150,
                 "move process definition from {0} to {1} error : {2}".to_string(),
                 "从{0}移动工作流到{1}错误 : {2}".to_string(),
             ),
-            Error::SwitchProcessDefinitionVersionError => DolphinErrorInfo::new(
+            Error::SwitchProcessDefinitionVersionError => AuroraErrorInfo::new(
                 10151,
                 "Switch process definition version error".to_string(),
                 "切换工作流版本出错".to_string(),
             ),
             Error::SwitchProcessDefinitionVersionNotExistProcessDefinitionError => {
-                DolphinErrorInfo::new(
+                AuroraErrorInfo::new(
                     10152,
                     "Switch process definition version error: not exists process definition: \
                      [process definition id {0}]"
@@ -3264,7 +3264,7 @@ impl From<Error> for DolphinErrorInfo {
                 )
             }
             Error::SwitchProcessDefinitionVersionNotExistProcessDefinitionVersionError => {
-                DolphinErrorInfo::new(
+                AuroraErrorInfo::new(
                     10153,
                     "Switch process defi:nition version error: not exists process definition \
                      version: [process definition id {0}] [version number {1}]"
@@ -3273,1011 +3273,1011 @@ impl From<Error> for DolphinErrorInfo {
                         .to_string(),
                 )
             }
-            Error::QueryProcessDefinitionVersionsError => DolphinErrorInfo::new(
+            Error::QueryProcessDefinitionVersionsError => AuroraErrorInfo::new(
                 10154,
                 "query process definition versions error".to_string(),
                 "查询工作流历史版本信息出错".to_string(),
             ),
-            Error::DeleteProcessDefinitionVersionError => DolphinErrorInfo::new(
+            Error::DeleteProcessDefinitionVersionError => AuroraErrorInfo::new(
                 10156,
                 "delete process definition version error".to_string(),
                 "删除工作流历史版本出错".to_string(),
             ),
-            Error::QueryUserCreatedProjectError => DolphinErrorInfo::new(
+            Error::QueryUserCreatedProjectError => AuroraErrorInfo::new(
                 10157,
                 "query user created project error error".to_string(),
                 "查询用户创建的项目错误".to_string(),
             ),
-            Error::ProcessDefinitionCodesIsEmpty => DolphinErrorInfo::new(
+            Error::ProcessDefinitionCodesIsEmpty => AuroraErrorInfo::new(
                 10158,
                 "process definition codes is empty".to_string(),
                 "工作流CODES不能为空".to_string(),
             ),
-            Error::BatchCopyProcessDefinitionError => DolphinErrorInfo::new(
+            Error::BatchCopyProcessDefinitionError => AuroraErrorInfo::new(
                 10159,
                 "batch copy process definition error".to_string(),
                 "复制工作流错误".to_string(),
             ),
-            Error::BatchMoveProcessDefinitionError => DolphinErrorInfo::new(
+            Error::BatchMoveProcessDefinitionError => AuroraErrorInfo::new(
                 10160,
                 "batch move process definition error".to_string(),
                 "移动工作流错误".to_string(),
             ),
-            Error::QueryWorkflowLineageError => DolphinErrorInfo::new(
+            Error::QueryWorkflowLineageError => AuroraErrorInfo::new(
                 10161,
                 "query workflow lineage error".to_string(),
                 "查询血缘失败".to_string(),
             ),
-            Error::QueryAuthorizedAndUserCreatedProjectError => DolphinErrorInfo::new(
+            Error::QueryAuthorizedAndUserCreatedProjectError => AuroraErrorInfo::new(
                 10162,
                 "query authorized and user created project error error".to_string(),
                 "查询授权的和用户创建的项目错误".to_string(),
             ),
-            Error::DeleteProcessDefinitionByCodeFail => DolphinErrorInfo::new(
+            Error::DeleteProcessDefinitionByCodeFail => AuroraErrorInfo::new(
                 10163,
                 "delete process definition by code fail.to_string(), for there are {0} process \
                  instances in executing using it"
                     .to_string(),
                 "删除工作流定义失败，有[{0}]个运行中的工作流实例正在使用".to_string(),
             ),
-            Error::CheckOsTenantCodeError => DolphinErrorInfo::new(
+            Error::CheckOsTenantCodeError => AuroraErrorInfo::new(
                 10164,
                 "Tenant code invalid.to_string(), should follow linux's users naming conventions"
                     .to_string(),
                 "非法的租户名，需要遵守 Linux 用户命名规范".to_string(),
             ),
-            Error::ForceTaskSuccessError => DolphinErrorInfo::new(
+            Error::ForceTaskSuccessError => AuroraErrorInfo::new(
                 10165,
                 "force task success error".to_string(),
                 "强制成功任务实例错误".to_string(),
             ),
-            Error::TaskInstanceStateOperationError => DolphinErrorInfo::new(
+            Error::TaskInstanceStateOperationError => AuroraErrorInfo::new(
                 10166,
                 "the status of task instance {0} is {1}.to_string(),Cannot perform force success \
                  operation"
                     .to_string(),
                 "任务实例[{0}]的状态是[{1}]，无法执行强制成功操作".to_string(),
             ),
-            Error::DatasourceTypeNotExist => DolphinErrorInfo::new(
+            Error::DatasourceTypeNotExist => AuroraErrorInfo::new(
                 10167,
                 "data source type not exist".to_string(),
                 "数据源类型不存在".to_string(),
             ),
-            Error::ProcessDefinitionNameExist => DolphinErrorInfo::new(
+            Error::ProcessDefinitionNameExist => AuroraErrorInfo::new(
                 10168,
                 "process definition name {0} already exists".to_string(),
                 "工作流定义名称[{0}]已存在".to_string(),
             ),
-            Error::DatasourceDbTypeIllegal => DolphinErrorInfo::new(
+            Error::DatasourceDbTypeIllegal => AuroraErrorInfo::new(
                 10169,
                 "datasource type illegal".to_string(),
                 "数据源类型参数不合法".to_string(),
             ),
-            Error::DatasourcePortIllegal => DolphinErrorInfo::new(
+            Error::DatasourcePortIllegal => AuroraErrorInfo::new(
                 10170,
                 "datasource port illegal".to_string(),
                 "数据源端口参数不合法".to_string(),
             ),
-            Error::DatasourceOtherParamsIllegal => DolphinErrorInfo::new(
+            Error::DatasourceOtherParamsIllegal => AuroraErrorInfo::new(
                 10171,
                 "datasource other params illegal".to_string(),
                 "数据源其他参数不合法".to_string(),
             ),
-            Error::DatasourceNameIllegal => DolphinErrorInfo::new(
+            Error::DatasourceNameIllegal => AuroraErrorInfo::new(
                 10172,
                 "datasource name illegal".to_string(),
                 "数据源名称不合法".to_string(),
             ),
-            Error::DatasourceHostIllegal => DolphinErrorInfo::new(
+            Error::DatasourceHostIllegal => AuroraErrorInfo::new(
                 10173,
                 "datasource host illegal".to_string(),
                 "数据源HOST不合法".to_string(),
             ),
-            Error::DeleteWorkerGroupNotExist => DolphinErrorInfo::new(
+            Error::DeleteWorkerGroupNotExist => AuroraErrorInfo::new(
                 10174,
                 "delete worker group not exist ".to_string(),
                 "删除worker分组不存在".to_string(),
             ),
-            Error::CreateWorkerGroupForbiddenInDocker => DolphinErrorInfo::new(
+            Error::CreateWorkerGroupForbiddenInDocker => AuroraErrorInfo::new(
                 10175,
                 "create worker group forbidden in docker ".to_string(),
                 "创建worker分组在docker中禁止".to_string(),
             ),
-            Error::DeleteWorkerGroupForbiddenInDocker => DolphinErrorInfo::new(
+            Error::DeleteWorkerGroupForbiddenInDocker => AuroraErrorInfo::new(
                 10176,
                 "delete worker group forbidden in docker ".to_string(),
                 "删除worker分组在docker中禁止".to_string(),
             ),
-            Error::WorkerAddressInvalid => DolphinErrorInfo::new(
+            Error::WorkerAddressInvalid => AuroraErrorInfo::new(
                 10177,
                 "worker address {0} invalid".to_string(),
                 "worker地址[{0}]无效".to_string(),
             ),
-            Error::QueryWorkerAddressListFail => DolphinErrorInfo::new(
+            Error::QueryWorkerAddressListFail => AuroraErrorInfo::new(
                 10178,
                 "query worker address list fail ".to_string(),
                 "查询worker地址列表失败".to_string(),
             ),
-            Error::TransformProjectOwnership => DolphinErrorInfo::new(
+            Error::TransformProjectOwnership => AuroraErrorInfo::new(
                 10179,
                 "Please transform project ownership [{0}]".to_string(),
                 "请先转移项目所有权[{0}]".to_string(),
             ),
-            Error::QueryAlertGroupError => DolphinErrorInfo::new(
+            Error::QueryAlertGroupError => AuroraErrorInfo::new(
                 10180,
                 "query alert group error".to_string(),
                 "查询告警组错误".to_string(),
             ),
-            Error::CurrentLoginUserTenantNotExist => DolphinErrorInfo::new(
+            Error::CurrentLoginUserTenantNotExist => AuroraErrorInfo::new(
                 10181,
                 "the tenant of the currently login user is not specified".to_string(),
                 "未指定当前登录用户的租户".to_string(),
             ),
-            Error::RevokeProjectError => DolphinErrorInfo::new(
+            Error::RevokeProjectError => AuroraErrorInfo::new(
                 10182,
                 "revoke project error".to_string(),
                 "撤销项目授权错误".to_string(),
             ),
-            Error::QueryAuthorizedUser => DolphinErrorInfo::new(
+            Error::QueryAuthorizedUser => AuroraErrorInfo::new(
                 10183,
                 "query authorized user error".to_string(),
                 "查询拥有项目权限的用户错误".to_string(),
             ),
-            Error::ProjectNotExist => DolphinErrorInfo::new(
+            Error::ProjectNotExist => AuroraErrorInfo::new(
                 10190,
                 "This project was not found. Please refresh page.".to_string(),
                 "该项目不存在".to_string(),
             ),
 
-            Error::TaskInstanceHostIsNull => DolphinErrorInfo::new(
+            Error::TaskInstanceHostIsNull => AuroraErrorInfo::new(
                 10191,
                 "task instance host is null ".to_string(),
                 "任务实例host为空".to_string(),
             ),
-            Error::QueryExecutingWorkflowError => DolphinErrorInfo::new(
+            Error::QueryExecutingWorkflowError => AuroraErrorInfo::new(
                 10192,
                 "query executing workflow error".to_string(),
                 "查询运行的工作流实例错误".to_string(),
             ),
-            Error::UdfFunctionNotExist => DolphinErrorInfo::new(
+            Error::UdfFunctionNotExist => AuroraErrorInfo::new(
                 20001,
                 "UDF function not found".to_string(),
                 "UDF函数不存在".to_string(),
             ),
-            Error::UdfFunctionExists => DolphinErrorInfo::new(
+            Error::UdfFunctionExists => AuroraErrorInfo::new(
                 20002,
                 "UDF function already exists".to_string(),
                 "UDF函数已存在".to_string(),
             ),
-            Error::ResourceNotExist => DolphinErrorInfo::new(
+            Error::ResourceNotExist => AuroraErrorInfo::new(
                 20004,
                 "resource not exist".to_string(),
                 "资源不存在".to_string(),
             ),
-            Error::ResourceExist => DolphinErrorInfo::new(
+            Error::ResourceExist => AuroraErrorInfo::new(
                 20005,
                 "resource already exists".to_string(),
                 "资源已存在".to_string(),
             ),
-            Error::ResourceSuffixNotSupportView => DolphinErrorInfo::new(
+            Error::ResourceSuffixNotSupportView => AuroraErrorInfo::new(
                 20006,
                 "resource suffix do not support online viewing".to_string(),
                 "资源文件后缀不支持查看".to_string(),
             ),
-            Error::ResourceSizeExceedLimit => DolphinErrorInfo::new(
+            Error::ResourceSizeExceedLimit => AuroraErrorInfo::new(
                 20007,
                 "upload resource file size exceeds limit".to_string(),
                 "上传资源文件大小超过限制".to_string(),
             ),
-            Error::ResourceSuffixForbidChange => DolphinErrorInfo::new(
+            Error::ResourceSuffixForbidChange => AuroraErrorInfo::new(
                 20008,
                 "resource suffix not allowed to be modified".to_string(),
                 "资源文件后缀不支持修改".to_string(),
             ),
-            Error::UdfResourceSuffixNotJar => DolphinErrorInfo::new(
+            Error::UdfResourceSuffixNotJar => AuroraErrorInfo::new(
                 20009,
                 "UDF resource suffix name must be jar".to_string(),
                 "UDF资源文件后缀名只支持[jar]".to_string(),
             ),
-            Error::HdfsCopyFail => DolphinErrorInfo::new(
+            Error::HdfsCopyFail => AuroraErrorInfo::new(
                 20010,
                 "hdfs copy {0} -> {1} fail".to_string(),
                 "hdfs复制失败：[{0}] -> [{1}]".to_string(),
             ),
-            Error::ResourceFileExist => DolphinErrorInfo::new(
+            Error::ResourceFileExist => AuroraErrorInfo::new(
                 20011,
                 "resource file {0} already exists !".to_string(),
                 "资源文件[{0}]已存在".to_string(),
             ),
-            Error::ResourceFileNotExist => DolphinErrorInfo::new(
+            Error::ResourceFileNotExist => AuroraErrorInfo::new(
                 20012,
                 "resource file {0} not exists !".to_string(),
                 "资源文件[{0}]不存在".to_string(),
             ),
-            Error::UdfResourceIsBound => DolphinErrorInfo::new(
+            Error::UdfResourceIsBound => AuroraErrorInfo::new(
                 20013,
                 "udf resource file is bound by UDF functions:{0}".to_string(),
                 "udf函数绑定了资源文件[{0}]".to_string(),
             ),
-            Error::ResourceIsUsed => DolphinErrorInfo::new(
+            Error::ResourceIsUsed => AuroraErrorInfo::new(
                 20014,
                 "resource file is used by process definition".to_string(),
                 "资源文件被上线的流程定义使用了".to_string(),
             ),
-            Error::ParentResourceNotExist => DolphinErrorInfo::new(
+            Error::ParentResourceNotExist => AuroraErrorInfo::new(
                 20015,
                 "parent resource not exist".to_string(),
                 "父资源文件不存在".to_string(),
             ),
-            Error::ResourceNotExistOrNoPermission => DolphinErrorInfo::new(
+            Error::ResourceNotExistOrNoPermission => AuroraErrorInfo::new(
                 20016,
                 "resource not exist or no permission:please view the task node and remove error \
                  resource"
                     .to_string(),
                 "请检查任务节点并移除无权限或者已删除的资源".to_string(),
             ),
-            Error::ResourceIsAuthorized => DolphinErrorInfo::new(
+            Error::ResourceIsAuthorized => AuroraErrorInfo::new(
                 20017,
                 "resource is authorized to user {0}:suffix not allowed to be modified".to_string(),
                 "资源文件已授权其他用户[{0}]".to_string(),
             ),
-            Error::UserNoOperationPerm => DolphinErrorInfo::new(
+            Error::UserNoOperationPerm => AuroraErrorInfo::new(
                 30001,
                 "user has no operation privilege".to_string(),
                 "当前用户没有操作权限".to_string(),
             ),
-            Error::UserNoOperationProjectPerm => DolphinErrorInfo::new(
+            Error::UserNoOperationProjectPerm => AuroraErrorInfo::new(
                 30002,
                 "user {0} is not has project {1} permission".to_string(),
                 "当前用户[{0}]没有[{1}]项目的操作权限".to_string(),
             ),
-            Error::ProcessInstanceNotExist => DolphinErrorInfo::new(
+            Error::ProcessInstanceNotExist => AuroraErrorInfo::new(
                 50001,
                 "process instance {0} does not exist".to_string(),
                 "工作流实例[{0}]不存在".to_string(),
             ),
-            Error::ProcessInstanceExist => DolphinErrorInfo::new(
+            Error::ProcessInstanceExist => AuroraErrorInfo::new(
                 50002,
                 "process instance {0} already exists".to_string(),
                 "工作流实例[{0}]已存在".to_string(),
             ),
-            Error::ProcessDefineNotExist => DolphinErrorInfo::new(
+            Error::ProcessDefineNotExist => AuroraErrorInfo::new(
                 50003,
                 "process definition {0} does not exist".to_string(),
                 "工作流定义[{0}]不存在".to_string(),
             ),
-            Error::ProcessDefineNotRelease => DolphinErrorInfo::new(
+            Error::ProcessDefineNotRelease => AuroraErrorInfo::new(
                 50004,
                 "process definition {0} process version {1} not online".to_string(),
                 "工作流定义[{0}] 工作流版本[{1}]不是上线状态".to_string(),
             ),
-            Error::SubProcessDefineNotRelease => DolphinErrorInfo::new(
+            Error::SubProcessDefineNotRelease => AuroraErrorInfo::new(
                 50004,
                 "exist sub process definition not online".to_string(),
                 "存在子工作流定义不是上线状态".to_string(),
             ),
-            Error::ProcessInstanceAlreadyChanged => DolphinErrorInfo::new(
+            Error::ProcessInstanceAlreadyChanged => AuroraErrorInfo::new(
                 50005,
                 "the status of process instance {0} is already {1}".to_string(),
                 "工作流实例[{0}]的状态已经是[{1}]".to_string(),
             ),
-            Error::ProcessInstanceStateOperationError => DolphinErrorInfo::new(
+            Error::ProcessInstanceStateOperationError => AuroraErrorInfo::new(
                 50006,
                 "the status of process instance {0} is {1}.to_string(),Cannot perform the \
                  operation"
                     .to_string(),
                 "工作流实例[{0}]的状态是[{1}]，无法执行该操作".to_string(),
             ),
-            Error::SubProcessInstanceNotExist => DolphinErrorInfo::new(
+            Error::SubProcessInstanceNotExist => AuroraErrorInfo::new(
                 50007,
                 "the task belong to process instance does not exist".to_string(),
                 "子工作流实例不存在".to_string(),
             ),
-            Error::ProcessDefineNotAllowedEdit => DolphinErrorInfo::new(
+            Error::ProcessDefineNotAllowedEdit => AuroraErrorInfo::new(
                 50008,
                 "process definition {0} does not allow edit".to_string(),
                 "工作流定义[{0}]不允许修改".to_string(),
             ),
-            Error::ProcessInstanceExecutingCommand => DolphinErrorInfo::new(
+            Error::ProcessInstanceExecutingCommand => AuroraErrorInfo::new(
                 50009,
                 "process instance {0} is executing command".to_string(),
                 "工作流实例[{0}]正在执行命令".to_string(),
             ),
-            Error::ProcessInstanceNotSubProcessInstance => DolphinErrorInfo::new(
+            Error::ProcessInstanceNotSubProcessInstance => AuroraErrorInfo::new(
                 50010,
                 "process instance {0} is not sub process instance".to_string(),
                 "工作流实例[{0}]不是子工作流实例".to_string(),
             ),
-            Error::TaskInstanceStateCountError => DolphinErrorInfo::new(
+            Error::TaskInstanceStateCountError => AuroraErrorInfo::new(
                 50011,
                 "task instance state count error".to_string(),
                 "查询各状态任务实例数错误".to_string(),
             ),
-            Error::CountProcessInstanceStateError => DolphinErrorInfo::new(
+            Error::CountProcessInstanceStateError => AuroraErrorInfo::new(
                 50012,
                 "count process instance state error".to_string(),
                 "查询各状态流程实例数错误".to_string(),
             ),
-            Error::CountProcessDefinitionUserError => DolphinErrorInfo::new(
+            Error::CountProcessDefinitionUserError => AuroraErrorInfo::new(
                 50013,
                 "count process definition user error".to_string(),
                 "查询各用户流程定义数错误".to_string(),
             ),
-            Error::StartProcessInstanceError => DolphinErrorInfo::new(
+            Error::StartProcessInstanceError => AuroraErrorInfo::new(
                 50014,
                 "start process instance error".to_string(),
                 "运行工作流实例错误".to_string(),
             ),
-            Error::BatchStartProcessInstanceError => DolphinErrorInfo::new(
+            Error::BatchStartProcessInstanceError => AuroraErrorInfo::new(
                 50014,
                 "batch start process instance error: {0}".to_string(),
                 "批量运行工作流实例错误: {0}".to_string(),
             ),
-            Error::ProcessInstanceError => DolphinErrorInfo::new(
+            Error::ProcessInstanceError => AuroraErrorInfo::new(
                 50014,
                 "process instance delete error: {0}".to_string(),
                 "工作流实例删除[{0}]错误".to_string(),
             ),
-            Error::ExecuteProcessInstanceError => DolphinErrorInfo::new(
+            Error::ExecuteProcessInstanceError => AuroraErrorInfo::new(
                 50015,
                 "execute process instance error".to_string(),
                 "操作工作流实例错误".to_string(),
             ),
-            Error::CheckProcessDefinitionError => DolphinErrorInfo::new(
+            Error::CheckProcessDefinitionError => AuroraErrorInfo::new(
                 50016,
                 "check process definition error".to_string(),
                 "工作流定义错误".to_string(),
             ),
-            Error::QueryRecipientsAndCopyersByProcessDefinitionError => DolphinErrorInfo::new(
+            Error::QueryRecipientsAndCopyersByProcessDefinitionError => AuroraErrorInfo::new(
                 50017,
                 "query recipients and copyers by process definition error".to_string(),
                 "查询收件人和抄送人错误".to_string(),
             ),
-            Error::DataIsNotValid => DolphinErrorInfo::new(
+            Error::DataIsNotValid => AuroraErrorInfo::new(
                 50017,
                 "data {0} not valid".to_string(),
                 "数据[{0}]无效".to_string(),
             ),
-            Error::DataIsNull => DolphinErrorInfo::new(
+            Error::DataIsNull => AuroraErrorInfo::new(
                 50018,
                 "data {0} is null".to_string(),
                 "数据[{0}]不能为空".to_string(),
             ),
-            Error::ProcessNodeHasCycle => DolphinErrorInfo::new(
+            Error::ProcessNodeHasCycle => AuroraErrorInfo::new(
                 50019,
                 "process node has cycle".to_string(),
                 "流程节点间存在循环依赖".to_string(),
             ),
-            Error::ProcessNodeSParameterInvalid => DolphinErrorInfo::new(
+            Error::ProcessNodeSParameterInvalid => AuroraErrorInfo::new(
                 50020,
                 "process node {0} parameter invalid".to_string(),
                 "流程节点[{0}]参数无效".to_string(),
             ),
-            Error::ProcessDefineStateOnline => DolphinErrorInfo::new(
+            Error::ProcessDefineStateOnline => AuroraErrorInfo::new(
                 50021,
                 "process definition [{0}] is already online".to_string(),
                 "工作流定义[{0}]已上线".to_string(),
             ),
-            Error::DeleteProcessDefineByCodeError => DolphinErrorInfo::new(
+            Error::DeleteProcessDefineByCodeError => AuroraErrorInfo::new(
                 50022,
                 "delete process definition by code error".to_string(),
                 "删除工作流定义错误".to_string(),
             ),
-            Error::ScheduleCronStateOnline => DolphinErrorInfo::new(
+            Error::ScheduleCronStateOnline => AuroraErrorInfo::new(
                 50023,
                 "the status of schedule {0} is already online".to_string(),
                 "调度配置[{0}]已上线".to_string(),
             ),
-            Error::DeleteScheduleCronByIdError => DolphinErrorInfo::new(
+            Error::DeleteScheduleCronByIdError => AuroraErrorInfo::new(
                 50024,
                 "delete schedule by id error".to_string(),
                 "删除调度配置错误".to_string(),
             ),
-            Error::BatchDeleteProcessDefineError => DolphinErrorInfo::new(
+            Error::BatchDeleteProcessDefineError => AuroraErrorInfo::new(
                 50025,
                 "batch delete process definition error".to_string(),
                 "批量删除工作流定义错误".to_string(),
             ),
-            Error::BatchDeleteProcessDefineByCodesError => DolphinErrorInfo::new(
+            Error::BatchDeleteProcessDefineByCodesError => AuroraErrorInfo::new(
                 50026,
                 "batch delete process definition by codes {0} error".to_string(),
                 "批量删除工作流定义[{0}]错误".to_string(),
             ),
-            Error::DeleteProcessDefineByCodesError => DolphinErrorInfo::new(
+            Error::DeleteProcessDefineByCodesError => AuroraErrorInfo::new(
                 50026,
                 "delete process definition by codes {0} error".to_string(),
                 "删除工作流定义[{0}]错误".to_string(),
             ),
-            Error::TenantNotSuitable => DolphinErrorInfo::new(
+            Error::TenantNotSuitable => AuroraErrorInfo::new(
                 50027,
                 "there is not any tenant suitable: please choose a tenant available.".to_string(),
                 "没有合适的租户，请选择可用的租户".to_string(),
             ),
-            Error::ExportProcessDefineByIdError => DolphinErrorInfo::new(
+            Error::ExportProcessDefineByIdError => AuroraErrorInfo::new(
                 50028,
                 "export process definition by id error".to_string(),
                 "导出工作流定义错误".to_string(),
             ),
-            Error::BatchExportProcessDefineByIdsError => DolphinErrorInfo::new(
+            Error::BatchExportProcessDefineByIdsError => AuroraErrorInfo::new(
                 50028,
                 "batch export process definition by ids error".to_string(),
                 "批量导出工作流定义错误".to_string(),
             ),
-            Error::ImportProcessDefineError => DolphinErrorInfo::new(
+            Error::ImportProcessDefineError => AuroraErrorInfo::new(
                 50029,
                 "import process definition error".to_string(),
                 "导入工作流定义错误".to_string(),
             ),
-            Error::TaskDefineNotExist => DolphinErrorInfo::new(
+            Error::TaskDefineNotExist => AuroraErrorInfo::new(
                 50030,
                 "task definition [{0}] does not exist".to_string(),
                 "任务定义[{0}]不存在".to_string(),
             ),
-            Error::CreateProcessTaskRelationError => DolphinErrorInfo::new(
+            Error::CreateProcessTaskRelationError => AuroraErrorInfo::new(
                 50032,
                 "create process task relation error".to_string(),
                 "创建工作流任务关系错误".to_string(),
             ),
-            Error::ProcessTaskRelationNotExist => DolphinErrorInfo::new(
+            Error::ProcessTaskRelationNotExist => AuroraErrorInfo::new(
                 50033,
                 "process task relation [{0}] does not exist".to_string(),
                 "工作流任务关系[{0}]不存在".to_string(),
             ),
-            Error::ProcessTaskRelationExist => DolphinErrorInfo::new(
+            Error::ProcessTaskRelationExist => AuroraErrorInfo::new(
                 50034,
                 "process task relation is already exist  processCode:[{0}]".to_string(),
                 "工作流任务关系已存在".to_string(),
             ),
-            Error::ProcessDagIsEmpty => DolphinErrorInfo::new(
+            Error::ProcessDagIsEmpty => AuroraErrorInfo::new(
                 50035,
                 "process dag is empty".to_string(),
                 "工作流dag是空".to_string(),
             ),
-            Error::CheckProcessTaskRelationError => DolphinErrorInfo::new(
+            Error::CheckProcessTaskRelationError => AuroraErrorInfo::new(
                 50036,
                 "check process task relation error".to_string(),
                 "工作流任务关系参数错误".to_string(),
             ),
-            Error::CreateTaskDefinitionError => DolphinErrorInfo::new(
+            Error::CreateTaskDefinitionError => AuroraErrorInfo::new(
                 50037,
                 "create task definition error".to_string(),
                 "创建任务错误".to_string(),
             ),
-            Error::UpdateTaskDefinitionError => DolphinErrorInfo::new(
+            Error::UpdateTaskDefinitionError => AuroraErrorInfo::new(
                 50038,
                 "update task definition error".to_string(),
                 "更新任务定义错误".to_string(),
             ),
-            Error::QueryTaskDefinitionVersionsError => DolphinErrorInfo::new(
+            Error::QueryTaskDefinitionVersionsError => AuroraErrorInfo::new(
                 50039,
                 "query task definition versions error".to_string(),
                 "查询任务历史版本信息出错".to_string(),
             ),
-            Error::SwitchTaskDefinitionVersionError => DolphinErrorInfo::new(
+            Error::SwitchTaskDefinitionVersionError => AuroraErrorInfo::new(
                 50040,
                 "Switch task definition version error".to_string(),
                 "切换任务版本出错".to_string(),
             ),
-            Error::DeleteTaskDefinitionVersionError => DolphinErrorInfo::new(
+            Error::DeleteTaskDefinitionVersionError => AuroraErrorInfo::new(
                 50041,
                 "delete task definition version error".to_string(),
                 "删除任务历史版本出错".to_string(),
             ),
-            Error::DeleteTaskDefineByCodeError => DolphinErrorInfo::new(
+            Error::DeleteTaskDefineByCodeError => AuroraErrorInfo::new(
                 50042,
                 "delete task definition by code error".to_string(),
                 "删除任务定义错误".to_string(),
             ),
-            Error::QueryDetailOfTaskDefinitionError => DolphinErrorInfo::new(
+            Error::QueryDetailOfTaskDefinitionError => AuroraErrorInfo::new(
                 50043,
                 "query detail of task definition error".to_string(),
                 "查询任务详细信息错误".to_string(),
             ),
-            Error::QueryTaskDefinitionListPagingError => DolphinErrorInfo::new(
+            Error::QueryTaskDefinitionListPagingError => AuroraErrorInfo::new(
                 50044,
                 "query task definition list paging error".to_string(),
                 "分页查询任务定义列表错误".to_string(),
             ),
-            Error::TaskDefinitionNameExisted => DolphinErrorInfo::new(
+            Error::TaskDefinitionNameExisted => AuroraErrorInfo::new(
                 50045,
                 "task definition name [{0}] already exists".to_string(),
                 "任务定义名称[{0}]已经存在".to_string(),
             ),
-            Error::ReleaseTaskDefinitionError => DolphinErrorInfo::new(
+            Error::ReleaseTaskDefinitionError => AuroraErrorInfo::new(
                 50046,
                 "release task definition error".to_string(),
                 "上线任务错误".to_string(),
             ),
-            Error::MoveProcessTaskRelationError => DolphinErrorInfo::new(
+            Error::MoveProcessTaskRelationError => AuroraErrorInfo::new(
                 50047,
                 "move process task relation error".to_string(),
                 "移动任务到其他工作流错误".to_string(),
             ),
-            Error::DeleteTaskProcessRelationError => DolphinErrorInfo::new(
+            Error::DeleteTaskProcessRelationError => AuroraErrorInfo::new(
                 50048,
                 "delete process task relation error".to_string(),
                 "删除工作流任务关系错误".to_string(),
             ),
-            Error::QueryTaskProcessRelationError => DolphinErrorInfo::new(
+            Error::QueryTaskProcessRelationError => AuroraErrorInfo::new(
                 50049,
                 "query process task relation error".to_string(),
                 "查询工作流任务关系错误".to_string(),
             ),
-            Error::TaskDefineStateOnline => DolphinErrorInfo::new(
+            Error::TaskDefineStateOnline => AuroraErrorInfo::new(
                 50050,
                 "task definition [{0}] is already online".to_string(),
                 "任务定义[{0}]已上线".to_string(),
             ),
-            Error::TaskHasDownstream => DolphinErrorInfo::new(
+            Error::TaskHasDownstream => AuroraErrorInfo::new(
                 50051,
                 "Task exists downstream [{0}] dependence".to_string(),
                 "任务存在下游[{0}]依赖".to_string(),
             ),
-            Error::TaskHasUpstream => DolphinErrorInfo::new(
+            Error::TaskHasUpstream => AuroraErrorInfo::new(
                 50052,
                 "Task [{0}] exists upstream dependence".to_string(),
                 "任务[{0}]存在上游依赖".to_string(),
             ),
-            Error::MainTableUsingVersion => DolphinErrorInfo::new(
+            Error::MainTableUsingVersion => AuroraErrorInfo::new(
                 50053,
                 "the version that the master table is using".to_string(),
                 "主表正在使用该版本".to_string(),
             ),
-            Error::ProjectProcessNotMatch => DolphinErrorInfo::new(
+            Error::ProjectProcessNotMatch => AuroraErrorInfo::new(
                 50054,
                 "the project and the process is not match".to_string(),
                 "项目和工作流不匹配".to_string(),
             ),
-            Error::DeleteEdgeError => DolphinErrorInfo::new(
+            Error::DeleteEdgeError => AuroraErrorInfo::new(
                 50055,
                 "delete edge error".to_string(),
                 "删除工作流任务连接线错误".to_string(),
             ),
-            Error::NotSupportUpdateTaskDefinition => DolphinErrorInfo::new(
+            Error::NotSupportUpdateTaskDefinition => AuroraErrorInfo::new(
                 50056,
                 "task state does not support modification".to_string(),
                 "当前任务不支持修改".to_string(),
             ),
-            Error::NotSupportCopyTaskType => DolphinErrorInfo::new(
+            Error::NotSupportCopyTaskType => AuroraErrorInfo::new(
                 50057,
                 "task type [{0}] does not support copy".to_string(),
                 "不支持复制的任务类型[{0}]".to_string(),
             ),
-            Error::HdfsNotStartup => DolphinErrorInfo::new(
+            Error::HdfsNotStartup => AuroraErrorInfo::new(
                 60001,
                 "hdfs not startup".to_string(),
                 "hdfs未启用".to_string(),
             ),
-            Error::StorageNotStartup => DolphinErrorInfo::new(
+            Error::StorageNotStartup => AuroraErrorInfo::new(
                 60002,
                 "storage not startup".to_string(),
                 "存储未启用".to_string(),
             ),
-            Error::S3CannotRename => DolphinErrorInfo::new(
+            Error::S3CannotRename => AuroraErrorInfo::new(
                 60003,
                 "directory cannot be renamed".to_string(),
                 "S3无法重命名文件夹".to_string(),
             ),
-            Error::QueryDatabaseStateError => DolphinErrorInfo::new(
+            Error::QueryDatabaseStateError => AuroraErrorInfo::new(
                 70001,
                 "query database state error".to_string(),
                 "查询数据库状态错误".to_string(),
             ),
-            Error::CreateAccessTokenError => DolphinErrorInfo::new(
+            Error::CreateAccessTokenError => AuroraErrorInfo::new(
                 70010,
                 "create access token error".to_string(),
                 "创建访问token错误".to_string(),
             ),
-            Error::GenerateTokenError => DolphinErrorInfo::new(
+            Error::GenerateTokenError => AuroraErrorInfo::new(
                 70011,
                 "generate token error".to_string(),
                 "生成token错误".to_string(),
             ),
-            Error::QueryAccesstokenListPagingError => DolphinErrorInfo::new(
+            Error::QueryAccesstokenListPagingError => AuroraErrorInfo::new(
                 70012,
                 "query access token list paging error".to_string(),
                 "分页查询访问token列表错误".to_string(),
             ),
-            Error::UpdateAccessTokenError => DolphinErrorInfo::new(
+            Error::UpdateAccessTokenError => AuroraErrorInfo::new(
                 70013,
                 "update access token error".to_string(),
                 "更新访问token错误".to_string(),
             ),
-            Error::DeleteAccessTokenError => DolphinErrorInfo::new(
+            Error::DeleteAccessTokenError => AuroraErrorInfo::new(
                 70014,
                 "delete access token error".to_string(),
                 "删除访问token错误".to_string(),
             ),
-            Error::AccessTokenNotExist => DolphinErrorInfo::new(
+            Error::AccessTokenNotExist => AuroraErrorInfo::new(
                 70015,
                 "access token not exist".to_string(),
                 "访问token不存在".to_string(),
             ),
-            Error::QueryAccesstokenByUserError => DolphinErrorInfo::new(
+            Error::QueryAccesstokenByUserError => AuroraErrorInfo::new(
                 70016,
                 "query access token by user error".to_string(),
                 "查询访问指定用户的token错误".to_string(),
             ),
-            Error::CommandStateCountError => DolphinErrorInfo::new(
+            Error::CommandStateCountError => AuroraErrorInfo::new(
                 80001,
                 "task instance state count error".to_string(),
                 "查询各状态任务实例数错误".to_string(),
             ),
-            Error::NegativeSizeNumberError => DolphinErrorInfo::new(
+            Error::NegativeSizeNumberError => AuroraErrorInfo::new(
                 80002,
                 "query size number error".to_string(),
                 "查询size错误".to_string(),
             ),
-            Error::StartTimeBiggerThanEndTimeError => DolphinErrorInfo::new(
+            Error::StartTimeBiggerThanEndTimeError => AuroraErrorInfo::new(
                 80003,
                 "start time bigger than end time error".to_string(),
                 "开始时间在结束时间之后错误".to_string(),
             ),
-            Error::QueueCountError => DolphinErrorInfo::new(
+            Error::QueueCountError => AuroraErrorInfo::new(
                 90001,
                 "queue count error".to_string(),
                 "查询队列数据错误".to_string(),
             ),
-            Error::KerberosStartupState => DolphinErrorInfo::new(
+            Error::KerberosStartupState => AuroraErrorInfo::new(
                 100001,
                 "get kerberos startup state error".to_string(),
                 "获取kerberos启动状态错误".to_string(),
             ),
-            Error::QueryAuditLogListPaging => DolphinErrorInfo::new(
+            Error::QueryAuditLogListPaging => AuroraErrorInfo::new(
                 10057,
                 "query audit log list paging".to_string(),
                 "分页查询日志列表错误".to_string(),
             ),
-            Error::PluginNotAUiComponent => DolphinErrorInfo::new(
+            Error::PluginNotAUiComponent => AuroraErrorInfo::new(
                 110001,
                 "query plugin error: this plugin has no UI component".to_string(),
                 "查询插件错误，此插件无UI组件".to_string(),
             ),
-            Error::QueryPluginsResultIsNull => DolphinErrorInfo::new(
+            Error::QueryPluginsResultIsNull => AuroraErrorInfo::new(
                 110002,
                 "query alarm plugins result is empty:please check the startup status of the alarm \
                  component and confirm that the relevant alarm plugin is successfully registered"
                     .to_string(),
                 "查询告警插件为空".to_string(),
             ),
-            Error::QueryPluginsError => DolphinErrorInfo::new(
+            Error::QueryPluginsError => AuroraErrorInfo::new(
                 110003,
                 "query plugins error".to_string(),
                 "查询插件错误".to_string(),
             ),
-            Error::QueryPluginDetailResultIsNull => DolphinErrorInfo::new(
+            Error::QueryPluginDetailResultIsNull => AuroraErrorInfo::new(
                 110004,
                 "query plugin detail result is null".to_string(),
                 "查询插件详情结果为空".to_string(),
             ),
-            Error::UpdateAlertPluginInstanceError => DolphinErrorInfo::new(
+            Error::UpdateAlertPluginInstanceError => AuroraErrorInfo::new(
                 110005,
                 "update alert plugin instance error".to_string(),
                 "更新告警组和告警组插件实例错误".to_string(),
             ),
-            Error::DeleteAlertPluginInstanceError => DolphinErrorInfo::new(
+            Error::DeleteAlertPluginInstanceError => AuroraErrorInfo::new(
                 110006,
                 "delete alert plugin instance error".to_string(),
                 "删除告警组和告警组插件实例错误".to_string(),
             ),
-            Error::GetAlertPluginInstanceError => DolphinErrorInfo::new(
+            Error::GetAlertPluginInstanceError => AuroraErrorInfo::new(
                 110007,
                 "get alert plugin instance error".to_string(),
                 "获取告警组和告警组插件实例错误".to_string(),
             ),
-            Error::CreateAlertPluginInstanceError => DolphinErrorInfo::new(
+            Error::CreateAlertPluginInstanceError => AuroraErrorInfo::new(
                 110008,
                 "create alert plugin instance error".to_string(),
                 "创建告警组和告警组插件实例错误".to_string(),
             ),
-            Error::QueryAllAlertPluginInstanceError => DolphinErrorInfo::new(
+            Error::QueryAllAlertPluginInstanceError => AuroraErrorInfo::new(
                 110009,
                 "query all alert plugin instance error".to_string(),
                 "查询所有告警实例失败".to_string(),
             ),
-            Error::PluginInstanceAlreadyExit => DolphinErrorInfo::new(
+            Error::PluginInstanceAlreadyExit => AuroraErrorInfo::new(
                 110010,
                 "plugin instance already exit".to_string(),
                 "该告警插件实例已存在".to_string(),
             ),
-            Error::ListPagingAlertPluginInstanceError => DolphinErrorInfo::new(
+            Error::ListPagingAlertPluginInstanceError => AuroraErrorInfo::new(
                 110011,
                 "query plugin instance page error".to_string(),
                 "分页查询告警实例失败".to_string(),
             ),
-            Error::DeleteAlertPluginInstanceErrorHasAlertGroupAssociated => DolphinErrorInfo::new(
+            Error::DeleteAlertPluginInstanceErrorHasAlertGroupAssociated => AuroraErrorInfo::new(
                 110012,
                 "failed to delete the alert instance there is an alarm group associated with this \
                  alert instance"
                     .to_string(),
                 "删除告警实例失败，存在与此告警实例关联的警报组".to_string(),
             ),
-            Error::ProcessDefinitionVersionIsUsed => DolphinErrorInfo::new(
+            Error::ProcessDefinitionVersionIsUsed => AuroraErrorInfo::new(
                 110013,
                 "this process definition version is used".to_string(),
                 "此工作流定义版本被使用".to_string(),
             ),
-            Error::CreateEnvironmentError => DolphinErrorInfo::new(
+            Error::CreateEnvironmentError => AuroraErrorInfo::new(
                 120001,
                 "create environment error".to_string(),
                 "创建环境失败".to_string(),
             ),
-            Error::EnvironmentNameExists => DolphinErrorInfo::new(
+            Error::EnvironmentNameExists => AuroraErrorInfo::new(
                 120002,
                 "this environment name [{0}] already exists".to_string(),
                 "环境名称[{0}]已经存在".to_string(),
             ),
-            Error::EnvironmentNameIsNull => DolphinErrorInfo::new(
+            Error::EnvironmentNameIsNull => AuroraErrorInfo::new(
                 120003,
                 "this environment name shouldn't be empty.".to_string(),
                 "环境名称不能为空".to_string(),
             ),
-            Error::EnvironmentConfigIsNull => DolphinErrorInfo::new(
+            Error::EnvironmentConfigIsNull => AuroraErrorInfo::new(
                 120004,
                 "this environment config shouldn't be empty.".to_string(),
                 "环境配置信息不能为空".to_string(),
             ),
-            Error::UpdateEnvironmentError => DolphinErrorInfo::new(
+            Error::UpdateEnvironmentError => AuroraErrorInfo::new(
                 120005,
                 "update environment [{0}] info error".to_string(),
                 "更新环境[{0}]信息失败".to_string(),
             ),
-            Error::DeleteEnvironmentError => DolphinErrorInfo::new(
+            Error::DeleteEnvironmentError => AuroraErrorInfo::new(
                 120006,
                 "delete environment error".to_string(),
                 "删除环境信息失败".to_string(),
             ),
-            Error::DeleteEnvironmentRelatedTaskExists => DolphinErrorInfo::new(
+            Error::DeleteEnvironmentRelatedTaskExists => AuroraErrorInfo::new(
                 120007,
                 "delete environment error, related task exists".to_string(),
                 "删除环境信息失败，存在关联任务".to_string(),
             ),
-            Error::QueryEnvironmentByNameError => DolphinErrorInfo::new(
+            Error::QueryEnvironmentByNameError => AuroraErrorInfo::new(
                 1200008,
                 "not found environment [{0}] ".to_string(),
                 "查询环境名称[{0}]信息不存在".to_string(),
             ),
-            Error::QueryEnvironmentByCodeError => DolphinErrorInfo::new(
+            Error::QueryEnvironmentByCodeError => AuroraErrorInfo::new(
                 1200009,
                 "not found environment [{0}] ".to_string(),
                 "查询环境编码[{0}]不存在".to_string(),
             ),
-            Error::QueryEnvironmentError => DolphinErrorInfo::new(
+            Error::QueryEnvironmentError => AuroraErrorInfo::new(
                 1200010,
                 "login user query environment error".to_string(),
                 "分页查询环境列表错误".to_string(),
             ),
-            Error::VerifyEnvironmentError => DolphinErrorInfo::new(
+            Error::VerifyEnvironmentError => AuroraErrorInfo::new(
                 1200011,
                 "verify environment error".to_string(),
                 "验证环境信息错误".to_string(),
             ),
-            Error::GetRuleFormCreateJsonError => DolphinErrorInfo::new(
+            Error::GetRuleFormCreateJsonError => AuroraErrorInfo::new(
                 1200012,
                 "get rule form create json error".to_string(),
                 "获取规则 FROM-CREATE-JSON 错误".to_string(),
             ),
-            Error::QueryRuleListPagingError => DolphinErrorInfo::new(
+            Error::QueryRuleListPagingError => AuroraErrorInfo::new(
                 1200013,
                 "query rule list paging error".to_string(),
                 "获取规则分页列表错误".to_string(),
             ),
-            Error::QueryRuleListError => DolphinErrorInfo::new(
+            Error::QueryRuleListError => AuroraErrorInfo::new(
                 1200014,
                 "query rule list error".to_string(),
                 "获取规则列表错误".to_string(),
             ),
-            Error::QueryRuleInputEntryListError => DolphinErrorInfo::new(
+            Error::QueryRuleInputEntryListError => AuroraErrorInfo::new(
                 1200015,
                 "query rule list error".to_string(),
                 "获取规则列表错误".to_string(),
             ),
-            Error::QueryExecuteResultListPagingError => DolphinErrorInfo::new(
+            Error::QueryExecuteResultListPagingError => AuroraErrorInfo::new(
                 1200016,
                 "query execute result list paging error".to_string(),
                 "获取数据质量任务结果分页错误".to_string(),
             ),
-            Error::GetDatasourceOptionsError => DolphinErrorInfo::new(
+            Error::GetDatasourceOptionsError => AuroraErrorInfo::new(
                 1200017,
                 "get datasource options error".to_string(),
                 "获取数据源Options错误".to_string(),
             ),
-            Error::GetDatasourceTablesError => DolphinErrorInfo::new(
+            Error::GetDatasourceTablesError => AuroraErrorInfo::new(
                 1200018,
                 "get datasource tables error".to_string(),
                 "获取数据源表列表错误".to_string(),
             ),
-            Error::GetDatasourceTableColumnsError => DolphinErrorInfo::new(
+            Error::GetDatasourceTableColumnsError => AuroraErrorInfo::new(
                 1200019,
                 "get datasource table columns error".to_string(),
                 "获取数据源表列名错误".to_string(),
             ),
-            Error::TaskGroupNameExist => DolphinErrorInfo::new(
+            Error::TaskGroupNameExist => AuroraErrorInfo::new(
                 130001,
                 "this task group name is repeated in a project".to_string(),
                 "该任务组名称在一个项目中已经使用".to_string(),
             ),
-            Error::TaskGroupSizeError => DolphinErrorInfo::new(
+            Error::TaskGroupSizeError => AuroraErrorInfo::new(
                 130002,
                 "task group size error".to_string(),
                 "任务组大小应该为大于1的整数".to_string(),
             ),
-            Error::TaskGroupStatusError => DolphinErrorInfo::new(
+            Error::TaskGroupStatusError => AuroraErrorInfo::new(
                 130003,
                 "task group status error".to_string(),
                 "任务组已经被关闭".to_string(),
             ),
-            Error::TaskGroupFull => DolphinErrorInfo::new(
+            Error::TaskGroupFull => AuroraErrorInfo::new(
                 130004,
                 "task group is full".to_string(),
                 "任务组已经满了".to_string(),
             ),
-            Error::TaskGroupUsedSizeError => DolphinErrorInfo::new(
+            Error::TaskGroupUsedSizeError => AuroraErrorInfo::new(
                 130005,
                 "the used size number of task group is dirty".to_string(),
                 "任务组使用的容量发生了变化".to_string(),
             ),
-            Error::TaskGroupQueueReleaseError => DolphinErrorInfo::new(
+            Error::TaskGroupQueueReleaseError => AuroraErrorInfo::new(
                 130006,
                 "failed to release task group queue".to_string(),
                 "任务组资源释放时出现了错误".to_string(),
             ),
-            Error::TaskGroupQueueAwakeError => DolphinErrorInfo::new(
+            Error::TaskGroupQueueAwakeError => AuroraErrorInfo::new(
                 130007,
                 "awake waiting task failed".to_string(),
                 "任务组使唤醒等待任务时发生了错误".to_string(),
             ),
-            Error::CreateTaskGroupError => DolphinErrorInfo::new(
+            Error::CreateTaskGroupError => AuroraErrorInfo::new(
                 130008,
                 "create task group error".to_string(),
                 "创建任务组错误".to_string(),
             ),
-            Error::UpdateTaskGroupError => DolphinErrorInfo::new(
+            Error::UpdateTaskGroupError => AuroraErrorInfo::new(
                 130009,
                 "update task group list error".to_string(),
                 "更新任务组错误".to_string(),
             ),
-            Error::QueryTaskGroupListError => DolphinErrorInfo::new(
+            Error::QueryTaskGroupListError => AuroraErrorInfo::new(
                 130010,
                 "query task group list error".to_string(),
                 "查询任务组列表错误".to_string(),
             ),
-            Error::CloseTaskGroupError => DolphinErrorInfo::new(
+            Error::CloseTaskGroupError => AuroraErrorInfo::new(
                 130011,
                 "close task group error".to_string(),
                 "关闭任务组错误".to_string(),
             ),
-            Error::StartTaskGroupError => DolphinErrorInfo::new(
+            Error::StartTaskGroupError => AuroraErrorInfo::new(
                 130012,
                 "start task group error".to_string(),
                 "启动任务组错误".to_string(),
             ),
-            Error::QueryTaskGroupQueueListError => DolphinErrorInfo::new(
+            Error::QueryTaskGroupQueueListError => AuroraErrorInfo::new(
                 130013,
                 "query task group queue list error".to_string(),
                 "查询任务组队列列表错误".to_string(),
             ),
-            Error::TaskGroupCacheStartFailed => DolphinErrorInfo::new(
+            Error::TaskGroupCacheStartFailed => AuroraErrorInfo::new(
                 130014,
                 "cache start failed".to_string(),
                 "任务组相关的缓存启动失败".to_string(),
             ),
-            Error::EnvironmentWorkerGroupsIsInvalid => DolphinErrorInfo::new(
+            Error::EnvironmentWorkerGroupsIsInvalid => AuroraErrorInfo::new(
                 130015,
                 "environment worker groups is invalid format".to_string(),
                 "环境关联的工作组参数解析错误".to_string(),
             ),
-            Error::UpdateEnvironmentWorkerGroupRelationError => DolphinErrorInfo::new(
+            Error::UpdateEnvironmentWorkerGroupRelationError => AuroraErrorInfo::new(
                 130016,
                 "update environment worker group relation error".to_string(),
                 "更新环境关联的工作组错误".to_string(),
             ),
-            Error::TaskGroupQueueAlreadyStart => DolphinErrorInfo::new(
+            Error::TaskGroupQueueAlreadyStart => AuroraErrorInfo::new(
                 130017,
                 "task group queue already start".to_string(),
                 "节点已经获取任务组资源".to_string(),
             ),
-            Error::TaskGroupStatusClosed => DolphinErrorInfo::new(
+            Error::TaskGroupStatusClosed => AuroraErrorInfo::new(
                 130018,
                 "The task group has been closed.".to_string(),
                 "任务组已经被关闭".to_string(),
             ),
-            Error::TaskGroupStatusOpened => DolphinErrorInfo::new(
+            Error::TaskGroupStatusOpened => AuroraErrorInfo::new(
                 130019,
                 "The task group has been opened.".to_string(),
                 "任务组已经被开启".to_string(),
             ),
-            Error::NotAllowToDisableOwnAccount => DolphinErrorInfo::new(
+            Error::NotAllowToDisableOwnAccount => AuroraErrorInfo::new(
                 130020,
                 "Not allow to disable your own account".to_string(),
                 "不能停用自己的账号".to_string(),
             ),
-            Error::NotAllowToDeleteDefaultAlarmGroup => DolphinErrorInfo::new(
+            Error::NotAllowToDeleteDefaultAlarmGroup => AuroraErrorInfo::new(
                 130030,
                 "Not allow to delete the default alarm group ".to_string(),
                 "不能删除默认告警组".to_string(),
             ),
-            Error::TimeZoneIllegal => DolphinErrorInfo::new(
+            Error::TimeZoneIllegal => AuroraErrorInfo::new(
                 130031,
                 "time zone [{0}] is illegal".to_string(),
                 "时区参数 [{0}] 不合法".to_string(),
             ),
-            Error::QueryK8sNamespaceListPagingError => DolphinErrorInfo::new(
+            Error::QueryK8sNamespaceListPagingError => AuroraErrorInfo::new(
                 1300001,
                 "login user query k8s namespace list paging error".to_string(),
                 "分页查询k8s名称空间列表错误".to_string(),
             ),
-            Error::K8sNamespaceExist => DolphinErrorInfo::new(
+            Error::K8sNamespaceExist => AuroraErrorInfo::new(
                 1300002,
                 "k8s namespace {0} already exists".to_string(),
                 "k8s命名空间[{0}]已存在".to_string(),
             ),
-            Error::CreateK8sNamespaceError => DolphinErrorInfo::new(
+            Error::CreateK8sNamespaceError => AuroraErrorInfo::new(
                 1300003,
                 "create k8s namespace error".to_string(),
                 "创建k8s命名空间错误".to_string(),
             ),
-            Error::UpdateK8sNamespaceError => DolphinErrorInfo::new(
+            Error::UpdateK8sNamespaceError => AuroraErrorInfo::new(
                 1300004,
                 "update k8s namespace error".to_string(),
                 "更新k8s命名空间信息错误".to_string(),
             ),
-            Error::K8sNamespaceNotExist => DolphinErrorInfo::new(
+            Error::K8sNamespaceNotExist => AuroraErrorInfo::new(
                 1300005,
                 "k8s namespace {0} not exists".to_string(),
                 "命名空间ID[{0}]不存在".to_string(),
             ),
-            Error::K8sClientOpsError => DolphinErrorInfo::new(
+            Error::K8sClientOpsError => AuroraErrorInfo::new(
                 1300006,
                 "k8s error with exception {0}".to_string(),
                 "k8s操作报错[{0}]".to_string(),
             ),
-            Error::VerifyK8sNamespaceError => DolphinErrorInfo::new(
+            Error::VerifyK8sNamespaceError => AuroraErrorInfo::new(
                 1300007,
                 "verify k8s and namespace error".to_string(),
                 "验证k8s命名空间信息错误".to_string(),
             ),
-            Error::DeleteK8sNamespaceByIdError => DolphinErrorInfo::new(
+            Error::DeleteK8sNamespaceByIdError => AuroraErrorInfo::new(
                 1300008,
                 "delete k8s namespace by id error".to_string(),
                 "删除命名空间错误".to_string(),
             ),
-            Error::VerifyParameterNameFailed => DolphinErrorInfo::new(
+            Error::VerifyParameterNameFailed => AuroraErrorInfo::new(
                 1300009,
                 "The file name verify failed".to_string(),
                 "文件命名校验失败".to_string(),
             ),
-            Error::StoreOperateCreateError => DolphinErrorInfo::new(
+            Error::StoreOperateCreateError => AuroraErrorInfo::new(
                 1300010,
                 "create the resource failed".to_string(),
                 "存储操作失败".to_string(),
             ),
-            Error::GrantK8sNamespaceError => DolphinErrorInfo::new(
+            Error::GrantK8sNamespaceError => AuroraErrorInfo::new(
                 1300011,
                 "grant namespace error".to_string(),
                 "授权资源错误".to_string(),
             ),
-            Error::QueryUnauthorizedNamespaceError => DolphinErrorInfo::new(
+            Error::QueryUnauthorizedNamespaceError => AuroraErrorInfo::new(
                 1300012,
                 "query unauthorized namespace error".to_string(),
                 "查询未授权命名空间错误".to_string(),
             ),
-            Error::QueryAuthorizedNamespaceError => DolphinErrorInfo::new(
+            Error::QueryAuthorizedNamespaceError => AuroraErrorInfo::new(
                 1300013,
                 "query authorized namespace error".to_string(),
                 "查询授权命名空间错误".to_string(),
             ),
-            Error::QueryCanUseK8sClusterError => DolphinErrorInfo::new(
+            Error::QueryCanUseK8sClusterError => AuroraErrorInfo::new(
                 1300014,
                 "login user query can used k8s cluster list error".to_string(),
                 "查询可用k8s集群错误".to_string(),
             ),
-            Error::ResourceFullNameTooLongError => DolphinErrorInfo::new(
+            Error::ResourceFullNameTooLongError => AuroraErrorInfo::new(
                 1300015,
                 "resource's fullname is too long error".to_string(),
                 "资源文件名过长".to_string(),
             ),
-            Error::TenantFullNameTooLongError => DolphinErrorInfo::new(
+            Error::TenantFullNameTooLongError => AuroraErrorInfo::new(
                 1300016,
                 "tenant's fullname is too long error".to_string(),
                 "租户名过长".to_string(),

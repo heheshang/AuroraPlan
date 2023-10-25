@@ -1,6 +1,6 @@
 
 [database]
-url = "postgres://superset:superset@tx:15432/dolphinscheduler"
+url = "postgres://superset:superset@tx:15432/Aurorascheduler"
 
 [server]
 host = "0.0.0.0"

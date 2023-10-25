@@ -99,7 +99,7 @@ mod tests {
     #[test]
     fn config_is_work() {
         let run_mode = env::var("RUN_MODE").unwrap_or_else(|_| "development".into());
-        // get dolphin-api-config path from env
+        // get Aurora-api-config path from env
         let config_path = get_dao_config_path();
         println!("config_path: {:?}", config_path);
         let s = Config::builder()
