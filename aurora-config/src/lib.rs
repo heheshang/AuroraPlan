@@ -32,13 +32,14 @@ fn glb_config_dir() -> PathBuf {
             let full_path = current_dir.join(filename);
             // 将完整路径转换为字符串并打印
             let full_path_string = full_path.to_str().unwrap();
+            println!("full_path_string: {:?}", full_path_string);
             let path = full_path_string
                 .split("AuroraPlan")
                 .collect::<Vec<_>>()
                 .first()
                 .unwrap()
                 .to_string();
-
+            println!("path: {:?}", path);
             Path::new(&path).join("AuroraPlan").join("aurora-config")
         }
     }
