@@ -19,13 +19,6 @@ impl Message {
         Message { code, descp }
     }
 }
-/// let vikings = HashMap::from([
-///     (Viking::new("Einar", "Norway"), 25),
-///     (Viking::new("Olaf", "Denmark"), 24),
-///
-///     (Viking::new("Harald", "Iceland"), 12),
-/// ]);
-
 impl SqoopQueryType {
     pub fn get_message(&self) -> Message {
         match self {
