@@ -1,0 +1,14 @@
+[registries.crates-io]
+# protocol = "sparse"
+
+#.cargo目录下创建文件config，文件内容如下
+# 放到 `$HOME/.cargo/config` 文件中
+[source.crates-io]
+registry = "https://github.com/rust-lang/crates.io-index"
+
+# 指定镜像
+replace-with = 'myres' # 如：tuna、sjtu、ustc，或者 rustcc
+
+[source.myres]
+registry = "https://ghproxy.com/https://github.com/rust-lang/crates.io-index"
+
