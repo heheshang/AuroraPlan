@@ -1,0 +1,104 @@
+syntax="proto3";
+
+package ds_udfs;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+//import "google/protobuf/timestamp.proto";
+
+
+message DsUdfs {
+    string id=1;
+    int32 user_id=2;
+    optional int32 ip=3;
+    // google.protobuf.Timestamp last_login_time=4 ;
+    optional string last_login_time=4 ;
+}
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsUdfsService {
+  rpc ListDsUdfss(ListDsUdfssRequest) returns (ListDsUdfssResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsUdfss"
+    };
+  }
+
+  rpc GetDsUdfs(GetDsUdfsRequest) returns (DsUdfs) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsUdfss/*}"
+    };
+  }
+
+  rpc CreateDsUdfs(CreateDsUdfsRequest) returns (DsUdfs) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsUdfss"
+      body: "DsUdfs"
+    };
+  }
+
+  rpc UpdateDsUdfs(UpdateDsUdfsRequest) returns (DsUdfs) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsUdfs.name=DsUdfss/*}"
+      body: "DsUdfs"
+    };
+  }
+
+  rpc DeleteDsUdfs(DeleteDsUdfsRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsUdfss/*}"
+    };
+  }
+}
+
+// message DsUdfs {
+// ! This should be defined elsewhere
+// }
+
+message ListDsUdfssRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListDsUdfssResponse {
+  // The field name should match the noun "DsUdfs" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated DsUdfs DsUdfss = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetDsUdfsRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateDsUdfsRequest {
+  // The parent resource name where the DsUdfs is to be created.
+  string parent = 1;
+
+  // The DsUdfs id to use for this DsUdfs.
+  string DsUdfs_id = 2;
+
+  // The DsUdfs resource to create.
+  // The field name should match the Noun in the method name.
+  DsUdfs DsUdfs = 3;
+}
+
+message UpdateDsUdfsRequest {
+  // The DsUdfs resource which replaces the resource on the server.
+  DsUdfs DsUdfs = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteDsUdfsRequest {
+  // The resource name of the DsUdfs to be deleted.
+  string name = 1;
+}

@@ -1,0 +1,105 @@
+syntax="proto3";
+
+package qrtz_cron_triggers;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+message QrtzCronTriggers{
+
+    string sched_name=1;
+    string trigger_name=2;
+    string trigger_group=3;
+    string cron_expression=4;
+    optional string time_zone_id=5;
+}
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service QrtzCronTriggersService {
+  rpc ListQrtzCronTriggerss(ListQrtzCronTriggerssRequest) returns (ListQrtzCronTriggerssResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/QrtzCronTriggerss"
+    };
+  }
+
+  rpc GetQrtzCronTriggers(GetQrtzCronTriggersRequest) returns (QrtzCronTriggers) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=QrtzCronTriggerss/*}"
+    };
+  }
+
+  rpc CreateQrtzCronTriggers(CreateQrtzCronTriggersRequest) returns (QrtzCronTriggers) {
+    option (google.api.http) = {
+      post: "/v1alpha1/QrtzCronTriggerss"
+      body: "QrtzCronTriggers"
+    };
+  }
+
+  rpc UpdateQrtzCronTriggers(UpdateQrtzCronTriggersRequest) returns (QrtzCronTriggers) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{QrtzCronTriggers.name=QrtzCronTriggerss/*}"
+      body: "QrtzCronTriggers"
+    };
+  }
+
+  rpc DeleteQrtzCronTriggers(DeleteQrtzCronTriggersRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=QrtzCronTriggerss/*}"
+    };
+  }
+}
+
+// message QrtzCronTriggers {
+// ! This should be defined elsewhere
+// }
+
+message ListQrtzCronTriggerssRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListQrtzCronTriggerssResponse {
+  // The field name should match the noun "QrtzCronTriggers" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated QrtzCronTriggers QrtzCronTriggerss = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetQrtzCronTriggersRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateQrtzCronTriggersRequest {
+  // The parent resource name where the QrtzCronTriggers is to be created.
+  string parent = 1;
+
+  // The QrtzCronTriggers id to use for this QrtzCronTriggers.
+  string QrtzCronTriggers_id = 2;
+
+  // The QrtzCronTriggers resource to create.
+  // The field name should match the Noun in the method name.
+  QrtzCronTriggers QrtzCronTriggers = 3;
+}
+
+message UpdateQrtzCronTriggersRequest {
+  // The QrtzCronTriggers resource which replaces the resource on the server.
+  QrtzCronTriggers QrtzCronTriggers = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteQrtzCronTriggersRequest {
+  // The resource name of the QrtzCronTriggers to be deleted.
+  string name = 1;
+}

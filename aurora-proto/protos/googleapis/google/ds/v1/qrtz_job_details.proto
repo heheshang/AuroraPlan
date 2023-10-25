@@ -1,0 +1,110 @@
+syntax="proto3";
+
+package qrtz_job_details;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+message QrtzJobDetails{
+
+    string sched_name = 1;
+    string  job_name=2;
+    string job_group=3;
+    optional string description=4;
+    string job_class_name=5;
+    bool is_durable=6;
+    bool is_nonconcurrent=7;
+    bool is_update_data=8;
+    bool requests_recovery=9;
+    optional bytes job_data=10;
+
+}
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service QrtzJobDetailsService {
+  rpc ListQrtzJobDetailss(ListQrtzJobDetailssRequest) returns (ListQrtzJobDetailssResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/QrtzJobDetailss"
+    };
+  }
+
+  rpc GetQrtzJobDetails(GetQrtzJobDetailsRequest) returns (QrtzJobDetails) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=QrtzJobDetailss/*}"
+    };
+  }
+
+  rpc CreateQrtzJobDetails(CreateQrtzJobDetailsRequest) returns (QrtzJobDetails) {
+    option (google.api.http) = {
+      post: "/v1alpha1/QrtzJobDetailss"
+      body: "QrtzJobDetails"
+    };
+  }
+
+  rpc UpdateQrtzJobDetails(UpdateQrtzJobDetailsRequest) returns (QrtzJobDetails) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{QrtzJobDetails.name=QrtzJobDetailss/*}"
+      body: "QrtzJobDetails"
+    };
+  }
+
+  rpc DeleteQrtzJobDetails(DeleteQrtzJobDetailsRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=QrtzJobDetailss/*}"
+    };
+  }
+}
+
+// message QrtzJobDetails {
+// ! This should be defined elsewhere
+// }
+
+message ListQrtzJobDetailssRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListQrtzJobDetailssResponse {
+  // The field name should match the noun "QrtzJobDetails" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated QrtzJobDetails QrtzJobDetailss = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetQrtzJobDetailsRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateQrtzJobDetailsRequest {
+  // The parent resource name where the QrtzJobDetails is to be created.
+  string parent = 1;
+
+  // The QrtzJobDetails id to use for this QrtzJobDetails.
+  string QrtzJobDetails_id = 2;
+
+  // The QrtzJobDetails resource to create.
+  // The field name should match the Noun in the method name.
+  QrtzJobDetails QrtzJobDetails = 3;
+}
+
+message UpdateQrtzJobDetailsRequest {
+  // The QrtzJobDetails resource which replaces the resource on the server.
+  QrtzJobDetails QrtzJobDetails = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteQrtzJobDetailsRequest {
+  // The resource name of the QrtzJobDetails to be deleted.
+  string name = 1;
+}

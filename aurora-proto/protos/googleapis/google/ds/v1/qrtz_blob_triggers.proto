@@ -1,0 +1,105 @@
+syntax="proto3";
+
+package qrtz_blob_triggers;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+
+message QrtzBlobTrigger{
+
+    string sched_name=1;
+    string trigger_name=2;
+    string trigger_group=3;
+    optional bytes blob_data=4;
+
+}
+
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service QrtzBlobTriggerService {
+  rpc ListQrtzBlobTriggers(ListQrtzBlobTriggersRequest) returns (ListQrtzBlobTriggersResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/QrtzBlobTriggers"
+    };
+  }
+
+  rpc GetQrtzBlobTrigger(GetQrtzBlobTriggerRequest) returns (QrtzBlobTrigger) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=QrtzBlobTriggers/*}"
+    };
+  }
+
+  rpc CreateQrtzBlobTrigger(CreateQrtzBlobTriggerRequest) returns (QrtzBlobTrigger) {
+    option (google.api.http) = {
+      post: "/v1alpha1/QrtzBlobTriggers"
+      body: "QrtzBlobTrigger"
+    };
+  }
+
+  rpc UpdateQrtzBlobTrigger(UpdateQrtzBlobTriggerRequest) returns (QrtzBlobTrigger) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{QrtzBlobTrigger.name=QrtzBlobTriggers/*}"
+      body: "QrtzBlobTrigger"
+    };
+  }
+
+  rpc DeleteQrtzBlobTrigger(DeleteQrtzBlobTriggerRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=QrtzBlobTriggers/*}"
+    };
+  }
+}
+
+// message QrtzBlobTrigger {
+// ! This should be defined elsewhere
+// }
+
+message ListQrtzBlobTriggersRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+  int32 page_num = 2;
+}
+
+message ListQrtzBlobTriggersResponse {
+  // The field name should match the noun "QrtzBlobTrigger" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated QrtzBlobTrigger QrtzBlobTriggers = 1;
+
+}
+
+message GetQrtzBlobTriggerRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateQrtzBlobTriggerRequest {
+  // The parent resource name where the QrtzBlobTrigger is to be created.
+  string parent = 1;
+
+  // The QrtzBlobTrigger id to use for this QrtzBlobTrigger.
+  string QrtzBlobTrigger_id = 2;
+
+  // The QrtzBlobTrigger resource to create.
+  // The field name should match the Noun in the method name.
+  QrtzBlobTrigger QrtzBlobTrigger = 3;
+}
+
+message UpdateQrtzBlobTriggerRequest {
+  // The QrtzBlobTrigger resource which replaces the resource on the server.
+  QrtzBlobTrigger QrtzBlobTrigger = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteQrtzBlobTriggerRequest {
+  // The resource name of the QrtzBlobTrigger to be deleted.
+  string name = 1;
+}

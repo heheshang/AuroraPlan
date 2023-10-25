@@ -1,0 +1,115 @@
+
+syntax="proto3";
+
+package qrtz_fired_triggers;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+message QrtzFiredTriggers{
+
+
+  string sched_name=1;
+    string entry_id=2;
+    string trigger_name=3;
+    string trigger_group=4;
+    string instance_name=5;
+    int64 fired_time=6;
+    int64 sched_time=7;
+    int32 priority=8;
+    string state=9;
+    optional string job_name=10;
+    optional string job_group=11;
+    optional bool  is_nonconcurrent=12;
+    optional bool requests_recovery=13;
+}
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service QrtzFiredTriggersService {
+  rpc ListQrtzFiredTriggerss(ListQrtzFiredTriggerssRequest) returns (ListQrtzFiredTriggerssResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/QrtzFiredTriggerss"
+    };
+  }
+
+  rpc GetQrtzFiredTriggers(GetQrtzFiredTriggersRequest) returns (QrtzFiredTriggers) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=QrtzFiredTriggerss/*}"
+    };
+  }
+
+  rpc CreateQrtzFiredTriggers(CreateQrtzFiredTriggersRequest) returns (QrtzFiredTriggers) {
+    option (google.api.http) = {
+      post: "/v1alpha1/QrtzFiredTriggerss"
+      body: "QrtzFiredTriggers"
+    };
+  }
+
+  rpc UpdateQrtzFiredTriggers(UpdateQrtzFiredTriggersRequest) returns (QrtzFiredTriggers) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{QrtzFiredTriggers.name=QrtzFiredTriggerss/*}"
+      body: "QrtzFiredTriggers"
+    };
+  }
+
+  rpc DeleteQrtzFiredTriggers(DeleteQrtzFiredTriggersRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=QrtzFiredTriggerss/*}"
+    };
+  }
+}
+
+// message QrtzFiredTriggers {
+// ! This should be defined elsewhere
+// }
+
+message ListQrtzFiredTriggerssRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListQrtzFiredTriggerssResponse {
+  // The field name should match the noun "QrtzFiredTriggers" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated QrtzFiredTriggers QrtzFiredTriggerss = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetQrtzFiredTriggersRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateQrtzFiredTriggersRequest {
+  // The parent resource name where the QrtzFiredTriggers is to be created.
+  string parent = 1;
+
+  // The QrtzFiredTriggers id to use for this QrtzFiredTriggers.
+  string QrtzFiredTriggers_id = 2;
+
+  // The QrtzFiredTriggers resource to create.
+  // The field name should match the Noun in the method name.
+  QrtzFiredTriggers QrtzFiredTriggers = 3;
+}
+
+message UpdateQrtzFiredTriggersRequest {
+  // The QrtzFiredTriggers resource which replaces the resource on the server.
+  QrtzFiredTriggers QrtzFiredTriggers = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteQrtzFiredTriggersRequest {
+  // The resource name of the QrtzFiredTriggers to be deleted.
+  string name = 1;
+}

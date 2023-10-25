@@ -1,0 +1,113 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+package ds_dq_task_statistics_value;
+
+
+
+message DsDqTaskStatisticsValue {
+
+     int32 id=1 ;
+     int32 process_definition_id=2 ;
+     optional int32 task_instance_id=3 ;
+     int32 rule_id=4 ;
+     string unique_code=5 ;
+     optional string statistics_name=6 ;
+     optional float statistics_value=7 ;
+     optional string data_time=8 ;
+     optional string create_time=9 ;
+     optional string update_time=10 ;
+}
+
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsDqTaskStatisticsValueService {
+  rpc ListDsDqTaskStatisticsValues(ListDsDqTaskStatisticsValuesRequest) returns (ListDsDqTaskStatisticsValuesResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsDqTaskStatisticsValues"
+    };
+  }
+
+  rpc GetDsDqTaskStatisticsValue(GetDsDqTaskStatisticsValueRequest) returns (DsDqTaskStatisticsValue) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsDqTaskStatisticsValues/*}"
+    };
+  }
+
+  rpc CreateDsDqTaskStatisticsValue(CreateDsDqTaskStatisticsValueRequest) returns (DsDqTaskStatisticsValue) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsDqTaskStatisticsValues"
+      body: "DsDqTaskStatisticsValue"
+    };
+  }
+
+  rpc UpdateDsDqTaskStatisticsValue(UpdateDsDqTaskStatisticsValueRequest) returns (DsDqTaskStatisticsValue) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsDqTaskStatisticsValue.name=DsDqTaskStatisticsValues/*}"
+      body: "DsDqTaskStatisticsValue"
+    };
+  }
+
+  rpc DeleteDsDqTaskStatisticsValue(DeleteDsDqTaskStatisticsValueRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsDqTaskStatisticsValues/*}"
+    };
+  }
+}
+
+// message DsDqTaskStatisticsValue {
+// ! This should be defined elsewhere
+// }
+
+message ListDsDqTaskStatisticsValuesRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListDsDqTaskStatisticsValuesResponse {
+  // The field name should match the noun "DsDqTaskStatisticsValue" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated DsDqTaskStatisticsValue DsDqTaskStatisticsValues = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetDsDqTaskStatisticsValueRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateDsDqTaskStatisticsValueRequest {
+  // The parent resource name where the DsDqTaskStatisticsValue is to be created.
+  string parent = 1;
+
+  // The DsDqTaskStatisticsValue id to use for this DsDqTaskStatisticsValue.
+  string DsDqTaskStatisticsValue_id = 2;
+
+  // The DsDqTaskStatisticsValue resource to create.
+  // The field name should match the Noun in the method name.
+  DsDqTaskStatisticsValue DsDqTaskStatisticsValue = 3;
+}
+
+message UpdateDsDqTaskStatisticsValueRequest {
+  // The DsDqTaskStatisticsValue resource which replaces the resource on the server.
+  DsDqTaskStatisticsValue DsDqTaskStatisticsValue = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteDsDqTaskStatisticsValueRequest {
+  // The resource name of the DsDqTaskStatisticsValue to be deleted.
+  string name = 1;
+}

@@ -1,0 +1,120 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+package ds_dq_execute_result;
+
+
+
+message DsDqExecuteResult {
+
+     int32 id= 1;
+     optional int32 process_definition_id= 2;
+     optional int32 process_instance_id= 3;
+     optional int32 task_instance_id= 4;
+     optional int32 rule_type=5 ;
+     optional string rule_name=6 ;
+     optional float statistics_value= 7;
+     optional float comparison_value= 8;
+     optional int32 check_type=9 ;
+     optional float threshold=10 ;
+     optional int32 operator= 11;
+     optional int32 failure_strategy=12 ;
+     optional int32 state=13 ;
+     optional int32 user_id=14 ;
+     optional string create_time=15 ;
+     optional string update_time=16 ;
+     optional int32 comparison_type= 17;
+     optional string error_output_path=18 ;
+}
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsDqExecuteResultService {
+  rpc ListDsDqExecuteResults(ListDsDqExecuteResultsRequest) returns (ListDsDqExecuteResultsResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsDqExecuteResults"
+    };
+  }
+
+  rpc GetDsDqExecuteResult(GetDsDqExecuteResultRequest) returns (DsDqExecuteResult) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsDqExecuteResults/*}"
+    };
+  }
+
+  rpc CreateDsDqExecuteResult(CreateDsDqExecuteResultRequest) returns (DsDqExecuteResult) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsDqExecuteResults"
+      body: "DsDqExecuteResult"
+    };
+  }
+
+  rpc UpdateDsDqExecuteResult(UpdateDsDqExecuteResultRequest) returns (DsDqExecuteResult) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsDqExecuteResult.name=DsDqExecuteResults/*}"
+      body: "DsDqExecuteResult"
+    };
+  }
+
+  rpc DeleteDsDqExecuteResult(DeleteDsDqExecuteResultRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsDqExecuteResults/*}"
+    };
+  }
+}
+
+// message DsDqExecuteResult {
+// ! This should be defined elsewhere
+// }
+
+message ListDsDqExecuteResultsRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListDsDqExecuteResultsResponse {
+  // The field name should match the noun "DsDqExecuteResult" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated DsDqExecuteResult DsDqExecuteResults = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetDsDqExecuteResultRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateDsDqExecuteResultRequest {
+  // The parent resource name where the DsDqExecuteResult is to be created.
+  string parent = 1;
+
+  // The DsDqExecuteResult id to use for this DsDqExecuteResult.
+  string DsDqExecuteResult_id = 2;
+
+  // The DsDqExecuteResult resource to create.
+  // The field name should match the Noun in the method name.
+  DsDqExecuteResult DsDqExecuteResult = 3;
+}
+
+message UpdateDsDqExecuteResultRequest {
+  // The DsDqExecuteResult resource which replaces the resource on the server.
+  DsDqExecuteResult DsDqExecuteResult = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteDsDqExecuteResultRequest {
+  // The resource name of the DsDqExecuteResult to be deleted.
+  string name = 1;
+}

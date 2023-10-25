@@ -1,0 +1,121 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+package ds_process_definition_log;
+
+
+message DsProcessDefinitionLog {
+
+int32 id= 1;
+int64 code= 2;
+optional string  name= 3;
+int32  version= 4;
+optional string  description= 5;
+optional int64 project_code= 6;
+optional int32  release_state= 7;
+optional int32  user_id= 8;
+optional string  global_params= 9;
+optional string locations= 10;
+optional int32  warning_group_id= 11;
+optional int32  flag=12 ;
+optional int32   timeout=13 ;
+optional int32   tenant_id=14 ;
+optional int32   execution_type=15 ;
+optional int32    operator=16 ;
+optional string   operate_time=17 ;
+optional string   create_time=18 ;
+optional string   update_time=19 ;
+}
+
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsProcessDefinitionLogService {
+  rpc ListDsProcessDefinitionLogs(ListDsProcessDefinitionLogsRequest) returns (ListDsProcessDefinitionLogsResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsProcessDefinitionLogs"
+    };
+  }
+
+  rpc GetDsProcessDefinitionLog(GetDsProcessDefinitionLogRequest) returns (DsProcessDefinitionLog) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsProcessDefinitionLogs/*}"
+    };
+  }
+
+  rpc CreateDsProcessDefinitionLog(CreateDsProcessDefinitionLogRequest) returns (DsProcessDefinitionLog) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsProcessDefinitionLogs"
+      body: "DsProcessDefinitionLog"
+    };
+  }
+
+  rpc UpdateDsProcessDefinitionLog(UpdateDsProcessDefinitionLogRequest) returns (DsProcessDefinitionLog) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsProcessDefinitionLog.name=DsProcessDefinitionLogs/*}"
+      body: "DsProcessDefinitionLog"
+    };
+  }
+
+  rpc DeleteDsProcessDefinitionLog(DeleteDsProcessDefinitionLogRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsProcessDefinitionLogs/*}"
+    };
+  }
+}
+
+// message DsProcessDefinitionLog {
+// ! This should be defined elsewhere
+// }
+
+message ListDsProcessDefinitionLogsRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListDsProcessDefinitionLogsResponse {
+  // The field name should match the noun "DsProcessDefinitionLog" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated DsProcessDefinitionLog DsProcessDefinitionLogs = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetDsProcessDefinitionLogRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateDsProcessDefinitionLogRequest {
+  // The parent resource name where the DsProcessDefinitionLog is to be created.
+  string parent = 1;
+
+  // The DsProcessDefinitionLog id to use for this DsProcessDefinitionLog.
+  string DsProcessDefinitionLog_id = 2;
+
+  // The DsProcessDefinitionLog resource to create.
+  // The field name should match the Noun in the method name.
+  DsProcessDefinitionLog DsProcessDefinitionLog = 3;
+}
+
+message UpdateDsProcessDefinitionLogRequest {
+  // The DsProcessDefinitionLog resource which replaces the resource on the server.
+  DsProcessDefinitionLog DsProcessDefinitionLog = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteDsProcessDefinitionLogRequest {
+  // The resource name of the DsProcessDefinitionLog to be deleted.
+  string name = 1;
+}

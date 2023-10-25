@@ -1,0 +1,119 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+package ds_command;
+
+
+message DsCommand{
+
+     int32 id= 1;
+     optional int32 command_DsCommand= 2;
+     int64 process_definition_code= 3;
+     optional string command_param= 4;
+     optional int32 task_depend_DsCommand= 5;
+     optional int32 failure_strategy= 6;
+     optional int32 warning_DsCommand= 7;
+     optional int32 warning_group_id=8;
+     optional string schedule_time=9;
+     optional string start_time= 10;
+     optional int32 executor_id= 11;
+     optional string update_time= 12;
+     optional int32 process_instance_priority= 13;
+     optional string worker_group= 14;
+     optional int64 environment_code= 15;
+     optional int32 dry_run= 16;
+     optional int32 process_instance_id= 17;
+     optional int32 process_definition_version= 18;
+}
+
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsCommandService {
+  rpc ListDsCommands(ListDsCommandsRequest) returns (ListDsCommandsResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsCommands"
+    };
+  }
+
+  rpc GetDsCommand(GetDsCommandRequest) returns (DsCommand) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsCommands/*}"
+    };
+  }
+
+  rpc CreateDsCommand(CreateDsCommandRequest) returns (DsCommand) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsCommands"
+      body: "DsCommand"
+    };
+  }
+
+  rpc UpdateDsCommand(UpdateDsCommandRequest) returns (DsCommand) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsCommand.name=DsCommands/*}"
+      body: "DsCommand"
+    };
+  }
+
+  rpc DeleteDsCommand(DeleteDsCommandRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsCommands/*}"
+    };
+  }
+}
+
+// message DsCommand {
+// ! This should be defined elsewhere
+// }
+
+message ListDsCommandsRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListDsCommandsResponse {
+  // The field name should match the noun "DsCommand" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated DsCommand DsCommands = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetDsCommandRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateDsCommandRequest {
+  // The parent resource name where the DsCommand is to be created.
+  string parent = 1;
+
+  // The DsCommand id to use for this DsCommand.
+  string DsCommand_id = 2;
+
+  // The DsCommand resource to create.
+  // The field name should match the Noun in the method name.
+  DsCommand DsCommand = 3;
+}
+
+message UpdateDsCommandRequest {
+  // The DsCommand resource which replaces the resource on the server.
+  DsCommand DsCommand = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteDsCommandRequest {
+  // The resource name of the DsCommand to be deleted.
+  string name = 1;
+}

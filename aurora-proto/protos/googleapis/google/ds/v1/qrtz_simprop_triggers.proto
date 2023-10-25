@@ -1,0 +1,117 @@
+
+syntax = "proto3";
+
+package qrtz_simprop_triggers;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+
+
+message QrtzSimpropTrigger {
+
+    string sched_name=1;
+    string trigger_name=2;
+    string trigger_group=3;
+    optional string str_prop_1=4;
+    optional string str_prop_2=5;
+    optional string str_prop_3=6;
+    optional int32 int_prop_1=7;
+    optional int32 int_prop_2=8;
+    optional int64 long_prop_1=9;
+    optional int64 long_prop_2=10;
+    optional string dec_prop_1=11;
+    optional string  dec_prop_2=12;
+    bool bool_prop_1=13;
+    bool bool_prop_2=14;
+}
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service QrtzSimpropTriggerService {
+  rpc ListQrtzSimpropTriggers(ListQrtzSimpropTriggersRequest) returns (ListQrtzSimpropTriggersResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/QrtzSimpropTriggers"
+    };
+  }
+
+  rpc GetQrtzSimpropTrigger(GetQrtzSimpropTriggerRequest) returns (QrtzSimpropTrigger) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=QrtzSimpropTriggers/*}"
+    };
+  }
+
+  rpc CreateQrtzSimpropTrigger(CreateQrtzSimpropTriggerRequest) returns (QrtzSimpropTrigger) {
+    option (google.api.http) = {
+      post: "/v1alpha1/QrtzSimpropTriggers"
+      body: "QrtzSimpropTrigger"
+    };
+  }
+
+  rpc UpdateQrtzSimpropTrigger(UpdateQrtzSimpropTriggerRequest) returns (QrtzSimpropTrigger) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{QrtzSimpropTrigger.name=QrtzSimpropTriggers/*}"
+      body: "QrtzSimpropTrigger"
+    };
+  }
+
+  rpc DeleteQrtzSimpropTrigger(DeleteQrtzSimpropTriggerRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=QrtzSimpropTriggers/*}"
+    };
+  }
+}
+
+// message QrtzSimpropTrigger {
+// ! This should be defined elsewhere
+// }
+
+message ListQrtzSimpropTriggersRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListQrtzSimpropTriggersResponse {
+  // The field name should match the noun "QrtzSimpropTrigger" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated QrtzSimpropTrigger QrtzSimpropTriggers = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetQrtzSimpropTriggerRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateQrtzSimpropTriggerRequest {
+  // The parent resource name where the QrtzSimpropTrigger is to be created.
+  string parent = 1;
+
+  // The QrtzSimpropTrigger id to use for this QrtzSimpropTrigger.
+  string QrtzSimpropTrigger_id = 2;
+
+  // The QrtzSimpropTrigger resource to create.
+  // The field name should match the Noun in the method name.
+  QrtzSimpropTrigger QrtzSimpropTrigger = 3;
+}
+
+message UpdateQrtzSimpropTriggerRequest {
+  // The QrtzSimpropTrigger resource which replaces the resource on the server.
+  QrtzSimpropTrigger QrtzSimpropTrigger = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteQrtzSimpropTriggerRequest {
+  // The resource name of the QrtzSimpropTrigger to be deleted.
+  string name = 1;
+}

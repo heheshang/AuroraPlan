@@ -1,0 +1,107 @@
+
+syntax = "proto3";
+
+package ds_alert_send_status;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+message DsAlertSendStatus {
+
+    int32 id=1;
+    int32 alert_id=2;
+    int32 alert_plugin_instance_id=3;
+    optional int32 send_status=4;
+    optional string log=5;
+    optional string create_time=6;
+}
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsAlertSendStatusService {
+  rpc ListDsAlertSendStatus(ListDsAlertSendStatusRequest) returns (ListDsAlertSendStatusResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsAlertSendStatuss"
+    };
+  }
+
+  rpc GetDsAlertSendStatus(GetDsAlertSendStatusRequest) returns (DsAlertSendStatus) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsAlertSendStatuss/*}"
+    };
+  }
+
+  rpc CreateDsAlertSendStatus(CreateDsAlertSendStatusRequest) returns (DsAlertSendStatus) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsAlertSendStatuss"
+      body: "DsAlertSendStatus"
+    };
+  }
+
+  rpc UpdateDsAlertSendStatus(UpdateDsAlertSendStatusRequest) returns (DsAlertSendStatus) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsAlertSendStatus.name=DsAlertSendStatuss/*}"
+      body: "DsAlertSendStatus"
+    };
+  }
+
+  rpc DeleteDsAlertSendStatus(DeleteDsAlertSendStatusRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsAlertSendStatuss/*}"
+    };
+  }
+}
+
+// message DsAlertSendStatus {
+// ! This should be defined elsewhere
+// }
+
+message ListDsAlertSendStatusRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListDsAlertSendStatusResponse {
+  // The field name should match the noun "DsAlertSendStatus" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated DsAlertSendStatus DsAlertSendStatus = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetDsAlertSendStatusRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateDsAlertSendStatusRequest {
+  // The parent resource name where the DsAlertSendStatus is to be created.
+  string parent = 1;
+
+  // The DsAlertSendStatus id to use for this DsAlertSendStatus.
+  string DsAlertSendStatus_id = 2;
+
+  // The DsAlertSendStatus resource to create.
+  // The field name should match the Noun in the method name.
+  DsAlertSendStatus DsAlertSendStatus = 3;
+}
+
+message UpdateDsAlertSendStatusRequest {
+  // The DsAlertSendStatus resource which replaces the resource on the server.
+  DsAlertSendStatus DsAlertSendStatus = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteDsAlertSendStatusRequest {
+  // The resource name of the DsAlertSendStatus to be deleted.
+  string name = 1;
+}

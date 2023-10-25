@@ -1,0 +1,155 @@
+// https= ;//blog.csdn.net/weixin_43172991/article/details/130788303
+// 使用的版本为3.20.X 不然会报错 不支持 optional 关键字
+// 还需要吧googleapis 下面的文件导入到include目录下面或者参考tonic-build在github上面的例子
+syntax="proto3";
+
+
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+package ds_user;
+
+// option java_multiple_files = true;
+// option java_package = "io.g";
+// option java_outer_classname = "HelloWorldProto";
+
+message DsUser{
+    int32 id=1;
+    optional string user_name=2;
+    optional string user_password=3;
+    optional int32 user_type=4;
+    optional string email=5;
+    optional string phone=6;
+    optional int32 tenant_id=7;
+    // google.protobuf.Timestamp create_time=8;
+    optional string create_time=8;
+    // optional google.protobuf.Timestamp update_time=9;
+    optional string update_time=9;
+
+    optional string queue = 10;
+    optional Flag state = 11;
+    optional string time_zone = 12;
+
+}
+
+enum Flag {
+    NO= 0;
+    YES = 1;
+}
+message QueryUserByNamePasswordRequest{
+     string user_name=1;
+     string user_password=2;
+}
+
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsUserService {
+  rpc ListDsUsers(ListDsUsersRequest) returns (ListDsUsersResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsUsers"
+    };
+  }
+
+  rpc GetDsUser(GetDsUserRequest) returns (DsUser) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsUsers/*}"
+    };
+  }
+  rpc GetDsUserById(GetDsUserByIdRequest) returns( GetDsUserByIdResponse){
+     option (google.api.http) = {
+      get: "/v1alpha1/{id=GetDsUserByIdRequest/*}"
+    };
+  }
+
+  rpc QueryUserByNamePassword(QueryUserByNamePasswordRequest) returns (DsUser) {
+    option (google.api.http) = {
+      post: "/v1alpha1/QueryUserByNamePassword"
+      body: "QueryUserByNamePassword"
+    };
+  }
+
+
+  rpc CreateDsUser(CreateDsUserRequest) returns (DsUser) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsUsers"
+      body: "DsUser"
+    };
+  }
+
+  rpc UpdateDsUser(UpdateDsUserRequest) returns (DsUser) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsUser.name=DsUsers/*}"
+      body: "DsUser"
+    };
+  }
+
+  rpc DeleteDsUser(DeleteDsUserRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsUsers/*}"
+    };
+  }
+}
+
+// message DsUser {
+// ! This should be defined elsewhere
+// }
+
+message ListDsUsersRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListDsUsersResponse {
+  // The field name should match the noun "DsUser" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated DsUser DsUsers = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+message GetDsUserByIdResponse{
+  optional DsUser DsUser=1;
+}
+
+message GetDsUserByIdRequest {
+  // The field will contain name of the resource requested.
+  int32 id = 1;
+}
+
+message GetDsUserRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateDsUserRequest {
+  // The parent resource name where the DsUser is to be created.
+  string parent = 1;
+
+  // The DsUser id to use for this DsUser.
+  string DsUser_id = 2;
+
+  // The DsUser resource to create.
+  // The field name should match the Noun in the method name.
+  DsUser DsUser = 3;
+}
+
+message UpdateDsUserRequest {
+  // The DsUser resource which replaces the resource on the server.
+  DsUser DsUser = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteDsUserRequest {
+  // The resource name of the DsUser to be deleted.
+  string name = 1;
+}

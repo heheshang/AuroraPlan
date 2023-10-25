@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+package ds_dq_rule;
+
+
+message DsDqRule {
+
+     int32 id=1 ;
+     optional string name=2 ;
+     optional int32 type=3 ;
+     optional int32 user_id= 4;
+     optional string create_time= 5;
+     optional string update_time= 6;
+}
+
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsDqRuleService {
+  rpc ListDsDqRules(ListDsDqRulesRequest) returns (ListDsDqRulesResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsDqRules"
+    };
+  }
+
+  rpc GetDsDqRule(GetDsDqRuleRequest) returns (DsDqRule) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsDqRules/*}"
+    };
+  }
+
+  rpc CreateDsDqRule(CreateDsDqRuleRequest) returns (DsDqRule) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsDqRules"
+      body: "DsDqRule"
+    };
+  }
+
+  rpc UpdateDsDqRule(UpdateDsDqRuleRequest) returns (DsDqRule) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsDqRule.name=DsDqRules/*}"
+      body: "DsDqRule"
+    };
+  }
+
+  rpc DeleteDsDqRule(DeleteDsDqRuleRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsDqRules/*}"
+    };
+  }
+}
+
+// message DsDqRule {
+// ! This should be defined elsewhere
+// }
+
+message ListDsDqRulesRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListDsDqRulesResponse {
+  // The field name should match the noun "DsDqRule" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated DsDqRule DsDqRules = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetDsDqRuleRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateDsDqRuleRequest {
+  // The parent resource name where the DsDqRule is to be created.
+  string parent = 1;
+
+  // The DsDqRule id to use for this DsDqRule.
+  string DsDqRule_id = 2;
+
+  // The DsDqRule resource to create.
+  // The field name should match the Noun in the method name.
+  DsDqRule DsDqRule = 3;
+}
+
+message UpdateDsDqRuleRequest {
+  // The DsDqRule resource which replaces the resource on the server.
+  DsDqRule DsDqRule = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteDsDqRuleRequest {
+  // The resource name of the DsDqRule to be deleted.
+  string name = 1;
+}

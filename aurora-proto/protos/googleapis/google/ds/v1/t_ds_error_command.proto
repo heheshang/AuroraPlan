@@ -1,0 +1,121 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+package ds_error_command;
+
+
+message DsErrorCommand {
+
+    int32 id=1 ;
+    optional int32 command_type=2 ;
+    int64 process_definition_code=3 ;
+    optional string command_param=4 ;
+    optional int32 task_depend_type=5 ;
+    optional int32  failure_strategy=6 ;
+    optional int32 warning_type=7 ;
+    optional int32 warning_group_id=8 ;
+    optional string schedule_time=9 ;
+    optional string start_time=10 ;
+    optional int32 executor_id=11 ;
+    optional string update_time=12 ;
+    optional int32 process_instance_priority=13 ;
+    optional string worker_group=14 ;
+    optional int64 environment_code=15 ;
+    optional int32 dry_run=16 ;
+    optional string message=17 ;
+    optional int32 process_instance_id=18 ;
+    optional int32 process_definition_version=19 ;
+}
+
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsErrorCommandService {
+  rpc ListDsErrorCommands(ListDsErrorCommandsRequest) returns (ListDsErrorCommandsResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsErrorCommands"
+    };
+  }
+
+  rpc GetDsErrorCommand(GetDsErrorCommandRequest) returns (DsErrorCommand) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsErrorCommands/*}"
+    };
+  }
+
+  rpc CreateDsErrorCommand(CreateDsErrorCommandRequest) returns (DsErrorCommand) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsErrorCommands"
+      body: "DsErrorCommand"
+    };
+  }
+
+  rpc UpdateDsErrorCommand(UpdateDsErrorCommandRequest) returns (DsErrorCommand) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsErrorCommand.name=DsErrorCommands/*}"
+      body: "DsErrorCommand"
+    };
+  }
+
+  rpc DeleteDsErrorCommand(DeleteDsErrorCommandRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsErrorCommands/*}"
+    };
+  }
+}
+
+// message DsErrorCommand {
+// ! This should be defined elsewhere
+// }
+
+message ListDsErrorCommandsRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListDsErrorCommandsResponse {
+  // The field name should match the noun "DsErrorCommand" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated DsErrorCommand DsErrorCommands = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetDsErrorCommandRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateDsErrorCommandRequest {
+  // The parent resource name where the DsErrorCommand is to be created.
+  string parent = 1;
+
+  // The DsErrorCommand id to use for this DsErrorCommand.
+  string DsErrorCommand_id = 2;
+
+  // The DsErrorCommand resource to create.
+  // The field name should match the Noun in the method name.
+  DsErrorCommand DsErrorCommand = 3;
+}
+
+message UpdateDsErrorCommandRequest {
+  // The DsErrorCommand resource which replaces the resource on the server.
+  DsErrorCommand DsErrorCommand = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteDsErrorCommandRequest {
+  // The resource name of the DsErrorCommand to be deleted.
+  string name = 1;
+}

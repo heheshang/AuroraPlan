@@ -1,0 +1,113 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+package ds_k8s_namespace;
+
+message DsK8sNamespace{
+
+     int32 id=1 ;
+     optional int32  limits_memory=2 ;
+     optional string  namespace= 3;
+     optional int32  online_job_num=4 ;
+     optional int32  user_id= 5;
+     optional int32  pod_replicas=6 ;
+     optional string   pod_request_cpu=7 ;
+     optional int32  pod_request_memory= 8;
+     optional string  limits_cpu=9 ;
+     optional string  k8s=10 ;
+     optional string  create_time=11 ;
+     optional string  update_time=12 ;
+}
+
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsK8sNamespaceService {
+  rpc ListDsK8sNamespaces(ListDsK8sNamespacesRequest) returns (ListDsK8sNamespacesResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsK8sNamespaces"
+    };
+  }
+
+  rpc GetDsK8sNamespace(GetDsK8sNamespaceRequest) returns (DsK8sNamespace) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsK8sNamespaces/*}"
+    };
+  }
+
+  rpc CreateDsK8sNamespace(CreateDsK8sNamespaceRequest) returns (DsK8sNamespace) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsK8sNamespaces"
+      body: "DsK8sNamespace"
+    };
+  }
+
+  rpc UpdateDsK8sNamespace(UpdateDsK8sNamespaceRequest) returns (DsK8sNamespace) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsK8sNamespace.name=DsK8sNamespaces/*}"
+      body: "DsK8sNamespace"
+    };
+  }
+
+  rpc DeleteDsK8sNamespace(DeleteDsK8sNamespaceRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsK8sNamespaces/*}"
+    };
+  }
+}
+
+// message DsK8sNamespace {
+// ! This should be defined elsewhere
+// }
+
+message ListDsK8sNamespacesRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListDsK8sNamespacesResponse {
+  // The field name should match the noun "DsK8sNamespace" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated DsK8sNamespace DsK8sNamespaces = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetDsK8sNamespaceRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateDsK8sNamespaceRequest {
+  // The parent resource name where the DsK8sNamespace is to be created.
+  string parent = 1;
+
+  // The DsK8sNamespace id to use for this DsK8sNamespace.
+  string DsK8sNamespace_id = 2;
+
+  // The DsK8sNamespace resource to create.
+  // The field name should match the Noun in the method name.
+  DsK8sNamespace DsK8sNamespace = 3;
+}
+
+message UpdateDsK8sNamespaceRequest {
+  // The DsK8sNamespace resource which replaces the resource on the server.
+  DsK8sNamespace DsK8sNamespace = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteDsK8sNamespaceRequest {
+  // The resource name of the DsK8sNamespace to be deleted.
+  string name = 1;
+}

@@ -1,0 +1,105 @@
+
+syntax = "proto3";
+
+package ds_access_token;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+message DsAccessToken {
+
+    int32 id=1;
+    optional int32 user_id=2;
+    optional string token=3;
+    optional string expire_time=4;
+    optional string create_time=5;
+    optional string update_time=6;
+}
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsAccessTokenService {
+  rpc ListDsAccessTokens(ListDsAccessTokensRequest) returns (ListDsAccessTokensResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsAccessTokens"
+    };
+  }
+
+  rpc GetDsAccessToken(GetDsAccessTokenRequest) returns (DsAccessToken) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsAccessTokens/*}"
+    };
+  }
+
+  rpc CreateDsAccessToken(CreateDsAccessTokenRequest) returns (DsAccessToken) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsAccessTokens"
+      body: "DsAccessToken"
+    };
+  }
+
+  rpc UpdateDsAccessToken(UpdateDsAccessTokenRequest) returns (DsAccessToken) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsAccessToken.name=DsAccessTokens/*}"
+      body: "DsAccessToken"
+    };
+  }
+
+  rpc DeleteDsAccessToken(DeleteDsAccessTokenRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsAccessTokens/*}"
+    };
+  }
+}
+
+// message DsAccessToken {
+// ! This should be defined elsewhere
+// }
+
+message ListDsAccessTokensRequest {
+
+
+  // The maximum number of items to return.
+  uint64 page_size = 1;
+
+  uint64 page_num = 2;
+}
+
+message ListDsAccessTokensResponse {
+  // The field name should match the noun "DsAccessToken" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated DsAccessToken DsAccessTokens = 1;
+
+}
+
+message GetDsAccessTokenRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateDsAccessTokenRequest {
+  // The parent resource name where the DsAccessToken is to be created.
+  string parent = 1;
+
+  // The DsAccessToken id to use for this DsAccessToken.
+  string DsAccessToken_id = 2;
+
+  // The DsAccessToken resource to create.
+  // The field name should match the Noun in the method name.
+  DsAccessToken DsAccessToken = 3;
+}
+
+message UpdateDsAccessTokenRequest {
+  // The DsAccessToken resource which replaces the resource on the server.
+  DsAccessToken DsAccessToken = 1;
+
+  // The update mask applies to the resource. For the `FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#fieldmask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteDsAccessTokenRequest {
+  // The resource name of the DsAccessToken to be deleted.
+  string name = 1;
+}

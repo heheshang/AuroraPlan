@@ -1,0 +1,126 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+package ds_task_definition_log;
+
+message DsTaskDefinitionLog {
+
+     int32 id= 1;
+     int64 code=2 ;
+     optional string  name=3 ;
+     int32 version=4 ;
+     optional string description=5 ;
+     optional int64  project_code= 6;
+     optional int32   user_id=7 ;
+     optional string  task_type=8 ;
+     optional string  task_params=9 ;
+     optional int32   flag=10 ;
+     optional int32  task_priority=11 ;
+     optional string   worker_group=12 ;
+     optional int64  environment_code=13 ;
+     optional int32   fail_retry_times=14 ;
+     optional int32   fail_retry_interval=15 ;
+     optional int32   timeout_flag=16 ;
+     optional int32   timeout_notify_strategy=17 ;
+     optional int32  timeout=18 ;
+     optional int32    delay_time=19 ;
+     optional string   resource_ids=20 ;
+     optional int32   operator=21 ;
+     optional int32   task_group_id=22 ;
+     optional int32   task_group_priority=23 ;
+     optional string    operate_time=24 ;
+     optional string   create_time=25 ;
+     optional string    update_time=26 ;
+}
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsTaskDefinitionLogService {
+  rpc ListDsTaskDefinitionLogs(ListDsTaskDefinitionLogsRequest) returns (ListDsTaskDefinitionLogsResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsTaskDefinitionLogs"
+    };
+  }
+
+  rpc GetDsTaskDefinitionLog(GetDsTaskDefinitionLogRequest) returns (DsTaskDefinitionLog) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsTaskDefinitionLogs/*}"
+    };
+  }
+
+  rpc CreateDsTaskDefinitionLog(CreateDsTaskDefinitionLogRequest) returns (DsTaskDefinitionLog) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsTaskDefinitionLogs"
+      body: "DsTaskDefinitionLog"
+    };
+  }
+
+  rpc UpdateDsTaskDefinitionLog(UpdateDsTaskDefinitionLogRequest) returns (DsTaskDefinitionLog) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsTaskDefinitionLog.name=DsTaskDefinitionLogs/*}"
+      body: "DsTaskDefinitionLog"
+    };
+  }
+
+  rpc DeleteDsTaskDefinitionLog(DeleteDsTaskDefinitionLogRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsTaskDefinitionLogs/*}"
+    };
+  }
+}
+
+// message DsTaskDefinitionLog {
+// ! This should be defined elsewhere
+// }
+
+message ListDsTaskDefinitionLogsRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListDsTaskDefinitionLogsResponse {
+  // The field name should match the noun "DsTaskDefinitionLog" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated DsTaskDefinitionLog DsTaskDefinitionLogs = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetDsTaskDefinitionLogRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateDsTaskDefinitionLogRequest {
+  // The parent resource name where the DsTaskDefinitionLog is to be created.
+  string parent = 1;
+
+  // The DsTaskDefinitionLog id to use for this DsTaskDefinitionLog.
+  string DsTaskDefinitionLog_id = 2;
+
+  // The DsTaskDefinitionLog resource to create.
+  // The field name should match the Noun in the method name.
+  DsTaskDefinitionLog DsTaskDefinitionLog = 3;
+}
+
+message UpdateDsTaskDefinitionLogRequest {
+  // The DsTaskDefinitionLog resource which replaces the resource on the server.
+  DsTaskDefinitionLog DsTaskDefinitionLog = 1;
+
+  // The update mask applies to the resource. For the `FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#fieldmask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteDsTaskDefinitionLogRequest {
+  // The resource name of the DsTaskDefinitionLog to be deleted.
+  string name = 1;
+}

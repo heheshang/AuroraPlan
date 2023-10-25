@@ -1,0 +1,118 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+package ds_process_definition;
+
+message DsProcessDefinition {
+
+     int32  id=1 ;
+     int64  code= 2;
+     optional string  name=3 ;
+     int32  version=4 ;
+     optional string   description=5 ;
+     optional int64    project_code=6 ;
+     optional int32   release_state=7 ;
+     optional int32   user_id=8 ;
+     optional string    global_params=9 ;
+     optional string    locations=10 ;
+     optional int32    warning_group_id=11 ;
+     optional int32    flag=12 ;
+     optional int32    timeout=13 ;
+     optional int32     tenant_id=14 ;
+     optional int32    execution_type=15 ;
+     optional string    create_time=16 ;
+     optional string   update_time=17 ;
+}
+
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsProcessDefinitionService {
+  rpc ListDsProcessDefinitions(ListDsProcessDefinitionsRequest) returns (ListDsProcessDefinitionsResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsProcessDefinitions"
+    };
+  }
+
+  rpc GetDsProcessDefinition(GetDsProcessDefinitionRequest) returns (DsProcessDefinition) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsProcessDefinitions/*}"
+    };
+  }
+
+  rpc CreateDsProcessDefinition(CreateDsProcessDefinitionRequest) returns (DsProcessDefinition) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsProcessDefinitions"
+      body: "DsProcessDefinition"
+    };
+  }
+
+  rpc UpdateDsProcessDefinition(UpdateDsProcessDefinitionRequest) returns (DsProcessDefinition) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsProcessDefinition.name=DsProcessDefinitions/*}"
+      body: "DsProcessDefinition"
+    };
+  }
+
+  rpc DeleteDsProcessDefinition(DeleteDsProcessDefinitionRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsProcessDefinitions/*}"
+    };
+  }
+}
+
+// message DsProcessDefinition {
+// ! This should be defined elsewhere
+// }
+
+message ListDsProcessDefinitionsRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListDsProcessDefinitionsResponse {
+  // The field name should match the noun "DsProcessDefinition" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated DsProcessDefinition DsProcessDefinitions = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetDsProcessDefinitionRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateDsProcessDefinitionRequest {
+  // The parent resource name where the DsProcessDefinition is to be created.
+  string parent = 1;
+
+  // The DsProcessDefinition id to use for this DsProcessDefinition.
+  string DsProcessDefinition_id = 2;
+
+  // The DsProcessDefinition resource to create.
+  // The field name should match the Noun in the method name.
+  DsProcessDefinition DsProcessDefinition = 3;
+}
+
+message UpdateDsProcessDefinitionRequest {
+  // The DsProcessDefinition resource which replaces the resource on the server.
+  DsProcessDefinition DsProcessDefinition = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteDsProcessDefinitionRequest {
+  // The resource name of the DsProcessDefinition to be deleted.
+  string name = 1;
+}

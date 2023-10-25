@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+package ds_environment_worker_group_relation;
+
+message DsEnvironmentWorkerGroupRelation {
+
+     int32 id= 1;
+     int64  environment_code= 2;
+     string  worker_group=3 ;
+     optional int32  operator=4 ;
+     optional string create_time=5 ;
+     optional string  update_time=6 ;
+}
+
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsEnvironmentWorkerGroupRelationService {
+  rpc ListDsEnvironmentWorkerGroupRelations(ListDsEnvironmentWorkerGroupRelationsRequest) returns (ListDsEnvironmentWorkerGroupRelationsResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsEnvironmentWorkerGroupRelations"
+    };
+  }
+
+  rpc GetDsEnvironmentWorkerGroupRelation(GetDsEnvironmentWorkerGroupRelationRequest) returns (DsEnvironmentWorkerGroupRelation) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsEnvironmentWorkerGroupRelations/*}"
+    };
+  }
+
+  rpc CreateDsEnvironmentWorkerGroupRelation(CreateDsEnvironmentWorkerGroupRelationRequest) returns (DsEnvironmentWorkerGroupRelation) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsEnvironmentWorkerGroupRelations"
+      body: "DsEnvironmentWorkerGroupRelation"
+    };
+  }
+
+  rpc UpdateDsEnvironmentWorkerGroupRelation(UpdateDsEnvironmentWorkerGroupRelationRequest) returns (DsEnvironmentWorkerGroupRelation) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsEnvironmentWorkerGroupRelation.name=DsEnvironmentWorkerGroupRelations/*}"
+      body: "DsEnvironmentWorkerGroupRelation"
+    };
+  }
+
+  rpc DeleteDsEnvironmentWorkerGroupRelation(DeleteDsEnvironmentWorkerGroupRelationRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsEnvironmentWorkerGroupRelations/*}"
+    };
+  }
+}
+
+// message DsEnvironmentWorkerGroupRelation {
+// ! This should be defined elsewhere
+// }
+
+message ListDsEnvironmentWorkerGroupRelationsRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListDsEnvironmentWorkerGroupRelationsResponse {
+  // The field name should match the noun "DsEnvironmentWorkerGroupRelation" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated DsEnvironmentWorkerGroupRelation DsEnvironmentWorkerGroupRelations = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetDsEnvironmentWorkerGroupRelationRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateDsEnvironmentWorkerGroupRelationRequest {
+  // The parent resource name where the DsEnvironmentWorkerGroupRelation is to be created.
+  string parent = 1;
+
+  // The DsEnvironmentWorkerGroupRelation id to use for this DsEnvironmentWorkerGroupRelation.
+  string DsEnvironmentWorkerGroupRelation_id = 2;
+
+  // The DsEnvironmentWorkerGroupRelation resource to create.
+  // The field name should match the Noun in the method name.
+  DsEnvironmentWorkerGroupRelation DsEnvironmentWorkerGroupRelation = 3;
+}
+
+message UpdateDsEnvironmentWorkerGroupRelationRequest {
+  // The DsEnvironmentWorkerGroupRelation resource which replaces the resource on the server.
+  DsEnvironmentWorkerGroupRelation DsEnvironmentWorkerGroupRelation = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteDsEnvironmentWorkerGroupRelationRequest {
+  // The resource name of the DsEnvironmentWorkerGroupRelation to be deleted.
+  string name = 1;
+}

@@ -1,0 +1,134 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+package ds_task_instance;
+
+
+message DsTaskInstance {
+
+    int32  id= 1;
+    optional string name=2 ;
+    optional string task_type= 3;
+    int64 task_code=4 ;
+    optional int32 task_definition_version= 5;
+    optional int32 process_instance_id= 6;
+    optional int32 state=7 ;
+    optional string submit_time= 8;
+    optional string  start_time= 9;
+    optional string end_time=10 ;
+    optional string  host=11 ;
+    optional string  execute_path= 12;
+    optional string  log_path=13 ;
+    optional int32  alert_flag=14 ;
+    optional int32  retry_times=15 ;
+    optional int32  pid= 16;
+    optional string app_link=17 ;
+    optional string  task_params= 18;
+    optional int32   flag=19 ;
+    optional int32  retry_interval= 20;
+    optional int32  max_retry_times=21 ;
+    optional int32  task_instance_priority= 22;
+    optional string worker_group=23 ;
+    optional int64 environment_code=24 ;
+    optional string environment_config=25 ;
+    optional int32  executor_id=26 ;
+    optional string  first_submit_time=27 ;
+    optional int32  delay_time=28 ;
+    optional int32  task_group_id=29 ;
+    optional string var_pool=30 ;
+    optional int32  dry_run= 31;
+}
+
+
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsTaskInstanceService {
+  rpc ListDsTaskInstances(ListDsTaskInstancesRequest) returns (ListDsTaskInstancesResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsTaskInstances"
+    };
+  }
+
+  rpc GetDsTaskInstance(GetDsTaskInstanceRequest) returns (DsTaskInstance) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsTaskInstances/*}"
+    };
+  }
+
+  rpc CreateDsTaskInstance(CreateDsTaskInstanceRequest) returns (DsTaskInstance) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsTaskInstances"
+      body: "DsTaskInstance"
+    };
+  }
+
+  rpc UpdateDsTaskInstance(UpdateDsTaskInstanceRequest) returns (DsTaskInstance) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsTaskInstance.name=DsTaskInstances/*}"
+      body: "DsTaskInstance"
+    };
+  }
+
+  rpc DeleteDsTaskInstance(DeleteDsTaskInstanceRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsTaskInstances/*}"
+    };
+  }
+}
+
+// message DsTaskInstance {
+// ! This should be defined elsewhere
+// }
+
+message ListDsTaskInstancesRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListDsTaskInstancesResponse {
+  // The field name should match the noun "DsTaskInstance" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated DsTaskInstance DsTaskInstances = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetDsTaskInstanceRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateDsTaskInstanceRequest {
+  // The parent resource name where the DsTaskInstance is to be created.
+  string parent = 1;
+
+  // The DsTaskInstance id to use for this DsTaskInstance.
+  string DsTaskInstance_id = 2;
+
+  // The DsTaskInstance resource to create.
+  // The field name should match the Noun in the method name.
+  DsTaskInstance DsTaskInstance = 3;
+}
+
+message UpdateDsTaskInstanceRequest {
+  // The DsTaskInstance resource which replaces the resource on the server.
+  DsTaskInstance DsTaskInstance = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteDsTaskInstanceRequest {
+  // The resource name of the DsTaskInstance to be deleted.
+  string name = 1;
+}

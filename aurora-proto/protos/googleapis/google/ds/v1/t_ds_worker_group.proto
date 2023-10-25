@@ -1,0 +1,105 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+package ds_worker_group;
+
+message DsWorkerGroup {
+
+    int64 id=1 ;
+    string name=2 ;
+    optional string addr_list=3 ;
+    optional string create_time=4 ;
+    optional string update_time=5 ;
+}
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsWorkerGroupService {
+  rpc ListDsWorkerGroups(ListDsWorkerGroupsRequest) returns (ListDsWorkerGroupsResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsWorkerGroups"
+    };
+  }
+
+  rpc GetDsWorkerGroup(GetDsWorkerGroupRequest) returns (DsWorkerGroup) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsWorkerGroups/*}"
+    };
+  }
+
+  rpc CreateDsWorkerGroup(CreateDsWorkerGroupRequest) returns (DsWorkerGroup) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsWorkerGroups"
+      body: "DsWorkerGroup"
+    };
+  }
+
+  rpc UpdateDsWorkerGroup(UpdateDsWorkerGroupRequest) returns (DsWorkerGroup) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsWorkerGroup.name=DsWorkerGroups/*}"
+      body: "DsWorkerGroup"
+    };
+  }
+
+  rpc DeleteDsWorkerGroup(DeleteDsWorkerGroupRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsWorkerGroups/*}"
+    };
+  }
+}
+
+// message DsWorkerGroup {
+// ! This should be defined elsewhere
+// }
+
+message ListDsWorkerGroupsRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListDsWorkerGroupsResponse {
+  // The field name should match the noun "DsWorkerGroup" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated DsWorkerGroup DsWorkerGroups = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetDsWorkerGroupRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateDsWorkerGroupRequest {
+  // The parent resource name where the DsWorkerGroup is to be created.
+  string parent = 1;
+
+  // The DsWorkerGroup id to use for this DsWorkerGroup.
+  string DsWorkerGroup_id = 2;
+
+  // The DsWorkerGroup resource to create.
+  // The field name should match the Noun in the method name.
+  DsWorkerGroup DsWorkerGroup = 3;
+}
+
+message UpdateDsWorkerGroupRequest {
+  // The DsWorkerGroup resource which replaces the resource on the server.
+  DsWorkerGroup DsWorkerGroup = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteDsWorkerGroupRequest {
+  // The resource name of the DsWorkerGroup to be deleted.
+  string name = 1;
+}

@@ -1,0 +1,107 @@
+
+syntax = "proto3";
+
+package qrtz_simple_triggers;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+message QrtzSimpleTrigger{
+    string sched_name=1;
+    string trigger_name=2;
+    string trigger_group=3;
+    int64 repeat_count=4;
+    int64 repeat_interval=5;
+    int64 times_triggered=6;
+}
+
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service QrtzSimpleTriggerService {
+  rpc ListQrtzSimpleTriggers(ListQrtzSimpleTriggersRequest) returns (ListQrtzSimpleTriggersResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/QrtzSimpleTriggers"
+    };
+  }
+
+  rpc GetQrtzSimpleTrigger(GetQrtzSimpleTriggerRequest) returns (QrtzSimpleTrigger) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=QrtzSimpleTriggers/*}"
+    };
+  }
+
+  rpc CreateQrtzSimpleTrigger(CreateQrtzSimpleTriggerRequest) returns (QrtzSimpleTrigger) {
+    option (google.api.http) = {
+      post: "/v1alpha1/QrtzSimpleTriggers"
+      body: "QrtzSimpleTrigger"
+    };
+  }
+
+  rpc UpdateQrtzSimpleTrigger(UpdateQrtzSimpleTriggerRequest) returns (QrtzSimpleTrigger) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{QrtzSimpleTrigger.name=QrtzSimpleTriggers/*}"
+      body: "QrtzSimpleTrigger"
+    };
+  }
+
+  rpc DeleteQrtzSimpleTrigger(DeleteQrtzSimpleTriggerRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=QrtzSimpleTriggers/*}"
+    };
+  }
+}
+
+// message QrtzSimpleTrigger {
+// ! This should be defined elsewhere
+// }
+
+message ListQrtzSimpleTriggersRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListQrtzSimpleTriggersResponse {
+  // The field name should match the noun "QrtzSimpleTrigger" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated QrtzSimpleTrigger QrtzSimpleTriggers = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetQrtzSimpleTriggerRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateQrtzSimpleTriggerRequest {
+  // The parent resource name where the QrtzSimpleTrigger is to be created.
+  string parent = 1;
+
+  // The QrtzSimpleTrigger id to use for this QrtzSimpleTrigger.
+  string QrtzSimpleTrigger_id = 2;
+
+  // The QrtzSimpleTrigger resource to create.
+  // The field name should match the Noun in the method name.
+  QrtzSimpleTrigger QrtzSimpleTrigger = 3;
+}
+
+message UpdateQrtzSimpleTriggerRequest {
+  // The QrtzSimpleTrigger resource which replaces the resource on the server.
+  QrtzSimpleTrigger QrtzSimpleTrigger = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteQrtzSimpleTriggerRequest {
+  // The resource name of the QrtzSimpleTrigger to be deleted.
+  string name = 1;
+}

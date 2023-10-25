@@ -1,0 +1,117 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+package ds_process_task_relation_log;
+
+
+message DsProcessTaskRelationLog {
+
+     int32   id=1 ;
+     optional string    name=2 ;
+     optional int64    project_code=3 ;
+     optional int64    process_definition_code= 4;
+     optional int32    process_definition_version=5 ;
+     optional int64    pre_task_code= 6;
+     optional int32    pre_task_version=7 ;
+     optional int64    post_task_code= 8;
+     optional int32    post_task_version= 9;
+     optional int32    condition_type=10 ;
+     optional string    condition_params=11 ;
+     optional int32    operator=12 ;
+     optional string    operate_time=13 ;
+     optional string    create_time=14 ;
+     optional string     update_time=15 ;
+}
+
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsProcessTaskRelationLogService {
+  rpc ListDsProcessTaskRelationLogs(ListDsProcessTaskRelationLogsRequest) returns (ListDsProcessTaskRelationLogsResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsProcessTaskRelationLogs"
+    };
+  }
+
+  rpc GetDsProcessTaskRelationLog(GetDsProcessTaskRelationLogRequest) returns (DsProcessTaskRelationLog) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsProcessTaskRelationLogs/*}"
+    };
+  }
+
+  rpc CreateDsProcessTaskRelationLog(CreateDsProcessTaskRelationLogRequest) returns (DsProcessTaskRelationLog) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsProcessTaskRelationLogs"
+      body: "DsProcessTaskRelationLog"
+    };
+  }
+
+  rpc UpdateDsProcessTaskRelationLog(UpdateDsProcessTaskRelationLogRequest) returns (DsProcessTaskRelationLog) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsProcessTaskRelationLog.name=DsProcessTaskRelationLogs/*}"
+      body: "DsProcessTaskRelationLog"
+    };
+  }
+
+  rpc DeleteDsProcessTaskRelationLog(DeleteDsProcessTaskRelationLogRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsProcessTaskRelationLogs/*}"
+    };
+  }
+}
+
+// message DsProcessTaskRelationLog {
+// ! This should be defined elsewhere
+// }
+
+message ListDsProcessTaskRelationLogsRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListDsProcessTaskRelationLogsResponse {
+  // The field name should match the noun "DsProcessTaskRelationLog" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated DsProcessTaskRelationLog DsProcessTaskRelationLogs = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetDsProcessTaskRelationLogRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateDsProcessTaskRelationLogRequest {
+  // The parent resource name where the DsProcessTaskRelationLog is to be created.
+  string parent = 1;
+
+  // The DsProcessTaskRelationLog id to use for this DsProcessTaskRelationLog.
+  string DsProcessTaskRelationLog_id = 2;
+
+  // The DsProcessTaskRelationLog resource to create.
+  // The field name should match the Noun in the method name.
+  DsProcessTaskRelationLog DsProcessTaskRelationLog = 3;
+}
+
+message UpdateDsProcessTaskRelationLogRequest {
+  // The DsProcessTaskRelationLog resource which replaces the resource on the server.
+  DsProcessTaskRelationLog DsProcessTaskRelationLog = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteDsProcessTaskRelationLogRequest {
+  // The resource name of the DsProcessTaskRelationLog to be deleted.
+  string name = 1;
+}

@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+package ds_alertgroup;
+
+
+message DsAlertGroup {
+
+    int32 id= 1;
+    optional string alert_instance_ids=2;
+    optional int32 create_user_id= 3;
+    optional string group_name= 4;
+    optional string description= 5;
+    optional string create_time= 6;
+    optional string update_time= 7;
+}
+
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsAlertGroupService {
+  rpc ListDsAlertGroups(ListDsAlertGroupsRequest) returns (ListDsAlertGroupsResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsAlertGroups"
+    };
+  }
+
+  rpc GetDsAlertGroup(GetDsAlertGroupRequest) returns (DsAlertGroup) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsAlertGroups/*}"
+    };
+  }
+
+  rpc CreateDsAlertGroup(CreateDsAlertGroupRequest) returns (DsAlertGroup) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsAlertGroups"
+      body: "DsAlertGroup"
+    };
+  }
+
+  rpc UpdateDsAlertGroup(UpdateDsAlertGroupRequest) returns (DsAlertGroup) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsAlertGroup.name=DsAlertGroups/*}"
+      body: "DsAlertGroup"
+    };
+  }
+
+  rpc DeleteDsAlertGroup(DeleteDsAlertGroupRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsAlertGroups/*}"
+    };
+  }
+}
+
+// message DsAlertGroup {
+// ! This should be defined elsewhere
+// }
+
+message ListDsAlertGroupsRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListDsAlertGroupsResponse {
+  // The field name should match the noun "DsAlertGroup" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated DsAlertGroup DsAlertGroups = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetDsAlertGroupRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateDsAlertGroupRequest {
+  // The parent resource name where the DsAlertGroup is to be created.
+  string parent = 1;
+
+  // The DsAlertGroup id to use for this DsAlertGroup.
+  string DsAlertGroup_id = 2;
+
+  // The DsAlertGroup resource to create.
+  // The field name should match the Noun in the method name.
+  DsAlertGroup DsAlertGroup = 3;
+}
+
+message UpdateDsAlertGroupRequest {
+  // The DsAlertGroup resource which replaces the resource on the server.
+  DsAlertGroup DsAlertGroup = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteDsAlertGroupRequest {
+  // The resource name of the DsAlertGroup to be deleted.
+  string name = 1;
+}

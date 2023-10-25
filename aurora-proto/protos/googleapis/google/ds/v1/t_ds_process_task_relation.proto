@@ -1,0 +1,115 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+package ds_process_task_relation;
+
+
+message DsProcessTaskRelation {
+
+     int32 id=1 ;
+     optional string name=2 ;
+     optional int64  project_code= 3;
+     optional int64 process_definition_code=4 ;
+     optional int32 process_definition_version=5 ;
+     optional int64 pre_task_code=6 ;
+     optional int32   pre_task_version=7 ;
+     optional int64  post_task_code=8 ;
+     optional int32  post_task_version=9 ;
+     optional int32  condition_type=10 ;
+     optional string  condition_params=11 ;
+     optional string    create_time=12 ;
+     optional string  update_time=13 ;
+}
+
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsProcessTaskRelationService {
+  rpc ListDsProcessTaskRelations(ListDsProcessTaskRelationsRequest) returns (ListDsProcessTaskRelationsResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsProcessTaskRelations"
+    };
+  }
+
+  rpc GetDsProcessTaskRelation(GetDsProcessTaskRelationRequest) returns (DsProcessTaskRelation) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsProcessTaskRelations/*}"
+    };
+  }
+
+  rpc CreateDsProcessTaskRelation(CreateDsProcessTaskRelationRequest) returns (DsProcessTaskRelation) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsProcessTaskRelations"
+      body: "DsProcessTaskRelation"
+    };
+  }
+
+  rpc UpdateDsProcessTaskRelation(UpdateDsProcessTaskRelationRequest) returns (DsProcessTaskRelation) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsProcessTaskRelation.name=DsProcessTaskRelations/*}"
+      body: "DsProcessTaskRelation"
+    };
+  }
+
+  rpc DeleteDsProcessTaskRelation(DeleteDsProcessTaskRelationRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsProcessTaskRelations/*}"
+    };
+  }
+}
+
+// message DsProcessTaskRelation {
+// ! This should be defined elsewhere
+// }
+
+message ListDsProcessTaskRelationsRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListDsProcessTaskRelationsResponse {
+  // The field name should match the noun "DsProcessTaskRelation" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated DsProcessTaskRelation DsProcessTaskRelations = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetDsProcessTaskRelationRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateDsProcessTaskRelationRequest {
+  // The parent resource name where the DsProcessTaskRelation is to be created.
+  string parent = 1;
+
+  // The DsProcessTaskRelation id to use for this DsProcessTaskRelation.
+  string DsProcessTaskRelation_id = 2;
+
+  // The DsProcessTaskRelation resource to create.
+  // The field name should match the Noun in the method name.
+  DsProcessTaskRelation DsProcessTaskRelation = 3;
+}
+
+message UpdateDsProcessTaskRelationRequest {
+  // The DsProcessTaskRelation resource which replaces the resource on the server.
+  DsProcessTaskRelation DsProcessTaskRelation = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteDsProcessTaskRelationRequest {
+  // The resource name of the DsProcessTaskRelation to be deleted.
+  string name = 1;
+}

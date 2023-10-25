@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+package ds_environment;
+message DsEnvironment {
+
+     int32  id= 1;
+     int64  code= 2;
+     optional string name= 3;
+     optional string config=4 ;
+     optional string  description= 5;
+     optional int32  operator= 6;
+     optional string  create_time=7 ;
+     optional string  update_time= 8;
+}
+
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsEnvironmentService {
+  rpc ListDsEnvironments(ListDsEnvironmentsRequest) returns (ListDsEnvironmentsResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsEnvironments"
+    };
+  }
+
+  rpc GetDsEnvironment(GetDsEnvironmentRequest) returns (DsEnvironment) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsEnvironments/*}"
+    };
+  }
+
+  rpc CreateDsEnvironment(CreateDsEnvironmentRequest) returns (DsEnvironment) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsEnvironments"
+      body: "DsEnvironment"
+    };
+  }
+
+  rpc UpdateDsEnvironment(UpdateDsEnvironmentRequest) returns (DsEnvironment) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsEnvironment.name=DsEnvironments/*}"
+      body: "DsEnvironment"
+    };
+  }
+
+  rpc DeleteDsEnvironment(DeleteDsEnvironmentRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsEnvironments/*}"
+    };
+  }
+}
+
+// message DsEnvironment {
+// ! This should be defined elsewhere
+// }
+
+message ListDsEnvironmentsRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListDsEnvironmentsResponse {
+  // The field name should match the noun "DsEnvironment" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated DsEnvironment DsEnvironments = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetDsEnvironmentRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateDsEnvironmentRequest {
+  // The parent resource name where the DsEnvironment is to be created.
+  string parent = 1;
+
+  // The DsEnvironment id to use for this DsEnvironment.
+  string DsEnvironment_id = 2;
+
+  // The DsEnvironment resource to create.
+  // The field name should match the Noun in the method name.
+  DsEnvironment DsEnvironment = 3;
+}
+
+message UpdateDsEnvironmentRequest {
+  // The DsEnvironment resource which replaces the resource on the server.
+  DsEnvironment DsEnvironment = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteDsEnvironmentRequest {
+  // The resource name of the DsEnvironment to be deleted.
+  string name = 1;
+}

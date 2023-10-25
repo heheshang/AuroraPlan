@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+package ds_relation_rule_input;
+
+message DsRelationRuleInput {
+
+     int32 id=1 ;
+     optional int32 rule_id=2 ;
+     optional int32 rule_input_entry_id= 3;
+     optional string values_map=4 ;
+     optional int32 index=5 ;
+     optional string  create_time= 6;
+     optional string update_time=7 ;
+}
+
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsRelationRuleInputService {
+  rpc ListDsRelationRuleInputs(ListDsRelationRuleInputsRequest) returns (ListDsRelationRuleInputsResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsRelationRuleInputs"
+    };
+  }
+
+  rpc GetDsRelationRuleInput(GetDsRelationRuleInputRequest) returns (DsRelationRuleInput) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsRelationRuleInputs/*}"
+    };
+  }
+
+  rpc CreateDsRelationRuleInput(CreateDsRelationRuleInputRequest) returns (DsRelationRuleInput) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsRelationRuleInputs"
+      body: "DsRelationRuleInput"
+    };
+  }
+
+  rpc UpdateDsRelationRuleInput(UpdateDsRelationRuleInputRequest) returns (DsRelationRuleInput) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsRelationRuleInput.name=DsRelationRuleInputs/*}"
+      body: "DsRelationRuleInput"
+    };
+  }
+
+  rpc DeleteDsRelationRuleInput(DeleteDsRelationRuleInputRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsRelationRuleInputs/*}"
+    };
+  }
+}
+
+// message DsRelationRuleInput {
+// ! This should be defined elsewhere
+// }
+
+message ListDsRelationRuleInputsRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListDsRelationRuleInputsResponse {
+  // The field name should match the noun "DsRelationRuleInput" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated DsRelationRuleInput DsRelationRuleInputs = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetDsRelationRuleInputRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateDsRelationRuleInputRequest {
+  // The parent resource name where the DsRelationRuleInput is to be created.
+  string parent = 1;
+
+  // The DsRelationRuleInput id to use for this DsRelationRuleInput.
+  string DsRelationRuleInput_id = 2;
+
+  // The DsRelationRuleInput resource to create.
+  // The field name should match the Noun in the method name.
+  DsRelationRuleInput DsRelationRuleInput = 3;
+}
+
+message UpdateDsRelationRuleInputRequest {
+  // The DsRelationRuleInput resource which replaces the resource on the server.
+  DsRelationRuleInput DsRelationRuleInput = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteDsRelationRuleInputRequest {
+  // The resource name of the DsRelationRuleInput to be deleted.
+  string name = 1;
+}

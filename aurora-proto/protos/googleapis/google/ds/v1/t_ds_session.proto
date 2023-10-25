@@ -1,0 +1,122 @@
+
+syntax="proto3";
+
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+//import "google/protobuf/timestamp.proto";
+package ds_session;
+
+message DsSession{
+    string id=1;
+    int32 user_id=2;
+    optional string ip=3;
+    // google.protobuf.Timestamp last_login_time=4 ;
+    optional string last_login_time=4 ;
+}
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsSessionService {
+  rpc ListDsSessions(ListDsSessionsRequest) returns (ListDsSessionsResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsSessions"
+    };
+  }
+
+  rpc GetDsSession(GetDsSessionByIRequest) returns (DsSession) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsSessions/*}"
+    };
+  }
+    rpc GetDsSessionById(GetDsSessionByIdRequest) returns (DsSession) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=GetDsSessionById/*}"
+    };
+  }
+  rpc GetDsSessionByUserId(GetDsSessionUserIdRequest) returns (GetDsSessionUserIdResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=GetDsSessionUserId/*}"
+    };
+  }
+
+  rpc CreateDsSession(CreateDsSessionRequest) returns (DsSession) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsSessions"
+      body: "DsSession"
+    };
+  }
+
+  rpc UpdateDsSession(UpdateDsSessionRequest) returns (DsSession) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsSession.name=DsSessions/*}"
+      body: "DsSession"
+    };
+  }
+
+  rpc DeleteDsSession(DeleteDsSessionRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsSessions/*}"
+    };
+  }
+}
+
+// message DsSession {
+// ! This should be defined elsewhere
+// }
+
+message ListDsSessionsRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListDsSessionsResponse {
+  // The field name should match the noun "DsSession" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated DsSession DsSessions = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetDsSessionByIRequest {
+  // The field will contain name of the resource requested.
+  string id = 1;
+}
+
+message GetDsSessionByIdRequest {
+  // The field will contain name of the resource requested.
+  string id = 1;
+}
+message GetDsSessionUserIdRequest {
+  // The field will contain name of the resource requested.
+  int32 userId = 1;
+}
+
+message GetDsSessionUserIdResponse {
+  // The field will contain name of the resource requested.
+  repeated DsSession  DsSessions= 1;
+}
+
+
+
+message CreateDsSessionRequest {
+  // The DsSession resource to create.
+  // The field name should match the Noun in the method name.
+  DsSession DsSession = 3;
+}
+
+message UpdateDsSessionRequest {
+  // The DsSession resource which replaces the resource on the server.
+  DsSession DsSession = 1;
+
+}
+
+message DeleteDsSessionRequest {
+  // The resource name of the DsSession to be deleted.
+  string id = 1;
+}

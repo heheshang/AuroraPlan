@@ -1,0 +1,109 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+package ds_dq_comparison_type;
+
+
+message DsDqComparisonType {
+
+     int32 id=1 ;
+     string type=2 ;
+     optional string execute_sql=3 ;
+     optional string output_table=4 ;
+     optional string name=5 ;
+     optional string create_time=6 ;
+     optional string update_time=7 ;
+     optional bool is_inner_source=8 ;
+}
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsDqComparisonTypeService {
+  rpc ListDsDqComparisonTypes(ListDsDqComparisonTypesRequest) returns (ListDsDqComparisonTypesResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsDqComparisonTypes"
+    };
+  }
+
+  rpc GetDsDqComparisonType(GetDsDqComparisonTypeRequest) returns (DsDqComparisonType) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsDqComparisonTypes/*}"
+    };
+  }
+
+  rpc CreateDsDqComparisonType(CreateDsDqComparisonTypeRequest) returns (DsDqComparisonType) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsDqComparisonTypes"
+      body: "DsDqComparisonType"
+    };
+  }
+
+  rpc UpdateDsDqComparisonType(UpdateDsDqComparisonTypeRequest) returns (DsDqComparisonType) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsDqComparisonType.name=DsDqComparisonTypes/*}"
+      body: "DsDqComparisonType"
+    };
+  }
+
+  rpc DeleteDsDqComparisonType(DeleteDsDqComparisonTypeRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsDqComparisonTypes/*}"
+    };
+  }
+}
+
+// message DsDqComparisonType {
+// ! This should be defined elsewhere
+// }
+
+message ListDsDqComparisonTypesRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListDsDqComparisonTypesResponse {
+  // The field name should match the noun "DsDqComparisonType" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated DsDqComparisonType DsDqComparisonTypes = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetDsDqComparisonTypeRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateDsDqComparisonTypeRequest {
+  // The parent resource name where the DsDqComparisonType is to be created.
+  string parent = 1;
+
+  // The DsDqComparisonType id to use for this DsDqComparisonType.
+  string DsDqComparisonType_id = 2;
+
+  // The DsDqComparisonType resource to create.
+  // The field name should match the Noun in the method name.
+  DsDqComparisonType DsDqComparisonType = 3;
+}
+
+message UpdateDsDqComparisonTypeRequest {
+  // The DsDqComparisonType resource which replaces the resource on the server.
+  DsDqComparisonType DsDqComparisonType = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteDsDqComparisonTypeRequest {
+  // The resource name of the DsDqComparisonType to be deleted.
+  string name = 1;
+}

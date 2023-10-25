@@ -1,0 +1,105 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+package ds_tenant;
+
+message DsTenant {
+
+     int32  id=1 ;
+     optional string tenant_code=2 ;
+     optional string description=3 ;
+     optional int32 queue_id=4 ;
+     optional string create_time=5 ;
+     optional string update_time=6 ;
+}
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsTenantService {
+  rpc ListDsTenants(ListDsTenantsRequest) returns (ListDsTenantsResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsTenants"
+    };
+  }
+
+  rpc GetDsTenant(GetDsTenantRequest) returns (DsTenant) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsTenants/*}"
+    };
+  }
+
+  rpc CreateDsTenant(CreateDsTenantRequest) returns (DsTenant) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsTenants"
+      body: "DsTenant"
+    };
+  }
+
+  rpc UpdateDsTenant(UpdateDsTenantRequest) returns (DsTenant) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsTenant.name=DsTenants/*}"
+      body: "DsTenant"
+    };
+  }
+
+  rpc DeleteDsTenant(DeleteDsTenantRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsTenants/*}"
+    };
+  }
+}
+
+// message DsTenant {
+// ! This should be defined elsewhere
+// }
+
+message ListDsTenantsRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListDsTenantsResponse {
+  // The field name should match the noun "DsTenant" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated DsTenant DsTenants = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetDsTenantRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateDsTenantRequest {
+  // The parent resource name where the DsTenant is to be created.
+  string parent = 1;
+
+  // The DsTenant id to use for this DsTenant.
+  string DsTenant_id = 2;
+
+  // The DsTenant resource to create.
+  // The field name should match the Noun in the method name.
+  DsTenant DsTenant = 3;
+}
+
+message UpdateDsTenantRequest {
+  // The DsTenant resource which replaces the resource on the server.
+  DsTenant DsTenant = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteDsTenantRequest {
+  // The resource name of the DsTenant to be deleted.
+  string name = 1;
+}

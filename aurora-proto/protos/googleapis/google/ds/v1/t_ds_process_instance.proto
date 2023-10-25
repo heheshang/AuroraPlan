@@ -1,0 +1,139 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+package ds_process_instance;
+
+
+message DsProcessInstance {
+
+    int32 id=1 ;
+    optional string name=2 ;
+    optional int64 process_definition_code=3 ;
+    optional int32 process_definition_version=4 ;
+    optional int32 state= 5;
+    optional int32 recovery=6 ;
+    optional string start_time=7 ;
+    optional string end_time=8 ;
+    optional int32 run_times=9;
+    optional string host=10 ;
+    optional int32 command_type= 11;
+    optional string command_param=12 ;
+    optional int32 task_depend_type=13 ;
+    optional int32 max_try_times=14 ;
+    optional int32 failure_strategy=15 ;
+    optional int32 warning_type=16 ;
+    optional int32 warning_group_id=17 ;
+    optional string schedule_time=18 ;
+    optional string command_start_time=19 ;
+    optional string global_params=20 ;
+    optional string process_instance_json=21 ;
+    optional int32 flag=22 ;
+    optional string update_time=23 ;
+    optional int32 is_sub_process=24 ;
+    int32 executor_id=25 ;
+    optional string history_cmd=26 ;
+    optional string dependence_schedule_times=27 ;
+    optional int32 process_instance_priority=28 ;
+    optional string worker_group=29 ;
+    optional int64 environment_code=30 ;
+    optional int32 timeout=31 ;
+    int32 tenant_id=32 ;
+    optional string var_pool=33 ;
+    optional int32 dry_run=34 ;
+    optional int32 next_process_instance_id=35 ;
+    optional string restart_time=36 ;
+}
+
+
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsProcessInstanceService {
+  rpc ListDsProcessInstances(ListDsProcessInstancesRequest) returns (ListDsProcessInstancesResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsProcessInstances"
+    };
+  }
+
+  rpc GetDsProcessInstance(GetDsProcessInstanceRequest) returns (DsProcessInstance) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsProcessInstances/*}"
+    };
+  }
+
+  rpc CreateDsProcessInstance(CreateDsProcessInstanceRequest) returns (DsProcessInstance) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsProcessInstances"
+      body: "DsProcessInstance"
+    };
+  }
+
+  rpc UpdateDsProcessInstance(UpdateDsProcessInstanceRequest) returns (DsProcessInstance) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsProcessInstance.name=DsProcessInstances/*}"
+      body: "DsProcessInstance"
+    };
+  }
+
+  rpc DeleteDsProcessInstance(DeleteDsProcessInstanceRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsProcessInstances/*}"
+    };
+  }
+}
+
+// message DsProcessInstance {
+// ! This should be defined elsewhere
+// }
+
+message ListDsProcessInstancesRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListDsProcessInstancesResponse {
+  // The field name should match the noun "DsProcessInstance" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated DsProcessInstance DsProcessInstances = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetDsProcessInstanceRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateDsProcessInstanceRequest {
+  // The parent resource name where the DsProcessInstance is to be created.
+  string parent = 1;
+
+  // The DsProcessInstance id to use for this DsProcessInstance.
+  string DsProcessInstance_id = 2;
+
+  // The DsProcessInstance resource to create.
+  // The field name should match the Noun in the method name.
+  DsProcessInstance DsProcessInstance = 3;
+}
+
+message UpdateDsProcessInstanceRequest {
+  // The DsProcessInstance resource which replaces the resource on the server.
+  DsProcessInstance DsProcessInstance = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteDsProcessInstanceRequest {
+  // The resource name of the DsProcessInstance to be deleted.
+  string name = 1;
+}

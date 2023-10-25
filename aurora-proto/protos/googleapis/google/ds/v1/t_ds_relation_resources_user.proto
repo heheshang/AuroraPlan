@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+package ds_relation_resources_user;
+
+message DsRelationResourcesUser {
+
+     int32 id= 1;
+     int32 user_id= 2;
+     optional int32 resources_id= 3;
+     optional int32 perm=4 ;
+     optional string create_time=5 ;
+     optional string  update_time=6 ;
+}
+
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsRelationResourcesUserService {
+  rpc ListDsRelationResourcesUsers(ListDsRelationResourcesUsersRequest) returns (ListDsRelationResourcesUsersResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsRelationResourcesUsers"
+    };
+  }
+
+  rpc GetDsRelationResourcesUser(GetDsRelationResourcesUserRequest) returns (DsRelationResourcesUser) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsRelationResourcesUsers/*}"
+    };
+  }
+
+  rpc CreateDsRelationResourcesUser(CreateDsRelationResourcesUserRequest) returns (DsRelationResourcesUser) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsRelationResourcesUsers"
+      body: "DsRelationResourcesUser"
+    };
+  }
+
+  rpc UpdateDsRelationResourcesUser(UpdateDsRelationResourcesUserRequest) returns (DsRelationResourcesUser) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsRelationResourcesUser.name=DsRelationResourcesUsers/*}"
+      body: "DsRelationResourcesUser"
+    };
+  }
+
+  rpc DeleteDsRelationResourcesUser(DeleteDsRelationResourcesUserRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsRelationResourcesUsers/*}"
+    };
+  }
+}
+
+// message DsRelationResourcesUser {
+// ! This should be defined elsewhere
+// }
+
+message ListDsRelationResourcesUsersRequest {
+
+
+  // The maximum number of items to return.
+  int32 page_size = 1;
+
+ int32 page_num = 2;
+}
+
+message ListDsRelationResourcesUsersResponse {
+  // The field name should match the noun "DsRelationResourcesUser" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated DsRelationResourcesUser DsRelationResourcesUsers = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+  string next_page_token = 2;
+}
+
+message GetDsRelationResourcesUserRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateDsRelationResourcesUserRequest {
+  // The parent resource name where the DsRelationResourcesUser is to be created.
+  string parent = 1;
+
+  // The DsRelationResourcesUser id to use for this DsRelationResourcesUser.
+  string DsRelationResourcesUser_id = 2;
+
+  // The DsRelationResourcesUser resource to create.
+  // The field name should match the Noun in the method name.
+  DsRelationResourcesUser DsRelationResourcesUser = 3;
+}
+
+message UpdateDsRelationResourcesUserRequest {
+  // The DsRelationResourcesUser resource which replaces the resource on the server.
+  DsRelationResourcesUser DsRelationResourcesUser = 1;
+
+  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteDsRelationResourcesUserRequest {
+  // The resource name of the DsRelationResourcesUser to be deleted.
+  string name = 1;
+}
