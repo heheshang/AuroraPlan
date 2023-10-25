@@ -1,0 +1,29 @@
+
+[database]
+url = "postgres://superset:superset@tx:15432/dolphinscheduler"
+
+[sparkpost]
+key = "sparkpost-dev-key"
+token = "sparkpost-dev-token"
+url = "https://api.sparkpost.com"
+version = 1
+
+[twitter]
+consumer_token = "twitter-dev-consumer-key"
+consumer_secret = "twitter-dev-consumer-secret"
+
+[braintree]
+merchant_id = "braintree-merchant-id"
+public_key = "braintree-dev-public-key"
+private_key = "braintree-dev-private-key"
+
+[security]
+# Authentication types (supported types: PASSWORD,LDAP)
+authentication_type = "PASSWORD"
+authentication_ldap_user_admin = "read-only-admin"
+authentication_ldap_urls = "ldap://ldap.forumsys.com:389/"
+authentication_ldap_base_dn = "dc=example,dc=com"
+authentication_ldap_username = "cn=read-only-admin,dc=example,dc=com"
+authentication_ldap_password = "password"
+authentication_ldap_user_identity_attribute = "uid"
+authentication_ldap_user_email_attribute = "mail"
