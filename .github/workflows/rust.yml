@@ -48,8 +48,8 @@ jobs:
         run: rustup component add clippy
       - name: install nextest
         uses: taiki-e/install-action@nextest
-      - name: Install sea-orm-cli
-        run: cargo install sea-orm-cli
+      # - name: Install sea-orm-cli
+      #   run: cargo install sea-orm-cli
       - uses: Swatinem/rust-cache@v1
       - name: Check code format
         run: cargo fmt -- --check
