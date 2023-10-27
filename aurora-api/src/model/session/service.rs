@@ -44,7 +44,7 @@ pub async fn create_ds_session(user: &DsUser, extra: &str) -> Result<DsSession> 
                 err
             })
     } else {
-        let session = sessions.get(0).unwrap();
+        let session = sessions.first().unwrap();
         update_ds_session(session.clone()).await?;
         Ok(DsSession {
             id: session.id.clone(),
