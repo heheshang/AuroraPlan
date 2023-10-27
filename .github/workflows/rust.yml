@@ -63,3 +63,6 @@ jobs:
             - name: run migration 
               # run: cargo nextest run --all-features
               run: cargo run -p migration
+            - name: run aurora-service
+              # run: cargo nextest run --all-features
+              run: cargo run -p aurora-service --bin server

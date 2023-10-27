@@ -24,17 +24,21 @@ fn glb_config_dir() -> PathBuf {
         Ok(v) => Path::new(&v).join("aurora-config"),
         Err(_) => {
             let current_dir = env::current_dir().unwrap();
-
+            println!("current_dir: {:?}", current_dir);
+            if current_dir.ends_with("aurora-config") {
+                return current_dir;
+            }
             // 获取当前文件名
             let args = env::args().next().unwrap();
             let filename = Path::new(&args).file_name().unwrap().to_str().unwrap();
+            println!("filename: {:?}", filename);
             // 拼接完整的文件路径
             let full_path = current_dir.join(filename);
             // 将完整路径转换为字符串并打印
             let full_path_string = full_path.to_str().unwrap();
             println!("full_path_string: {:?}", full_path_string);
             let path = full_path_string
-                .split("aurora-config")
+                .split(filename)
                 .collect::<Vec<_>>()
                 .first()
                 .unwrap()
