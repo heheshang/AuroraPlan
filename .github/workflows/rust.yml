@@ -101,7 +101,7 @@ jobs:
         # run: cargo nextest run --all-features
         run: cargo run -p migration
   build-test:
-    needs: [ build-rust,delpoy]
+    needs: [ build-rust,delpoy,build-migraions]
     runs-on: ubuntu-latest
     steps:
       - name: Execute rust tests
