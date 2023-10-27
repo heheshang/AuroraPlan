@@ -1,0 +1,46 @@
+version: '3'
+services:
+    db:
+        restart: always
+        image: postgres:14.5
+        environment:
+            - POSTGRES_USER=superset
+            - POSTGRES_PASSWORD=superset
+            - POSTGRES_DB=Aurorascheduler
+        ports:
+            - 154321:5432
+        volumes:
+            - ./db:/var/lib/postgresql/data
+        # Set health checks to wait until postgres has started
+        healthcheck:
+            test: ["CMD", "pg_isready", "-U", "superset"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+    aurora-api:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        command: ['cargo', 'run', '-p', 'aurora-api', '--release']
+        ports:
+            - '54321:54321'
+        depends_on:
+            - db
+            - aurora-service
+    aurora-service:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        command:
+            [
+                'cargo',
+                'run',
+                '-p',
+                'aurora-service',
+                '--bin server',
+                '--release',
+            ]
+        ports:
+            - '50051:50051'
+        depends_on:
+            - db

@@ -10,8 +10,8 @@ env:
     CARGO_TERM_COLOR: always
 
 jobs:
-    build-rust:
-        strategy:
+    build-db:
+         strategy:
             matrix:
                 platform: [ubuntu-latest]
         runs-on: ${{ matrix.platform }}
@@ -29,7 +29,8 @@ jobs:
                     --health-cmd pg_isready
                     --health-interval 10s
                     --health-timeout 5s
-                    --health-retries 5
+                    --health-retries 5   
+    build-rust:
         steps:
             - uses: actions/checkout@v3
               with:
@@ -56,15 +57,47 @@ jobs:
             - name: Lint rust sources
               # run: cargo clippy --all-targets --all-features --tests --benches -- -D warnings
               run: cargo clippy --all-targets -F cn_msg --tests --benches -- -D warnings
-            - name: Execute rust tests
+            - name: Execute migration 
               # run: cargo nextest run --all-features
               run: cargo run -p migration
-            - name: run aurora-service
+            # - name: budild docker image
+            #   run: docker build . --file Dockerfile --tag AuroraPlan:lastest
+            # - name: run aurora-service
+            #   # run: cargo nextest run --all-features
+            #   run: cargo run -p aurora-service --bin server
+            # - name: run aurora-api
+            #   # run: cargo nextest run --all-features
+            #   run: cargo run -p aurora-api 
+            # - name: Execute rust tests
               # run: cargo nextest run --all-features
-              run: cargo run -p aurora-service --bin server
-            - name: run aurora-api
-              # run: cargo nextest run --all-features
-              run: cargo run -p aurora-api 
+              # run: cargo nextest run -F cn_msg
+    deploy:
+        needs: [build-db, build-rust]
+        runs-on: ubuntu-latest
+        steps:
+            - name: Install Docker
+              uses: docker/setup-docker@v1
+            - name: Build and push
+              uses: docker/build-push-action@v2
+              with:
+                  context: .
+                  file: ./Dockerfile
+                  push: true
+                  tags: aurora-plan:latest
+            - name: Check docker image
+              run: docker images
+            # docker-compose up -d
+            - name:  Run Docker Compose
+              with:
+                  context: .
+                  file: ./docker-compose.yml
+              run: docker-compose up -d
+            - name: Check docker container status
+              run: docker ps -a
+    build-test:
+        needs: [build-db, build-rust,delpoy]
+        runs-on: ubuntu-latest
+        steps:
             - name: Execute rust tests
               # run: cargo nextest run --all-features
               run: cargo nextest run -F cn_msg
