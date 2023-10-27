@@ -1,0 +1,21 @@
+POST http://127.0.0.1:3000/authorize HTTP/1.1
+Content-Type: application/json
+
+{"client_id":"foo1111","client_secret":"bar"}
+
+
+###
+POST http://127.0.0.1:3000/users HTTP/1.1
+Authorization:Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJmb28xMTExIiwiY29tcGFueSI6ImJhciIsImV4cCI6MjAwMDAwMDAwMDB9.b-dE8Cmfa6VkK2pFtJ4BJeoSreg8D2pI_JGxDSVuPQk
+Content-Type: application/json
+
+{"username":"shangshikun"}
+
+
+
+###
+GET http://127.0.0.1:3000/ HTTP/1.1
+Authorization:Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJmb28xMTExIiwiY29tcGFueSI6ImJhciIsImV4cCI6MjAwMDAwMDAwMDB9.b-dE8Cmfa6VkK2pFtJ4BJeoSreg8D2pI_JGxDSVuPQk
+Content-Type: application/json
+
+{"username":"shangshikun"}
