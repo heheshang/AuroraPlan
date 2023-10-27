@@ -10,26 +10,26 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build-db:
-      strategy:
-        matrix:
-            platform: [ubuntu-latest]
-      runs-on: ${{ matrix.platform }}
-      services:
-        postgres:
-          image: postgres:14.5
-          env:
-            POSTGRES_USER: superset
-            POSTGRES_PASSWORD: superset
-            POSTGRES_DB: Aurorascheduler
-          ports:
-            - 15432:5432
-          # Set health checks to wait until postgres has started
-          options: >-
-            --health-cmd pg_isready
-            --health-interval 10s
-            --health-timeout 5s
-            --health-retries 5   
+  # build-db:
+  #     strategy:
+  #       matrix:
+  #           platform: [ubuntu-latest]
+  #     runs-on: ${{ matrix.platform }}
+  #     services:
+  #       postgres:
+  #         image: postgres:14.5
+  #         env:
+  #           POSTGRES_USER: superset
+  #           POSTGRES_PASSWORD: superset
+  #           POSTGRES_DB: Aurorascheduler
+  #         ports:
+  #           - 15432:5432
+  #         # Set health checks to wait until postgres has started
+  #         options: >-
+  #           --health-cmd pg_isready
+  #           --health-interval 10s
+  #           --health-timeout 5s
+  #           --health-retries 5   
   build-rust:
     steps:
       - uses: actions/checkout@v3
@@ -57,9 +57,9 @@ jobs:
       - name: Lint rust sources
         # run: cargo clippy --all-targets --all-features --tests --benches -- -D warnings
         run: cargo clippy --all-targets -F cn_msg --tests --benches -- -D warnings
-      - name: Execute migration 
-        # run: cargo nextest run --all-features
-        run: cargo run -p migration
+      # - name: Execute migration 
+      #   # run: cargo nextest run --all-features
+      #   run: cargo run -p migration
       # - name: budild docker image
       #   run: docker build . --file Dockerfile --tag AuroraPlan:lastest
       # - name: run aurora-service
@@ -72,7 +72,7 @@ jobs:
         # run: cargo nextest run --all-features
         # run: cargo nextest run -F cn_msg
   deploy:
-    needs: [build-db, build-rust]
+    needs: [ build-rust]
     runs-on: ubuntu-latest
     steps:
       - name: Install Docker
@@ -92,8 +92,15 @@ jobs:
         run: docker-compose up -d
       - name: Check docker container status
         run: docker ps -a
+  build-migraions:
+    needs: [ deploy]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Execute migration 
+        # run: cargo nextest run --all-features
+        run: cargo run -p migration
   build-test:
-    needs: [build-db, build-rust,delpoy]
+    needs: [ build-rust,delpoy]
     runs-on: ubuntu-latest
     steps:
       - name: Execute rust tests
