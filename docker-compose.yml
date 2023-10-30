@@ -13,7 +13,7 @@ services:
             - ./db:/var/lib/postgresql/data
         # Set health checks to wait until postgres has started
         healthcheck:
-            test: ['CMD', 'pg_isready',  '--username=superset' '--dbname=Aurorascheduler']
+            test: ['CMD', 'pg_isready',  '--username=superset', '--dbname=Aurorascheduler']
             interval: 5s
             timeout: 5s
             retries: 5
