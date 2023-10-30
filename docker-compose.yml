@@ -8,12 +8,18 @@ services:
             - POSTGRES_PASSWORD=superset
             - POSTGRES_DB=Aurorascheduler
         ports:
-            - 15432:5432
+            - 16432:5432
         volumes:
             - ./db:/var/lib/postgresql/data
         # Set health checks to wait until postgres has started
         healthcheck:
-            test: ['CMD', 'pg_isready',  '--username=superset', '--dbname=Aurorascheduler']
+            test:
+                [
+                    'CMD',
+                    'pg_isready',
+                    '--username=superset',
+                    '--dbname=Aurorascheduler',
+                ]
             interval: 5s
             timeout: 5s
             retries: 5
@@ -25,7 +31,7 @@ services:
         ports:
             - '54321:54321'
         depends_on:
-        # - db
+            # - db
             - aurora-service
     aurora-service:
         build:
