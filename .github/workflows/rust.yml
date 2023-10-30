@@ -96,11 +96,16 @@ jobs:
         run: docker-compose up -d
       - name: Check docker container status
         run: docker ps -a
+      - name: Install Rust
+        run: rustup toolchain install stable --component llvm-tools-preview
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov 
       - name: Execute migration 
-        # run: cargo nextest run --all-features
         run: cargo run -p migration
       - name: install nextest
         uses: taiki-e/install-action@nextest
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
       - name: Execute rust tests
         # run: cargo nextest run --all-features
         run: cargo nextest run -F cn_msg
