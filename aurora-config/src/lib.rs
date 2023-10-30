@@ -24,26 +24,21 @@ fn glb_config_dir() -> PathBuf {
         Ok(v) => Path::new(&v).join("aurora-config"),
         Err(_) => {
             let current_dir = env::current_dir().unwrap();
+
             println!("current_dir: {:?}", current_dir);
-            if current_dir.ends_with("aurora-config") {
-                return current_dir;
+
+            let mut dirs = current_dir.to_str().unwrap().split('/').collect::<Vec<_>>();
+
+            dirs.reverse();
+
+            while !dirs.is_empty() && dirs[0] != "AuroraPlan" {
+                dirs.remove(0);
             }
-            // 获取当前文件名
-            let args = env::args().next().unwrap();
-            let filename = Path::new(&args).file_name().unwrap().to_str().unwrap();
-            println!("filename: {:?}", filename);
-            // 拼接完整的文件路径
-            let full_path = current_dir.join(filename);
-            // 将完整路径转换为字符串并打印
-            let full_path_string = full_path.to_str().unwrap();
-            println!("full_path_string: {:?}", full_path_string);
-            let path = full_path_string
-                .split(filename)
-                .collect::<Vec<_>>()
-                .first()
-                .unwrap()
-                .to_string();
-            println!("path: {:?}", path);
+
+            let path = dirs.iter().rev().copied().collect::<Vec<_>>().join("/");
+
+            println!("final path: {:?}", path);
+
             Path::new(&path).join("aurora-config")
         }
     }
@@ -51,9 +46,29 @@ fn glb_config_dir() -> PathBuf {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     #[test]
     fn get_api_config_path() {
         let path = super::get_dao_config_path();
         println!("path: {:?}", path);
+    }
+
+    #[test]
+    fn test_ptah_caculate() {
+        let current_dir = env::current_dir().unwrap();
+
+        println!("current_dir: {:?}", current_dir);
+
+        let mut dirs = current_dir.to_str().unwrap().split('/').collect::<Vec<_>>();
+
+        dirs.reverse();
+
+        while !dirs.is_empty() && dirs[0] != "AuroraPlan" {
+            dirs.remove(0);
+        }
+
+        let path = dirs.iter().rev().copied().collect::<Vec<_>>().join("/");
+
+        println!("final path: {:?}", path);
     }
 }
