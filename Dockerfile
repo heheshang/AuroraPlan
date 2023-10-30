@@ -3,6 +3,7 @@ FROM rust:latest
 COPY . /app
 WORKDIR /app
 # install protobuf
+
 RUN apt-get update && \
     apt-get install -y protobuf-compiler && \
     apt-get clean && \
