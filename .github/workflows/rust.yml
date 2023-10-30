@@ -46,8 +46,7 @@ jobs:
         run: rustup component add rustfmt
       - name: Install cargo clippy
         run: rustup component add clippy
-      - name: install nextest
-        uses: taiki-e/install-action@nextest
+
       # - name: Install sea-orm-cli
       #   run: cargo install sea-orm-cli
       - uses: Swatinem/rust-cache@v2
@@ -100,6 +99,8 @@ jobs:
       - name: Execute migration 
         # run: cargo nextest run --all-features
         run: cargo run -p migration
+      - name: install nextest
+        uses: taiki-e/install-action@nextest
       - name: Execute rust tests
         # run: cargo nextest run --all-features
         run: cargo nextest run -F cn_msg
