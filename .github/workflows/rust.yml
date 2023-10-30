@@ -87,7 +87,10 @@ jobs:
         #     push: true
         #     tags: aurora-plan:latest
       
-      # docker-compose up -d
+      # docker-compose up -
+      - name: Clean The Workspace 
+        run: cargo clean 
+
       - name: Build the stack
         run: docker-compose up --build 
       - name: run the stack
