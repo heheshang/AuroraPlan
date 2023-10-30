@@ -37,7 +37,8 @@ services:
                 'run',
                 '-p',
                 'aurora-service',
-                '--bin server',
+                '--bin',
+                'server',
                 '--release',
             ]
         ports:
