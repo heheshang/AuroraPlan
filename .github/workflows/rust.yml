@@ -105,6 +105,9 @@ jobs:
         # run: cargo nextest run --all-features
         run: cargo nextest run -F cn_msg
       
+      - name: Execute example 
+        # run: cargo nextest run --all-features
+        run: cargo run -p aurora-api --example quick_dev
   # build-migraions:
   #   needs: [ deploy]
   #   runs-on: ubuntu-latest
