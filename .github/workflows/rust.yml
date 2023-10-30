@@ -102,6 +102,7 @@ jobs:
     needs: [ deploy]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Execute migration 
         # run: cargo nextest run --all-features
         run: cargo run -p migration
@@ -109,6 +110,7 @@ jobs:
     needs: [ build-rust,deploy,build-migraions]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Execute rust tests
         # run: cargo nextest run --all-features
         run: cargo nextest run -F cn_msg
