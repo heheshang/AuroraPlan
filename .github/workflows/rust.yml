@@ -92,7 +92,7 @@ jobs:
         run: cargo clean 
 
       - name: Build the stack
-        run: docker-compose up --build 
+        run: docker-compose build 
       - name: run the stack
         run: docker-compose up -d
       - name: Check docker container status
