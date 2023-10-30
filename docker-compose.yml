@@ -24,9 +24,9 @@ services:
         command: ['cargo', 'run', '-p', 'aurora-api', '--release']
         ports:
             - '54321:54321'
-        # depends_on:
+        depends_on:
         # - db
-        # - aurora-service
+            - aurora-service
     aurora-service:
         build:
             context: .
@@ -43,5 +43,5 @@ services:
             ]
         ports:
             - '50051:50051'
-        # depends_on:
-        # - db
+        depends_on:
+            - db
