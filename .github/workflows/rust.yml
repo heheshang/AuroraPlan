@@ -89,6 +89,8 @@ jobs:
       
       # docker-compose up -d
       - name: Build the stack
+        run: docker-compose up --build 
+      - name: run the stack
         run: docker-compose up -d
       - name: Check docker container status
         run: docker ps -a
