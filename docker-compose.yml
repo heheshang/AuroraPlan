@@ -1,6 +1,6 @@
 version: '3'
 services:
-    db:
+    aurora-postgres:
         restart: always
         image: postgres:14.5
         environment:
@@ -10,7 +10,7 @@ services:
         ports:
             - 16432:5432
         volumes:
-            - ./db:/var/lib/postgresql/data
+            - aurora-postgres:/var/lib/postgresql/data
         # Set health checks to wait until postgres has started
         healthcheck:
             test:
@@ -23,31 +23,60 @@ services:
             interval: 5s
             timeout: 5s
             retries: 5
-    aurora-api:
+        networks:
+            - aurora_plan
+
+    aurora-plan:
         build:
             context: .
             dockerfile: Dockerfile
-        command: ['cargo', 'run', '-p', 'aurora-api', '--release']
+        image: aurora-plan:latest
+        networks:
+            - aurora_plan
+    aurora-migration:
+        image: aurora-plan:latest
+        command: ["./deploy/migration"]
+        depends_on:
+            # - db
+            - aurora-postgres
+        networks:
+            - aurora_plan
+    aurora-api:
+        image: aurora-plan:latest
+        # command: ['cargo', 'run', '-p', 'aurora-api', '--release']
+        command: ["./deploy/aurora-api"]
         ports:
             - '54321:54321'
         depends_on:
             # - db
             - aurora-service
+        networks:
+            - aurora_plan
     aurora-service:
-        build:
-            context: .
-            dockerfile: Dockerfile
-        command:
-            [
-                'cargo',
-                'run',
-                '-p',
-                'aurora-service',
-                '--bin',
-                'server',
-                '--release',
-            ]
+        image: aurora-plan:latest
+        # command:
+        #     [
+        #         'cargo',
+        #         'run',
+        #         '-p',
+        #         'aurora-service',
+        #         '--release',
+        #     ]
+        command: ["./deploy/aurora-service"]
         ports:
             - '50051:50051'
         depends_on:
-            - db
+            - aurora-postgres
+        networks:
+            - aurora_plan
+networks:
+    aurora_plan:
+        driver: bridge
+
+volumes:
+    aurora-postgres:
+    aurora-zookeeper:
+    aurora-worker-data:
+    aurora-logs:
+    aurora-shared-local:
+    aurora-resource-local:

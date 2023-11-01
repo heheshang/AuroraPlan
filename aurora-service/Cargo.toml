@@ -19,7 +19,7 @@ sea-orm = { workspace = true, features = [
     "serde_json",
 ] }
 serde = { workspace = true, features = ["derive"] }
-tokio = { workspace=true, features = ["full"] }
+tokio = { workspace = true, features = ["full"] }
 tonic = { workspace = true }
 entity = { version = "0.1.0", path = "../aurora-entity", package = "aurora-entity" }
 proto = { version = "0.1.0", path = "../aurora-proto", package = "aurora-proto" }
@@ -28,9 +28,9 @@ serde_json = { workspace = true }
 chrono = { workspace = true }
 aurora_config = { version = "0.1.0", path = "../aurora-config", package = "aurora-config" }
 
-[[bin]]
-name = "server"
-path = "src/server.rs"
-[[bin]]
-name = "client"
-path = "src/client.rs"
+# [[bin]]
+# name = "server"
+# path = "src/server.rs"
+# [[bin]]
+# name = "client"
+# path = "src/client.rs"

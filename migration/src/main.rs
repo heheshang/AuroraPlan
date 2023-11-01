@@ -2,6 +2,7 @@ use std::env;
 
 // use futures::executor::block_on;
 use async_std::{fs, task};
+use aurora_config::dao_config::Settings;
 use sea_orm_migration::{
     prelude::*,
     sea_orm::{Database, Statement},
@@ -16,8 +17,9 @@ fn main() -> Result<(), DbErr> {
     Ok(())
 }
 async fn run() -> Result<(), DbErr> {
-    let db_url = dotenvy::var("DATABASE_URL")
-        .unwrap_or(DbErr::Custom("DATABASE_URL is not set".to_string()).to_string());
+    // let db_url = dotenvy::var("DATABASE_URL")
+    // .unwrap_or(DbErr::Custom("DATABASE_URL is not set".to_string()).to_string());
+    let db_url = Settings::new().expect("load config error").database.url;
     println!("db_url: {:?}", db_url);
 
     let current_dir = env::current_dir().unwrap_or(
@@ -53,7 +55,7 @@ async fn run() -> Result<(), DbErr> {
         .map(|ll| ll.trim())
         .collect::<Vec<_>>()
         .join(" ");
-    println!("sql_content: {:?}", sql_content);
+    // println!("sql_content: {:?}", sql_content);
 
     let db = Database::connect(&db_url).await?;
     match db.get_database_backend() {

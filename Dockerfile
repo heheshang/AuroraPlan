@@ -1,15 +1,43 @@
-FROM rust:latest 
+FROM rust:latest as builder
+user root
+ENV TZ=Asia/Shanghai
 
-COPY . /app
-WORKDIR /app
-# install protobuf
+COPY . /AuroraPlan
+WORKDIR /AuroraPlan
+RUN mkdir -p /$HOME/.cargo
 
-RUN apt-get update && \
-    apt-get install -y protobuf-compiler && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-# Install  Install protoc
-RUN cargo install protobuf-codegen
+RUN touch /$HOME/.cargo/config.toml
+RUN rm -rf /AuroraPlan/aurora-proto/build.rs 
+RUN ls -l /AuroraPlan/aurora-proto
+
+ENV RUSTUP_DIST_SERVER=https://mirrors.ustc.edu.cn/rust-static
+ENV RUSTUP_UPDATE_ROOT=https://mirrors.ustc.edu.cn/rust-static/rustup
+ENV PATH="/root/.cargo/bin:$PATH"
 RUN cargo build --release
 
+RUN mkdir -p /AuroraPlan/deploy/examples
+RUN ls -la /AuroraPlan/target/release
+RUN cp /AuroraPlan/target/release/aurora-api /AuroraPlan/deploy/
+RUN cp /AuroraPlan/target/release/aurora-service /AuroraPlan/deploy/
+RUN cp /AuroraPlan/target/release/migration /AuroraPlan/deploy/
+RUN cp -r /AuroraPlan/target/release/examples /AuroraPlan/deploy/examples/
+RUN ls -la /AuroraPlan/deploy/
+RUN ls -la /AuroraPlan/deploy/examples
+
+RUN cargo clean
+RUN rm -rf /root/.cargo/registry/cache
+
+
+
+
+FROM rust:latest
+user root
+ENV TZ=Asia/Shanghai
+WORKDIR /AuroraPlan
+COPY --from=builder /AuroraPlan .
+RUN ls -la /AuroraPlan/deploy/
+RUN ls -la /AuroraPlan/deploy/examples
+
+
 EXPOSE 8000
+

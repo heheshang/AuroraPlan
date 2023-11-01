@@ -1,3 +1,4 @@
 target
 .git
 .gitingore
+aurora-ui/node_modules

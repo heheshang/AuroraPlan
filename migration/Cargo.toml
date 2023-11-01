@@ -10,6 +10,7 @@ path = "src/lib.rs"
 
 [dependencies]
 async-std = { workspace = true, features = ["attributes", "tokio1"] }
+aurora_config = { version = "0.1.0", path = "../aurora-config", package = "aurora-config" }
 dotenvy = { workspace = true }
 # futures = { workspace = true }
 [dependencies.sea-orm-migration]

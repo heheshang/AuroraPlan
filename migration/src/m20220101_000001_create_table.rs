@@ -11,6 +11,7 @@ impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         // Replace the sample below with your own migration scripts
         // todo!();
+
         let db = manager.get_database_backend();
         let statement = match db {
             DbBackend::MySql => Statement::from_string(db, ""),
