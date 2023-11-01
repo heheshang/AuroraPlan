@@ -87,6 +87,8 @@ jobs:
         #     tags: aurora-plan:latest
       
       # docker-compose up -
+      - name: default config.toml
+        run: sed -i 's/replace-with/#replace-with/g' .cargo/config.toml
       - name: Clean The Workspace 
         run: cargo clean 
 
