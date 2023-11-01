@@ -7,7 +7,7 @@ async fn main() -> Result<()> {
     // let settings = Settings::new()?;
     // let host = settings.server.host;
     // let port = settings.server.port;
-    let url = format!("http://{}:{}", "127.0.0.1",54321);
+    let url = format!("http://{}:{}", "127.0.0.1", "54321");
 
     let hc = httpc_test::new_client(url)?;
 
