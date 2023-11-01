@@ -110,10 +110,9 @@ jobs:
         uses: arduino/setup-protoc@v1
       # - name: modify hosts
       #   run: sudo echo "127.0.0.1  aurora-service aurora-postgres" >> /etc/hosts
-      # - name: Execute rust tests
+      - name: Print test LOG
       #   # run: cargo nextest run --all-features
-      #   run: cargo nextest run -F cn_msg
-      
+        run: docker logs -f 1000 aurora-test
       - name: Execute example 
         # run: cargo nextest run --all-features
         run: cargo run -p aurora-api --example quick_dev
