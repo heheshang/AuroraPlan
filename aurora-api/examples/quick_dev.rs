@@ -1,9 +1,15 @@
 use anyhow::Result;
+use aurora_config::api_config::Settings;
 use serde_json::json;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let hc = httpc_test::new_client("http://127.0.0.1:54321")?;
+    let settings = Settings::new()?;
+    let host = settings.server.host;
+    let port = settings.server.port;
+    let url = format!("http://{}:{}", host, port);
+
+    let hc = httpc_test::new_client(url)?;
 
     // hc.do_get("/index.html").await?.print().await?;
 
