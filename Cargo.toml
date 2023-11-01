@@ -81,3 +81,6 @@ serial_test = "2"
 [profile.release-with-debug]
 inherits = "release"
 debug = true
+
+[profile.dev]
+incremental = true
