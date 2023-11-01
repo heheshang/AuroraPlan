@@ -100,8 +100,6 @@ jobs:
         run: rustup toolchain install stable --component llvm-tools-preview
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov 
-      - name: Execute migration 
-        run: cargo run -p migration
       - name: install nextest
         uses: taiki-e/install-action@nextest
       - name: Install Protoc

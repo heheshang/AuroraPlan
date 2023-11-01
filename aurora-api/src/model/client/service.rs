@@ -1,6 +1,4 @@
-use std::cell::RefCell;
-
-use aurora_config::dao_config::Settings;
+use aurora_config::api_config::Settings;
 use aurora_proto::{
     ds_access_token::ds_access_token_service_client::DsAccessTokenServiceClient,
     ds_alert::ds_alert_service_client::DsAlertServiceClient,
@@ -62,6 +60,8 @@ use aurora_proto::{
     qrtz_simprop_triggers::qrtz_simprop_trigger_service_client::QrtzSimpropTriggerServiceClient,
     qrtz_triggers::qrtz_trigger_service_client::QrtzTriggerServiceClient,
 };
+use std::cell::RefCell;
+use tracing::info;
 
 use aurora_common::{core_error::error::Error, core_results::results::Result};
 
@@ -76,10 +76,11 @@ macro_rules! build_client {
         > = tokio::sync::OnceCell::const_new();
 
         pub async fn $fn_name() -> Result<$service_type<tonic::transport::Channel>> {
-            let host = SETTINGS.with(|settings| settings.borrow().server.host.clone());
-            let port = SETTINGS.with(|settings| settings.borrow().server.port.clone());
+            let host = SETTINGS.with(|settings| settings.borrow().service.host.clone());
+            let port = SETTINGS.with(|settings| settings.borrow().service.port.clone());
 
             let addr_str = format!("http://{host}:{port}").clone();
+            info!("addr_str:{}", addr_str);
             let addr = tonic::transport::Endpoint::from_shared(addr_str);
             let client = match $service_type::connect(addr.unwrap()).await {
                 Ok(client) => Ok(client),

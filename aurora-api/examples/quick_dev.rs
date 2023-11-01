@@ -11,7 +11,7 @@ async fn main() -> Result<()> {
         "/aurorascheduler/login",
         json!({
             "userName": "admin",
-            "userPassword": "aurorascheduler123"
+            "userPassword": "dolphinscheduler123"
         }),
     );
     req_login.await?.print().await?;
@@ -20,7 +20,7 @@ async fn main() -> Result<()> {
         "/aurorascheduler/login",
         json!({
             "userName": "admin",
-            "userPassword": "aurorascheduler1234"
+            "userPassword": "dolphinscheduler123"
         }),
     );
     req_login.await?.print().await?;

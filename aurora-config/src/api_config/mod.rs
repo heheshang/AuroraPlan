@@ -55,8 +55,15 @@ pub struct Settings {
     pub braintree: Braintree,
     pub security: Security,
     pub server: Server,
+    pub service: Service,
 }
 
+#[derive(Debug, Deserialize)]
+#[allow(unused)]
+pub struct Service {
+    pub host: String,
+    pub port: u32,
+}
 #[derive(Debug, Deserialize)]
 #[allow(unused)]
 pub struct Server {
