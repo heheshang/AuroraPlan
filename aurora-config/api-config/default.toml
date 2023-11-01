@@ -2,6 +2,10 @@
 [database]
 url = "postgres://superset:superset@aurora-postgres:5432/Aurorascheduler"
 
+[server]
+host = "0.0.0.0"
+port = 54321
+
 [sparkpost]
 key = "sparkpost-dev-key"
 token = "sparkpost-dev-token"

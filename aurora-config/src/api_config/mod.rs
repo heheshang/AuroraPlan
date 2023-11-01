@@ -54,6 +54,14 @@ pub struct Settings {
     pub twitter: Twitter,
     pub braintree: Braintree,
     pub security: Security,
+    pub server: Server,
+}
+
+#[derive(Debug, Deserialize)]
+#[allow(unused)]
+pub struct Server {
+    pub host: String,
+    pub port: u32,
 }
 
 impl Settings {
