@@ -8,7 +8,7 @@ async fn main() -> Result<()> {
     // hc.do_get("/index.html").await?.print().await?;
 
     let req_login = hc.do_post(
-        "/aurorascheduler/login",
+        "/aurora/login",
         json!({
             "userName": "admin",
             "userPassword": "dolphinscheduler123"
@@ -17,14 +17,14 @@ async fn main() -> Result<()> {
     req_login.await?.print().await?;
 
     let req_login = hc.do_post(
-        "/aurorascheduler/login",
+        "/aurora/login",
         json!({
             "userName": "admin",
             "userPassword": "dolphinscheduler123"
         }),
     );
     req_login.await?.print().await?;
-    let user_info = hc.do_get("/aurorascheduler/get_user_info").await?;
+    let user_info = hc.do_get("/aurora/get_user_info").await?;
     user_info.print().await?;
     Ok(())
 }

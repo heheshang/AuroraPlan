@@ -29,9 +29,9 @@ pub fn routes() -> Router {
     let login = Router::new().route("/login", post(login));
 
     let other = Router::new()
-        .nest("/aurorascheduler", routes)
+        .nest("/aurora", routes)
         .route_layer(middleware::from_fn(mw_ctx_require));
-    Router::new().nest("/aurorascheduler", login).merge(other)
+    Router::new().nest("/aurora", login).merge(other)
 }
 
 pub async fn login(
