@@ -112,7 +112,7 @@ jobs:
       #   run: sudo echo "127.0.0.1  aurora-service aurora-postgres" >> /etc/hosts
       - name: Print test LOG
       #   # run: cargo nextest run --all-features
-        run: docker logs  aurora-test
+        run: docker logs  auroraplan-aurora-test-1
       - name: Execute example 
         # run: cargo nextest run --all-features
         run: cargo run -p aurora-api --example quick_dev

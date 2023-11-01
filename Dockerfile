@@ -23,7 +23,7 @@ RUN cp /AuroraPlan/target/release/migration /AuroraPlan/deploy/
 RUN cp -r /AuroraPlan/target/release/examples /AuroraPlan/deploy/examples/
 RUN ls -la /AuroraPlan/deploy/
 RUN ls -la /AuroraPlan/deploy/examples
-RUN cargo install nextest
+RUN cargo install cargo-nextest
 RUN cargo clean
 RUN rm -rf /root/.cargo/registry/cache
 
