@@ -36,6 +36,8 @@ jobs:
       - uses: actions/checkout@v3
         with:
             fetch-depth: 0
+      - name: default config.toml
+        run: sed -i 's/replace-with/#replace-with/g' .cargo/config.toml
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
       - name: Install Rust
