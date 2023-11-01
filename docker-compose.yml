@@ -18,7 +18,7 @@ services:
                     'CMD',
                     'pg_isready',
                     '--username=superset',
-                    '--dbname=Aurorascheduler',
+                    '--dbname=Aurorascheduler'
                 ]
             interval: 5s
             timeout: 5s
@@ -35,7 +35,7 @@ services:
             - aurora_plan
     aurora-migration:
         image: aurora-plan:latest
-        command: ["./deploy/migration"]
+        command: [ "./deploy/migration" ]
         depends_on:
             # - db
             - aurora-postgres
@@ -44,7 +44,7 @@ services:
     aurora-api:
         image: aurora-plan:latest
         # command: ['cargo', 'run', '-p', 'aurora-api', '--release']
-        command: ["./deploy/aurora-api"]
+        command: [ "./deploy/aurora-api" ]
         ports:
             - '54321:54321'
         depends_on:
@@ -62,11 +62,28 @@ services:
         #         'aurora-service',
         #         '--release',
         #     ]
-        command: ["./deploy/aurora-service"]
+        command: [ "./deploy/aurora-service" ]
         ports:
             - '50051:50051'
         depends_on:
             - aurora-postgres
+        networks:
+            - aurora_plan
+    aurora-test:
+        image: aurora-plan:latest
+        # command:
+        #     [
+        #         'cargo',
+        #         'run',
+        #         '-p',
+        #         'aurora-service',
+        #         '--release',
+        #     ]
+        command: [ "cargo", "nextest", "run", "-F", "cn_msg" ]
+        ports:
+            - '50051:50051'
+        depends_on:
+            - aurora-api
         networks:
             - aurora_plan
 networks:

@@ -1,5 +1,5 @@
 FROM rust:latest as builder
-user root
+USER root
 ENV TZ=Asia/Shanghai
 
 COPY . /AuroraPlan
@@ -23,15 +23,14 @@ RUN cp /AuroraPlan/target/release/migration /AuroraPlan/deploy/
 RUN cp -r /AuroraPlan/target/release/examples /AuroraPlan/deploy/examples/
 RUN ls -la /AuroraPlan/deploy/
 RUN ls -la /AuroraPlan/deploy/examples
-
+RUN cargo install nextest
 RUN cargo clean
 RUN rm -rf /root/.cargo/registry/cache
 
 
 
-
 FROM rust:latest
-user root
+USER root
 ENV TZ=Asia/Shanghai
 WORKDIR /AuroraPlan
 COPY --from=builder /AuroraPlan .

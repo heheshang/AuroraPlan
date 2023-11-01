@@ -104,15 +104,15 @@ jobs:
         run: rustup toolchain install stable --component llvm-tools-preview
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov 
-      - name: install nextest
-        uses: taiki-e/install-action@nextest
+      # - name: install nextest
+      #   uses: taiki-e/install-action@nextest
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
-      - name: modify hosts
-        run: sudo echo "127.0.0.1  aurora-service aurora-postgres" >> /etc/hosts
-      - name: Execute rust tests
-        # run: cargo nextest run --all-features
-        run: cargo nextest run -F cn_msg
+      # - name: modify hosts
+      #   run: sudo echo "127.0.0.1  aurora-service aurora-postgres" >> /etc/hosts
+      # - name: Execute rust tests
+      #   # run: cargo nextest run --all-features
+      #   run: cargo nextest run -F cn_msg
       
       - name: Execute example 
         # run: cargo nextest run --all-features
