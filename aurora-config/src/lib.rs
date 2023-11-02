@@ -65,7 +65,7 @@ pub fn get_ui_source_path() -> Result<PathBuf> {
     } else if Path::new(&path_str).join("aurora-ui").join("dist").exists() {
         Ok(Path::new(&path_str).join("aurora-ui").join("dist"))
     } else {
-        Err(anyhow::anyhow!("ui source path not found"))
+        Ok(Path::new(&path_str).join(""))
     }
 }
 

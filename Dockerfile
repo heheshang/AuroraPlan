@@ -15,7 +15,7 @@ ENV RUSTUP_DIST_SERVER=https://mirrors.ustc.edu.cn/rust-static
 ENV RUSTUP_UPDATE_ROOT=https://mirrors.ustc.edu.cn/rust-static/rustup
 ENV PATH="/root/.cargo/bin:$PATH"
 RUN cargo install cargo-nextest
-RUN cargo nextest run -F cn_msg --release
+RUN cargo nextest run -F cn_msg --nocapture --release
 RUN cargo build --release
 
 RUN mkdir -p /AuroraPlan/deploy/examples
