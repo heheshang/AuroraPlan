@@ -21,6 +21,7 @@ aurora_proto = { path = "../aurora-proto", package = "aurora-proto" }
 aurora_config = { path = "../aurora-config", package = "aurora-config" }
 tonic = { workspace = true }
 tower = { workspace = true, features = ["full"] }
+tower-http = { workspace = true, features = ["fs", "trace"] }
 anyhow = { workspace = true }
 once_cell = { workspace = true }
 md5 = { workspace = true }

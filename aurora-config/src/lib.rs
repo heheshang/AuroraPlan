@@ -1,8 +1,8 @@
+use anyhow::Result;
 use std::{
     env,
     path::{Path, PathBuf},
 };
-
 pub mod api_config;
 pub mod dao_config;
 
@@ -43,3 +43,32 @@ fn glb_config_dir() -> PathBuf {
         }
     }
 }
+
+pub fn get_ui_source_path() -> Result<PathBuf> {
+    let current_dir = env::current_dir().unwrap();
+
+    println!("current_dir: {:?}", current_dir);
+
+    let mut dirs = current_dir.to_str().unwrap().split('/').collect::<Vec<_>>();
+
+    dirs.reverse();
+
+    while !dirs.is_empty() && dirs[0] != "AuroraPlan" {
+        dirs.remove(0);
+    }
+
+    let path = dirs.iter().rev().copied().collect::<Vec<_>>().join("/");
+
+    println!("final path: {:?}", path);
+    let path = Path::new(&path).join("ui");
+    if path.exists() {
+        Ok(path)
+    } else if Path::new(&path).join("aurora-ui").join("dist").exists() {
+        Ok(Path::new(&path).join("aurora-ui").join("dist"))
+    } else {
+        Err(anyhow::anyhow!("ui source path not found"))
+    }
+}
+
+#[cfg(test)]
+mod tests {}

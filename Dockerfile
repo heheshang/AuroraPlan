@@ -19,6 +19,7 @@ RUN cargo nextest run -F cn_msg --release
 RUN cargo build --release
 
 RUN mkdir -p /AuroraPlan/deploy/examples
+RUN mkdir -p /AuroraPlan/ui
 RUN ls -la /AuroraPlan/target/release
 RUN cp /AuroraPlan/target/release/aurora-api /AuroraPlan/deploy/
 RUN cp /AuroraPlan/target/release/aurora-service /AuroraPlan/deploy/
@@ -30,6 +31,14 @@ RUN ls -la /AuroraPlan/deploy/examples
 RUN cargo clean
 RUN rm -rf /root/.cargo/registry/cache
 
+FROM node:latest as node
+USER root
+ENV TZ=Asia/Shanghai
+WORKDIR /AuroraPlan
+COPY --from=builder /AuroraPlan .
+RUN cd /AuroraPlan/aurora-ui && npm install && npm run build:prod
+RUN ls -la /AuroraPlan/aurora-ui/dist
+RUN cp -r /AuroraPlan/aurora-ui/dist/* /AuroraPlan/ui
 
 
 FROM rust:latest
@@ -37,8 +46,10 @@ USER root
 ENV TZ=Asia/Shanghai
 WORKDIR /AuroraPlan
 COPY --from=builder /AuroraPlan .
+COPY --from=node /AuroraPlan/ui /AuroraPlan/ui
 RUN ls -la /AuroraPlan/deploy/
 RUN ls -la /AuroraPlan/deploy/examples
+RUN ls -la /AuroraPlan/ui
 
 EXPOSE 8000
 

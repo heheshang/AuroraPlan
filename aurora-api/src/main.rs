@@ -10,9 +10,11 @@ use crate::web::mw::{
 };
 use anyhow::Result;
 use aurora_config::api_config::Settings;
+use aurora_config::get_ui_source_path;
 use axum::{middleware, routing::get, Router};
 use std::{env, net::SocketAddr};
 use tower_cookies::CookieManagerLayer;
+use tower_http::services::ServeDir;
 use tracing::{info, Level};
 use web::routes_user;
 async fn hello() -> &'static str {
@@ -34,8 +36,8 @@ async fn main() -> Result<()> {
         .with_target(true)
         .with_thread_names(true)
         .with_thread_ids(true)
+        .with_ansi(true)
         // .with_file(true)
-        .with_line_number(true)
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
 
@@ -45,6 +47,7 @@ async fn main() -> Result<()> {
     let route_all = Router::new()
         .merge(routes_user::routes())
         .route("/api", get(hello))
+        .merge(using_serve_dir())
         .layer(middleware::map_request(log_path_params))
         .layer(middleware::map_response(mw_response_map))
         .layer(middleware::from_fn(mw_ctx_resolve))
@@ -55,4 +58,18 @@ async fn main() -> Result<()> {
         .await?;
 
     Ok(())
+}
+
+fn using_serve_dir() -> Router {
+    // serve the file in the "assets" directory under `/assets`
+    let path = get_ui_source_path();
+    match path {
+        Ok(p) => Router::new()
+            .nest_service(
+                "/",
+                ServeDir::new(p.to_str().unwrap()).append_index_html_on_directories(true),
+            )
+            .nest_service("/dolphinscheduler/ui", ServeDir::new(p.to_str().unwrap())),
+        Err(_) => Router::new(),
+    }
 }
