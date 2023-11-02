@@ -43,32 +43,3 @@ fn glb_config_dir() -> PathBuf {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn get_api_config_path() {
-        let path = super::get_dao_config_path();
-        println!("path: {:?}", path);
-    }
-
-    #[test]
-    fn test_ptah_caculate() {
-        let current_dir = env::current_dir().unwrap();
-
-        println!("current_dir: {:?}", current_dir);
-
-        let mut dirs = current_dir.to_str().unwrap().split('/').collect::<Vec<_>>();
-
-        dirs.reverse();
-
-        while !dirs.is_empty() && dirs[0] != "AuroraPlan" {
-            dirs.remove(0);
-        }
-
-        let path = dirs.iter().rev().copied().collect::<Vec<_>>().join("/");
-
-        println!("final path: {:?}", path);
-    }
-}

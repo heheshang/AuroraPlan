@@ -5,19 +5,21 @@ use crate::model::{
 use async_trait::async_trait;
 use aurora_common::core_results::results::Result;
 use aurora_proto::pb::ds_user::DsUser;
-use std::collections::HashMap;
+use std::{collections::HashMap, str::FromStr};
 use tracing::info;
 pub enum AuthenticatorType {
     Password,
     Ladp,
 }
 
-impl AuthenticatorType {
-    pub fn from_str(s: &str) -> Self {
+impl FromStr for AuthenticatorType {
+    type Err = ();
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         match s {
-            "PASSWORD" => AuthenticatorType::Password,
-            "LADP" => AuthenticatorType::Ladp,
-            _ => AuthenticatorType::Password,
+            "PASSWORD" => Ok(AuthenticatorType::Password),
+            "LDAP" => Ok(AuthenticatorType::Ladp),
+            _ => Ok(AuthenticatorType::Password),
         }
     }
 }

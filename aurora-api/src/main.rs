@@ -1,11 +1,10 @@
 mod ctx;
-mod cypt;
+pub mod cypt;
 mod log;
-mod model;
+pub mod model;
 mod utils;
 mod web;
 
-mod tests;
 use crate::web::mw::{
     mw_auth::mw_ctx_resolve, mw_req_map::log_path_params, mw_res_map::mw_response_map,
 };

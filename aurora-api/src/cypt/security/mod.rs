@@ -2,6 +2,8 @@
 pub mod authenticator;
 pub(crate) mod error;
 
+use std::str::FromStr;
+
 use aurora_config::api_config::Settings;
 
 use self::authenticator::{
@@ -32,7 +34,7 @@ pub fn get_authenticator() -> Box<dyn Authenticator> {
         .security
         .authentication_type
         .unwrap_or("PASSWORD".to_string());
-    let r#type = AuthenticatorType::from_str(auth_type.as_str());
+    let r#type = AuthenticatorType::from_str(auth_type.as_str()).unwrap();
     match r#type {
         AuthenticatorType::Password => PwdAuthenticatorFactory::build(),
         AuthenticatorType::Ladp => LdapAuthenticatorFactory::build(),

@@ -71,15 +71,9 @@ services:
             - aurora_plan
     aurora-test:
         image: aurora-plan:latest
-        # command:
-        #     [
-        #         'cargo',
-        #         'run',
-        #         '-p',
-        #         'aurora-service',
-        #         '--release',
-        #     ]
-        command: [ "cargo", "nextest", "run", "-F", "cn_msg" ]
+        command: >
+            ./deploy/aurora-tests-authenticator &&
+            ./deploy/aurora-tests-rpc_client
         depends_on:
             - aurora-api
         networks:

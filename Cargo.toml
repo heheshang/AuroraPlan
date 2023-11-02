@@ -6,6 +6,7 @@ members = [
     "aurora-entity",
     "aurora-common",
     "aurora-service",
+    "aurora-tests",
     "migration",
 ]
 

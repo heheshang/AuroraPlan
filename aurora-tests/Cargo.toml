@@ -1,0 +1,30 @@
+[package]
+name = "aurora-tests"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+license.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+name = "aurora-tests-authenticator"
+path = "src/aurora_api/authenticator.rs"
+
+[[bin]]
+name = "aurora-tests-rpc_client"
+path = "src/aurora_api/rpc_client.rs"
+
+[dependencies]
+tokio = { workspace = true }
+aurora_api = { path = "../aurora-api", package = "aurora-api" }
+aurora_common = { path = "../aurora-common", package = "aurora-common" }
+aurora_proto = { path = "../aurora-proto", package = "aurora-proto" }
+aurora_config = { path = "../aurora-config", package = "aurora-config" }
+tonic = { workspace = true }
+
+regex = { workspace = true }
+config = { workspace = true, optional = false, features = ["toml"] }
