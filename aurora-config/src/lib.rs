@@ -57,18 +57,23 @@ pub fn get_ui_source_path() -> Result<PathBuf> {
         dirs.remove(0);
     }
 
-    let path = dirs.iter().rev().copied().collect::<Vec<_>>().join("/");
+    let path_str = dirs.iter().rev().copied().collect::<Vec<_>>().join("/");
 
-    println!("final path: {:?}", path);
-    let path = Path::new(&path).join("ui");
-    if path.exists() {
-        Ok(path)
-    } else if Path::new(&path).join("aurora-ui").join("dist").exists() {
-        Ok(Path::new(&path).join("aurora-ui").join("dist"))
+    println!("final path: {:?}", path_str);
+    if Path::new(&path_str).join("ui").exists() {
+        Ok(Path::new(&path_str).join("ui"))
+    } else if Path::new(&path_str).join("aurora-ui").join("dist").exists() {
+        Ok(Path::new(&path_str).join("aurora-ui").join("dist"))
     } else {
         Err(anyhow::anyhow!("ui source path not found"))
     }
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    #[test]
+    fn test_get_ui_source_path() {
+        let path = super::get_ui_source_path().unwrap();
+        println!("path: {:?}", path);
+    }
+}
