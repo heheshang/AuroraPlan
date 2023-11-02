@@ -7,12 +7,15 @@ WORKDIR /AuroraPlan
 RUN mkdir -p /$HOME/.cargo
 
 RUN touch /$HOME/.cargo/config.toml
+COPY .cargo/config.toml  /$HOME/.cargo/config.toml
 RUN rm -rf /AuroraPlan/aurora-proto/build.rs 
 RUN ls -l /AuroraPlan/aurora-proto
 
 ENV RUSTUP_DIST_SERVER=https://mirrors.ustc.edu.cn/rust-static
 ENV RUSTUP_UPDATE_ROOT=https://mirrors.ustc.edu.cn/rust-static/rustup
 ENV PATH="/root/.cargo/bin:$PATH"
+RUN cargo install cargo-nextest
+RUN cargo nextest run -F cn_msg --release
 RUN cargo build --release
 
 RUN mkdir -p /AuroraPlan/deploy/examples
@@ -24,8 +27,6 @@ RUN cp /AuroraPlan/target/release/aurora-tests-* /AuroraPlan/deploy/
 RUN cp -r /AuroraPlan/target/release/examples /AuroraPlan/deploy/examples/
 RUN ls -la /AuroraPlan/deploy/
 RUN ls -la /AuroraPlan/deploy/examples
-RUN cargo install cargo-nextest
-RUN cargo nextest run -F cn_msg
 RUN cargo clean
 RUN rm -rf /root/.cargo/registry/cache
 

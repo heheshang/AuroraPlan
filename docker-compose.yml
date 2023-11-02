@@ -42,7 +42,9 @@ services:
         networks:
             - aurora_plan
     aurora-api:
+        restart: always
         image: aurora-plan:latest
+     
         # command: ['cargo', 'run', '-p', 'aurora-api', '--release']
         command: [ "./deploy/aurora-api" ]
         ports:
@@ -53,7 +55,9 @@ services:
         networks:
             - aurora_plan
     aurora-service:
+        restart: always
         image: aurora-plan:latest
+       
         # command:
         #     [
         #         'cargo',
@@ -71,11 +75,16 @@ services:
             - aurora_plan
     aurora-test:
         image: aurora-plan:latest
-        command: >
-            ./deploy/aurora-tests-authenticator &&
-            ./deploy/aurora-tests-rpc_client
+        command: 
+            - /bin/bash
+            - -c
+            - |
+                ./deploy/aurora-tests-authenticator 
+                ./deploy/aurora-tests-rpc_client
         depends_on:
             - aurora-api
+            - aurora-service
+            - aurora-postgres
         networks:
             - aurora_plan
 networks:
