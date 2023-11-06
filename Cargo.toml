@@ -21,14 +21,7 @@ keywords = [
     "plan",
     "schedule",
     "task",
-    "calendar",
-    "planner",
-    "organize",
-    "management",
-    "productivity",
-    "time",
     "free",
-    "project",
 ]
 categories = ["science"]
 license = "MIT OR Apache-2.0"
