@@ -1,4 +1,5 @@
 use anyhow::Result;
+
 // use aurora_config::api_config::Settings;
 use serde_json::json;
 #[tokio::main]
@@ -29,6 +30,7 @@ async fn main() -> Result<()> {
         }),
     );
     req_login.await?.print().await?;
+    hc.cookie_store();
     let user_info = hc.do_get("/aurora/get_user_info").await?;
     user_info.print().await?;
     define_user_count().await?;
@@ -52,8 +54,17 @@ async fn main() -> Result<()> {
 async fn define_user_count() -> Result<()> {
     let url = format!("http://{}:{}", "127.0.0.1", "54321");
 
-    let hc = httpc_test::new_client(url)?;
-    hc.do_get("/dolphinscheduler/projects/analysis/define-user-count?projectCode=0")
+    let hc = httpc_test::new_client(url)?; 
+    let req_login = hc.do_post(
+        "/aurora/login",
+        json!({
+            "userName": "admin",
+            "userPassword": "dolphinscheduler123"
+        }),
+    );
+    req_login.await?.print().await?;
+    hc.cookie_store();
+    hc.do_get("/aurora/projects/analysis/define-user-count?projectCode=0")
         .await?
         .print()
         .await?;

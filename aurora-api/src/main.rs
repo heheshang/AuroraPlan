@@ -16,6 +16,7 @@ use std::{env, net::SocketAddr};
 use tower_cookies::CookieManagerLayer;
 use tower_http::services::ServeDir;
 use tracing::{info, Level};
+use web::routes_projects;
 use web::routes_user;
 async fn hello() -> &'static str {
     info!("hello world");
@@ -46,6 +47,7 @@ async fn main() -> Result<()> {
 
     let route_all = Router::new()
         .merge(routes_user::routes())
+        .merge(routes_projects::routes())
         .route("/api", get(hello))
         .merge(using_serve_dir())
         .layer(middleware::map_request(log_path_params))
