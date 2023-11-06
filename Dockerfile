@@ -7,8 +7,7 @@ WORKDIR /AuroraPlan
 RUN mkdir -p /$HOME/.cargo
 
 RUN sed -i 's/rustc-wrapper = "sccache"/#rustc-wrapper = "sccache"/g'  /AuroraPlan/.cargo/config.toml
-RUN touch /$HOME/.cargo/config.toml
-RUN sed -i 's/rustc-wrapper = "sccache"/#rustc-wrapper = "sccache"/g' /$HOME/.cargo/config.toml
+RUN cp /AuroraPlan/.cargo/config.toml   /$HOME/.cargo/config.toml
 RUN cat /$HOME/.cargo/config.toml
 RUN cat /AuroraPlan/.cargo/config.toml
 RUN rm -rf /AuroraPlan/aurora-proto/build.rs 
