@@ -66,13 +66,13 @@ tokio-stream = { version = "0.1" }
 proto-builder-trait = "0.5.1"
 # prost = "0.11.9"
 # prost-types = "0.11.9"
-sea-orm = { version = "0.12.2", features = [
+sea-orm = { version = "0.12.4", features = [
     "sqlx-postgres",
     "runtime-tokio-native-tls",
     "debug-print",
     "serde_json",
 ] }
-sea-orm-migration = { version = "0.12" }
+sea-orm-migration = { version = "0.12.4" }
 strum_macros = "0.25.2"
 uuid = { version = "1.4.1", features = ["v4", "fast-rng"] }
 tower = { version = "0.4.13", features = ["full"] }
