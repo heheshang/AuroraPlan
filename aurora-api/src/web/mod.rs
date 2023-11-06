@@ -1,6 +1,7 @@
 #![allow(unused)]
 pub(crate) mod bean;
 pub(crate) mod mw;
+pub(crate) mod routes_projects;
 pub(crate) mod routes_user;
 
 // region:    --- Modules
