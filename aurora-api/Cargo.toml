@@ -28,6 +28,7 @@ md5 = { workspace = true }
 struct-convert = { workspace = true }
 tower-cookies = { workspace = true }
 error-chain = { workspace = true }
+tonic-health = { workspace = true }
 
 
 [dev-dependencies]

@@ -46,6 +46,7 @@ pub mod ds_udfs;
 pub mod ds_user;
 pub mod ds_version;
 pub mod ds_worker_group;
+pub mod helloworld;
 pub mod qrtz_blob_triggers;
 pub mod qrtz_calendars;
 pub mod qrtz_cron_triggers;

@@ -3,6 +3,7 @@ use std::{
     env,
     path::{Path, PathBuf},
 };
+use tracing::info;
 pub mod api_config;
 pub mod dao_config;
 
@@ -25,7 +26,7 @@ fn glb_config_dir() -> PathBuf {
         Err(_) => {
             let current_dir = env::current_dir().unwrap();
 
-            println!("current_dir: {:?}", current_dir);
+            info!("current_dir: {:?}", current_dir);
 
             let mut dirs = current_dir.to_str().unwrap().split('/').collect::<Vec<_>>();
 
@@ -37,7 +38,7 @@ fn glb_config_dir() -> PathBuf {
 
             let path = dirs.iter().rev().copied().collect::<Vec<_>>().join("/");
 
-            println!("final path: {:?}", path);
+            info!("final path: {:?}", path);
 
             Path::new(&path).join("aurora-config")
         }
@@ -47,7 +48,7 @@ fn glb_config_dir() -> PathBuf {
 pub fn get_ui_source_path() -> Result<PathBuf> {
     let current_dir = env::current_dir().unwrap();
 
-    println!("current_dir: {:?}", current_dir);
+    info!("current_dir: {:?}", current_dir);
 
     let mut dirs = current_dir.to_str().unwrap().split('/').collect::<Vec<_>>();
 
@@ -59,7 +60,7 @@ pub fn get_ui_source_path() -> Result<PathBuf> {
 
     let path_str = dirs.iter().rev().copied().collect::<Vec<_>>().join("/");
 
-    println!("final path: {:?}", path_str);
+    info!("final path: {:?}", path_str);
     if Path::new(&path_str).join("ui").exists() {
         Ok(Path::new(&path_str).join("ui"))
     } else if Path::new(&path_str).join("aurora-ui").join("dist").exists() {
@@ -71,9 +72,10 @@ pub fn get_ui_source_path() -> Result<PathBuf> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     #[test]
     fn test_get_ui_source_path() {
         let path = super::get_ui_source_path().unwrap();
-        println!("path: {:?}", path);
+        info!("path: {:?}", path);
     }
 }

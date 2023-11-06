@@ -54,12 +54,15 @@ serde_with = "3.3.0"
 tokio = { version = "1.33.0" }
 tonic = "0.10.2"
 tracing = "0.1.40"
-tracing-subscriber = "0.2.20"
+tracing-subscriber = "0.3.17"
 tower-http = "0.4.4"
 prost = "0.12.1"
 prost-types = "0.12.1"
 prost-build = { version = "0.11.6" }
 tonic-build = "0.9.2"
+tonic-health = "0.10.2"
+listenfd = { version = "1.0" }
+tokio-stream = { version = "0.1" }
 proto-builder-trait = "0.5.1"
 # prost = "0.11.9"
 # prost-types = "0.11.9"

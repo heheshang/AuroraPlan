@@ -15,3 +15,6 @@ anyhow = { workspace = true, optional = false }
 dotenvy = { workspace = true, optional = false }
 config = { workspace = true, optional = false, features = ["toml"] }
 serde = { workspace = true, optional = false, features = ["derive"] }
+
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["tracing-log", "fmt"] }

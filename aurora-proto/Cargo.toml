@@ -18,17 +18,27 @@ serde = { workspace = true, features = ['derive'] }
 serde_with = { workspace = true }
 tonic = { workspace = true }
 
-[dev-dependencies]
-prost-build = { workspace = true }
-tonic-build = { workspace = true }
-proto-builder-trait = { workspace = true }
+prost-build = { workspace = true, optional = true }
+tonic-build = { workspace = true, optional = true }
+proto-builder-trait = { workspace = true, optional = true }
+# [dev-dependencies]
+# prost-build = { workspace = true }
+# tonic-build = { workspace = true }
+# proto-builder-trait = { workspace = true }
 
 
+# [build-dependencies]
+# prost-build = { workspace = true }
+# tonic-build = { workspace = true }
+# proto-builder-trait = { workspace = true }
+[features]
+aurora-proto-gen = [
+    "dep:prost-build",
+    "dep:tonic-build",
+    "dep:proto-builder-trait",
+]
+default = ["aurora-proto-gen"]
 
-[build-dependencies]
-prost-build = { workspace = true }
-tonic-build = { workspace = true }
-proto-builder-trait = { workspace = true }
-
-
-
+[[bin]]
+name = "aurora-proto-gen"
+path = "src/bin/aurora-proto-gen.rs"

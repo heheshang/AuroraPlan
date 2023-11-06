@@ -1,3 +1,4 @@
 {
-    "cargo.automaticCheck": false
+    "cargo.automaticCheck": false,
+    "rust-analyzer.cargo.buildScripts.enable": false
 }

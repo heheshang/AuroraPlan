@@ -60,8 +60,10 @@ use aurora_proto::{
     qrtz_simprop_triggers::qrtz_simprop_trigger_service_client::QrtzSimpropTriggerServiceClient,
     qrtz_triggers::qrtz_trigger_service_client::QrtzTriggerServiceClient,
 };
-use std::cell::RefCell;
-use tracing::info;
+use std::{cell::RefCell, time::Duration};
+use tonic::Request;
+use tonic_health::pb::{health_client::HealthClient, HealthCheckRequest};
+use tracing::{error, info, warn};
 
 use aurora_common::{core_error::error::Error, core_results::results::Result};
 
@@ -78,6 +80,18 @@ macro_rules! build_client {
         pub async fn $fn_name() -> Result<$service_type<tonic::transport::Channel>> {
             let host = SETTINGS.with(|settings| settings.borrow().service.host.clone());
             let port = SETTINGS.with(|settings| settings.borrow().service.port.clone());
+
+            loop {
+                let res = check_client().await;
+                match res {
+                    Ok(_) => {
+                        break;
+                    }
+                    Err(_) => {
+                        continue;
+                    }
+                }
+            }
 
             let addr_str = format!("http://{host}:{port}").clone();
             info!("addr_str:{}", addr_str);
@@ -96,6 +110,52 @@ macro_rules! build_client {
             }
         }
     };
+}
+#[allow(unused)]
+async fn check_client() -> core::result::Result<(), Box<dyn std::error::Error>> {
+    let host = SETTINGS.with(|settings| settings.borrow().service.host.clone());
+    let port = SETTINGS.with(|settings| settings.borrow().service.port);
+    loop {
+        tokio::time::sleep(Duration::from_secs(1)).await;
+        info!("host:{},port:{}", host, port);
+        let conn = tonic::transport::Endpoint::new(format!("http://{}:{}", host, port))?
+            .connect()
+            .await?;
+
+        let mut client = HealthClient::new(conn);
+        let request = Request::new(HealthCheckRequest {
+            service: "helloworld.Greeter".into(),
+        });
+        match client.check(request).await {
+            Ok(response) => {
+                let status = response.into_inner().status();
+                match status {
+                    tonic_health::pb::health_check_response::ServingStatus::Unknown => {
+                        warn!("Unknown!")
+                    }
+                    tonic_health::pb::health_check_response::ServingStatus::Serving => {
+                        break;
+                    }
+                    tonic_health::pb::health_check_response::ServingStatus::NotServing => {
+                        warn!("Not Serving!")
+                    }
+                    tonic_health::pb::health_check_response::ServingStatus::ServiceUnknown => {
+                        warn!("ServiceUnknown!")
+                    }
+                }
+            }
+            Err(status) => {
+                match status.code() {
+                tonic::Code::Unimplemented =>
+                   error!("error: this server does not implement the grpc health protocol (grpc.health.v1.Health): {}", status.message()),
+                tonic::Code::DeadlineExceeded => info!("timeout: health rpc did not complete within 1 second"),
+                _ => error!("error: health rpc failed: {}", status.message()),
+            };
+                continue;
+            }
+        }
+    }
+    Ok(())
 }
 build_client!(
     _DS_ACCESS_TOKEN,
