@@ -91,7 +91,7 @@ jobs:
       # docker-compose up -
       - name: default config.toml
         run: sed -i 's/replace-with/#replace-with/g' .cargo/config.toml
-      - name: default config.toml
+      - name: default rustc-wrapper
         run: sed -i 's/rustc-wrapper = "sccache"/#rustc-wrapper = "sccache"/g' .cargo/config.toml
       - name: Clean The Workspace 
         run: cargo clean 
