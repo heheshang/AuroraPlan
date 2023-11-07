@@ -94,6 +94,8 @@ pub async fn define_user_count(
 pub struct DefineUserCountParams {
     projectCode: u32,
 }
+
+//http://pt003:12345/dolphinscheduler/projects/analysis/task-state-count?startDate=2023-11-06 00:00:00&endDate=2023-11-06 14:46:54&projectCode=0
 // curl 'http://pt003:12345/dolphinscheduler/projects/analysis/task-state-count?startDate=2023-11-06%2000%3A00%3A00&endDate=2023-11-06%2014%3A46%3A54&projectCode=0' \
 //   -H 'Accept: application/json, text/plain, */*' \
 //   -H 'Accept-Language: zh-CN,zh;q=0.9' \
