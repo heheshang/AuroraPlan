@@ -53,7 +53,6 @@ async fn define_user_count() -> Result<()> {
     let url = format!("http://{}:{}", "127.0.0.1", "54321");
 
     let hc = httpc_test::new_client(url)?;
-
     hc.do_get("/dolphinscheduler/projects/analysis/define-user-count?projectCode=0")
         .await?
         .print()
