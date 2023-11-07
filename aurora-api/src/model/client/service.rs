@@ -60,7 +60,7 @@ use aurora_proto::{
     qrtz_simprop_triggers::qrtz_simprop_trigger_service_client::QrtzSimpropTriggerServiceClient,
     qrtz_triggers::qrtz_trigger_service_client::QrtzTriggerServiceClient,
 };
-use std::{cell::RefCell, time::Duration};
+use std::cell::RefCell;
 use tonic::Request;
 use tonic_health::pb::{health_client::HealthClient, HealthCheckRequest};
 use tracing::{error, info, warn};
@@ -116,7 +116,6 @@ async fn check_client() -> core::result::Result<(), Box<dyn std::error::Error>> 
     let host = SETTINGS.with(|settings| settings.borrow().service.host.clone());
     let port = SETTINGS.with(|settings| settings.borrow().service.port);
     loop {
-        tokio::time::sleep(Duration::from_secs(1)).await;
         info!("host:{},port:{}", host, port);
         let conn = tonic::transport::Endpoint::new(format!("http://{}:{}", host, port))?
             .connect()
