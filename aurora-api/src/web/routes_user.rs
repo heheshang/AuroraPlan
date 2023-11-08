@@ -12,7 +12,7 @@ use axum::{
     extract::ConnectInfo,
     middleware,
     routing::{get, post},
-    Json, Router,
+    Form, Json, Router,
 };
 use tower_cookies::Cookies;
 use tracing::error;
@@ -25,19 +25,19 @@ use super::{
 pub fn routes() -> Router {
     let routes = Router::new()
         .route("/logout", post(logout))
-        .route("/get_user_info", get(user_info));
+        .route("/users/get-user-info", get(user_info));
     let login = Router::new().route("/login", post(login));
 
     let other = Router::new()
-        .nest("/aurora", routes)
+        .nest("/", routes)
         .route_layer(middleware::from_fn(mw_ctx_require));
-    Router::new().nest("/aurora", login).merge(other)
+    Router::new().nest("/", login).merge(other)
 }
 
 pub async fn login(
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     cookies: Cookies,
-    Json(payload): Json<UserLoginInfoReq>,
+    Form(payload): Form<UserLoginInfoReq>,
 ) -> Result<ApiResult<HashMap<String, String>>> {
     let user_name = payload.user_name.clone();
     let user_password = payload.user_password.clone();

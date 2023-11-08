@@ -31,7 +31,7 @@ import 'nprogress/nprogress.css'
 
 const router = createRouter({
   history: createWebHistory(
-    import.meta.env.MODE === 'production' ? '/dolphinscheduler/ui/' : '/'
+    import.meta.env.MODE === 'production' ? '/aurora/ui/' : '/'
   ),
   routes
 })

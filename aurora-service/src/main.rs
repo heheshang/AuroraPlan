@@ -11,7 +11,7 @@ pub use service::*;
 async fn main() -> Result<()> {
     //let _addr: SocketAddr = "0.0.0.0:50051".parse()?;
 
-    // let database_url = env::var("postgres://superset:superset@tx:16432/Aurorascheduler").expect("DATABASE_URL must be set");
+    // let database_url = env::var("postgres://root:root@tx:16432/Aurorascheduler").expect("DATABASE_URL must be set");
 
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::DEBUG)

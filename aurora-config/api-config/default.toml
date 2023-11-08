@@ -1,6 +1,6 @@
 
 [database]
-url = "postgres://superset:superset@aurora-postgres:5432/Aurorascheduler"
+url = "postgres://root:root@aurora-postgres:5432/Aurorascheduler"
 
 [server]
 host = "0.0.0.0"

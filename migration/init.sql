@@ -258,7 +258,7 @@ DROP TABLE IF EXISTS public.qrtz_blob_triggers;
 SET default_tablespace = '';
 
 --
--- Name: qrtz_blob_triggers; Type: TABLE; Schema: public; Owner: superset
+-- Name: qrtz_blob_triggers; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.qrtz_blob_triggers (
@@ -269,10 +269,10 @@ CREATE TABLE public.qrtz_blob_triggers (
 );
 
 
-ALTER TABLE public.qrtz_blob_triggers OWNER TO superset;
+ALTER TABLE public.qrtz_blob_triggers OWNER TO root;
 
 --
--- Name: qrtz_calendars; Type: TABLE; Schema: public; Owner: superset
+-- Name: qrtz_calendars; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.qrtz_calendars (
@@ -282,10 +282,10 @@ CREATE TABLE public.qrtz_calendars (
 );
 
 
-ALTER TABLE public.qrtz_calendars OWNER TO superset;
+ALTER TABLE public.qrtz_calendars OWNER TO root;
 
 --
--- Name: qrtz_cron_triggers; Type: TABLE; Schema: public; Owner: superset
+-- Name: qrtz_cron_triggers; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.qrtz_cron_triggers (
@@ -297,10 +297,10 @@ CREATE TABLE public.qrtz_cron_triggers (
 );
 
 
-ALTER TABLE public.qrtz_cron_triggers OWNER TO superset;
+ALTER TABLE public.qrtz_cron_triggers OWNER TO root;
 
 --
--- Name: qrtz_fired_triggers; Type: TABLE; Schema: public; Owner: superset
+-- Name: qrtz_fired_triggers; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.qrtz_fired_triggers (
@@ -320,10 +320,10 @@ CREATE TABLE public.qrtz_fired_triggers (
 );
 
 
-ALTER TABLE public.qrtz_fired_triggers OWNER TO superset;
+ALTER TABLE public.qrtz_fired_triggers OWNER TO root;
 
 --
--- Name: qrtz_job_details; Type: TABLE; Schema: public; Owner: superset
+-- Name: qrtz_job_details; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.qrtz_job_details (
@@ -340,10 +340,10 @@ CREATE TABLE public.qrtz_job_details (
 );
 
 
-ALTER TABLE public.qrtz_job_details OWNER TO superset;
+ALTER TABLE public.qrtz_job_details OWNER TO root;
 
 --
--- Name: qrtz_locks; Type: TABLE; Schema: public; Owner: superset
+-- Name: qrtz_locks; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.qrtz_locks (
@@ -352,10 +352,10 @@ CREATE TABLE public.qrtz_locks (
 );
 
 
-ALTER TABLE public.qrtz_locks OWNER TO superset;
+ALTER TABLE public.qrtz_locks OWNER TO root;
 
 --
--- Name: qrtz_paused_trigger_grps; Type: TABLE; Schema: public; Owner: superset
+-- Name: qrtz_paused_trigger_grps; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.qrtz_paused_trigger_grps (
@@ -364,10 +364,10 @@ CREATE TABLE public.qrtz_paused_trigger_grps (
 );
 
 
-ALTER TABLE public.qrtz_paused_trigger_grps OWNER TO superset;
+ALTER TABLE public.qrtz_paused_trigger_grps OWNER TO root;
 
 --
--- Name: qrtz_scheduler_state; Type: TABLE; Schema: public; Owner: superset
+-- Name: qrtz_scheduler_state; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.qrtz_scheduler_state (
@@ -378,10 +378,10 @@ CREATE TABLE public.qrtz_scheduler_state (
 );
 
 
-ALTER TABLE public.qrtz_scheduler_state OWNER TO superset;
+ALTER TABLE public.qrtz_scheduler_state OWNER TO root;
 
 --
--- Name: qrtz_simple_triggers; Type: TABLE; Schema: public; Owner: superset
+-- Name: qrtz_simple_triggers; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.qrtz_simple_triggers (
@@ -394,10 +394,10 @@ CREATE TABLE public.qrtz_simple_triggers (
 );
 
 
-ALTER TABLE public.qrtz_simple_triggers OWNER TO superset;
+ALTER TABLE public.qrtz_simple_triggers OWNER TO root;
 
 --
--- Name: qrtz_simprop_triggers; Type: TABLE; Schema: public; Owner: superset
+-- Name: qrtz_simprop_triggers; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.qrtz_simprop_triggers (
@@ -418,10 +418,10 @@ CREATE TABLE public.qrtz_simprop_triggers (
 );
 
 
-ALTER TABLE public.qrtz_simprop_triggers OWNER TO superset;
+ALTER TABLE public.qrtz_simprop_triggers OWNER TO root;
 
 --
--- Name: qrtz_triggers; Type: TABLE; Schema: public; Owner: superset
+-- Name: qrtz_triggers; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.qrtz_triggers (
@@ -444,10 +444,10 @@ CREATE TABLE public.qrtz_triggers (
 );
 
 
-ALTER TABLE public.qrtz_triggers OWNER TO superset;
+ALTER TABLE public.qrtz_triggers OWNER TO root;
 
 --
--- Name: t_ds_access_token_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_access_token_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_access_token_id_sequence
@@ -458,10 +458,10 @@ CREATE SEQUENCE public.t_ds_access_token_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_access_token_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_access_token_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_access_token; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_access_token; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_access_token (
@@ -474,10 +474,10 @@ CREATE TABLE public.t_ds_access_token (
 );
 
 
-ALTER TABLE public.t_ds_access_token OWNER TO superset;
+ALTER TABLE public.t_ds_access_token OWNER TO root;
 
 --
--- Name: t_ds_alert_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_alert_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_alert_id_sequence
@@ -488,10 +488,10 @@ CREATE SEQUENCE public.t_ds_alert_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_alert_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_alert_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_alert; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_alert; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_alert (
@@ -512,17 +512,17 @@ CREATE TABLE public.t_ds_alert (
 );
 
 
-ALTER TABLE public.t_ds_alert OWNER TO superset;
+ALTER TABLE public.t_ds_alert OWNER TO root;
 
 --
--- Name: COLUMN t_ds_alert.sign; Type: COMMENT; Schema: public; Owner: superset
+-- Name: COLUMN t_ds_alert.sign; Type: COMMENT; Schema: public; Owner: root
 --
 
 COMMENT ON COLUMN public.t_ds_alert.sign IS 'sign=sha1(content)';
 
 
 --
--- Name: t_ds_alert_plugin_instance; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_alert_plugin_instance; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_alert_plugin_instance (
@@ -535,10 +535,10 @@ CREATE TABLE public.t_ds_alert_plugin_instance (
 );
 
 
-ALTER TABLE public.t_ds_alert_plugin_instance OWNER TO superset;
+ALTER TABLE public.t_ds_alert_plugin_instance OWNER TO root;
 
 --
--- Name: t_ds_alert_plugin_instance_id_seq; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_alert_plugin_instance_id_seq; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_alert_plugin_instance_id_seq
@@ -550,17 +550,17 @@ CREATE SEQUENCE public.t_ds_alert_plugin_instance_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_alert_plugin_instance_id_seq OWNER TO superset;
+ALTER TABLE public.t_ds_alert_plugin_instance_id_seq OWNER TO root;
 
 --
--- Name: t_ds_alert_plugin_instance_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: superset
+-- Name: t_ds_alert_plugin_instance_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
 --
 
 ALTER SEQUENCE public.t_ds_alert_plugin_instance_id_seq OWNED BY public.t_ds_alert_plugin_instance.id;
 
 
 --
--- Name: t_ds_alert_send_status; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_alert_send_status; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_alert_send_status (
@@ -573,10 +573,10 @@ CREATE TABLE public.t_ds_alert_send_status (
 );
 
 
-ALTER TABLE public.t_ds_alert_send_status OWNER TO superset;
+ALTER TABLE public.t_ds_alert_send_status OWNER TO root;
 
 --
--- Name: t_ds_alert_send_status_id_seq; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_alert_send_status_id_seq; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_alert_send_status_id_seq
@@ -588,17 +588,17 @@ CREATE SEQUENCE public.t_ds_alert_send_status_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_alert_send_status_id_seq OWNER TO superset;
+ALTER TABLE public.t_ds_alert_send_status_id_seq OWNER TO root;
 
 --
--- Name: t_ds_alert_send_status_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: superset
+-- Name: t_ds_alert_send_status_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
 --
 
 ALTER SEQUENCE public.t_ds_alert_send_status_id_seq OWNED BY public.t_ds_alert_send_status.id;
 
 
 --
--- Name: t_ds_alertgroup_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_alertgroup_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_alertgroup_id_sequence
@@ -609,10 +609,10 @@ CREATE SEQUENCE public.t_ds_alertgroup_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_alertgroup_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_alertgroup_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_alertgroup; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_alertgroup; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_alertgroup (
@@ -626,10 +626,10 @@ CREATE TABLE public.t_ds_alertgroup (
 );
 
 
-ALTER TABLE public.t_ds_alertgroup OWNER TO superset;
+ALTER TABLE public.t_ds_alertgroup OWNER TO root;
 
 --
--- Name: t_ds_audit_log; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_audit_log; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_audit_log (
@@ -642,10 +642,10 @@ CREATE TABLE public.t_ds_audit_log (
 );
 
 
-ALTER TABLE public.t_ds_audit_log OWNER TO superset;
+ALTER TABLE public.t_ds_audit_log OWNER TO root;
 
 --
--- Name: t_ds_audit_log_id_seq; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_audit_log_id_seq; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_audit_log_id_seq
@@ -657,17 +657,17 @@ CREATE SEQUENCE public.t_ds_audit_log_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_audit_log_id_seq OWNER TO superset;
+ALTER TABLE public.t_ds_audit_log_id_seq OWNER TO root;
 
 --
--- Name: t_ds_audit_log_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: superset
+-- Name: t_ds_audit_log_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
 --
 
 ALTER SEQUENCE public.t_ds_audit_log_id_seq OWNED BY public.t_ds_audit_log.id;
 
 
 --
--- Name: t_ds_command_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_command_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_command_id_sequence
@@ -678,10 +678,10 @@ CREATE SEQUENCE public.t_ds_command_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_command_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_command_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_command; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_command; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_command (
@@ -706,10 +706,10 @@ CREATE TABLE public.t_ds_command (
 );
 
 
-ALTER TABLE public.t_ds_command OWNER TO superset;
+ALTER TABLE public.t_ds_command OWNER TO root;
 
 --
--- Name: t_ds_datasource_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_datasource_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_datasource_id_sequence
@@ -720,10 +720,10 @@ CREATE SEQUENCE public.t_ds_datasource_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_datasource_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_datasource_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_datasource; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_datasource; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_datasource (
@@ -738,10 +738,10 @@ CREATE TABLE public.t_ds_datasource (
 );
 
 
-ALTER TABLE public.t_ds_datasource OWNER TO superset;
+ALTER TABLE public.t_ds_datasource OWNER TO root;
 
 --
--- Name: t_ds_dq_comparison_type; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_dq_comparison_type; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_dq_comparison_type (
@@ -756,10 +756,10 @@ CREATE TABLE public.t_ds_dq_comparison_type (
 );
 
 
-ALTER TABLE public.t_ds_dq_comparison_type OWNER TO superset;
+ALTER TABLE public.t_ds_dq_comparison_type OWNER TO root;
 
 --
--- Name: t_ds_dq_comparison_type_id_seq; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_dq_comparison_type_id_seq; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_dq_comparison_type_id_seq
@@ -771,17 +771,17 @@ CREATE SEQUENCE public.t_ds_dq_comparison_type_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_dq_comparison_type_id_seq OWNER TO superset;
+ALTER TABLE public.t_ds_dq_comparison_type_id_seq OWNER TO root;
 
 --
--- Name: t_ds_dq_comparison_type_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: superset
+-- Name: t_ds_dq_comparison_type_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
 --
 
 ALTER SEQUENCE public.t_ds_dq_comparison_type_id_seq OWNED BY public.t_ds_dq_comparison_type.id;
 
 
 --
--- Name: t_ds_dq_execute_result; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_dq_execute_result; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_dq_execute_result (
@@ -806,10 +806,10 @@ CREATE TABLE public.t_ds_dq_execute_result (
 );
 
 
-ALTER TABLE public.t_ds_dq_execute_result OWNER TO superset;
+ALTER TABLE public.t_ds_dq_execute_result OWNER TO root;
 
 --
--- Name: t_ds_dq_execute_result_id_seq; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_dq_execute_result_id_seq; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_dq_execute_result_id_seq
@@ -821,17 +821,17 @@ CREATE SEQUENCE public.t_ds_dq_execute_result_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_dq_execute_result_id_seq OWNER TO superset;
+ALTER TABLE public.t_ds_dq_execute_result_id_seq OWNER TO root;
 
 --
--- Name: t_ds_dq_execute_result_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: superset
+-- Name: t_ds_dq_execute_result_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
 --
 
 ALTER SEQUENCE public.t_ds_dq_execute_result_id_seq OWNED BY public.t_ds_dq_execute_result.id;
 
 
 --
--- Name: t_ds_dq_rule; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_dq_rule; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_dq_rule (
@@ -844,10 +844,10 @@ CREATE TABLE public.t_ds_dq_rule (
 );
 
 
-ALTER TABLE public.t_ds_dq_rule OWNER TO superset;
+ALTER TABLE public.t_ds_dq_rule OWNER TO root;
 
 --
--- Name: t_ds_dq_rule_execute_sql; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_dq_rule_execute_sql; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_dq_rule_execute_sql (
@@ -862,10 +862,10 @@ CREATE TABLE public.t_ds_dq_rule_execute_sql (
 );
 
 
-ALTER TABLE public.t_ds_dq_rule_execute_sql OWNER TO superset;
+ALTER TABLE public.t_ds_dq_rule_execute_sql OWNER TO root;
 
 --
--- Name: t_ds_dq_rule_execute_sql_id_seq; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_dq_rule_execute_sql_id_seq; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_dq_rule_execute_sql_id_seq
@@ -877,17 +877,17 @@ CREATE SEQUENCE public.t_ds_dq_rule_execute_sql_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_dq_rule_execute_sql_id_seq OWNER TO superset;
+ALTER TABLE public.t_ds_dq_rule_execute_sql_id_seq OWNER TO root;
 
 --
--- Name: t_ds_dq_rule_execute_sql_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: superset
+-- Name: t_ds_dq_rule_execute_sql_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
 --
 
 ALTER SEQUENCE public.t_ds_dq_rule_execute_sql_id_seq OWNED BY public.t_ds_dq_rule_execute_sql.id;
 
 
 --
--- Name: t_ds_dq_rule_id_seq; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_dq_rule_id_seq; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_dq_rule_id_seq
@@ -899,17 +899,17 @@ CREATE SEQUENCE public.t_ds_dq_rule_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_dq_rule_id_seq OWNER TO superset;
+ALTER TABLE public.t_ds_dq_rule_id_seq OWNER TO root;
 
 --
--- Name: t_ds_dq_rule_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: superset
+-- Name: t_ds_dq_rule_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
 --
 
 ALTER SEQUENCE public.t_ds_dq_rule_id_seq OWNED BY public.t_ds_dq_rule.id;
 
 
 --
--- Name: t_ds_dq_rule_input_entry; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_dq_rule_input_entry; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_dq_rule_input_entry (
@@ -932,10 +932,10 @@ CREATE TABLE public.t_ds_dq_rule_input_entry (
 );
 
 
-ALTER TABLE public.t_ds_dq_rule_input_entry OWNER TO superset;
+ALTER TABLE public.t_ds_dq_rule_input_entry OWNER TO root;
 
 --
--- Name: t_ds_dq_rule_input_entry_id_seq; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_dq_rule_input_entry_id_seq; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_dq_rule_input_entry_id_seq
@@ -947,17 +947,17 @@ CREATE SEQUENCE public.t_ds_dq_rule_input_entry_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_dq_rule_input_entry_id_seq OWNER TO superset;
+ALTER TABLE public.t_ds_dq_rule_input_entry_id_seq OWNER TO root;
 
 --
--- Name: t_ds_dq_rule_input_entry_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: superset
+-- Name: t_ds_dq_rule_input_entry_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
 --
 
 ALTER SEQUENCE public.t_ds_dq_rule_input_entry_id_seq OWNED BY public.t_ds_dq_rule_input_entry.id;
 
 
 --
--- Name: t_ds_dq_task_statistics_value; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_dq_task_statistics_value; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_dq_task_statistics_value (
@@ -974,10 +974,10 @@ CREATE TABLE public.t_ds_dq_task_statistics_value (
 );
 
 
-ALTER TABLE public.t_ds_dq_task_statistics_value OWNER TO superset;
+ALTER TABLE public.t_ds_dq_task_statistics_value OWNER TO root;
 
 --
--- Name: t_ds_dq_task_statistics_value_id_seq; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_dq_task_statistics_value_id_seq; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_dq_task_statistics_value_id_seq
@@ -989,17 +989,17 @@ CREATE SEQUENCE public.t_ds_dq_task_statistics_value_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_dq_task_statistics_value_id_seq OWNER TO superset;
+ALTER TABLE public.t_ds_dq_task_statistics_value_id_seq OWNER TO root;
 
 --
--- Name: t_ds_dq_task_statistics_value_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: superset
+-- Name: t_ds_dq_task_statistics_value_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
 --
 
 ALTER SEQUENCE public.t_ds_dq_task_statistics_value_id_seq OWNED BY public.t_ds_dq_task_statistics_value.id;
 
 
 --
--- Name: t_ds_environment; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_environment; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_environment (
@@ -1014,10 +1014,10 @@ CREATE TABLE public.t_ds_environment (
 );
 
 
-ALTER TABLE public.t_ds_environment OWNER TO superset;
+ALTER TABLE public.t_ds_environment OWNER TO root;
 
 --
--- Name: t_ds_environment_id_seq; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_environment_id_seq; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_environment_id_seq
@@ -1029,17 +1029,17 @@ CREATE SEQUENCE public.t_ds_environment_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_environment_id_seq OWNER TO superset;
+ALTER TABLE public.t_ds_environment_id_seq OWNER TO root;
 
 --
--- Name: t_ds_environment_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: superset
+-- Name: t_ds_environment_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
 --
 
 ALTER SEQUENCE public.t_ds_environment_id_seq OWNED BY public.t_ds_environment.id;
 
 
 --
--- Name: t_ds_environment_worker_group_relation; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_environment_worker_group_relation; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_environment_worker_group_relation (
@@ -1052,10 +1052,10 @@ CREATE TABLE public.t_ds_environment_worker_group_relation (
 );
 
 
-ALTER TABLE public.t_ds_environment_worker_group_relation OWNER TO superset;
+ALTER TABLE public.t_ds_environment_worker_group_relation OWNER TO root;
 
 --
--- Name: t_ds_environment_worker_group_relation_id_seq; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_environment_worker_group_relation_id_seq; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_environment_worker_group_relation_id_seq
@@ -1067,17 +1067,17 @@ CREATE SEQUENCE public.t_ds_environment_worker_group_relation_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_environment_worker_group_relation_id_seq OWNER TO superset;
+ALTER TABLE public.t_ds_environment_worker_group_relation_id_seq OWNER TO root;
 
 --
--- Name: t_ds_environment_worker_group_relation_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: superset
+-- Name: t_ds_environment_worker_group_relation_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
 --
 
 ALTER SEQUENCE public.t_ds_environment_worker_group_relation_id_seq OWNED BY public.t_ds_environment_worker_group_relation.id;
 
 
 --
--- Name: t_ds_error_command; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_error_command; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_error_command (
@@ -1103,10 +1103,10 @@ CREATE TABLE public.t_ds_error_command (
 );
 
 
-ALTER TABLE public.t_ds_error_command OWNER TO superset;
+ALTER TABLE public.t_ds_error_command OWNER TO root;
 
 --
--- Name: t_ds_k8s; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_k8s; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_k8s (
@@ -1118,10 +1118,10 @@ CREATE TABLE public.t_ds_k8s (
 );
 
 
-ALTER TABLE public.t_ds_k8s OWNER TO superset;
+ALTER TABLE public.t_ds_k8s OWNER TO root;
 
 --
--- Name: t_ds_k8s_id_seq; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_k8s_id_seq; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_k8s_id_seq
@@ -1133,17 +1133,17 @@ CREATE SEQUENCE public.t_ds_k8s_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_k8s_id_seq OWNER TO superset;
+ALTER TABLE public.t_ds_k8s_id_seq OWNER TO root;
 
 --
--- Name: t_ds_k8s_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: superset
+-- Name: t_ds_k8s_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
 --
 
 ALTER SEQUENCE public.t_ds_k8s_id_seq OWNED BY public.t_ds_k8s.id;
 
 
 --
--- Name: t_ds_k8s_namespace; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_k8s_namespace; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_k8s_namespace (
@@ -1162,10 +1162,10 @@ CREATE TABLE public.t_ds_k8s_namespace (
 );
 
 
-ALTER TABLE public.t_ds_k8s_namespace OWNER TO superset;
+ALTER TABLE public.t_ds_k8s_namespace OWNER TO root;
 
 --
--- Name: t_ds_k8s_namespace_id_seq; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_k8s_namespace_id_seq; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_k8s_namespace_id_seq
@@ -1177,17 +1177,17 @@ CREATE SEQUENCE public.t_ds_k8s_namespace_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_k8s_namespace_id_seq OWNER TO superset;
+ALTER TABLE public.t_ds_k8s_namespace_id_seq OWNER TO root;
 
 --
--- Name: t_ds_k8s_namespace_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: superset
+-- Name: t_ds_k8s_namespace_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
 --
 
 ALTER SEQUENCE public.t_ds_k8s_namespace_id_seq OWNED BY public.t_ds_k8s_namespace.id;
 
 
 --
--- Name: t_ds_plugin_define; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_plugin_define; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_plugin_define (
@@ -1200,10 +1200,10 @@ CREATE TABLE public.t_ds_plugin_define (
 );
 
 
-ALTER TABLE public.t_ds_plugin_define OWNER TO superset;
+ALTER TABLE public.t_ds_plugin_define OWNER TO root;
 
 --
--- Name: t_ds_plugin_define_id_seq; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_plugin_define_id_seq; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_plugin_define_id_seq
@@ -1215,17 +1215,17 @@ CREATE SEQUENCE public.t_ds_plugin_define_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_plugin_define_id_seq OWNER TO superset;
+ALTER TABLE public.t_ds_plugin_define_id_seq OWNER TO root;
 
 --
--- Name: t_ds_plugin_define_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: superset
+-- Name: t_ds_plugin_define_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
 --
 
 ALTER SEQUENCE public.t_ds_plugin_define_id_seq OWNED BY public.t_ds_plugin_define.id;
 
 
 --
--- Name: t_ds_process_definition_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_process_definition_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_process_definition_id_sequence
@@ -1236,10 +1236,10 @@ CREATE SEQUENCE public.t_ds_process_definition_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_process_definition_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_process_definition_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_process_definition; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_process_definition; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_process_definition (
@@ -1263,10 +1263,10 @@ CREATE TABLE public.t_ds_process_definition (
 );
 
 
-ALTER TABLE public.t_ds_process_definition OWNER TO superset;
+ALTER TABLE public.t_ds_process_definition OWNER TO root;
 
 --
--- Name: t_ds_process_definition_log_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_process_definition_log_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_process_definition_log_id_sequence
@@ -1277,10 +1277,10 @@ CREATE SEQUENCE public.t_ds_process_definition_log_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_process_definition_log_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_process_definition_log_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_process_definition_log; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_process_definition_log; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_process_definition_log (
@@ -1306,10 +1306,10 @@ CREATE TABLE public.t_ds_process_definition_log (
 );
 
 
-ALTER TABLE public.t_ds_process_definition_log OWNER TO superset;
+ALTER TABLE public.t_ds_process_definition_log OWNER TO root;
 
 --
--- Name: t_ds_process_instance_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_process_instance_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_process_instance_id_sequence
@@ -1320,10 +1320,10 @@ CREATE SEQUENCE public.t_ds_process_instance_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_process_instance_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_process_instance_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_process_instance; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_process_instance; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_process_instance (
@@ -1366,10 +1366,10 @@ CREATE TABLE public.t_ds_process_instance (
 );
 
 
-ALTER TABLE public.t_ds_process_instance OWNER TO superset;
+ALTER TABLE public.t_ds_process_instance OWNER TO root;
 
 --
--- Name: t_ds_process_task_relation_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_process_task_relation_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_process_task_relation_id_sequence
@@ -1380,10 +1380,10 @@ CREATE SEQUENCE public.t_ds_process_task_relation_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_process_task_relation_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_process_task_relation_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_process_task_relation; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_process_task_relation; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_process_task_relation (
@@ -1403,10 +1403,10 @@ CREATE TABLE public.t_ds_process_task_relation (
 );
 
 
-ALTER TABLE public.t_ds_process_task_relation OWNER TO superset;
+ALTER TABLE public.t_ds_process_task_relation OWNER TO root;
 
 --
--- Name: t_ds_process_task_relation_log_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_process_task_relation_log_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_process_task_relation_log_id_sequence
@@ -1417,10 +1417,10 @@ CREATE SEQUENCE public.t_ds_process_task_relation_log_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_process_task_relation_log_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_process_task_relation_log_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_process_task_relation_log; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_process_task_relation_log; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_process_task_relation_log (
@@ -1442,10 +1442,10 @@ CREATE TABLE public.t_ds_process_task_relation_log (
 );
 
 
-ALTER TABLE public.t_ds_process_task_relation_log OWNER TO superset;
+ALTER TABLE public.t_ds_process_task_relation_log OWNER TO root;
 
 --
--- Name: t_ds_project_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_project_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_project_id_sequence
@@ -1456,10 +1456,10 @@ CREATE SEQUENCE public.t_ds_project_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_project_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_project_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_project; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_project; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_project (
@@ -1474,10 +1474,10 @@ CREATE TABLE public.t_ds_project (
 );
 
 
-ALTER TABLE public.t_ds_project OWNER TO superset;
+ALTER TABLE public.t_ds_project OWNER TO root;
 
 --
--- Name: t_ds_queue_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_queue_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_queue_id_sequence
@@ -1488,10 +1488,10 @@ CREATE SEQUENCE public.t_ds_queue_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_queue_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_queue_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_queue; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_queue; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_queue (
@@ -1503,10 +1503,10 @@ CREATE TABLE public.t_ds_queue (
 );
 
 
-ALTER TABLE public.t_ds_queue OWNER TO superset;
+ALTER TABLE public.t_ds_queue OWNER TO root;
 
 --
--- Name: t_ds_relation_datasource_user_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_relation_datasource_user_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_relation_datasource_user_id_sequence
@@ -1517,10 +1517,10 @@ CREATE SEQUENCE public.t_ds_relation_datasource_user_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_relation_datasource_user_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_relation_datasource_user_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_relation_datasource_user; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_relation_datasource_user; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_relation_datasource_user (
@@ -1533,10 +1533,10 @@ CREATE TABLE public.t_ds_relation_datasource_user (
 );
 
 
-ALTER TABLE public.t_ds_relation_datasource_user OWNER TO superset;
+ALTER TABLE public.t_ds_relation_datasource_user OWNER TO root;
 
 --
--- Name: t_ds_relation_namespace_user; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_relation_namespace_user; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_relation_namespace_user (
@@ -1549,10 +1549,10 @@ CREATE TABLE public.t_ds_relation_namespace_user (
 );
 
 
-ALTER TABLE public.t_ds_relation_namespace_user OWNER TO superset;
+ALTER TABLE public.t_ds_relation_namespace_user OWNER TO root;
 
 --
--- Name: t_ds_relation_namespace_user_id_seq; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_relation_namespace_user_id_seq; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_relation_namespace_user_id_seq
@@ -1564,17 +1564,17 @@ CREATE SEQUENCE public.t_ds_relation_namespace_user_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_relation_namespace_user_id_seq OWNER TO superset;
+ALTER TABLE public.t_ds_relation_namespace_user_id_seq OWNER TO root;
 
 --
--- Name: t_ds_relation_namespace_user_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: superset
+-- Name: t_ds_relation_namespace_user_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
 --
 
 ALTER SEQUENCE public.t_ds_relation_namespace_user_id_seq OWNED BY public.t_ds_relation_namespace_user.id;
 
 
 --
--- Name: t_ds_relation_process_instance_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_relation_process_instance_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_relation_process_instance_id_sequence
@@ -1585,10 +1585,10 @@ CREATE SEQUENCE public.t_ds_relation_process_instance_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_relation_process_instance_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_relation_process_instance_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_relation_process_instance; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_relation_process_instance; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_relation_process_instance (
@@ -1599,10 +1599,10 @@ CREATE TABLE public.t_ds_relation_process_instance (
 );
 
 
-ALTER TABLE public.t_ds_relation_process_instance OWNER TO superset;
+ALTER TABLE public.t_ds_relation_process_instance OWNER TO root;
 
 --
--- Name: t_ds_relation_project_user_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_relation_project_user_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_relation_project_user_id_sequence
@@ -1613,10 +1613,10 @@ CREATE SEQUENCE public.t_ds_relation_project_user_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_relation_project_user_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_relation_project_user_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_relation_project_user; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_relation_project_user; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_relation_project_user (
@@ -1629,10 +1629,10 @@ CREATE TABLE public.t_ds_relation_project_user (
 );
 
 
-ALTER TABLE public.t_ds_relation_project_user OWNER TO superset;
+ALTER TABLE public.t_ds_relation_project_user OWNER TO root;
 
 --
--- Name: t_ds_relation_resources_user_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_relation_resources_user_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_relation_resources_user_id_sequence
@@ -1643,10 +1643,10 @@ CREATE SEQUENCE public.t_ds_relation_resources_user_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_relation_resources_user_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_relation_resources_user_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_relation_resources_user; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_relation_resources_user; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_relation_resources_user (
@@ -1659,10 +1659,10 @@ CREATE TABLE public.t_ds_relation_resources_user (
 );
 
 
-ALTER TABLE public.t_ds_relation_resources_user OWNER TO superset;
+ALTER TABLE public.t_ds_relation_resources_user OWNER TO root;
 
 --
--- Name: t_ds_relation_rule_execute_sql; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_relation_rule_execute_sql; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_relation_rule_execute_sql (
@@ -1674,10 +1674,10 @@ CREATE TABLE public.t_ds_relation_rule_execute_sql (
 );
 
 
-ALTER TABLE public.t_ds_relation_rule_execute_sql OWNER TO superset;
+ALTER TABLE public.t_ds_relation_rule_execute_sql OWNER TO root;
 
 --
--- Name: t_ds_relation_rule_execute_sql_id_seq; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_relation_rule_execute_sql_id_seq; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_relation_rule_execute_sql_id_seq
@@ -1689,17 +1689,17 @@ CREATE SEQUENCE public.t_ds_relation_rule_execute_sql_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_relation_rule_execute_sql_id_seq OWNER TO superset;
+ALTER TABLE public.t_ds_relation_rule_execute_sql_id_seq OWNER TO root;
 
 --
--- Name: t_ds_relation_rule_execute_sql_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: superset
+-- Name: t_ds_relation_rule_execute_sql_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
 --
 
 ALTER SEQUENCE public.t_ds_relation_rule_execute_sql_id_seq OWNED BY public.t_ds_relation_rule_execute_sql.id;
 
 
 --
--- Name: t_ds_relation_rule_input_entry; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_relation_rule_input_entry; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_relation_rule_input_entry (
@@ -1713,10 +1713,10 @@ CREATE TABLE public.t_ds_relation_rule_input_entry (
 );
 
 
-ALTER TABLE public.t_ds_relation_rule_input_entry OWNER TO superset;
+ALTER TABLE public.t_ds_relation_rule_input_entry OWNER TO root;
 
 --
--- Name: t_ds_relation_rule_input_entry_id_seq; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_relation_rule_input_entry_id_seq; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_relation_rule_input_entry_id_seq
@@ -1728,17 +1728,17 @@ CREATE SEQUENCE public.t_ds_relation_rule_input_entry_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_relation_rule_input_entry_id_seq OWNER TO superset;
+ALTER TABLE public.t_ds_relation_rule_input_entry_id_seq OWNER TO root;
 
 --
--- Name: t_ds_relation_rule_input_entry_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: superset
+-- Name: t_ds_relation_rule_input_entry_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
 --
 
 ALTER SEQUENCE public.t_ds_relation_rule_input_entry_id_seq OWNED BY public.t_ds_relation_rule_input_entry.id;
 
 
 --
--- Name: t_ds_relation_udfs_user_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_relation_udfs_user_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_relation_udfs_user_id_sequence
@@ -1749,10 +1749,10 @@ CREATE SEQUENCE public.t_ds_relation_udfs_user_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_relation_udfs_user_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_relation_udfs_user_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_relation_udfs_user; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_relation_udfs_user; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_relation_udfs_user (
@@ -1765,10 +1765,10 @@ CREATE TABLE public.t_ds_relation_udfs_user (
 );
 
 
-ALTER TABLE public.t_ds_relation_udfs_user OWNER TO superset;
+ALTER TABLE public.t_ds_relation_udfs_user OWNER TO root;
 
 --
--- Name: t_ds_resources_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_resources_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_resources_id_sequence
@@ -1779,10 +1779,10 @@ CREATE SEQUENCE public.t_ds_resources_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_resources_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_resources_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_resources; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_resources; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_resources (
@@ -1801,10 +1801,10 @@ CREATE TABLE public.t_ds_resources (
 );
 
 
-ALTER TABLE public.t_ds_resources OWNER TO superset;
+ALTER TABLE public.t_ds_resources OWNER TO root;
 
 --
--- Name: t_ds_schedules_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_schedules_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_schedules_id_sequence
@@ -1815,10 +1815,10 @@ CREATE SEQUENCE public.t_ds_schedules_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_schedules_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_schedules_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_schedules; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_schedules; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_schedules (
@@ -1841,10 +1841,10 @@ CREATE TABLE public.t_ds_schedules (
 );
 
 
-ALTER TABLE public.t_ds_schedules OWNER TO superset;
+ALTER TABLE public.t_ds_schedules OWNER TO root;
 
 --
--- Name: t_ds_session; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_session; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_session (
@@ -1855,10 +1855,10 @@ CREATE TABLE public.t_ds_session (
 );
 
 
-ALTER TABLE public.t_ds_session OWNER TO superset;
+ALTER TABLE public.t_ds_session OWNER TO root;
 
 --
--- Name: t_ds_task_definition_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_task_definition_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_task_definition_id_sequence
@@ -1869,10 +1869,10 @@ CREATE SEQUENCE public.t_ds_task_definition_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_task_definition_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_task_definition_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_task_definition; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_task_definition; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_task_definition (
@@ -1903,10 +1903,10 @@ CREATE TABLE public.t_ds_task_definition (
 );
 
 
-ALTER TABLE public.t_ds_task_definition OWNER TO superset;
+ALTER TABLE public.t_ds_task_definition OWNER TO root;
 
 --
--- Name: t_ds_task_definition_log_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_task_definition_log_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_task_definition_log_id_sequence
@@ -1917,10 +1917,10 @@ CREATE SEQUENCE public.t_ds_task_definition_log_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_task_definition_log_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_task_definition_log_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_task_definition_log; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_task_definition_log; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_task_definition_log (
@@ -1953,10 +1953,10 @@ CREATE TABLE public.t_ds_task_definition_log (
 );
 
 
-ALTER TABLE public.t_ds_task_definition_log OWNER TO superset;
+ALTER TABLE public.t_ds_task_definition_log OWNER TO root;
 
 --
--- Name: t_ds_task_group; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_task_group; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_task_group (
@@ -1973,10 +1973,10 @@ CREATE TABLE public.t_ds_task_group (
 );
 
 
-ALTER TABLE public.t_ds_task_group OWNER TO superset;
+ALTER TABLE public.t_ds_task_group OWNER TO root;
 
 --
--- Name: t_ds_task_group_id_seq; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_task_group_id_seq; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_task_group_id_seq
@@ -1988,17 +1988,17 @@ CREATE SEQUENCE public.t_ds_task_group_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_task_group_id_seq OWNER TO superset;
+ALTER TABLE public.t_ds_task_group_id_seq OWNER TO root;
 
 --
--- Name: t_ds_task_group_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: superset
+-- Name: t_ds_task_group_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
 --
 
 ALTER SEQUENCE public.t_ds_task_group_id_seq OWNED BY public.t_ds_task_group.id;
 
 
 --
--- Name: t_ds_task_group_queue; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_task_group_queue; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_task_group_queue (
@@ -2016,10 +2016,10 @@ CREATE TABLE public.t_ds_task_group_queue (
 );
 
 
-ALTER TABLE public.t_ds_task_group_queue OWNER TO superset;
+ALTER TABLE public.t_ds_task_group_queue OWNER TO root;
 
 --
--- Name: t_ds_task_group_queue_id_seq; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_task_group_queue_id_seq; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_task_group_queue_id_seq
@@ -2031,17 +2031,17 @@ CREATE SEQUENCE public.t_ds_task_group_queue_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_task_group_queue_id_seq OWNER TO superset;
+ALTER TABLE public.t_ds_task_group_queue_id_seq OWNER TO root;
 
 --
--- Name: t_ds_task_group_queue_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: superset
+-- Name: t_ds_task_group_queue_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
 --
 
 ALTER SEQUENCE public.t_ds_task_group_queue_id_seq OWNED BY public.t_ds_task_group_queue.id;
 
 
 --
--- Name: t_ds_task_instance_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_task_instance_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_task_instance_id_sequence
@@ -2052,10 +2052,10 @@ CREATE SEQUENCE public.t_ds_task_instance_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_task_instance_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_task_instance_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_task_instance; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_task_instance; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_task_instance (
@@ -2093,10 +2093,10 @@ CREATE TABLE public.t_ds_task_instance (
 );
 
 
-ALTER TABLE public.t_ds_task_instance OWNER TO superset;
+ALTER TABLE public.t_ds_task_instance OWNER TO root;
 
 --
--- Name: t_ds_tenant_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_tenant_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_tenant_id_sequence
@@ -2107,10 +2107,10 @@ CREATE SEQUENCE public.t_ds_tenant_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_tenant_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_tenant_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_tenant; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_tenant; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_tenant (
@@ -2123,10 +2123,10 @@ CREATE TABLE public.t_ds_tenant (
 );
 
 
-ALTER TABLE public.t_ds_tenant OWNER TO superset;
+ALTER TABLE public.t_ds_tenant OWNER TO root;
 
 --
--- Name: t_ds_udfs_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_udfs_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_udfs_id_sequence
@@ -2137,10 +2137,10 @@ CREATE SEQUENCE public.t_ds_udfs_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_udfs_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_udfs_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_udfs; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_udfs; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_udfs (
@@ -2159,10 +2159,10 @@ CREATE TABLE public.t_ds_udfs (
 );
 
 
-ALTER TABLE public.t_ds_udfs OWNER TO superset;
+ALTER TABLE public.t_ds_udfs OWNER TO root;
 
 --
--- Name: t_ds_user_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_user_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_user_id_sequence
@@ -2173,10 +2173,10 @@ CREATE SEQUENCE public.t_ds_user_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_user_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_user_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_user; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_user; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_user (
@@ -2195,17 +2195,17 @@ CREATE TABLE public.t_ds_user (
 );
 
 
-ALTER TABLE public.t_ds_user OWNER TO superset;
+ALTER TABLE public.t_ds_user OWNER TO root;
 
 --
--- Name: COLUMN t_ds_user.state; Type: COMMENT; Schema: public; Owner: superset
+-- Name: COLUMN t_ds_user.state; Type: COMMENT; Schema: public; Owner: root
 --
 
 COMMENT ON COLUMN public.t_ds_user.state IS 'state 0:disable 1:enable';
 
 
 --
--- Name: t_ds_version_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_version_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_version_id_sequence
@@ -2216,10 +2216,10 @@ CREATE SEQUENCE public.t_ds_version_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_version_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_version_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_version; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_version; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_version (
@@ -2228,10 +2228,10 @@ CREATE TABLE public.t_ds_version (
 );
 
 
-ALTER TABLE public.t_ds_version OWNER TO superset;
+ALTER TABLE public.t_ds_version OWNER TO root;
 
 --
--- Name: t_ds_worker_group_id_sequence; Type: SEQUENCE; Schema: public; Owner: superset
+-- Name: t_ds_worker_group_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE public.t_ds_worker_group_id_sequence
@@ -2242,10 +2242,10 @@ CREATE SEQUENCE public.t_ds_worker_group_id_sequence
     CACHE 1;
 
 
-ALTER TABLE public.t_ds_worker_group_id_sequence OWNER TO superset;
+ALTER TABLE public.t_ds_worker_group_id_sequence OWNER TO root;
 
 --
--- Name: t_ds_worker_group; Type: TABLE; Schema: public; Owner: superset
+-- Name: t_ds_worker_group; Type: TABLE; Schema: public; Owner: root
 --
 
 CREATE TABLE public.t_ds_worker_group (
@@ -2257,173 +2257,173 @@ CREATE TABLE public.t_ds_worker_group (
 );
 
 
-ALTER TABLE public.t_ds_worker_group OWNER TO superset;
+ALTER TABLE public.t_ds_worker_group OWNER TO root;
 
 --
--- Name: t_ds_alert_plugin_instance id; Type: DEFAULT; Schema: public; Owner: superset
+-- Name: t_ds_alert_plugin_instance id; Type: DEFAULT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_alert_plugin_instance ALTER COLUMN id SET DEFAULT nextval('public.t_ds_alert_plugin_instance_id_seq'::regclass);
 
 
 --
--- Name: t_ds_alert_send_status id; Type: DEFAULT; Schema: public; Owner: superset
+-- Name: t_ds_alert_send_status id; Type: DEFAULT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_alert_send_status ALTER COLUMN id SET DEFAULT nextval('public.t_ds_alert_send_status_id_seq'::regclass);
 
 
 --
--- Name: t_ds_audit_log id; Type: DEFAULT; Schema: public; Owner: superset
+-- Name: t_ds_audit_log id; Type: DEFAULT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_audit_log ALTER COLUMN id SET DEFAULT nextval('public.t_ds_audit_log_id_seq'::regclass);
 
 
 --
--- Name: t_ds_dq_comparison_type id; Type: DEFAULT; Schema: public; Owner: superset
+-- Name: t_ds_dq_comparison_type id; Type: DEFAULT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_dq_comparison_type ALTER COLUMN id SET DEFAULT nextval('public.t_ds_dq_comparison_type_id_seq'::regclass);
 
 
 --
--- Name: t_ds_dq_execute_result id; Type: DEFAULT; Schema: public; Owner: superset
+-- Name: t_ds_dq_execute_result id; Type: DEFAULT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_dq_execute_result ALTER COLUMN id SET DEFAULT nextval('public.t_ds_dq_execute_result_id_seq'::regclass);
 
 
 --
--- Name: t_ds_dq_rule id; Type: DEFAULT; Schema: public; Owner: superset
+-- Name: t_ds_dq_rule id; Type: DEFAULT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_dq_rule ALTER COLUMN id SET DEFAULT nextval('public.t_ds_dq_rule_id_seq'::regclass);
 
 
 --
--- Name: t_ds_dq_rule_execute_sql id; Type: DEFAULT; Schema: public; Owner: superset
+-- Name: t_ds_dq_rule_execute_sql id; Type: DEFAULT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_dq_rule_execute_sql ALTER COLUMN id SET DEFAULT nextval('public.t_ds_dq_rule_execute_sql_id_seq'::regclass);
 
 
 --
--- Name: t_ds_dq_rule_input_entry id; Type: DEFAULT; Schema: public; Owner: superset
+-- Name: t_ds_dq_rule_input_entry id; Type: DEFAULT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_dq_rule_input_entry ALTER COLUMN id SET DEFAULT nextval('public.t_ds_dq_rule_input_entry_id_seq'::regclass);
 
 
 --
--- Name: t_ds_dq_task_statistics_value id; Type: DEFAULT; Schema: public; Owner: superset
+-- Name: t_ds_dq_task_statistics_value id; Type: DEFAULT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_dq_task_statistics_value ALTER COLUMN id SET DEFAULT nextval('public.t_ds_dq_task_statistics_value_id_seq'::regclass);
 
 
 --
--- Name: t_ds_environment id; Type: DEFAULT; Schema: public; Owner: superset
+-- Name: t_ds_environment id; Type: DEFAULT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_environment ALTER COLUMN id SET DEFAULT nextval('public.t_ds_environment_id_seq'::regclass);
 
 
 --
--- Name: t_ds_environment_worker_group_relation id; Type: DEFAULT; Schema: public; Owner: superset
+-- Name: t_ds_environment_worker_group_relation id; Type: DEFAULT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_environment_worker_group_relation ALTER COLUMN id SET DEFAULT nextval('public.t_ds_environment_worker_group_relation_id_seq'::regclass);
 
 
 --
--- Name: t_ds_k8s id; Type: DEFAULT; Schema: public; Owner: superset
+-- Name: t_ds_k8s id; Type: DEFAULT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_k8s ALTER COLUMN id SET DEFAULT nextval('public.t_ds_k8s_id_seq'::regclass);
 
 
 --
--- Name: t_ds_k8s_namespace id; Type: DEFAULT; Schema: public; Owner: superset
+-- Name: t_ds_k8s_namespace id; Type: DEFAULT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_k8s_namespace ALTER COLUMN id SET DEFAULT nextval('public.t_ds_k8s_namespace_id_seq'::regclass);
 
 
 --
--- Name: t_ds_plugin_define id; Type: DEFAULT; Schema: public; Owner: superset
+-- Name: t_ds_plugin_define id; Type: DEFAULT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_plugin_define ALTER COLUMN id SET DEFAULT nextval('public.t_ds_plugin_define_id_seq'::regclass);
 
 
 --
--- Name: t_ds_relation_namespace_user id; Type: DEFAULT; Schema: public; Owner: superset
+-- Name: t_ds_relation_namespace_user id; Type: DEFAULT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_relation_namespace_user ALTER COLUMN id SET DEFAULT nextval('public.t_ds_relation_namespace_user_id_seq'::regclass);
 
 
 --
--- Name: t_ds_relation_rule_execute_sql id; Type: DEFAULT; Schema: public; Owner: superset
+-- Name: t_ds_relation_rule_execute_sql id; Type: DEFAULT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_relation_rule_execute_sql ALTER COLUMN id SET DEFAULT nextval('public.t_ds_relation_rule_execute_sql_id_seq'::regclass);
 
 
 --
--- Name: t_ds_relation_rule_input_entry id; Type: DEFAULT; Schema: public; Owner: superset
+-- Name: t_ds_relation_rule_input_entry id; Type: DEFAULT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_relation_rule_input_entry ALTER COLUMN id SET DEFAULT nextval('public.t_ds_relation_rule_input_entry_id_seq'::regclass);
 
 
 --
--- Name: t_ds_task_group id; Type: DEFAULT; Schema: public; Owner: superset
+-- Name: t_ds_task_group id; Type: DEFAULT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_task_group ALTER COLUMN id SET DEFAULT nextval('public.t_ds_task_group_id_seq'::regclass);
 
 
 --
--- Name: t_ds_task_group_queue id; Type: DEFAULT; Schema: public; Owner: superset
+-- Name: t_ds_task_group_queue id; Type: DEFAULT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_task_group_queue ALTER COLUMN id SET DEFAULT nextval('public.t_ds_task_group_queue_id_seq'::regclass);
 
 
 --
--- Data for Name: qrtz_blob_triggers; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: qrtz_blob_triggers; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: qrtz_calendars; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: qrtz_calendars; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: qrtz_cron_triggers; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: qrtz_cron_triggers; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: qrtz_fired_triggers; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: qrtz_fired_triggers; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: qrtz_job_details; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: qrtz_job_details; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: qrtz_locks; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: qrtz_locks; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 INSERT INTO public.qrtz_locks VALUES ('DolphinScheduler', 'STATE_ACCESS');
@@ -2431,38 +2431,38 @@ INSERT INTO public.qrtz_locks VALUES ('DolphinScheduler', 'TRIGGER_ACCESS');
 
 
 --
--- Data for Name: qrtz_paused_trigger_grps; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: qrtz_paused_trigger_grps; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: qrtz_scheduler_state; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: qrtz_scheduler_state; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 INSERT INTO public.qrtz_scheduler_state VALUES ('DolphinScheduler', 'VM-8-4-ubuntu1688030144147', 1688030165976, 5000);
 
 
 --
--- Data for Name: qrtz_simple_triggers; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: qrtz_simple_triggers; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: qrtz_simprop_triggers; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: qrtz_simprop_triggers; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: qrtz_triggers; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: qrtz_triggers; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_access_token; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_access_token; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 INSERT INTO public.t_ds_access_token VALUES (1, 111, '111', '2023-08-31 16:36:05', '2023-08-31 16:36:11', '2023-08-31 16:36:15');
@@ -2482,51 +2482,51 @@ INSERT INTO public.t_ds_access_token VALUES (14, 22, '11', '2023-08-31 16:36:55'
 
 
 --
--- Data for Name: t_ds_alert; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_alert; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 INSERT INTO public.t_ds_alert VALUES (1, 'Fault tolerance warning', 'f5bc9bc42f1039d3bb7a079007620b36d9499bd1', '[{"type":"MASTER","host":"/nodes/master/10.0.8.4:5678","event":"SERVER_DOWN","warningLevel":"SERIOUS"}]', 0, 2, NULL, 1, '2023-06-29 16:27:41.297', '2023-06-29 16:27:41.297', NULL, NULL, NULL, 4);
 
 
 --
--- Data for Name: t_ds_alert_plugin_instance; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_alert_plugin_instance; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_alert_send_status; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_alert_send_status; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_alertgroup; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_alertgroup; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 INSERT INTO public.t_ds_alertgroup VALUES (1, '1,2', 1, 'default admin warning group', 'default admin warning group', '2018-11-29 10:20:39', '2018-11-29 10:20:39');
 
 
 --
--- Data for Name: t_ds_audit_log; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_audit_log; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_command; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_command; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_datasource; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_datasource; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_dq_comparison_type; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_dq_comparison_type; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 INSERT INTO public.t_ds_dq_comparison_type VALUES (1, 'FixValue', NULL, NULL, NULL, '2021-06-30 00:00:00', '2021-06-30 00:00:00', false);
@@ -2540,13 +2540,13 @@ INSERT INTO public.t_ds_dq_comparison_type VALUES (8, 'TargetTableTotalRows', 'S
 
 
 --
--- Data for Name: t_ds_dq_execute_result; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_dq_execute_result; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_dq_rule; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_dq_rule; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 INSERT INTO public.t_ds_dq_rule VALUES (1, '$t(null_check)', 0, 1, '2020-01-12 00:00:00', '2020-01-12 00:00:00');
@@ -2562,7 +2562,7 @@ INSERT INTO public.t_ds_dq_rule VALUES (10, '$t(table_count_check)', 0, 1, '2020
 
 
 --
--- Data for Name: t_ds_dq_rule_execute_sql; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_dq_rule_execute_sql; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 INSERT INTO public.t_ds_dq_rule_execute_sql VALUES (1, 1, 'SELECT COUNT(*) AS nulls FROM null_items', 'null_count', 1, '2021-03-03 11:31:24', '2021-03-03 11:31:24', false);
@@ -2585,7 +2585,7 @@ INSERT INTO public.t_ds_dq_rule_execute_sql VALUES (17, 1, 'SELECT * FROM ${src_
 
 
 --
--- Data for Name: t_ds_dq_rule_input_entry; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_dq_rule_input_entry; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 INSERT INTO public.t_ds_dq_rule_input_entry VALUES (1, 'src_connector_type', 'select', '$t(src_connector_type)', '', '[{"label":"HIVE","value":"HIVE"},{"label":"JDBC","value":"JDBC"}]', 'please select source connector type', 2, 2, 0, 1, 1, 1, 0, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
@@ -2620,43 +2620,43 @@ INSERT INTO public.t_ds_dq_rule_input_entry VALUES (29, 'begin_time', 'input', '
 
 
 --
--- Data for Name: t_ds_dq_task_statistics_value; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_dq_task_statistics_value; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_environment; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_environment; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_environment_worker_group_relation; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_environment_worker_group_relation; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_error_command; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_error_command; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_k8s; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_k8s; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_k8s_namespace; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_k8s_namespace; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_plugin_define; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_plugin_define; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 INSERT INTO public.t_ds_plugin_define VALUES (1, 'DingTalk', 'alert', '[{"props":null,"field":"WarningType","name":"warningType","type":"radio","title":"warningType","value":"all","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"success","value":"success","disabled":false},{"label":"failure","value":"failure","disabled":false},{"label":"all","value":"all","disabled":false}]},{"props":null,"field":"WebHook","name":"$t(''webhook'')","type":"input","title":"$t(''webhook'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"Keyword","name":"$t(''keyword'')","type":"input","title":"$t(''keyword'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"Secret","name":"$t(''secret'')","type":"input","title":"$t(''secret'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"MsgType","name":"$t(''msgType'')","type":"radio","title":"$t(''msgType'')","value":"text","validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"text","value":"text","disabled":false},{"label":"markdown","value":"markdown","disabled":false}]},{"props":null,"field":"AtMobiles","name":"$t(''atMobiles'')","type":"input","title":"$t(''atMobiles'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"AtUserIds","name":"$t(''atUserIds'')","type":"input","title":"$t(''atUserIds'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"IsAtAll","name":"$t(''isAtAll'')","type":"radio","title":"$t(''isAtAll'')","value":"false","validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"YES","value":"true","disabled":false},{"label":"NO","value":"false","disabled":false}]},{"props":null,"field":"IsEnableProxy","name":"$t(''isEnableProxy'')","type":"radio","title":"$t(''isEnableProxy'')","value":"false","validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"YES","value":"true","disabled":false},{"label":"NO","value":"false","disabled":false}]},{"props":null,"field":"Proxy","name":"$t(''proxy'')","type":"input","title":"$t(''proxy'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"Port","name":"$t(''port'')","type":"input","title":"$t(''port'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"User","name":"$t(''user'')","type":"input","title":"$t(''user'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"field":"Password","name":"$t(''password'')","props":{"disabled":null,"placeholder":"if enable use authentication, you need input password","size":"small"},"type":"input","title":"$t(''password'')","value":null,"validate":null,"emit":null}]', '2023-06-29 15:48:19.191', '2023-06-29 15:48:19.191');
@@ -2692,80 +2692,80 @@ INSERT INTO public.t_ds_plugin_define VALUES (30, 'BLOCKING', 'task', 'null', '2
 
 
 --
--- Data for Name: t_ds_process_definition; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_process_definition; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_process_definition_log; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_process_definition_log; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_process_instance; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_process_instance; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_process_task_relation; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_process_task_relation; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_process_task_relation_log; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_process_task_relation_log; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_project; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_project; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_queue; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_queue; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 INSERT INTO public.t_ds_queue VALUES (1, 'default', 'default', '2018-11-29 10:22:33', '2018-11-29 10:22:33');
 
 
 --
--- Data for Name: t_ds_relation_datasource_user; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_relation_datasource_user; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_relation_namespace_user; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_relation_namespace_user; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_relation_process_instance; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_relation_process_instance; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_relation_project_user; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_relation_project_user; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_relation_resources_user; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_relation_resources_user; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_relation_rule_execute_sql; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_relation_rule_execute_sql; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 INSERT INTO public.t_ds_relation_rule_execute_sql VALUES (1, 1, 1, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
@@ -2786,7 +2786,7 @@ INSERT INTO public.t_ds_relation_rule_execute_sql VALUES (15, 5, 17, '2021-03-03
 
 
 --
--- Data for Name: t_ds_relation_rule_input_entry; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_relation_rule_input_entry; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 INSERT INTO public.t_ds_relation_rule_input_entry VALUES (1, 1, 1, NULL, 1, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
@@ -2923,416 +2923,416 @@ INSERT INTO public.t_ds_relation_rule_input_entry VALUES (150, 8, 29, NULL, 7, '
 
 
 --
--- Data for Name: t_ds_relation_udfs_user; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_relation_udfs_user; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_resources; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_resources; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_schedules; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_schedules; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_session; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_session; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 INSERT INTO public.t_ds_session VALUES ('4757b696-676f-461e-bee7-87d2d864e3e2', 1, '127.0.0.1', '2023-10-11 16:50:45.275841');
 
 
 --
--- Data for Name: t_ds_task_definition; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_task_definition; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_task_definition_log; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_task_definition_log; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_task_group; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_task_group; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_task_group_queue; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_task_group_queue; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_task_instance; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_task_instance; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_tenant; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_tenant; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_udfs; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_udfs; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Data for Name: t_ds_user; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_user; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 INSERT INTO public.t_ds_user VALUES (1, 'admin', '7ad2410b2f4c074479a8937a28a22b8f', 0, 'xxx@qq.com', '', 0, '2018-03-27 15:48:50', '2018-10-24 17:40:22', NULL, 1, NULL);
 
 
 --
--- Data for Name: t_ds_version; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_version; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 INSERT INTO public.t_ds_version VALUES (1, '3.0.1');
 
 
 --
--- Data for Name: t_ds_worker_group; Type: TABLE DATA; Schema: public; Owner: superset
+-- Data for Name: t_ds_worker_group; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
 
 --
--- Name: t_ds_access_token_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_access_token_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_access_token_id_sequence', 1, true);
 
 
 --
--- Name: t_ds_alert_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_alert_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_alert_id_sequence', 1, true);
 
 
 --
--- Name: t_ds_alert_plugin_instance_id_seq; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_alert_plugin_instance_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_alert_plugin_instance_id_seq', 1, false);
 
 
 --
--- Name: t_ds_alert_send_status_id_seq; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_alert_send_status_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_alert_send_status_id_seq', 1, false);
 
 
 --
--- Name: t_ds_alertgroup_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_alertgroup_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_alertgroup_id_sequence', 1, true);
 
 
 --
--- Name: t_ds_audit_log_id_seq; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_audit_log_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_audit_log_id_seq', 1, false);
 
 
 --
--- Name: t_ds_command_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_command_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_command_id_sequence', 1, false);
 
 
 --
--- Name: t_ds_datasource_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_datasource_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_datasource_id_sequence', 1, false);
 
 
 --
--- Name: t_ds_dq_comparison_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_dq_comparison_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_dq_comparison_type_id_seq', 1, false);
 
 
 --
--- Name: t_ds_dq_execute_result_id_seq; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_dq_execute_result_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_dq_execute_result_id_seq', 1, false);
 
 
 --
--- Name: t_ds_dq_rule_execute_sql_id_seq; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_dq_rule_execute_sql_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_dq_rule_execute_sql_id_seq', 1, false);
 
 
 --
--- Name: t_ds_dq_rule_id_seq; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_dq_rule_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_dq_rule_id_seq', 1, false);
 
 
 --
--- Name: t_ds_dq_rule_input_entry_id_seq; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_dq_rule_input_entry_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_dq_rule_input_entry_id_seq', 1, false);
 
 
 --
--- Name: t_ds_dq_task_statistics_value_id_seq; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_dq_task_statistics_value_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_dq_task_statistics_value_id_seq', 1, false);
 
 
 --
--- Name: t_ds_environment_id_seq; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_environment_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_environment_id_seq', 1, false);
 
 
 --
--- Name: t_ds_environment_worker_group_relation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_environment_worker_group_relation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_environment_worker_group_relation_id_seq', 1, false);
 
 
 --
--- Name: t_ds_k8s_id_seq; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_k8s_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_k8s_id_seq', 1, false);
 
 
 --
--- Name: t_ds_k8s_namespace_id_seq; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_k8s_namespace_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_k8s_namespace_id_seq', 1, false);
 
 
 --
--- Name: t_ds_plugin_define_id_seq; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_plugin_define_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_plugin_define_id_seq', 30, true);
 
 
 --
--- Name: t_ds_process_definition_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_process_definition_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_process_definition_id_sequence', 1, false);
 
 
 --
--- Name: t_ds_process_definition_log_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_process_definition_log_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_process_definition_log_id_sequence', 1, false);
 
 
 --
--- Name: t_ds_process_instance_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_process_instance_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_process_instance_id_sequence', 1, false);
 
 
 --
--- Name: t_ds_process_task_relation_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_process_task_relation_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_process_task_relation_id_sequence', 1, false);
 
 
 --
--- Name: t_ds_process_task_relation_log_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_process_task_relation_log_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_process_task_relation_log_id_sequence', 1, false);
 
 
 --
--- Name: t_ds_project_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_project_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_project_id_sequence', 1, false);
 
 
 --
--- Name: t_ds_queue_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_queue_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_queue_id_sequence', 1, true);
 
 
 --
--- Name: t_ds_relation_datasource_user_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_relation_datasource_user_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_relation_datasource_user_id_sequence', 1, false);
 
 
 --
--- Name: t_ds_relation_namespace_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_relation_namespace_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_relation_namespace_user_id_seq', 1, false);
 
 
 --
--- Name: t_ds_relation_process_instance_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_relation_process_instance_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_relation_process_instance_id_sequence', 1, false);
 
 
 --
--- Name: t_ds_relation_project_user_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_relation_project_user_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_relation_project_user_id_sequence', 1, false);
 
 
 --
--- Name: t_ds_relation_resources_user_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_relation_resources_user_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_relation_resources_user_id_sequence', 1, false);
 
 
 --
--- Name: t_ds_relation_rule_execute_sql_id_seq; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_relation_rule_execute_sql_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_relation_rule_execute_sql_id_seq', 1, false);
 
 
 --
--- Name: t_ds_relation_rule_input_entry_id_seq; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_relation_rule_input_entry_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_relation_rule_input_entry_id_seq', 1, false);
 
 
 --
--- Name: t_ds_relation_udfs_user_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_relation_udfs_user_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_relation_udfs_user_id_sequence', 1, false);
 
 
 --
--- Name: t_ds_resources_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_resources_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_resources_id_sequence', 1, false);
 
 
 --
--- Name: t_ds_schedules_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_schedules_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_schedules_id_sequence', 1, false);
 
 
 --
--- Name: t_ds_task_definition_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_task_definition_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_task_definition_id_sequence', 1, false);
 
 
 --
--- Name: t_ds_task_definition_log_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_task_definition_log_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_task_definition_log_id_sequence', 1, false);
 
 
 --
--- Name: t_ds_task_group_id_seq; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_task_group_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_task_group_id_seq', 1, false);
 
 
 --
--- Name: t_ds_task_group_queue_id_seq; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_task_group_queue_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_task_group_queue_id_seq', 1, false);
 
 
 --
--- Name: t_ds_task_instance_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_task_instance_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_task_instance_id_sequence', 1, false);
 
 
 --
--- Name: t_ds_tenant_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_tenant_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_tenant_id_sequence', 1, false);
 
 
 --
--- Name: t_ds_udfs_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_udfs_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_udfs_id_sequence', 1, false);
 
 
 --
--- Name: t_ds_user_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_user_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_user_id_sequence', 1, true);
 
 
 --
--- Name: t_ds_version_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_version_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_version_id_sequence', 1, true);
 
 
 --
--- Name: t_ds_worker_group_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: superset
+-- Name: t_ds_worker_group_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('public.t_ds_worker_group_id_sequence', 1, false);
 
 
 --
--- Name: t_ds_alert_send_status alert_send_status_unique; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_alert_send_status alert_send_status_unique; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_alert_send_status
@@ -3340,7 +3340,7 @@ ALTER TABLE ONLY public.t_ds_alert_send_status
 
 
 --
--- Name: t_ds_environment environment_code_unique; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_environment environment_code_unique; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_environment
@@ -3348,7 +3348,7 @@ ALTER TABLE ONLY public.t_ds_environment
 
 
 --
--- Name: t_ds_environment environment_name_unique; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_environment environment_name_unique; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_environment
@@ -3356,7 +3356,7 @@ ALTER TABLE ONLY public.t_ds_environment
 
 
 --
--- Name: t_ds_environment_worker_group_relation environment_worker_group_unique; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_environment_worker_group_relation environment_worker_group_unique; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_environment_worker_group_relation
@@ -3364,7 +3364,7 @@ ALTER TABLE ONLY public.t_ds_environment_worker_group_relation
 
 
 --
--- Name: t_ds_k8s_namespace k8s_namespace_unique; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_k8s_namespace k8s_namespace_unique; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_k8s_namespace
@@ -3372,7 +3372,7 @@ ALTER TABLE ONLY public.t_ds_k8s_namespace
 
 
 --
--- Name: t_ds_worker_group name_unique; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_worker_group name_unique; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_worker_group
@@ -3380,7 +3380,7 @@ ALTER TABLE ONLY public.t_ds_worker_group
 
 
 --
--- Name: t_ds_relation_namespace_user namespace_user_unique; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_relation_namespace_user namespace_user_unique; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_relation_namespace_user
@@ -3388,7 +3388,7 @@ ALTER TABLE ONLY public.t_ds_relation_namespace_user
 
 
 --
--- Name: t_ds_process_definition process_definition_unique; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_process_definition process_definition_unique; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_process_definition
@@ -3396,7 +3396,7 @@ ALTER TABLE ONLY public.t_ds_process_definition
 
 
 --
--- Name: qrtz_blob_triggers qrtz_blob_triggers_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: qrtz_blob_triggers qrtz_blob_triggers_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.qrtz_blob_triggers
@@ -3404,7 +3404,7 @@ ALTER TABLE ONLY public.qrtz_blob_triggers
 
 
 --
--- Name: qrtz_calendars qrtz_calendars_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: qrtz_calendars qrtz_calendars_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.qrtz_calendars
@@ -3412,7 +3412,7 @@ ALTER TABLE ONLY public.qrtz_calendars
 
 
 --
--- Name: qrtz_cron_triggers qrtz_cron_triggers_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: qrtz_cron_triggers qrtz_cron_triggers_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.qrtz_cron_triggers
@@ -3420,7 +3420,7 @@ ALTER TABLE ONLY public.qrtz_cron_triggers
 
 
 --
--- Name: qrtz_fired_triggers qrtz_fired_triggers_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: qrtz_fired_triggers qrtz_fired_triggers_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.qrtz_fired_triggers
@@ -3428,7 +3428,7 @@ ALTER TABLE ONLY public.qrtz_fired_triggers
 
 
 --
--- Name: qrtz_job_details qrtz_job_details_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: qrtz_job_details qrtz_job_details_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.qrtz_job_details
@@ -3436,7 +3436,7 @@ ALTER TABLE ONLY public.qrtz_job_details
 
 
 --
--- Name: qrtz_locks qrtz_locks_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: qrtz_locks qrtz_locks_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.qrtz_locks
@@ -3444,7 +3444,7 @@ ALTER TABLE ONLY public.qrtz_locks
 
 
 --
--- Name: qrtz_paused_trigger_grps qrtz_paused_trigger_grps_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: qrtz_paused_trigger_grps qrtz_paused_trigger_grps_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.qrtz_paused_trigger_grps
@@ -3452,7 +3452,7 @@ ALTER TABLE ONLY public.qrtz_paused_trigger_grps
 
 
 --
--- Name: qrtz_scheduler_state qrtz_scheduler_state_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: qrtz_scheduler_state qrtz_scheduler_state_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.qrtz_scheduler_state
@@ -3460,7 +3460,7 @@ ALTER TABLE ONLY public.qrtz_scheduler_state
 
 
 --
--- Name: qrtz_simple_triggers qrtz_simple_triggers_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: qrtz_simple_triggers qrtz_simple_triggers_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.qrtz_simple_triggers
@@ -3468,7 +3468,7 @@ ALTER TABLE ONLY public.qrtz_simple_triggers
 
 
 --
--- Name: qrtz_simprop_triggers qrtz_simprop_triggers_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: qrtz_simprop_triggers qrtz_simprop_triggers_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.qrtz_simprop_triggers
@@ -3476,7 +3476,7 @@ ALTER TABLE ONLY public.qrtz_simprop_triggers
 
 
 --
--- Name: qrtz_triggers qrtz_triggers_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: qrtz_triggers qrtz_triggers_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.qrtz_triggers
@@ -3484,7 +3484,7 @@ ALTER TABLE ONLY public.qrtz_triggers
 
 
 --
--- Name: t_ds_access_token t_ds_access_token_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_access_token t_ds_access_token_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_access_token
@@ -3492,7 +3492,7 @@ ALTER TABLE ONLY public.t_ds_access_token
 
 
 --
--- Name: t_ds_alert t_ds_alert_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_alert t_ds_alert_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_alert
@@ -3500,7 +3500,7 @@ ALTER TABLE ONLY public.t_ds_alert
 
 
 --
--- Name: t_ds_alert_plugin_instance t_ds_alert_plugin_instance_pk; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_alert_plugin_instance t_ds_alert_plugin_instance_pk; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_alert_plugin_instance
@@ -3508,7 +3508,7 @@ ALTER TABLE ONLY public.t_ds_alert_plugin_instance
 
 
 --
--- Name: t_ds_alert_send_status t_ds_alert_send_status_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_alert_send_status t_ds_alert_send_status_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_alert_send_status
@@ -3516,7 +3516,7 @@ ALTER TABLE ONLY public.t_ds_alert_send_status
 
 
 --
--- Name: t_ds_alertgroup t_ds_alertgroup_name_un; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_alertgroup t_ds_alertgroup_name_un; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_alertgroup
@@ -3524,7 +3524,7 @@ ALTER TABLE ONLY public.t_ds_alertgroup
 
 
 --
--- Name: t_ds_alertgroup t_ds_alertgroup_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_alertgroup t_ds_alertgroup_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_alertgroup
@@ -3532,7 +3532,7 @@ ALTER TABLE ONLY public.t_ds_alertgroup
 
 
 --
--- Name: t_ds_audit_log t_ds_audit_log_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_audit_log t_ds_audit_log_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_audit_log
@@ -3540,7 +3540,7 @@ ALTER TABLE ONLY public.t_ds_audit_log
 
 
 --
--- Name: t_ds_command t_ds_command_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_command t_ds_command_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_command
@@ -3548,7 +3548,7 @@ ALTER TABLE ONLY public.t_ds_command
 
 
 --
--- Name: t_ds_datasource t_ds_datasource_name_un; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_datasource t_ds_datasource_name_un; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_datasource
@@ -3556,7 +3556,7 @@ ALTER TABLE ONLY public.t_ds_datasource
 
 
 --
--- Name: t_ds_datasource t_ds_datasource_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_datasource t_ds_datasource_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_datasource
@@ -3564,7 +3564,7 @@ ALTER TABLE ONLY public.t_ds_datasource
 
 
 --
--- Name: t_ds_dq_comparison_type t_ds_dq_comparison_type_pk; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_dq_comparison_type t_ds_dq_comparison_type_pk; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_dq_comparison_type
@@ -3572,7 +3572,7 @@ ALTER TABLE ONLY public.t_ds_dq_comparison_type
 
 
 --
--- Name: t_ds_dq_execute_result t_ds_dq_execute_result_pk; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_dq_execute_result t_ds_dq_execute_result_pk; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_dq_execute_result
@@ -3580,7 +3580,7 @@ ALTER TABLE ONLY public.t_ds_dq_execute_result
 
 
 --
--- Name: t_ds_dq_rule_execute_sql t_ds_dq_rule_execute_sql_pk; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_dq_rule_execute_sql t_ds_dq_rule_execute_sql_pk; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_dq_rule_execute_sql
@@ -3588,7 +3588,7 @@ ALTER TABLE ONLY public.t_ds_dq_rule_execute_sql
 
 
 --
--- Name: t_ds_dq_rule_input_entry t_ds_dq_rule_input_entry_pk; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_dq_rule_input_entry t_ds_dq_rule_input_entry_pk; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_dq_rule_input_entry
@@ -3596,7 +3596,7 @@ ALTER TABLE ONLY public.t_ds_dq_rule_input_entry
 
 
 --
--- Name: t_ds_dq_rule t_ds_dq_rule_pk; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_dq_rule t_ds_dq_rule_pk; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_dq_rule
@@ -3604,7 +3604,7 @@ ALTER TABLE ONLY public.t_ds_dq_rule
 
 
 --
--- Name: t_ds_dq_task_statistics_value t_ds_dq_task_statistics_value_pk; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_dq_task_statistics_value t_ds_dq_task_statistics_value_pk; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_dq_task_statistics_value
@@ -3612,7 +3612,7 @@ ALTER TABLE ONLY public.t_ds_dq_task_statistics_value
 
 
 --
--- Name: t_ds_environment t_ds_environment_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_environment t_ds_environment_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_environment
@@ -3620,7 +3620,7 @@ ALTER TABLE ONLY public.t_ds_environment
 
 
 --
--- Name: t_ds_environment_worker_group_relation t_ds_environment_worker_group_relation_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_environment_worker_group_relation t_ds_environment_worker_group_relation_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_environment_worker_group_relation
@@ -3628,7 +3628,7 @@ ALTER TABLE ONLY public.t_ds_environment_worker_group_relation
 
 
 --
--- Name: t_ds_error_command t_ds_error_command_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_error_command t_ds_error_command_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_error_command
@@ -3636,7 +3636,7 @@ ALTER TABLE ONLY public.t_ds_error_command
 
 
 --
--- Name: t_ds_k8s_namespace t_ds_k8s_namespace_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_k8s_namespace t_ds_k8s_namespace_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_k8s_namespace
@@ -3644,7 +3644,7 @@ ALTER TABLE ONLY public.t_ds_k8s_namespace
 
 
 --
--- Name: t_ds_k8s t_ds_k8s_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_k8s t_ds_k8s_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_k8s
@@ -3652,7 +3652,7 @@ ALTER TABLE ONLY public.t_ds_k8s
 
 
 --
--- Name: t_ds_plugin_define t_ds_plugin_define_pk; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_plugin_define t_ds_plugin_define_pk; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_plugin_define
@@ -3660,7 +3660,7 @@ ALTER TABLE ONLY public.t_ds_plugin_define
 
 
 --
--- Name: t_ds_plugin_define t_ds_plugin_define_un; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_plugin_define t_ds_plugin_define_un; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_plugin_define
@@ -3668,7 +3668,7 @@ ALTER TABLE ONLY public.t_ds_plugin_define
 
 
 --
--- Name: t_ds_process_definition_log t_ds_process_definition_log_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_process_definition_log t_ds_process_definition_log_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_process_definition_log
@@ -3676,7 +3676,7 @@ ALTER TABLE ONLY public.t_ds_process_definition_log
 
 
 --
--- Name: t_ds_process_definition t_ds_process_definition_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_process_definition t_ds_process_definition_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_process_definition
@@ -3684,7 +3684,7 @@ ALTER TABLE ONLY public.t_ds_process_definition
 
 
 --
--- Name: t_ds_process_instance t_ds_process_instance_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_process_instance t_ds_process_instance_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_process_instance
@@ -3692,7 +3692,7 @@ ALTER TABLE ONLY public.t_ds_process_instance
 
 
 --
--- Name: t_ds_process_task_relation_log t_ds_process_task_relation_log_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_process_task_relation_log t_ds_process_task_relation_log_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_process_task_relation_log
@@ -3700,7 +3700,7 @@ ALTER TABLE ONLY public.t_ds_process_task_relation_log
 
 
 --
--- Name: t_ds_process_task_relation t_ds_process_task_relation_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_process_task_relation t_ds_process_task_relation_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_process_task_relation
@@ -3708,7 +3708,7 @@ ALTER TABLE ONLY public.t_ds_process_task_relation
 
 
 --
--- Name: t_ds_project t_ds_project_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_project t_ds_project_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_project
@@ -3716,7 +3716,7 @@ ALTER TABLE ONLY public.t_ds_project
 
 
 --
--- Name: t_ds_queue t_ds_queue_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_queue t_ds_queue_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_queue
@@ -3724,7 +3724,7 @@ ALTER TABLE ONLY public.t_ds_queue
 
 
 --
--- Name: t_ds_relation_datasource_user t_ds_relation_datasource_user_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_relation_datasource_user t_ds_relation_datasource_user_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_relation_datasource_user
@@ -3732,7 +3732,7 @@ ALTER TABLE ONLY public.t_ds_relation_datasource_user
 
 
 --
--- Name: t_ds_relation_namespace_user t_ds_relation_namespace_user_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_relation_namespace_user t_ds_relation_namespace_user_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_relation_namespace_user
@@ -3740,7 +3740,7 @@ ALTER TABLE ONLY public.t_ds_relation_namespace_user
 
 
 --
--- Name: t_ds_relation_process_instance t_ds_relation_process_instance_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_relation_process_instance t_ds_relation_process_instance_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_relation_process_instance
@@ -3748,7 +3748,7 @@ ALTER TABLE ONLY public.t_ds_relation_process_instance
 
 
 --
--- Name: t_ds_relation_project_user t_ds_relation_project_user_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_relation_project_user t_ds_relation_project_user_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_relation_project_user
@@ -3756,7 +3756,7 @@ ALTER TABLE ONLY public.t_ds_relation_project_user
 
 
 --
--- Name: t_ds_relation_project_user t_ds_relation_project_user_un; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_relation_project_user t_ds_relation_project_user_un; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_relation_project_user
@@ -3764,7 +3764,7 @@ ALTER TABLE ONLY public.t_ds_relation_project_user
 
 
 --
--- Name: t_ds_relation_resources_user t_ds_relation_resources_user_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_relation_resources_user t_ds_relation_resources_user_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_relation_resources_user
@@ -3772,7 +3772,7 @@ ALTER TABLE ONLY public.t_ds_relation_resources_user
 
 
 --
--- Name: t_ds_relation_rule_execute_sql t_ds_relation_rule_execute_sql_pk; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_relation_rule_execute_sql t_ds_relation_rule_execute_sql_pk; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_relation_rule_execute_sql
@@ -3780,7 +3780,7 @@ ALTER TABLE ONLY public.t_ds_relation_rule_execute_sql
 
 
 --
--- Name: t_ds_relation_rule_input_entry t_ds_relation_rule_input_entry_pk; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_relation_rule_input_entry t_ds_relation_rule_input_entry_pk; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_relation_rule_input_entry
@@ -3788,7 +3788,7 @@ ALTER TABLE ONLY public.t_ds_relation_rule_input_entry
 
 
 --
--- Name: t_ds_relation_udfs_user t_ds_relation_udfs_user_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_relation_udfs_user t_ds_relation_udfs_user_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_relation_udfs_user
@@ -3796,7 +3796,7 @@ ALTER TABLE ONLY public.t_ds_relation_udfs_user
 
 
 --
--- Name: t_ds_resources t_ds_resources_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_resources t_ds_resources_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_resources
@@ -3804,7 +3804,7 @@ ALTER TABLE ONLY public.t_ds_resources
 
 
 --
--- Name: t_ds_resources t_ds_resources_un; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_resources t_ds_resources_un; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_resources
@@ -3812,7 +3812,7 @@ ALTER TABLE ONLY public.t_ds_resources
 
 
 --
--- Name: t_ds_schedules t_ds_schedules_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_schedules t_ds_schedules_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_schedules
@@ -3820,7 +3820,7 @@ ALTER TABLE ONLY public.t_ds_schedules
 
 
 --
--- Name: t_ds_session t_ds_session_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_session t_ds_session_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_session
@@ -3828,7 +3828,7 @@ ALTER TABLE ONLY public.t_ds_session
 
 
 --
--- Name: t_ds_task_definition_log t_ds_task_definition_log_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_task_definition_log t_ds_task_definition_log_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_task_definition_log
@@ -3836,7 +3836,7 @@ ALTER TABLE ONLY public.t_ds_task_definition_log
 
 
 --
--- Name: t_ds_task_definition t_ds_task_definition_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_task_definition t_ds_task_definition_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_task_definition
@@ -3844,7 +3844,7 @@ ALTER TABLE ONLY public.t_ds_task_definition
 
 
 --
--- Name: t_ds_task_group t_ds_task_group_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_task_group t_ds_task_group_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_task_group
@@ -3852,7 +3852,7 @@ ALTER TABLE ONLY public.t_ds_task_group
 
 
 --
--- Name: t_ds_task_group_queue t_ds_task_group_queue_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_task_group_queue t_ds_task_group_queue_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_task_group_queue
@@ -3860,7 +3860,7 @@ ALTER TABLE ONLY public.t_ds_task_group_queue
 
 
 --
--- Name: t_ds_task_instance t_ds_task_instance_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_task_instance t_ds_task_instance_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_task_instance
@@ -3868,7 +3868,7 @@ ALTER TABLE ONLY public.t_ds_task_instance
 
 
 --
--- Name: t_ds_tenant t_ds_tenant_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_tenant t_ds_tenant_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_tenant
@@ -3876,7 +3876,7 @@ ALTER TABLE ONLY public.t_ds_tenant
 
 
 --
--- Name: t_ds_udfs t_ds_udfs_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_udfs t_ds_udfs_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_udfs
@@ -3884,7 +3884,7 @@ ALTER TABLE ONLY public.t_ds_udfs
 
 
 --
--- Name: t_ds_user t_ds_user_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_user t_ds_user_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_user
@@ -3892,7 +3892,7 @@ ALTER TABLE ONLY public.t_ds_user
 
 
 --
--- Name: t_ds_version t_ds_version_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_version t_ds_version_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_version
@@ -3900,7 +3900,7 @@ ALTER TABLE ONLY public.t_ds_version
 
 
 --
--- Name: t_ds_worker_group t_ds_worker_group_pkey; Type: CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_worker_group t_ds_worker_group_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_worker_group
@@ -3908,301 +3908,301 @@ ALTER TABLE ONLY public.t_ds_worker_group
 
 
 --
--- Name: idx_qrtz_ft_inst_job_req_rcvry; Type: INDEX; Schema: public; Owner: superset
+-- Name: idx_qrtz_ft_inst_job_req_rcvry; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX idx_qrtz_ft_inst_job_req_rcvry ON public.qrtz_fired_triggers USING btree (sched_name, instance_name, requests_recovery);
 
 
 --
--- Name: idx_qrtz_ft_j_g; Type: INDEX; Schema: public; Owner: superset
+-- Name: idx_qrtz_ft_j_g; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX idx_qrtz_ft_j_g ON public.qrtz_fired_triggers USING btree (sched_name, job_name, job_group);
 
 
 --
--- Name: idx_qrtz_ft_jg; Type: INDEX; Schema: public; Owner: superset
+-- Name: idx_qrtz_ft_jg; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX idx_qrtz_ft_jg ON public.qrtz_fired_triggers USING btree (sched_name, job_group);
 
 
 --
--- Name: idx_qrtz_ft_t_g; Type: INDEX; Schema: public; Owner: superset
+-- Name: idx_qrtz_ft_t_g; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX idx_qrtz_ft_t_g ON public.qrtz_fired_triggers USING btree (sched_name, trigger_name, trigger_group);
 
 
 --
--- Name: idx_qrtz_ft_tg; Type: INDEX; Schema: public; Owner: superset
+-- Name: idx_qrtz_ft_tg; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX idx_qrtz_ft_tg ON public.qrtz_fired_triggers USING btree (sched_name, trigger_group);
 
 
 --
--- Name: idx_qrtz_ft_trig_inst_name; Type: INDEX; Schema: public; Owner: superset
+-- Name: idx_qrtz_ft_trig_inst_name; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX idx_qrtz_ft_trig_inst_name ON public.qrtz_fired_triggers USING btree (sched_name, instance_name);
 
 
 --
--- Name: idx_qrtz_j_grp; Type: INDEX; Schema: public; Owner: superset
+-- Name: idx_qrtz_j_grp; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX idx_qrtz_j_grp ON public.qrtz_job_details USING btree (sched_name, job_group);
 
 
 --
--- Name: idx_qrtz_j_req_recovery; Type: INDEX; Schema: public; Owner: superset
+-- Name: idx_qrtz_j_req_recovery; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX idx_qrtz_j_req_recovery ON public.qrtz_job_details USING btree (sched_name, requests_recovery);
 
 
 --
--- Name: idx_qrtz_t_c; Type: INDEX; Schema: public; Owner: superset
+-- Name: idx_qrtz_t_c; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX idx_qrtz_t_c ON public.qrtz_triggers USING btree (sched_name, calendar_name);
 
 
 --
--- Name: idx_qrtz_t_g; Type: INDEX; Schema: public; Owner: superset
+-- Name: idx_qrtz_t_g; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX idx_qrtz_t_g ON public.qrtz_triggers USING btree (sched_name, trigger_group);
 
 
 --
--- Name: idx_qrtz_t_j; Type: INDEX; Schema: public; Owner: superset
+-- Name: idx_qrtz_t_j; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX idx_qrtz_t_j ON public.qrtz_triggers USING btree (sched_name, job_name, job_group);
 
 
 --
--- Name: idx_qrtz_t_jg; Type: INDEX; Schema: public; Owner: superset
+-- Name: idx_qrtz_t_jg; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX idx_qrtz_t_jg ON public.qrtz_triggers USING btree (sched_name, job_group);
 
 
 --
--- Name: idx_qrtz_t_n_g_state; Type: INDEX; Schema: public; Owner: superset
+-- Name: idx_qrtz_t_n_g_state; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX idx_qrtz_t_n_g_state ON public.qrtz_triggers USING btree (sched_name, trigger_group, trigger_state);
 
 
 --
--- Name: idx_qrtz_t_n_state; Type: INDEX; Schema: public; Owner: superset
+-- Name: idx_qrtz_t_n_state; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX idx_qrtz_t_n_state ON public.qrtz_triggers USING btree (sched_name, trigger_name, trigger_group, trigger_state);
 
 
 --
--- Name: idx_qrtz_t_next_fire_time; Type: INDEX; Schema: public; Owner: superset
+-- Name: idx_qrtz_t_next_fire_time; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX idx_qrtz_t_next_fire_time ON public.qrtz_triggers USING btree (sched_name, next_fire_time);
 
 
 --
--- Name: idx_qrtz_t_nft_misfire; Type: INDEX; Schema: public; Owner: superset
+-- Name: idx_qrtz_t_nft_misfire; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX idx_qrtz_t_nft_misfire ON public.qrtz_triggers USING btree (sched_name, misfire_instr, next_fire_time);
 
 
 --
--- Name: idx_qrtz_t_nft_st; Type: INDEX; Schema: public; Owner: superset
+-- Name: idx_qrtz_t_nft_st; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX idx_qrtz_t_nft_st ON public.qrtz_triggers USING btree (sched_name, trigger_state, next_fire_time);
 
 
 --
--- Name: idx_qrtz_t_nft_st_misfire; Type: INDEX; Schema: public; Owner: superset
+-- Name: idx_qrtz_t_nft_st_misfire; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX idx_qrtz_t_nft_st_misfire ON public.qrtz_triggers USING btree (sched_name, misfire_instr, next_fire_time, trigger_state);
 
 
 --
--- Name: idx_qrtz_t_nft_st_misfire_grp; Type: INDEX; Schema: public; Owner: superset
+-- Name: idx_qrtz_t_nft_st_misfire_grp; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX idx_qrtz_t_nft_st_misfire_grp ON public.qrtz_triggers USING btree (sched_name, misfire_instr, next_fire_time, trigger_group, trigger_state);
 
 
 --
--- Name: idx_qrtz_t_state; Type: INDEX; Schema: public; Owner: superset
+-- Name: idx_qrtz_t_state; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX idx_qrtz_t_state ON public.qrtz_triggers USING btree (sched_name, trigger_state);
 
 
 --
--- Name: idx_sign; Type: INDEX; Schema: public; Owner: superset
+-- Name: idx_sign; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX idx_sign ON public.t_ds_alert USING btree (sign);
 
 
 --
--- Name: idx_status; Type: INDEX; Schema: public; Owner: superset
+-- Name: idx_status; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX idx_status ON public.t_ds_alert USING btree (alert_status);
 
 
 --
--- Name: idx_task_definition_log_code_version; Type: INDEX; Schema: public; Owner: superset
+-- Name: idx_task_definition_log_code_version; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX idx_task_definition_log_code_version ON public.t_ds_task_definition_log USING btree (code, version);
 
 
 --
--- Name: idx_task_definition_log_project_code; Type: INDEX; Schema: public; Owner: superset
+-- Name: idx_task_definition_log_project_code; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX idx_task_definition_log_project_code ON public.t_ds_task_definition_log USING btree (project_code);
 
 
 --
--- Name: idx_task_instance_code_version; Type: INDEX; Schema: public; Owner: superset
+-- Name: idx_task_instance_code_version; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX idx_task_instance_code_version ON public.t_ds_task_instance USING btree (task_code, task_definition_version);
 
 
 --
--- Name: priority_id_index; Type: INDEX; Schema: public; Owner: superset
+-- Name: priority_id_index; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX priority_id_index ON public.t_ds_command USING btree (process_instance_priority, id);
 
 
 --
--- Name: process_definition_index; Type: INDEX; Schema: public; Owner: superset
+-- Name: process_definition_index; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX process_definition_index ON public.t_ds_process_definition USING btree (code, id);
 
 
 --
--- Name: process_instance_index; Type: INDEX; Schema: public; Owner: superset
+-- Name: process_instance_index; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX process_instance_index ON public.t_ds_process_instance USING btree (process_definition_code, id);
 
 
 --
--- Name: process_task_relation_idx_post_task_code_version; Type: INDEX; Schema: public; Owner: superset
+-- Name: process_task_relation_idx_post_task_code_version; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX process_task_relation_idx_post_task_code_version ON public.t_ds_process_task_relation USING btree (post_task_code, post_task_version);
 
 
 --
--- Name: process_task_relation_idx_pre_task_code_version; Type: INDEX; Schema: public; Owner: superset
+-- Name: process_task_relation_idx_pre_task_code_version; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX process_task_relation_idx_pre_task_code_version ON public.t_ds_process_task_relation USING btree (pre_task_code, pre_task_version);
 
 
 --
--- Name: process_task_relation_idx_project_code_process_definition_code; Type: INDEX; Schema: public; Owner: superset
+-- Name: process_task_relation_idx_project_code_process_definition_code; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX process_task_relation_idx_project_code_process_definition_code ON public.t_ds_process_task_relation USING btree (project_code, process_definition_code);
 
 
 --
--- Name: process_task_relation_log_idx_project_code_process_definition_c; Type: INDEX; Schema: public; Owner: superset
+-- Name: process_task_relation_log_idx_project_code_process_definition_c; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX process_task_relation_log_idx_project_code_process_definition_c ON public.t_ds_process_task_relation_log USING btree (project_code, process_definition_code);
 
 
 --
--- Name: relation_project_user_id_index; Type: INDEX; Schema: public; Owner: superset
+-- Name: relation_project_user_id_index; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX relation_project_user_id_index ON public.t_ds_relation_project_user USING btree (user_id);
 
 
 --
--- Name: start_time_index; Type: INDEX; Schema: public; Owner: superset
+-- Name: start_time_index; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX start_time_index ON public.t_ds_process_instance USING btree (start_time, end_time);
 
 
 --
--- Name: task_definition_index; Type: INDEX; Schema: public; Owner: superset
+-- Name: task_definition_index; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX task_definition_index ON public.t_ds_task_definition USING btree (project_code, id);
 
 
 --
--- Name: unique_code; Type: INDEX; Schema: public; Owner: superset
+-- Name: unique_code; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE UNIQUE INDEX unique_code ON public.t_ds_project USING btree (code);
 
 
 --
--- Name: unique_func_name; Type: INDEX; Schema: public; Owner: superset
+-- Name: unique_func_name; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE UNIQUE INDEX unique_func_name ON public.t_ds_udfs USING btree (func_name);
 
 
 --
--- Name: unique_name; Type: INDEX; Schema: public; Owner: superset
+-- Name: unique_name; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE UNIQUE INDEX unique_name ON public.t_ds_project USING btree (name);
 
 
 --
--- Name: unique_queue_name; Type: INDEX; Schema: public; Owner: superset
+-- Name: unique_queue_name; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE UNIQUE INDEX unique_queue_name ON public.t_ds_queue USING btree (queue_name);
 
 
 --
--- Name: unique_tenant_code; Type: INDEX; Schema: public; Owner: superset
+-- Name: unique_tenant_code; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE UNIQUE INDEX unique_tenant_code ON public.t_ds_tenant USING btree (tenant_code);
 
 
 --
--- Name: user_id_index; Type: INDEX; Schema: public; Owner: superset
+-- Name: user_id_index; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX user_id_index ON public.t_ds_project USING btree (user_id);
 
 
 --
--- Name: version_index; Type: INDEX; Schema: public; Owner: superset
+-- Name: version_index; Type: INDEX; Schema: public; Owner: root
 --
 
 CREATE INDEX version_index ON public.t_ds_version USING btree (version);
 
 
 --
--- Name: t_ds_task_instance foreign_key_instance_id; Type: FK CONSTRAINT; Schema: public; Owner: superset
+-- Name: t_ds_task_instance foreign_key_instance_id; Type: FK CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_task_instance

@@ -143,7 +143,7 @@ const NodeDetailModal = defineComponent({
             let linkedTaskType = taskType?.toLowerCase().replace('_', '-')
             if (taskType === 'PROCEDURE') linkedTaskType = 'stored-procedure'
             const helpUrl =
-              'https://dolphinscheduler.apache.org/' +
+              'https://aurora.apache.org/' +
               locale.value.toLowerCase().replace('_', '-') +
               '/docs/latest/user_doc/guide/task/' +
               linkedTaskType +

@@ -10,18 +10,14 @@ use crate::web::mw::{
 };
 use anyhow::Result;
 use aurora_config::api_config::Settings;
-use aurora_config::get_ui_source_path;
-use axum::{middleware, routing::get, Router};
+
+use axum::{middleware, Router};
 use std::{env, net::SocketAddr};
 use tower_cookies::CookieManagerLayer;
-use tower_http::services::ServeDir;
 use tracing::{info, Level};
 use web::routes_projects;
+use web::routes_resources;
 use web::routes_user;
-async fn hello() -> &'static str {
-    info!("hello world");
-    "hello world"
-}
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -46,14 +42,18 @@ async fn main() -> Result<()> {
     info!("{:<12}->{}", "listen", addr);
 
     let route_all = Router::new()
+        // .merge(using_serve_dir())
         .merge(routes_user::routes())
         .merge(routes_projects::routes())
-        .route("/api", get(hello))
-        .merge(using_serve_dir())
+        .merge(routes_resources::routes())
+        // .route("/aurora/ui/home", get(hello))
         .layer(middleware::map_request(log_path_params))
         .layer(middleware::map_response(mw_response_map))
         .layer(middleware::from_fn(mw_ctx_resolve))
-        .layer(CookieManagerLayer::new());
+        .layer(CookieManagerLayer::new())
+        // .fallback(get_service(StaticFiles::new("./static/")))
+        // .merge(using_serve_dir())
+        ;
 
     axum::Server::bind(&addr)
         .serve(route_all.into_make_service_with_connect_info::<SocketAddr>())
@@ -62,16 +62,15 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-fn using_serve_dir() -> Router {
-    // serve the file in the "assets" directory under `/assets`
-    let path = get_ui_source_path();
-    match path {
-        Ok(p) => Router::new()
-            .nest_service(
-                "/",
-                ServeDir::new(p.to_str().unwrap()).append_index_html_on_directories(true),
-            )
-            .nest_service("/dolphinscheduler/ui", ServeDir::new(p.to_str().unwrap())),
-        Err(_) => Router::new(),
-    }
-}
+// fn using_serve_dir() -> Router {
+//     // serve the file in the "assets" directory under `/assets`
+//     let path = get_ui_source_path();
+//     match path {
+//         Ok(p) => Router::new().route_service(
+//             "/aurora/ui/*rest",
+//             ServeDir::new(p.to_str().unwrap()).append_index_html_on_directories(true),
+//         ),
+
+//         Err(_) => Router::new(),
+//     }
+// }

@@ -13,7 +13,7 @@
 // async fn main() -> Result<()> {
 //     //let _addr: SocketAddr = "0.0.0.0:50051".parse()?;
 
-//     // let database_url = env::var("postgres://superset:superset@tx:16432/Aurorascheduler").expect("DATABASE_URL must be set");
+//     // let database_url = env::var("postgres://root:root@tx:16432/Aurorascheduler").expect("DATABASE_URL must be set");
 
 //     // establish database connection
 //     let settings = Settings::new()?;

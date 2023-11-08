@@ -23,7 +23,7 @@ pub async fn mw_response_map(
     info!("web_error: {:?}", web_error);
     let error_response = web_error.as_ref().map(|error| {
         (
-            StatusCode::OK,
+            StatusCode::UNAUTHORIZED,
             Json(json!({
                   "data": "",
                   "failed":true,

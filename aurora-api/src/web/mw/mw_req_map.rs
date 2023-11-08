@@ -1,4 +1,7 @@
-use axum::{extract::Path, http::Request, middleware::map_request, routing::get, Router};
+use aurora_config::get_ui_source_path;
+use axum::{
+    extract::Path, http::Request, middleware::map_request, response::Redirect, routing::get, Router,
+};
 use std::collections::HashMap;
 
 pub async fn log_path_params<B>(

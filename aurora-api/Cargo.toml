@@ -29,9 +29,11 @@ struct-convert = { workspace = true }
 tower-cookies = { workspace = true }
 error-chain = { workspace = true }
 tonic-health = { workspace = true }
-
+# axum_static = { workspace = true }
+axum-extra = { workspace = true }
 
 [dev-dependencies]
 anyhow = { workspace = true }
 httpc-test = { workspace = true }
 serial_test = { workspace = true }
+url = { workspace = true }

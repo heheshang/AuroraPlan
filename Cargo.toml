@@ -16,13 +16,7 @@ version = "0.1.0"
 edition = "2021"
 description = "AuroraPlan is your go-to scheduling and planning tool. It helps you manage your tasks and appointments effortlessly. With AuroraPlan, you can stay organized, save time, and enjoy a stress-free schedule."
 repository = "https://github.com/heheshang/AuroraPlan"
-keywords = [
-    "aurora",
-    "plan",
-    "schedule",
-    "task",
-    "free",
-]
+keywords = ["aurora", "plan", "schedule", "task", "free"]
 categories = ["science"]
 license = "MIT OR Apache-2.0"
 
@@ -75,6 +69,10 @@ struct-convert = "1.2.9"
 tower-cookies = "0.9.0"
 httpc-test = "0.1.1"
 serial_test = "2"
+url = "2.4.1"
+# axum_static = "1.2.3"
+axum-extra = "0.8.0"
+
 
 [profile.release-with-debug]
 inherits = "release"
