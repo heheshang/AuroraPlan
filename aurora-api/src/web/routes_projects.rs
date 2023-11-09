@@ -32,7 +32,7 @@ pub fn routes() -> Router {
         .route("/projects", get(project_list));
 
     Router::new()
-        .nest("/", routes)
+        .nest("/aurora", routes)
         .route_layer(middleware::from_fn(mw_ctx_require))
 }
 

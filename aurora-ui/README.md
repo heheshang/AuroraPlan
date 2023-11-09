@@ -1,4 +1,4 @@
-# Dolphin Scheduler UI
+# Aurora Plan UI
 
 > Brand new UI management system (V3.0.0-Release).
 >

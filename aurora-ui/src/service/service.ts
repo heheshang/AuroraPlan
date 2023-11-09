@@ -34,7 +34,7 @@ const uiSettingStore = useUISettingStore()
 const handleError = (res: AxiosResponse<any, any>) => {
   // Print to console
   if (import.meta.env.MODE === 'development') {
-    utils.log.capsule('DolphinScheduler', 'UI')
+    utils.log.capsule('Aurora Plan', 'UI')
     utils.log.error(res)
   }
   window.$message.error(res.data.msg)

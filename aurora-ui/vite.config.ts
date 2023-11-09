@@ -22,7 +22,7 @@ import viteCompression from 'vite-plugin-compression'
 import path from 'path'
 
 export default defineConfig({
-  base: process.env.NODE_ENV === 'production' ? '/aurora/ui/' : '/',
+  base: process.env.NODE_ENV === 'production' ? '/' : '/',
   plugins: [
     vue(),
     vueJsx(),
@@ -41,9 +41,17 @@ export default defineConfig({
       // resolve vue-i18n warning: You are running the esm-bundler build of vue-i18n.
     }
   },
+  // server: {
+  //   proxy: {
+  //     '/aurora': {
+  //       target: loadEnv('development', './').VITE_APP_DEV_WEB_URL,
+  //       changeOrigin: true
+  //     }
+  //   }
+  // }
   server: {
     proxy: {
-      '/aurora': {
+      '/' :{
         target: loadEnv('development', './').VITE_APP_DEV_WEB_URL,
         changeOrigin: true
       }

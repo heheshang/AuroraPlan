@@ -41,7 +41,8 @@ async fn main() -> Result<()> {
     info!("log init success!");
     info!("{:<12}->{}", "listen", addr);
 
-    let route_all = Router::new()
+    let route_all = Router::new().nest("/api",
+        Router::new()
         // .merge(using_serve_dir())
         .merge(routes_user::routes())
         .merge(routes_projects::routes())
@@ -51,6 +52,7 @@ async fn main() -> Result<()> {
         .layer(middleware::map_response(mw_response_map))
         .layer(middleware::from_fn(mw_ctx_resolve))
         .layer(CookieManagerLayer::new())
+)
         // .fallback(get_service(StaticFiles::new("./static/")))
         // .merge(using_serve_dir())
         ;

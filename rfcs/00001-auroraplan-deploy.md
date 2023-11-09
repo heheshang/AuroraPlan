@@ -85,3 +85,44 @@ Note that having something written down in the future-possibilities section
 is not a reason to accept the current or a future RFC; such notes should be
 in the section on motivation or rationale in this or subsequent RFCs.
 The section merely provides additional information.
+# aurora-ui docker deploy
+
+- docker pull nginx
+- cd aurora-ui
+- npm run build:prod
+- cp -r dist/* ~/dist
+- docker run --name aurora-ui -d -p 5174:80 -v ~/dist:/usr/share/nginx/html nginx
+
+```shell
+server {  
+        listen 80;  
+        server_name tx;  # 修改为您的域名  
+
+
+        root /usr/share/nginx/html;  # 修改为您的静态资源路径  
+        location ~ ^/ui.*$ {  
+            add_header Access-Control-Allow-Credentials false;
+            add_header Access-Control-Allow-Origin *;
+            add_header Access-Control-Allow-Methods 'GET, POST, OPTIONS';
+            add_header Access-Control-Allow-Headers 'DNT,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization';
+            if ($request_method = 'OPTIONS') { return 204; }
+            # proxy_pass http://127.0.0.1:5174/;  # 修改为您的静态资源路径
+                try_files $uri $uri/ /index.html;  
+                # index index.html index.htm;  
+        }  
+
+
+
+        location /api {  # 修改为适用于您的后端服务的路径  
+            proxy_pass http://myhost:54321;  # 修改为后端服务器的地址  
+            proxy_set_header Host $host;  
+            proxy_set_header X-Real-IP $remote_addr;  
+        }  
+}   
+
+
+
+```
+```shell
+ docker run --add-host=myhost:172.18.0.1 -di --name=nginx -p 5174:80 -v /home/ssk/dist:/usr/share/nginx/html  -v /home/ssk/aurora-ui.conf:/etc/nginx/conf.d/aurora-ui.conf nginx
+```

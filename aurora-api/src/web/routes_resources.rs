@@ -29,7 +29,7 @@ pub fn routes() -> Router {
     let routes = Router::new().route("/resources/base-dir", get(base_dir));
 
     Router::new()
-        .nest("/", routes)
+        .nest("/aurora", routes)
         .route_layer(middleware::from_fn(mw_ctx_require))
 }
 
