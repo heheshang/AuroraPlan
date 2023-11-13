@@ -87,6 +87,15 @@ services:
             - aurora-postgres
         networks:
             - aurora_plan
+    aurora-ui:
+        restart: always
+        image: aurora-plan:latest
+        ports:
+            - '5174:80'
+        depends_on:
+            - aurora-api
+        networks:
+            - aurora_plan
 networks:
     aurora_plan:
         driver: bridge
@@ -98,3 +107,4 @@ volumes:
     aurora-logs:
     aurora-shared-local:
     aurora-resource-local:
+    aurora-ui:

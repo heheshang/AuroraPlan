@@ -42,16 +42,20 @@ RUN cd /AuroraPlan/aurora-ui && npm install && npm run build:prod
 RUN ls -la /AuroraPlan/aurora-ui/dist
 RUN cp -r /AuroraPlan/aurora-ui/dist/* /AuroraPlan/ui
 
+FROM nginx:latest
+USER root
+ENV TZ=Asia/Shanghai
+COPY --from=node /AuroraPlan/ui/* /usr/share/nginx/html
+COPY ./ng-aurora-ui.conf /etc/nginx/conf.d/ng-aurora-ui.conf
+
 
 FROM rust:latest
 USER root
 ENV TZ=Asia/Shanghai
 WORKDIR /AuroraPlan
 COPY --from=builder /AuroraPlan .
-COPY --from=node /AuroraPlan/ui /AuroraPlan/ui
 RUN ls -la /AuroraPlan/deploy/
 RUN ls -la /AuroraPlan/deploy/examples
-RUN ls -la /AuroraPlan/ui
 
 EXPOSE 8000
 

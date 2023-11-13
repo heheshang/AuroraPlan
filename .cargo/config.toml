@@ -7,7 +7,7 @@ protocol = "sparse"
 # registry = "https://github.com/rust-lang/crates.io-index"
 
 # 指定镜像
-replace-with = 'myres' # 如：tuna、sjtu、ustc，或者 rustcc
+replace-with = 'ustc' # 如：tuna、sjtu、ustc，或者 rustcc
 
 [source.myres]
 registry = "https://gh-proxy.com/https://github.com/rust-lang/crates.io-index"
