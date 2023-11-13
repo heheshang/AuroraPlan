@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-// use aurora_config::api_config::Settings;
+// use api/aurora_config::api_config::Settings;
 use serde_json::json;
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -14,7 +14,7 @@ async fn main() -> Result<()> {
     // hc.do_get("/index.html").await?.print().await?;
 
     let req_login = hc.do_post(
-        "/aurora/login",
+        "/api/aurora/login",
         json!({
             "userName": "admin",
             "userPassword": "dolphinscheduler123"
@@ -23,7 +23,7 @@ async fn main() -> Result<()> {
     req_login.await?.print().await?;
 
     let req_login = hc.do_post(
-        "/aurora/login",
+        "/api/aurora/login",
         json!({
             "userName": "admin",
             "userPassword": "dolphinscheduler123"
@@ -31,7 +31,7 @@ async fn main() -> Result<()> {
     );
     req_login.await?.print().await?;
     hc.cookie_store();
-    let user_info = hc.do_get("/aurora/get_user_info").await?;
+    let user_info = hc.do_get("/api/aurora/get_user_info").await?;
     user_info.print().await?;
     define_user_count().await?;
     task_state_count().await?;
@@ -42,7 +42,7 @@ async fn main() -> Result<()> {
 
 async fn define_user_count() -> Result<()> {
     let hc = login!();
-    hc.do_get("/aurora/projects/analysis/define-user-count?projectCode=0")
+    hc.do_get("/api/aurora/projects/analysis/define-user-count?projectCode=0")
         .await?
         .print()
         .await?;
@@ -55,7 +55,7 @@ macro_rules! login {
 
         let hc = httpc_test::new_client(url)?;
         let req_login = hc.do_post(
-            "/aurora/login",
+            "/api/aurora/login",
             json!({
                 "userName": "admin",
                 "userPassword": "dolphinscheduler123"
@@ -70,7 +70,7 @@ macro_rules! login {
 
 async fn task_state_count() -> Result<()> {
     let hc = login!();
-    hc.do_get("/aurora/projects/analysis/task-state-count?projectCode=0&startDate=2023-11-07&endDate=2023-11-07")
+    hc.do_get("/api/aurora/projects/analysis/task-state-count?projectCode=0&startDate=2023-11-07&endDate=2023-11-07")
         .await?
         .print()
         .await?;
@@ -79,7 +79,7 @@ async fn task_state_count() -> Result<()> {
 //http://pt003:12345/dolphinscheduler/projects/analysis/process-state-count?startDate=2023-11-07%2000%3A00%3A00&endDate=2023-11-07%2009%3A04%3A42&projectCode=0
 async fn process_state_count() -> Result<()> {
     let hc = login!();
-    hc.do_get("/aurora/projects/analysis/process-state-count?projectCode=0&startDate=2023-11-07&endDate=2023-11-00")
+    hc.do_get("/api/aurora/projects/analysis/process-state-count?projectCode=0&startDate=2023-11-07&endDate=2023-11-00")
         .await?
         .print()
         .await?;
@@ -89,13 +89,13 @@ async fn process_state_count() -> Result<()> {
 
 async fn projects() -> Result<()> {
     let hc = login!();
-    hc.do_get("/aurora/projects?pageSize=10&pageNo=1&searchVal=")
+    hc.do_get("/api/aurora/projects?pageSize=10&pageNo=1&searchVal=")
         .await?
         .print()
         .await?;
     Ok(())
 }
-// curl 'http://localhost:5174/aurora/signOut' \
+// curl 'http://localhost:5174/api/aurora/signOut' \
 //  -X 'POST' \
 //  -H 'Accept: application/json, text/plain, */*' \
 //  -H 'Accept-Language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
