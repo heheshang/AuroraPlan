@@ -27,10 +27,10 @@ proto-builder-trait = { workspace = true, optional = true }
 # proto-builder-trait = { workspace = true }
 
 
-# [build-dependencies]
-# prost-build = { workspace = true }
-# tonic-build = { workspace = true }
-# proto-builder-trait = { workspace = true }
+[build-dependencies]
+prost-build = { workspace = true }
+tonic-build = { workspace = true }
+proto-builder-trait = { workspace = true }
 [features]
 aurora-proto-gen = [
     "dep:prost-build",

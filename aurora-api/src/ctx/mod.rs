@@ -7,7 +7,7 @@ use aurora_common::{core_error::error::Error, core_results::results::Result};
 
 #[derive(Clone, Debug)]
 pub struct Ctx {
-    user_id: i32,
+    pub(crate) user_id: i32,
 }
 
 // Constructors.

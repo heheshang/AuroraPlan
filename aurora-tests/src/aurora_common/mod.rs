@@ -24,4 +24,11 @@ mod tests {
 
         println!("{}", new_text);
     }
+
+    #[test]
+    fn test_snowflake() {
+        use snowflake::SnowflakeIdBucket;
+        let id = SnowflakeIdBucket::new(1, 1).get_id();
+        println!("{}", id);
+    }
 }

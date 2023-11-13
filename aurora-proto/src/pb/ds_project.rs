@@ -24,10 +24,12 @@ pub struct DsProject {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ListDsProjectsRequest {
     /// The maximum number of items to return.
-    #[prost(int32, tag = "1")]
-    pub page_size: i32,
-    #[prost(int32, tag = "2")]
-    pub page_num: i32,
+    #[prost(uint64, tag = "1")]
+    pub page_size: u64,
+    #[prost(uint64, tag = "2")]
+    pub page_num: u64,
+    #[prost(string, optional, tag = "3")]
+    pub search_val: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -35,10 +37,39 @@ pub struct ListDsProjectsResponse {
     /// The field name should match the noun "DsProject" in the method name.
     /// There will be a maximum number of items returned based on the page_size field in the request.
     #[prost(message, repeated, tag = "1")]
-    pub ds_projects: ::prost::alloc::vec::Vec<DsProject>,
-    /// Token to retrieve the next page of results, or empty if there are no more results in the list.
-    #[prost(string, tag = "2")]
-    pub next_page_token: ::prost::alloc::string::String,
+    pub total_list: ::prost::alloc::vec::Vec<DsProjectListRes>,
+    #[prost(uint64, tag = "2")]
+    pub current_page: u64,
+    #[prost(uint64, tag = "3")]
+    pub page_size: u64,
+    #[prost(uint64, tag = "4")]
+    pub start: u64,
+    #[prost(uint64, tag = "5")]
+    pub total: u64,
+    #[prost(uint64, tag = "6")]
+    pub total_page: u64,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct DsProjectListRes {
+    #[prost(int32, tag = "1")]
+    pub id: i32,
+    #[prost(string, optional, tag = "2")]
+    pub name: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(int64, tag = "3")]
+    pub code: i64,
+    #[prost(string, optional, tag = "4")]
+    pub description: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(int32, optional, tag = "5")]
+    pub user_id: ::core::option::Option<i32>,
+    #[prost(int32, optional, tag = "6")]
+    pub flag: ::core::option::Option<i32>,
+    #[prost(string, optional, tag = "7")]
+    pub create_time: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "8")]
+    pub update_time: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, tag = "9")]
+    pub user_name: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -50,16 +81,12 @@ pub struct GetDsProjectRequest {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct CreateDsProjectRequest {
-    /// The parent resource name where the DsProject is to be created.
     #[prost(string, tag = "1")]
-    pub parent: ::prost::alloc::string::String,
-    /// The DsProject id to use for this DsProject.
-    #[prost(string, tag = "2")]
-    pub ds_project_id: ::prost::alloc::string::String,
-    /// The DsProject resource to create.
-    /// The field name should match the Noun in the method name.
-    #[prost(message, optional, tag = "3")]
-    pub ds_project: ::core::option::Option<DsProject>,
+    pub name: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "3")]
+    pub description: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(int32, tag = "4")]
+    pub user_id: i32,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]

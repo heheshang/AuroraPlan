@@ -15,9 +15,36 @@ pub struct Model {
     pub flag: Option<i32>,
     pub create_time: Option<DateTime>,
     pub update_time: Option<DateTime>,
+    #[sea_orm(ignore)]
+    pub user_name: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
+pub enum Relation {
+    #[sea_orm(
+        belongs_to = "super::t_ds_user::Entity",
+        from = "Column::UserId",
+        to = "super::t_ds_user::Column::Id"
+    )]
+    TDsProjectUser,
+}
+
+impl Related<super::t_ds_user::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::TDsProjectUser.def()
+    }
+}
 
 impl ActiveModelBehavior for ActiveModel {}
+#[derive(Debug)]
+pub struct ProjectToUserLink;
+
+impl Linked for ProjectToUserLink {
+    type FromEntity = Entity;
+
+    type ToEntity = super::t_ds_user::Entity;
+
+    fn link(&self) -> Vec<RelationDef> {
+        vec![Relation::TDsProjectUser.def()]
+    }
+}

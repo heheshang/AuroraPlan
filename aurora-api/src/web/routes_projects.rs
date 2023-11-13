@@ -1,21 +1,26 @@
-use anyhow::Ok;
-use aurora_common::core_results::results::ApiResult;
-use aurora_common::core_results::results::Result;
-use axum::extract::Query;
-use axum::response::IntoResponse;
-use axum::routing::patch;
-use axum::Json;
+use aurora_common::core_results::results::{ApiResult, Result};
 use axum::{
+    extract::Json,
+    extract::Query,
     middleware,
-    routing::{get, post},
-    Router,
+    response::IntoResponse,
+    routing::{get, patch, post},
+    Form, Router,
 };
 use serde::Deserialize;
 use serde_json::json;
 use tower_cookies::Cookies;
 
-use crate::ctx::Ctx;
+use crate::web::bean::response::arurora_projects_res::DsProjectRes;
+use crate::{
+    ctx::Ctx,
+    model::{self, projects::service::create},
+};
 
+use super::bean::request::arurora_projects_req::{
+    DefineUserCountParams, ProcessStateCountParams, ProjectCreateParams, ProjectListParams,
+    TaskStateCountParams,
+};
 use super::mw::mw_auth::mw_ctx_require;
 
 pub fn routes() -> Router {
@@ -29,11 +34,23 @@ pub fn routes() -> Router {
             "/projects/analysis/process-state-count",
             get(process_state_count),
         )
-        .route("/projects", get(project_list));
+        .route("/projects", get(project_list).post(create_project));
 
     Router::new()
         .nest("/aurora", routes)
         .route_layer(middleware::from_fn(mw_ctx_require))
+}
+
+pub async fn create_project(
+    cookies: Cookies,
+    ctx: Ctx,
+    param: Form<ProjectCreateParams>,
+) -> Result<ApiResult<DsProjectRes>> {
+    let user_id = ctx.user_id;
+    let name = param.projectName.clone();
+    let description = param.description.clone();
+    let res = create(user_id, name, description).await?;
+    Ok(ApiResult::build(Some(DsProjectRes::from(res))))
 }
 
 pub async fn define_user_count(
@@ -58,19 +75,6 @@ pub async fn define_user_count(
       "success": true
     });
     Json(v)
-}
-#[allow(non_snake_case)]
-#[derive(Deserialize)]
-pub struct DefineUserCountParams {
-    projectCode: u64,
-}
-
-#[allow(non_snake_case)]
-#[derive(Deserialize)]
-pub struct TaskStateCountParams {
-    startDate: String,
-    endDate: String,
-    projectCode: u64,
 }
 
 pub async fn task_state_count(
@@ -164,14 +168,6 @@ pub async fn task_state_count(
     });
     Json(v)
 }
-
-#[allow(non_snake_case)]
-#[derive(Deserialize)]
-pub struct ProcessStateCountParams {
-    startDate: String,
-    endDate: String,
-    projectCode: u64,
-}
 pub async fn process_state_count(
     param: Query<ProcessStateCountParams>,
     cookies: Cookies,
@@ -258,13 +254,6 @@ pub async fn process_state_count(
 
      });
     Json(res)
-}
-#[allow(non_snake_case)]
-#[derive(Deserialize)]
-pub struct ProjectListParams {
-    pageSize: u32,
-    pageNo: String,
-    searchVal: Option<String>,
 }
 pub async fn project_list(
     param: Query<ProjectListParams>,

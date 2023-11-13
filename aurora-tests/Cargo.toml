@@ -28,3 +28,4 @@ tonic = { workspace = true }
 
 regex = { workspace = true }
 config = { workspace = true, optional = false, features = ["toml"] }
+rs-snowflake = { workspace = true }

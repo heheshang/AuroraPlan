@@ -1,5 +1,13 @@
 use super::dao_service::AuroraRpcServer;
+use aurora_common::core_error::error::{AuroraErrorInfo, Error};
+use entity::t_ds_project::{self, ActiveModel, Column, Entity};
+use entity::t_ds_user::Column as UserColumn;
 use proto::ds_project::ds_project_service_server::DsProjectService;
+use proto::ds_project::DsProjectListRes;
+use sea_orm::QueryOrder;
+use sea_orm::{entity::prelude::*, QuerySelect, SelectColumns, Set};
+use snowflake::SnowflakeIdBucket;
+use tracing::error;
 
 #[tonic::async_trait]
 impl DsProjectService for AuroraRpcServer {
@@ -10,7 +18,76 @@ impl DsProjectService for AuroraRpcServer {
         tonic::Response<proto::ds_project::ListDsProjectsResponse>,
         tonic::Status,
     > {
-        todo!()
+        let conn = &self.conn;
+        let search_val = _req.get_ref().clone().search_val.unwrap_or_default();
+        let page_size = _req.get_ref().clone().page_size;
+        let page_num = _req.get_ref().clone().page_num;
+        let pages = Entity::find()
+            .order_by_desc(Column::CreateTime)
+            // .find_with_linked(ProjectToUserLink)
+            .filter(t_ds_project::Column::Name.like(search_val))
+            .join(
+                sea_orm::JoinType::LeftJoin,
+                t_ds_project::Relation::TDsProjectUser.def(),
+            )
+            .select_only()
+            .select_column_as(Column::Name, Column::Name.to_string())
+            .select_column_as(Column::Id, Column::Id.to_string())
+            .select_column_as(Column::Code, Column::Code.to_string())
+            .select_column_as(Column::Description, Column::Description.to_string())
+            .select_column_as(Column::Flag, Column::Flag.to_string())
+            .select_column_as(Column::CreateTime, Column::CreateTime.to_string())
+            .select_column_as(Column::UpdateTime, Column::UpdateTime.to_string())
+            .select_column_as(UserColumn::UserName, UserColumn::UserName.to_string())
+            .paginate(conn, page_size);
+
+        let items = match pages.fetch_page(page_num).await {
+            Ok(items) => items,
+            Err(_) => {
+                error!("fetch_page ds_project error");
+                vec![]
+            }
+        };
+        let current_page = pages.cur_page();
+        let (total, total_page) = match pages.num_items_and_pages().await {
+            Ok(v) => (v.number_of_items, v.number_of_pages),
+            Err(_) => {
+                error!("num_items_and_pages ds_project error");
+                (0, 0)
+            }
+        };
+        let start = (current_page - 1) * page_size;
+        let parse_from_str = DateTime::parse_from_str;
+        let res = proto::ds_project::ListDsProjectsResponse {
+            total,
+            page_size,
+            total_list: items
+                .into_iter()
+                .map(|v| DsProjectListRes {
+                    id: v.id,
+                    name: v.name,
+                    code: v.code,
+                    description: v.description,
+                    flag: v.flag,
+                    create_time: Some(
+                        parse_from_str(&v.create_time.unwrap().to_string(), "%Y-%m-%d %H:%M:%S")
+                            .unwrap()
+                            .to_string(),
+                    ),
+                    update_time: Some(
+                        parse_from_str(&v.update_time.unwrap().to_string(), "%Y-%m-%d %H:%M:%S")
+                            .unwrap()
+                            .to_string(),
+                    ),
+                    user_name: v.user_name,
+                    ..Default::default()
+                })
+                .collect(),
+            current_page,
+            start,
+            total_page,
+        };
+        Ok(tonic::Response::new(res))
     }
 
     async fn get_ds_project(
@@ -24,7 +101,30 @@ impl DsProjectService for AuroraRpcServer {
         &self,
         _req: tonic::Request<proto::ds_project::CreateDsProjectRequest>,
     ) -> std::result::Result<tonic::Response<proto::ds_project::DsProject>, tonic::Status> {
-        todo!()
+        let conn = &self.conn;
+        let req = _req.into_inner();
+        let current_time = chrono::prelude::Local::now().naive_local();
+
+        let code = SnowflakeIdBucket::new(1, 1).get_id();
+        let res = ActiveModel {
+            id: sea_orm::ActiveValue::NotSet,
+            code: Set(code),
+            name: Set(Some(req.name)),
+            user_id: Set(Some(req.user_id)),
+            description: Set(req.description),
+            flag: Set(Some(1)),
+            create_time: Set(Some(current_time)),
+            update_time: Set(Some(current_time)),
+        }
+        .insert(conn)
+        .await;
+
+        match res {
+            Ok(v) => Ok(tonic::Response::new(v.into())),
+            Err(_) => Err(tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
+                Error::CreateProjectError.into(),
+            ))),
+        }
     }
 
     async fn update_ds_project(
@@ -39,5 +139,55 @@ impl DsProjectService for AuroraRpcServer {
         _req: tonic::Request<proto::ds_project::DeleteDsProjectRequest>,
     ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
         todo!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use entity::t_ds_project::Entity;
+    use entity::t_ds_project::ProjectToUserLink;
+    use sea_orm::{QueryTrait, SelectColumns};
+    #[test]
+    fn test_link_sql() {
+        let sql = Entity::find()
+            .find_also_linked(ProjectToUserLink)
+            .build(sea_orm::DatabaseBackend::Postgres)
+            .to_string();
+
+        println!("{}", sql);
+        let sql1 = Entity::find()
+            .join_rev(
+                sea_orm::JoinType::LeftJoin,
+                t_ds_project::Relation::TDsProjectUser.def(),
+            )
+            .build(sea_orm::DatabaseBackend::Postgres)
+            .to_string();
+        println!("{}", sql1);
+        let sql2 = Entity::find()
+            .join_rev(
+                sea_orm::JoinType::Join,
+                t_ds_project::Relation::TDsProjectUser.def(),
+            )
+            .build(sea_orm::DatabaseBackend::Postgres)
+            .to_string();
+        println!("{}", sql2);
+        println!("-------------------");
+        let sql3 = Entity::find()
+            .join(
+                sea_orm::JoinType::LeftJoin,
+                t_ds_project::Relation::TDsProjectUser.def(),
+            )
+            .select_only()
+            // .select_also(entity::t_ds_user::Entity)
+            // .select_also(entity::t_ds_project::Entity)
+            .select_column_as(
+                entity::t_ds_project::Column::Name,
+                entity::t_ds_project::Column::Name.to_string(),
+            )
+            .select_column_as(entity::t_ds_user::Column::UserName, "user_name")
+            .build(sea_orm::DatabaseBackend::Postgres)
+            .to_string();
+        println!("{}", sql3);
     }
 }

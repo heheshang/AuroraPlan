@@ -64,19 +64,37 @@ message ListDsProjectsRequest {
 
 
   // The maximum number of items to return.
-  int32 page_size = 1;
+  uint64 page_size = 1;
 
- int32 page_num = 2;
+  uint64 page_num = 2;
+  optional string search_val=3 ;
 }
 
 message ListDsProjectsResponse {
   // The field name should match the noun "DsProject" in the method name.
   // There will be a maximum number of items returned based on the page_size field in the request.
-  repeated DsProject DsProjects = 1;
+  repeated DsProjectListRes total_list = 1;
 
-  // Token to retrieve the next page of results, or empty if there are no more results in the list.
-  string next_page_token = 2;
+  uint64 current_page = 2;
+  uint64 page_size = 3;
+  uint64 start = 4;
+  uint64 total = 5;
+  uint64 total_page = 6;
 }
+message DsProjectListRes {
+
+     int32 id=1 ;
+     optional string name=2 ;
+     int64 code=3 ;
+     optional string description=4 ;
+     optional int32 user_id=5 ;
+     optional int32  flag=6 ;
+     optional string  create_time=7 ;
+     optional string  update_time=8 ;
+     string user_name=9 ;
+}
+
+
 
 message GetDsProjectRequest {
   // The field will contain name of the resource requested.
@@ -84,15 +102,11 @@ message GetDsProjectRequest {
 }
 
 message CreateDsProjectRequest {
-  // The parent resource name where the DsProject is to be created.
-  string parent = 1;
+  string name = 1;
+  
+  optional string description=3 ;
+  int32 user_id=4 ;
 
-  // The DsProject id to use for this DsProject.
-  string DsProject_id = 2;
-
-  // The DsProject resource to create.
-  // The field name should match the Noun in the method name.
-  DsProject DsProject = 3;
 }
 
 message UpdateDsProjectRequest {
