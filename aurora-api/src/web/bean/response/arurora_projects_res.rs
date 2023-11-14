@@ -1,5 +1,6 @@
 use aurora_proto::ds_project::DsProject;
 use aurora_proto::ds_project::DsProjectListRes;
+use aurora_proto::ds_project::ListDsProjectsResponse;
 use serde::{Deserialize, Serialize};
 use struct_convert::Convert;
 #[derive(Debug, Serialize, Deserialize, Convert)]
@@ -15,15 +16,16 @@ pub struct DsProjectRes {
     pub create_time: Option<String>,
     pub update_time: Option<String>,
 }
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Convert)]
 #[serde(rename_all = "camelCase")]
+#[convert(from = "ListDsProjectsResponse")]
 pub struct DsProjectList {
-    pub total: i32,
-    pub total_page: i32,
-    pub page_size: i32,
-    pub current_page: i32,
-    pub start: i32,
-    pub total_list: Vec<DsProjectRes>,
+    pub total: u64,
+    pub total_page: u64,
+    pub page_size: u64,
+    pub current_page: u64,
+    pub start: u64,
+    pub total_list: Vec<DsProjectListInfo>,
 }
 #[derive(Debug, Serialize, Deserialize, Convert)]
 #[serde(rename_all = "camelCase")]

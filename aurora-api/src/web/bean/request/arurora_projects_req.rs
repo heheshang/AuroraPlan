@@ -23,11 +23,11 @@ pub struct ProcessStateCountParams {
 }
 
 #[allow(non_snake_case)]
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct ProjectListParams {
-    pageSize: u32,
-    pageNo: String,
-    searchVal: Option<String>,
+    pub pageSize: u64,
+    pub pageNo: u64,
+    pub searchVal: Option<String>,
 }
 #[allow(non_snake_case)]
 #[derive(Deserialize, Serialize)]

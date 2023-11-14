@@ -7,7 +7,7 @@ use proto::ds_project::DsProjectListRes;
 use sea_orm::QueryOrder;
 use sea_orm::{entity::prelude::*, QuerySelect, SelectColumns, Set};
 use snowflake::SnowflakeIdBucket;
-use tracing::error;
+use tracing::{error, info};
 
 #[tonic::async_trait]
 impl DsProjectService for AuroraRpcServer {
@@ -22,10 +22,14 @@ impl DsProjectService for AuroraRpcServer {
         let search_val = _req.get_ref().clone().search_val.unwrap_or_default();
         let page_size = _req.get_ref().clone().page_size;
         let page_num = _req.get_ref().clone().page_num;
+        info!(
+            "search_val: {},page_size: {} ,page_num:{}",
+            search_val, page_size, page_num
+        );
         let pages = Entity::find()
             .order_by_desc(Column::CreateTime)
             // .find_with_linked(ProjectToUserLink)
-            .filter(t_ds_project::Column::Name.like(search_val))
+            .filter(t_ds_project::Column::Name.like(format!("%{}%", search_val)))
             .join(
                 sea_orm::JoinType::LeftJoin,
                 t_ds_project::Relation::TDsProjectUser.def(),
@@ -40,7 +44,11 @@ impl DsProjectService for AuroraRpcServer {
             .select_column_as(Column::UpdateTime, Column::UpdateTime.to_string())
             .select_column_as(UserColumn::UserName, UserColumn::UserName.to_string())
             .paginate(conn, page_size);
-
+        info!("query sql:{:#?}", pages);
+        let page_num = match page_num {
+            0 => 0,
+            _ => page_num - 1,
+        };
         let items = match pages.fetch_page(page_num).await {
             Ok(items) => items,
             Err(_) => {
@@ -49,6 +57,7 @@ impl DsProjectService for AuroraRpcServer {
             }
         };
         let current_page = pages.cur_page();
+        info!("current_page: {}", current_page);
         let (total, total_page) = match pages.num_items_and_pages().await {
             Ok(v) => (v.number_of_items, v.number_of_pages),
             Err(_) => {
@@ -56,8 +65,9 @@ impl DsProjectService for AuroraRpcServer {
                 (0, 0)
             }
         };
-        let start = (current_page - 1) * page_size;
-        let parse_from_str = DateTime::parse_from_str;
+        info!("total: {}, total_page: {}", total, total_page);
+        let start = (page_num) * page_size;
+        info!("start: {}", start);
         let res = proto::ds_project::ListDsProjectsResponse {
             total,
             page_size,
@@ -69,21 +79,13 @@ impl DsProjectService for AuroraRpcServer {
                     code: v.code,
                     description: v.description,
                     flag: v.flag,
-                    create_time: Some(
-                        parse_from_str(&v.create_time.unwrap().to_string(), "%Y-%m-%d %H:%M:%S")
-                            .unwrap()
-                            .to_string(),
-                    ),
-                    update_time: Some(
-                        parse_from_str(&v.update_time.unwrap().to_string(), "%Y-%m-%d %H:%M:%S")
-                            .unwrap()
-                            .to_string(),
-                    ),
+                    create_time: Some(v.create_time.unwrap().to_string()),
+                    update_time: Some(v.update_time.unwrap().to_string()),
                     user_name: v.user_name,
                     ..Default::default()
                 })
                 .collect(),
-            current_page,
+            current_page: current_page + 1,
             start,
             total_page,
         };

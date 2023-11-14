@@ -14,7 +14,7 @@ async fn main() -> Result<()> {
     // let database_url = env::var("postgres://root:root@tx:16432/Aurorascheduler").expect("DATABASE_URL must be set");
 
     tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::DEBUG)
+        .with_max_level(tracing::Level::INFO)
         .init();
 
     // establish database connection

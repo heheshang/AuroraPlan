@@ -11,15 +11,20 @@ use serde::Deserialize;
 use serde_json::json;
 use tower_cookies::Cookies;
 
-use crate::web::bean::response::arurora_projects_res::DsProjectRes;
 use crate::{
     ctx::Ctx,
     model::{self, projects::service::create},
 };
+use crate::{
+    model::projects::service::list, web::bean::response::arurora_projects_res::DsProjectRes,
+};
 
-use super::bean::request::arurora_projects_req::{
-    DefineUserCountParams, ProcessStateCountParams, ProjectCreateParams, ProjectListParams,
-    TaskStateCountParams,
+use super::bean::{
+    request::arurora_projects_req::{
+        DefineUserCountParams, ProcessStateCountParams, ProjectCreateParams, ProjectListParams,
+        TaskStateCountParams,
+    },
+    response::arurora_projects_res::DsProjectList,
 };
 use super::mw::mw_auth::mw_ctx_require;
 
@@ -255,51 +260,12 @@ pub async fn process_state_count(
      });
     Json(res)
 }
+
 pub async fn project_list(
     param: Query<ProjectListParams>,
     cookies: Cookies,
     ctx: Ctx,
-) -> impl IntoResponse {
-    let res = json!({
-        "code": 0,
-        "msg": "成功",
-        "data": {
-            "totalList": [
-                {
-                    "id": 3,
-                    "userId": 1,
-                    "userName": "admin",
-                    "code": "8721014310784",
-                    "name": "test",
-                    "description": "",
-                    "createTime": "2023-02-28 13:48:44",
-                    "updateTime": "2023-02-28 13:48:44",
-                    "perm": 0,
-                    "defCount": 0,
-                    "instRunningCount": 0
-                },
-                {
-                    "id": 2,
-                    "userId": 1,
-                    "userName": "admin",
-                    "code": "8442776973696",
-                    "name": "dolphinscheduler",
-                    "description": "",
-                    "createTime": "2023-02-03 09:59:55",
-                    "updateTime": "2023-02-03 09:59:55",
-                    "perm": 0,
-                    "defCount": 227,
-                    "instRunningCount": 30
-                }
-            ],
-            "total": 2,
-            "totalPage": 1,
-            "pageSize": 10,
-            "currentPage": 1,
-            "start": 0
-        },
-        "failed": false,
-        "success": true
-    });
-    Json(res)
+) -> Result<ApiResult<DsProjectList>> {
+    let res = list(&param.pageNo, &param.pageSize, &param.searchVal).await?;
+    Ok(ApiResult::build(Some(res)))
 }
