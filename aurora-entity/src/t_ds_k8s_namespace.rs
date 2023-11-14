@@ -8,9 +8,9 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
+    pub code: i64,
     pub limits_memory: Option<i32>,
     pub namespace: Option<String>,
-    pub online_job_num: Option<i32>,
     pub user_id: Option<i32>,
     pub pod_replicas: Option<i32>,
     #[sea_orm(column_type = "Decimal(Some((13, 4)))", nullable)]
@@ -18,7 +18,7 @@ pub struct Model {
     pub pod_request_memory: Option<i32>,
     #[sea_orm(column_type = "Decimal(Some((13, 4)))", nullable)]
     pub limits_cpu: Option<Decimal>,
-    pub k8s: Option<String>,
+    pub cluster_code: i64,
     pub create_time: Option<DateTime>,
     pub update_time: Option<DateTime>,
 }

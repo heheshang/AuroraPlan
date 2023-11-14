@@ -4,26 +4,19 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
-#[sea_orm(table_name = "t_ds_process_definition")]
+#[sea_orm(table_name = "t_ds_cluster")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
+    #[sea_orm(unique)]
     pub code: i64,
+    #[sea_orm(unique)]
     pub name: Option<String>,
-    pub version: i32,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub config: Option<String>,
     #[sea_orm(column_type = "Text", nullable)]
     pub description: Option<String>,
-    pub project_code: Option<i64>,
-    pub release_state: Option<i32>,
-    pub user_id: Option<i32>,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub global_params: Option<String>,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub locations: Option<String>,
-    pub warning_group_id: Option<i32>,
-    pub flag: Option<i32>,
-    pub timeout: Option<i32>,
-    pub execution_type: Option<i32>,
+    pub operator: Option<i32>,
     pub create_time: Option<DateTime>,
     pub update_time: Option<DateTime>,
 }

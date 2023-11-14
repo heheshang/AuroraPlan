@@ -11,7 +11,10 @@ pub struct Model {
     pub name: Option<String>,
     pub process_definition_code: Option<i64>,
     pub process_definition_version: Option<i32>,
+    pub project_code: Option<i64>,
     pub state: Option<i32>,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub state_history: Option<String>,
     pub recovery: Option<i32>,
     pub start_time: Option<DateTime>,
     pub end_time: Option<DateTime>,
@@ -35,6 +38,7 @@ pub struct Model {
     pub update_time: Option<DateTime>,
     pub is_sub_process: Option<i32>,
     pub executor_id: i32,
+    pub executor_name: Option<String>,
     #[sea_orm(column_type = "Text", nullable)]
     pub history_cmd: Option<String>,
     #[sea_orm(column_type = "Text", nullable)]
@@ -43,24 +47,16 @@ pub struct Model {
     pub worker_group: Option<String>,
     pub environment_code: Option<i64>,
     pub timeout: Option<i32>,
-    pub tenant_id: i32,
+    pub tenant_code: Option<String>,
     #[sea_orm(column_type = "Text", nullable)]
     pub var_pool: Option<String>,
     pub dry_run: Option<i32>,
     pub next_process_instance_id: Option<i32>,
     pub restart_time: Option<DateTime>,
+    pub test_flag: Option<i32>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {
-    #[sea_orm(has_many = "super::t_ds_task_instance::Entity")]
-    TDsTaskInstance,
-}
-
-impl Related<super::t_ds_task_instance::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::TDsTaskInstance.def()
-    }
-}
+pub enum Relation {}
 
 impl ActiveModelBehavior for ActiveModel {}

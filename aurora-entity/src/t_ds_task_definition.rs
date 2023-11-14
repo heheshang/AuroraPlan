@@ -16,9 +16,11 @@ pub struct Model {
     pub project_code: Option<i64>,
     pub user_id: Option<i32>,
     pub task_type: Option<String>,
+    pub task_execute_type: Option<i32>,
     #[sea_orm(column_type = "Text", nullable)]
     pub task_params: Option<String>,
     pub flag: Option<i32>,
+    pub is_cache: Option<i32>,
     pub task_priority: Option<i32>,
     pub worker_group: Option<String>,
     pub environment_code: Option<i64>,
@@ -32,6 +34,8 @@ pub struct Model {
     pub task_group_priority: Option<i32>,
     #[sea_orm(column_type = "Text", nullable)]
     pub resource_ids: Option<String>,
+    pub cpu_quota: i32,
+    pub memory_max: i32,
     pub create_time: Option<DateTime>,
     pub update_time: Option<DateTime>,
 }

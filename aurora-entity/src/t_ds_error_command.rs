@@ -22,12 +22,14 @@ pub struct Model {
     pub update_time: Option<DateTime>,
     pub process_instance_priority: Option<i32>,
     pub worker_group: Option<String>,
+    pub tenant_code: Option<String>,
     pub environment_code: Option<i64>,
     pub dry_run: Option<i32>,
     #[sea_orm(column_type = "Text", nullable)]
     pub message: Option<String>,
     pub process_instance_id: Option<i32>,
     pub process_definition_version: Option<i32>,
+    pub test_flag: Option<i32>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

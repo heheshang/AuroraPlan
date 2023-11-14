@@ -20,6 +20,7 @@ pub struct Model {
     pub warning_group_id: Option<i32>,
     pub process_instance_priority: Option<i32>,
     pub worker_group: Option<String>,
+    pub tenant_code: Option<String>,
     pub environment_code: Option<i64>,
     pub create_time: DateTime,
     pub update_time: DateTime,

@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 10.21 (Debian 10.21-1.pgdg90+1)
--- Dumped by pg_dump version 14.8 (Ubuntu 14.8-0ubuntu0.22.04.1)
+-- Dumped from database version 15.2
+-- Dumped by pg_dump version 15.2
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -16,14 +16,18 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
-ALTER TABLE IF EXISTS ONLY public.t_ds_task_instance DROP CONSTRAINT IF EXISTS foreign_key_instance_id;
 DROP INDEX IF EXISTS public.version_index;
 DROP INDEX IF EXISTS public.user_id_index;
 DROP INDEX IF EXISTS public.unique_tenant_code;
 DROP INDEX IF EXISTS public.unique_queue_name;
+DROP INDEX IF EXISTS public.unique_project_preference_project_code;
+DROP INDEX IF EXISTS public.unique_project_preference_code;
+DROP INDEX IF EXISTS public.unique_project_parameter_name;
+DROP INDEX IF EXISTS public.unique_project_parameter_code;
 DROP INDEX IF EXISTS public.unique_name;
 DROP INDEX IF EXISTS public.unique_func_name;
 DROP INDEX IF EXISTS public.unique_code;
+DROP INDEX IF EXISTS public.uniq_idx_code_version;
 DROP INDEX IF EXISTS public.task_definition_index;
 DROP INDEX IF EXISTS public.start_time_index;
 DROP INDEX IF EXISTS public.relation_project_user_id_index;
@@ -37,8 +41,11 @@ DROP INDEX IF EXISTS public.priority_id_index;
 DROP INDEX IF EXISTS public.idx_task_instance_code_version;
 DROP INDEX IF EXISTS public.idx_task_definition_log_project_code;
 DROP INDEX IF EXISTS public.idx_task_definition_log_code_version;
+DROP INDEX IF EXISTS public.idx_sub_workflow_instance_id;
 DROP INDEX IF EXISTS public.idx_status;
 DROP INDEX IF EXISTS public.idx_sign;
+DROP INDEX IF EXISTS public.idx_relation_process_instance_process_instance_id;
+DROP INDEX IF EXISTS public.idx_relation_process_instance_parent_process_task;
 DROP INDEX IF EXISTS public.idx_qrtz_t_state;
 DROP INDEX IF EXISTS public.idx_qrtz_t_nft_st_misfire_grp;
 DROP INDEX IF EXISTS public.idx_qrtz_t_nft_st_misfire;
@@ -59,10 +66,15 @@ DROP INDEX IF EXISTS public.idx_qrtz_ft_t_g;
 DROP INDEX IF EXISTS public.idx_qrtz_ft_jg;
 DROP INDEX IF EXISTS public.idx_qrtz_ft_j_g;
 DROP INDEX IF EXISTS public.idx_qrtz_ft_inst_job_req_rcvry;
+DROP INDEX IF EXISTS public.idx_parent_workflow_instance_id;
+DROP INDEX IF EXISTS public.idx_parent_task_code;
+DROP INDEX IF EXISTS public.idx_cache_key;
 ALTER TABLE IF EXISTS ONLY public.t_ds_worker_group DROP CONSTRAINT IF EXISTS t_ds_worker_group_pkey;
 ALTER TABLE IF EXISTS ONLY public.t_ds_version DROP CONSTRAINT IF EXISTS t_ds_version_pkey;
 ALTER TABLE IF EXISTS ONLY public.t_ds_user DROP CONSTRAINT IF EXISTS t_ds_user_pkey;
 ALTER TABLE IF EXISTS ONLY public.t_ds_udfs DROP CONSTRAINT IF EXISTS t_ds_udfs_pkey;
+ALTER TABLE IF EXISTS ONLY public.t_ds_trigger_relation DROP CONSTRAINT IF EXISTS t_ds_trigger_relation_unique;
+ALTER TABLE IF EXISTS ONLY public.t_ds_trigger_relation DROP CONSTRAINT IF EXISTS t_ds_trigger_relation_pkey;
 ALTER TABLE IF EXISTS ONLY public.t_ds_tenant DROP CONSTRAINT IF EXISTS t_ds_tenant_pkey;
 ALTER TABLE IF EXISTS ONLY public.t_ds_task_instance DROP CONSTRAINT IF EXISTS t_ds_task_instance_pkey;
 ALTER TABLE IF EXISTS ONLY public.t_ds_task_group_queue DROP CONSTRAINT IF EXISTS t_ds_task_group_queue_pkey;
@@ -74,6 +86,7 @@ ALTER TABLE IF EXISTS ONLY public.t_ds_schedules DROP CONSTRAINT IF EXISTS t_ds_
 ALTER TABLE IF EXISTS ONLY public.t_ds_resources DROP CONSTRAINT IF EXISTS t_ds_resources_un;
 ALTER TABLE IF EXISTS ONLY public.t_ds_resources DROP CONSTRAINT IF EXISTS t_ds_resources_pkey;
 ALTER TABLE IF EXISTS ONLY public.t_ds_relation_udfs_user DROP CONSTRAINT IF EXISTS t_ds_relation_udfs_user_pkey;
+ALTER TABLE IF EXISTS ONLY public.t_ds_relation_sub_workflow DROP CONSTRAINT IF EXISTS t_ds_relation_sub_workflow_pkey;
 ALTER TABLE IF EXISTS ONLY public.t_ds_relation_rule_input_entry DROP CONSTRAINT IF EXISTS t_ds_relation_rule_input_entry_pk;
 ALTER TABLE IF EXISTS ONLY public.t_ds_relation_rule_execute_sql DROP CONSTRAINT IF EXISTS t_ds_relation_rule_execute_sql_pk;
 ALTER TABLE IF EXISTS ONLY public.t_ds_relation_resources_user DROP CONSTRAINT IF EXISTS t_ds_relation_resources_user_pkey;
@@ -83,7 +96,9 @@ ALTER TABLE IF EXISTS ONLY public.t_ds_relation_process_instance DROP CONSTRAINT
 ALTER TABLE IF EXISTS ONLY public.t_ds_relation_namespace_user DROP CONSTRAINT IF EXISTS t_ds_relation_namespace_user_pkey;
 ALTER TABLE IF EXISTS ONLY public.t_ds_relation_datasource_user DROP CONSTRAINT IF EXISTS t_ds_relation_datasource_user_pkey;
 ALTER TABLE IF EXISTS ONLY public.t_ds_queue DROP CONSTRAINT IF EXISTS t_ds_queue_pkey;
+ALTER TABLE IF EXISTS ONLY public.t_ds_project_preference DROP CONSTRAINT IF EXISTS t_ds_project_preference_pkey;
 ALTER TABLE IF EXISTS ONLY public.t_ds_project DROP CONSTRAINT IF EXISTS t_ds_project_pkey;
+ALTER TABLE IF EXISTS ONLY public.t_ds_project_parameter DROP CONSTRAINT IF EXISTS t_ds_project_parameter_pkey;
 ALTER TABLE IF EXISTS ONLY public.t_ds_process_task_relation DROP CONSTRAINT IF EXISTS t_ds_process_task_relation_pkey;
 ALTER TABLE IF EXISTS ONLY public.t_ds_process_task_relation_log DROP CONSTRAINT IF EXISTS t_ds_process_task_relation_log_pkey;
 ALTER TABLE IF EXISTS ONLY public.t_ds_process_instance DROP CONSTRAINT IF EXISTS t_ds_process_instance_pkey;
@@ -93,6 +108,7 @@ ALTER TABLE IF EXISTS ONLY public.t_ds_plugin_define DROP CONSTRAINT IF EXISTS t
 ALTER TABLE IF EXISTS ONLY public.t_ds_plugin_define DROP CONSTRAINT IF EXISTS t_ds_plugin_define_pk;
 ALTER TABLE IF EXISTS ONLY public.t_ds_k8s DROP CONSTRAINT IF EXISTS t_ds_k8s_pkey;
 ALTER TABLE IF EXISTS ONLY public.t_ds_k8s_namespace DROP CONSTRAINT IF EXISTS t_ds_k8s_namespace_pkey;
+ALTER TABLE IF EXISTS ONLY public.t_ds_fav_task DROP CONSTRAINT IF EXISTS t_ds_fav_task_pkey;
 ALTER TABLE IF EXISTS ONLY public.t_ds_error_command DROP CONSTRAINT IF EXISTS t_ds_error_command_pkey;
 ALTER TABLE IF EXISTS ONLY public.t_ds_environment_worker_group_relation DROP CONSTRAINT IF EXISTS t_ds_environment_worker_group_relation_pkey;
 ALTER TABLE IF EXISTS ONLY public.t_ds_environment DROP CONSTRAINT IF EXISTS t_ds_environment_pkey;
@@ -105,6 +121,7 @@ ALTER TABLE IF EXISTS ONLY public.t_ds_dq_comparison_type DROP CONSTRAINT IF EXI
 ALTER TABLE IF EXISTS ONLY public.t_ds_datasource DROP CONSTRAINT IF EXISTS t_ds_datasource_pkey;
 ALTER TABLE IF EXISTS ONLY public.t_ds_datasource DROP CONSTRAINT IF EXISTS t_ds_datasource_name_un;
 ALTER TABLE IF EXISTS ONLY public.t_ds_command DROP CONSTRAINT IF EXISTS t_ds_command_pkey;
+ALTER TABLE IF EXISTS ONLY public.t_ds_cluster DROP CONSTRAINT IF EXISTS t_ds_cluster_pkey;
 ALTER TABLE IF EXISTS ONLY public.t_ds_audit_log DROP CONSTRAINT IF EXISTS t_ds_audit_log_pkey;
 ALTER TABLE IF EXISTS ONLY public.t_ds_alertgroup DROP CONSTRAINT IF EXISTS t_ds_alertgroup_pkey;
 ALTER TABLE IF EXISTS ONLY public.t_ds_alertgroup DROP CONSTRAINT IF EXISTS t_ds_alertgroup_name_un;
@@ -130,15 +147,20 @@ ALTER TABLE IF EXISTS ONLY public.t_ds_k8s_namespace DROP CONSTRAINT IF EXISTS k
 ALTER TABLE IF EXISTS ONLY public.t_ds_environment_worker_group_relation DROP CONSTRAINT IF EXISTS environment_worker_group_unique;
 ALTER TABLE IF EXISTS ONLY public.t_ds_environment DROP CONSTRAINT IF EXISTS environment_name_unique;
 ALTER TABLE IF EXISTS ONLY public.t_ds_environment DROP CONSTRAINT IF EXISTS environment_code_unique;
+ALTER TABLE IF EXISTS ONLY public.t_ds_cluster DROP CONSTRAINT IF EXISTS cluster_name_unique;
+ALTER TABLE IF EXISTS ONLY public.t_ds_cluster DROP CONSTRAINT IF EXISTS cluster_code_unique;
 ALTER TABLE IF EXISTS ONLY public.t_ds_alert_send_status DROP CONSTRAINT IF EXISTS alert_send_status_unique;
+ALTER TABLE IF EXISTS public.t_ds_trigger_relation ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.t_ds_task_group_queue ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.t_ds_task_group ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.t_ds_relation_sub_workflow ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.t_ds_relation_rule_input_entry ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.t_ds_relation_rule_execute_sql ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.t_ds_relation_namespace_user ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.t_ds_plugin_define ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.t_ds_k8s_namespace ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.t_ds_k8s ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.t_ds_fav_task ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.t_ds_environment_worker_group_relation ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.t_ds_environment ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.t_ds_dq_task_statistics_value ALTER COLUMN id DROP DEFAULT;
@@ -147,6 +169,7 @@ ALTER TABLE IF EXISTS public.t_ds_dq_rule_execute_sql ALTER COLUMN id DROP DEFAU
 ALTER TABLE IF EXISTS public.t_ds_dq_rule ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.t_ds_dq_execute_result ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.t_ds_dq_comparison_type ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.t_ds_cluster ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.t_ds_audit_log ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.t_ds_alert_send_status ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.t_ds_alert_plugin_instance ALTER COLUMN id DROP DEFAULT;
@@ -158,6 +181,8 @@ DROP TABLE IF EXISTS public.t_ds_user;
 DROP SEQUENCE IF EXISTS public.t_ds_user_id_sequence;
 DROP TABLE IF EXISTS public.t_ds_udfs;
 DROP SEQUENCE IF EXISTS public.t_ds_udfs_id_sequence;
+DROP SEQUENCE IF EXISTS public.t_ds_trigger_relation_id_seq;
+DROP TABLE IF EXISTS public.t_ds_trigger_relation;
 DROP TABLE IF EXISTS public.t_ds_tenant;
 DROP SEQUENCE IF EXISTS public.t_ds_tenant_id_sequence;
 DROP TABLE IF EXISTS public.t_ds_task_instance;
@@ -177,6 +202,8 @@ DROP TABLE IF EXISTS public.t_ds_resources;
 DROP SEQUENCE IF EXISTS public.t_ds_resources_id_sequence;
 DROP TABLE IF EXISTS public.t_ds_relation_udfs_user;
 DROP SEQUENCE IF EXISTS public.t_ds_relation_udfs_user_id_sequence;
+DROP SEQUENCE IF EXISTS public.t_ds_relation_sub_workflow_id_seq;
+DROP TABLE IF EXISTS public.t_ds_relation_sub_workflow;
 DROP SEQUENCE IF EXISTS public.t_ds_relation_rule_input_entry_id_seq;
 DROP TABLE IF EXISTS public.t_ds_relation_rule_input_entry;
 DROP SEQUENCE IF EXISTS public.t_ds_relation_rule_execute_sql_id_seq;
@@ -193,6 +220,10 @@ DROP TABLE IF EXISTS public.t_ds_relation_datasource_user;
 DROP SEQUENCE IF EXISTS public.t_ds_relation_datasource_user_id_sequence;
 DROP TABLE IF EXISTS public.t_ds_queue;
 DROP SEQUENCE IF EXISTS public.t_ds_queue_id_sequence;
+DROP TABLE IF EXISTS public.t_ds_project_preference;
+DROP SEQUENCE IF EXISTS public.t_ds_project_preference_id_sequence;
+DROP TABLE IF EXISTS public.t_ds_project_parameter;
+DROP SEQUENCE IF EXISTS public.t_ds_project_parameter_id_sequence;
 DROP TABLE IF EXISTS public.t_ds_project;
 DROP SEQUENCE IF EXISTS public.t_ds_project_id_sequence;
 DROP TABLE IF EXISTS public.t_ds_process_task_relation_log;
@@ -211,6 +242,8 @@ DROP SEQUENCE IF EXISTS public.t_ds_k8s_namespace_id_seq;
 DROP TABLE IF EXISTS public.t_ds_k8s_namespace;
 DROP SEQUENCE IF EXISTS public.t_ds_k8s_id_seq;
 DROP TABLE IF EXISTS public.t_ds_k8s;
+DROP SEQUENCE IF EXISTS public.t_ds_fav_task_id_seq;
+DROP TABLE IF EXISTS public.t_ds_fav_task;
 DROP TABLE IF EXISTS public.t_ds_error_command;
 DROP SEQUENCE IF EXISTS public.t_ds_environment_worker_group_relation_id_seq;
 DROP TABLE IF EXISTS public.t_ds_environment_worker_group_relation;
@@ -232,6 +265,8 @@ DROP TABLE IF EXISTS public.t_ds_datasource;
 DROP SEQUENCE IF EXISTS public.t_ds_datasource_id_sequence;
 DROP TABLE IF EXISTS public.t_ds_command;
 DROP SEQUENCE IF EXISTS public.t_ds_command_id_sequence;
+DROP SEQUENCE IF EXISTS public.t_ds_cluster_id_seq;
+DROP TABLE IF EXISTS public.t_ds_cluster;
 DROP SEQUENCE IF EXISTS public.t_ds_audit_log_id_seq;
 DROP TABLE IF EXISTS public.t_ds_audit_log;
 DROP TABLE IF EXISTS public.t_ds_alertgroup;
@@ -255,7 +290,19 @@ DROP TABLE IF EXISTS public.qrtz_fired_triggers;
 DROP TABLE IF EXISTS public.qrtz_cron_triggers;
 DROP TABLE IF EXISTS public.qrtz_calendars;
 DROP TABLE IF EXISTS public.qrtz_blob_triggers;
+-- *not* dropping schema, since initdb creates it
+--
+-- Name: public; Type: SCHEMA; Schema: -; Owner: root
+--
+
+-- *not* creating schema, since initdb creates it
+
+
+ALTER SCHEMA public OWNER TO root;
+
 SET default_tablespace = '';
+
+SET default_table_access_method = heap;
 
 --
 -- Name: qrtz_blob_triggers; Type: TABLE; Schema: public; Owner: root
@@ -496,7 +543,7 @@ ALTER TABLE public.t_ds_alert_id_sequence OWNER TO root;
 
 CREATE TABLE public.t_ds_alert (
     id integer DEFAULT nextval('public.t_ds_alert_id_sequence'::regclass) NOT NULL,
-    title character varying(64) DEFAULT NULL::character varying,
+    title character varying(512) DEFAULT NULL::character varying,
     sign character varying(40) DEFAULT ''::character varying NOT NULL,
     content text,
     alert_status integer DEFAULT 0,
@@ -531,7 +578,7 @@ CREATE TABLE public.t_ds_alert_plugin_instance (
     plugin_instance_params text,
     create_time timestamp without time zone,
     update_time timestamp without time zone,
-    instance_name character varying(200)
+    instance_name character varying(255)
 );
 
 
@@ -667,6 +714,46 @@ ALTER SEQUENCE public.t_ds_audit_log_id_seq OWNED BY public.t_ds_audit_log.id;
 
 
 --
+-- Name: t_ds_cluster; Type: TABLE; Schema: public; Owner: root
+--
+
+CREATE TABLE public.t_ds_cluster (
+    id integer NOT NULL,
+    code bigint NOT NULL,
+    name character varying(255) DEFAULT NULL::character varying,
+    config text,
+    description text,
+    operator integer,
+    create_time timestamp without time zone,
+    update_time timestamp without time zone
+);
+
+
+ALTER TABLE public.t_ds_cluster OWNER TO root;
+
+--
+-- Name: t_ds_cluster_id_seq; Type: SEQUENCE; Schema: public; Owner: root
+--
+
+CREATE SEQUENCE public.t_ds_cluster_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.t_ds_cluster_id_seq OWNER TO root;
+
+--
+-- Name: t_ds_cluster_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
+--
+
+ALTER SEQUENCE public.t_ds_cluster_id_seq OWNED BY public.t_ds_cluster.id;
+
+
+--
 -- Name: t_ds_command_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
@@ -698,11 +785,13 @@ CREATE TABLE public.t_ds_command (
     executor_id integer,
     update_time timestamp without time zone,
     process_instance_priority integer DEFAULT 2,
-    worker_group character varying(64),
+    worker_group character varying(255),
+    tenant_code character varying(64) DEFAULT 'default'::character varying,
     environment_code bigint DEFAULT '-1'::bigint,
     dry_run integer DEFAULT 0,
     process_instance_id integer DEFAULT 0,
-    process_definition_version integer DEFAULT 0
+    process_definition_version integer DEFAULT 0,
+    test_flag integer
 );
 
 
@@ -836,7 +925,7 @@ ALTER SEQUENCE public.t_ds_dq_execute_result_id_seq OWNED BY public.t_ds_dq_exec
 
 CREATE TABLE public.t_ds_dq_rule (
     id integer NOT NULL,
-    name character varying(100) DEFAULT NULL::character varying,
+    name character varying(255) DEFAULT NULL::character varying,
     type integer,
     user_id integer,
     create_time timestamp without time zone,
@@ -1005,7 +1094,7 @@ ALTER SEQUENCE public.t_ds_dq_task_statistics_value_id_seq OWNED BY public.t_ds_
 CREATE TABLE public.t_ds_environment (
     id integer NOT NULL,
     code bigint NOT NULL,
-    name character varying(100) DEFAULT NULL::character varying,
+    name character varying(255) DEFAULT NULL::character varying,
     config text,
     description text,
     operator integer,
@@ -1094,16 +1183,53 @@ CREATE TABLE public.t_ds_error_command (
     executor_id integer,
     update_time timestamp without time zone,
     process_instance_priority integer DEFAULT 2,
-    worker_group character varying(64),
+    worker_group character varying(255),
+    tenant_code character varying(64) DEFAULT 'default'::character varying,
     environment_code bigint DEFAULT '-1'::bigint,
     dry_run integer DEFAULT 0,
     message text,
     process_instance_id integer DEFAULT 0,
-    process_definition_version integer DEFAULT 0
+    process_definition_version integer DEFAULT 0,
+    test_flag integer
 );
 
 
 ALTER TABLE public.t_ds_error_command OWNER TO root;
+
+--
+-- Name: t_ds_fav_task; Type: TABLE; Schema: public; Owner: root
+--
+
+CREATE TABLE public.t_ds_fav_task (
+    id integer NOT NULL,
+    task_type character varying(64) NOT NULL,
+    user_id integer NOT NULL
+);
+
+
+ALTER TABLE public.t_ds_fav_task OWNER TO root;
+
+--
+-- Name: t_ds_fav_task_id_seq; Type: SEQUENCE; Schema: public; Owner: root
+--
+
+CREATE SEQUENCE public.t_ds_fav_task_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.t_ds_fav_task_id_seq OWNER TO root;
+
+--
+-- Name: t_ds_fav_task_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
+--
+
+ALTER SEQUENCE public.t_ds_fav_task_id_seq OWNED BY public.t_ds_fav_task.id;
+
 
 --
 -- Name: t_ds_k8s; Type: TABLE; Schema: public; Owner: root
@@ -1111,7 +1237,7 @@ ALTER TABLE public.t_ds_error_command OWNER TO root;
 
 CREATE TABLE public.t_ds_k8s (
     id integer NOT NULL,
-    k8s_name character varying(100) DEFAULT NULL::character varying,
+    k8s_name character varying(255) DEFAULT NULL::character varying,
     k8s_config text,
     create_time timestamp without time zone,
     update_time timestamp without time zone
@@ -1148,15 +1274,15 @@ ALTER SEQUENCE public.t_ds_k8s_id_seq OWNED BY public.t_ds_k8s.id;
 
 CREATE TABLE public.t_ds_k8s_namespace (
     id integer NOT NULL,
+    code bigint NOT NULL,
     limits_memory integer,
-    namespace character varying(100) DEFAULT NULL::character varying,
-    online_job_num integer DEFAULT 0,
+    namespace character varying(255) DEFAULT NULL::character varying,
     user_id integer,
     pod_replicas integer,
     pod_request_cpu numeric(13,4),
     pod_request_memory integer,
     limits_cpu numeric(13,4),
-    k8s character varying(100) DEFAULT NULL::character varying,
+    cluster_code bigint NOT NULL,
     create_time timestamp without time zone,
     update_time timestamp without time zone
 );
@@ -1192,8 +1318,8 @@ ALTER SEQUENCE public.t_ds_k8s_namespace_id_seq OWNED BY public.t_ds_k8s_namespa
 
 CREATE TABLE public.t_ds_plugin_define (
     id integer NOT NULL,
-    plugin_name character varying(100) NOT NULL,
-    plugin_type character varying(100) NOT NULL,
+    plugin_name character varying(255) NOT NULL,
+    plugin_type character varying(63) NOT NULL,
     plugin_params text,
     create_time timestamp without time zone,
     update_time timestamp without time zone
@@ -1256,7 +1382,6 @@ CREATE TABLE public.t_ds_process_definition (
     warning_group_id integer,
     flag integer,
     timeout integer DEFAULT 0,
-    tenant_id integer DEFAULT '-1'::integer,
     execution_type integer DEFAULT 0,
     create_time timestamp without time zone,
     update_time timestamp without time zone
@@ -1297,7 +1422,6 @@ CREATE TABLE public.t_ds_process_definition_log (
     warning_group_id integer,
     flag integer,
     timeout integer DEFAULT 0,
-    tenant_id integer DEFAULT '-1'::integer,
     execution_type integer DEFAULT 0,
     operator integer,
     operate_time timestamp without time zone,
@@ -1331,7 +1455,9 @@ CREATE TABLE public.t_ds_process_instance (
     name character varying(255) DEFAULT NULL::character varying,
     process_definition_code bigint,
     process_definition_version integer,
+    project_code bigint,
     state integer,
+    state_history text,
     recovery integer,
     start_time timestamp without time zone,
     end_time timestamp without time zone,
@@ -1352,17 +1478,19 @@ CREATE TABLE public.t_ds_process_instance (
     update_time timestamp without time zone,
     is_sub_process integer DEFAULT 0,
     executor_id integer NOT NULL,
+    executor_name character varying(64) DEFAULT NULL::character varying,
     history_cmd text,
     dependence_schedule_times text,
     process_instance_priority integer DEFAULT 2,
-    worker_group character varying(64),
+    worker_group character varying(255),
     environment_code bigint DEFAULT '-1'::bigint,
     timeout integer DEFAULT 0,
-    tenant_id integer DEFAULT '-1'::integer NOT NULL,
+    tenant_code character varying(64) DEFAULT 'default'::character varying,
     var_pool text,
     dry_run integer DEFAULT 0,
     next_process_instance_id integer DEFAULT 0,
-    restart_time timestamp without time zone
+    restart_time timestamp without time zone,
+    test_flag integer
 );
 
 
@@ -1464,9 +1592,9 @@ ALTER TABLE public.t_ds_project_id_sequence OWNER TO root;
 
 CREATE TABLE public.t_ds_project (
     id integer DEFAULT nextval('public.t_ds_project_id_sequence'::regclass) NOT NULL,
-    name character varying(100) DEFAULT NULL::character varying,
+    name character varying(255) DEFAULT NULL::character varying,
     code bigint NOT NULL,
-    description character varying(200) DEFAULT NULL::character varying,
+    description character varying(255) DEFAULT NULL::character varying,
     user_id integer,
     flag integer DEFAULT 1,
     create_time timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
@@ -1475,6 +1603,70 @@ CREATE TABLE public.t_ds_project (
 
 
 ALTER TABLE public.t_ds_project OWNER TO root;
+
+--
+-- Name: t_ds_project_parameter_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
+--
+
+CREATE SEQUENCE public.t_ds_project_parameter_id_sequence
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.t_ds_project_parameter_id_sequence OWNER TO root;
+
+--
+-- Name: t_ds_project_parameter; Type: TABLE; Schema: public; Owner: root
+--
+
+CREATE TABLE public.t_ds_project_parameter (
+    id integer DEFAULT nextval('public.t_ds_project_parameter_id_sequence'::regclass) NOT NULL,
+    param_name character varying(255) NOT NULL,
+    param_value character varying(255) NOT NULL,
+    code bigint NOT NULL,
+    project_code bigint NOT NULL,
+    user_id integer,
+    create_time timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    update_time timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.t_ds_project_parameter OWNER TO root;
+
+--
+-- Name: t_ds_project_preference_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
+--
+
+CREATE SEQUENCE public.t_ds_project_preference_id_sequence
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.t_ds_project_preference_id_sequence OWNER TO root;
+
+--
+-- Name: t_ds_project_preference; Type: TABLE; Schema: public; Owner: root
+--
+
+CREATE TABLE public.t_ds_project_preference (
+    id integer DEFAULT nextval('public.t_ds_project_preference_id_sequence'::regclass) NOT NULL,
+    code bigint NOT NULL,
+    project_code bigint NOT NULL,
+    preferences character varying(512) NOT NULL,
+    user_id integer,
+    state integer DEFAULT 1,
+    create_time timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    update_time timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.t_ds_project_preference OWNER TO root;
 
 --
 -- Name: t_ds_queue_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
@@ -1738,6 +1930,42 @@ ALTER SEQUENCE public.t_ds_relation_rule_input_entry_id_seq OWNED BY public.t_ds
 
 
 --
+-- Name: t_ds_relation_sub_workflow; Type: TABLE; Schema: public; Owner: root
+--
+
+CREATE TABLE public.t_ds_relation_sub_workflow (
+    id integer NOT NULL,
+    parent_workflow_instance_id bigint NOT NULL,
+    parent_task_code bigint NOT NULL,
+    sub_workflow_instance_id bigint NOT NULL
+);
+
+
+ALTER TABLE public.t_ds_relation_sub_workflow OWNER TO root;
+
+--
+-- Name: t_ds_relation_sub_workflow_id_seq; Type: SEQUENCE; Schema: public; Owner: root
+--
+
+CREATE SEQUENCE public.t_ds_relation_sub_workflow_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.t_ds_relation_sub_workflow_id_seq OWNER TO root;
+
+--
+-- Name: t_ds_relation_sub_workflow_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
+--
+
+ALTER SEQUENCE public.t_ds_relation_sub_workflow_id_seq OWNED BY public.t_ds_relation_sub_workflow.id;
+
+
+--
 -- Name: t_ds_relation_udfs_user_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
@@ -1834,7 +2062,8 @@ CREATE TABLE public.t_ds_schedules (
     warning_type integer NOT NULL,
     warning_group_id integer,
     process_instance_priority integer DEFAULT 2,
-    worker_group character varying(64),
+    worker_group character varying(255),
+    tenant_code character varying(64) DEFAULT 'default'::character varying,
     environment_code bigint DEFAULT '-1'::bigint,
     create_time timestamp without time zone NOT NULL,
     update_time timestamp without time zone NOT NULL
@@ -1884,8 +2113,10 @@ CREATE TABLE public.t_ds_task_definition (
     project_code bigint,
     user_id integer,
     task_type character varying(50) DEFAULT NULL::character varying,
+    task_execute_type integer DEFAULT 0,
     task_params text,
     flag integer,
+    is_cache integer DEFAULT 0,
     task_priority integer DEFAULT 2,
     worker_group character varying(255) DEFAULT NULL::character varying,
     environment_code bigint DEFAULT '-1'::bigint,
@@ -1898,6 +2129,8 @@ CREATE TABLE public.t_ds_task_definition (
     task_group_id integer,
     task_group_priority integer DEFAULT 0,
     resource_ids text,
+    cpu_quota integer DEFAULT '-1'::integer NOT NULL,
+    memory_max integer DEFAULT '-1'::integer NOT NULL,
     create_time timestamp without time zone,
     update_time timestamp without time zone
 );
@@ -1932,8 +2165,10 @@ CREATE TABLE public.t_ds_task_definition_log (
     project_code bigint,
     user_id integer,
     task_type character varying(50) DEFAULT NULL::character varying,
+    task_execute_type integer DEFAULT 0,
     task_params text,
     flag integer,
+    is_cache integer DEFAULT 0,
     task_priority integer DEFAULT 2,
     worker_group character varying(255) DEFAULT NULL::character varying,
     environment_code bigint DEFAULT '-1'::bigint,
@@ -1948,6 +2183,8 @@ CREATE TABLE public.t_ds_task_definition_log (
     task_group_id integer,
     task_group_priority integer DEFAULT 0,
     operate_time timestamp without time zone,
+    cpu_quota integer DEFAULT '-1'::integer NOT NULL,
+    memory_max integer DEFAULT '-1'::integer NOT NULL,
     create_time timestamp without time zone,
     update_time timestamp without time zone
 );
@@ -1961,8 +2198,8 @@ ALTER TABLE public.t_ds_task_definition_log OWNER TO root;
 
 CREATE TABLE public.t_ds_task_group (
     id integer NOT NULL,
-    name character varying(100) DEFAULT NULL::character varying,
-    description character varying(200) DEFAULT NULL::character varying,
+    name character varying(255) DEFAULT NULL::character varying,
+    description character varying(255) DEFAULT NULL::character varying,
     group_size integer NOT NULL,
     project_code bigint DEFAULT '0'::bigint,
     use_size integer DEFAULT 0,
@@ -2004,7 +2241,7 @@ ALTER SEQUENCE public.t_ds_task_group_id_seq OWNED BY public.t_ds_task_group.id;
 CREATE TABLE public.t_ds_task_group_queue (
     id integer NOT NULL,
     task_id integer,
-    task_name character varying(100) DEFAULT NULL::character varying,
+    task_name character varying(255) DEFAULT NULL::character varying,
     group_id integer,
     process_id integer,
     priority integer DEFAULT 0,
@@ -2062,9 +2299,12 @@ CREATE TABLE public.t_ds_task_instance (
     id integer DEFAULT nextval('public.t_ds_task_instance_id_sequence'::regclass) NOT NULL,
     name character varying(255) DEFAULT NULL::character varying,
     task_type character varying(50) DEFAULT NULL::character varying,
+    task_execute_type integer DEFAULT 0,
     task_code bigint NOT NULL,
     task_definition_version integer,
     process_instance_id integer,
+    process_instance_name character varying(255) DEFAULT NULL::character varying,
+    project_code bigint,
     state integer,
     submit_time timestamp without time zone,
     start_time timestamp without time zone,
@@ -2078,18 +2318,24 @@ CREATE TABLE public.t_ds_task_instance (
     app_link text,
     task_params text,
     flag integer DEFAULT 1,
+    is_cache integer DEFAULT 0,
+    cache_key character varying(200) DEFAULT NULL::character varying,
     retry_interval integer,
     max_retry_times integer,
     task_instance_priority integer,
-    worker_group character varying(64),
+    worker_group character varying(255),
     environment_code bigint DEFAULT '-1'::bigint,
     environment_config text,
     executor_id integer,
+    executor_name character varying(64) DEFAULT NULL::character varying,
     first_submit_time timestamp without time zone,
     delay_time integer DEFAULT 0,
     task_group_id integer,
     var_pool text,
-    dry_run integer DEFAULT 0
+    dry_run integer DEFAULT 0,
+    cpu_quota integer DEFAULT '-1'::integer NOT NULL,
+    memory_max integer DEFAULT '-1'::integer NOT NULL,
+    test_flag integer
 );
 
 
@@ -2126,6 +2372,44 @@ CREATE TABLE public.t_ds_tenant (
 ALTER TABLE public.t_ds_tenant OWNER TO root;
 
 --
+-- Name: t_ds_trigger_relation; Type: TABLE; Schema: public; Owner: root
+--
+
+CREATE TABLE public.t_ds_trigger_relation (
+    id integer NOT NULL,
+    trigger_type integer NOT NULL,
+    trigger_code bigint NOT NULL,
+    job_id bigint NOT NULL,
+    create_time timestamp without time zone,
+    update_time timestamp without time zone
+);
+
+
+ALTER TABLE public.t_ds_trigger_relation OWNER TO root;
+
+--
+-- Name: t_ds_trigger_relation_id_seq; Type: SEQUENCE; Schema: public; Owner: root
+--
+
+CREATE SEQUENCE public.t_ds_trigger_relation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.t_ds_trigger_relation_id_seq OWNER TO root;
+
+--
+-- Name: t_ds_trigger_relation_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
+--
+
+ALTER SEQUENCE public.t_ds_trigger_relation_id_seq OWNED BY public.t_ds_trigger_relation.id;
+
+
+--
 -- Name: t_ds_udfs_id_sequence; Type: SEQUENCE; Schema: public; Owner: root
 --
 
@@ -2146,7 +2430,7 @@ ALTER TABLE public.t_ds_udfs_id_sequence OWNER TO root;
 CREATE TABLE public.t_ds_udfs (
     id integer DEFAULT nextval('public.t_ds_udfs_id_sequence'::regclass) NOT NULL,
     user_id integer NOT NULL,
-    func_name character varying(100) NOT NULL,
+    func_name character varying(255) NOT NULL,
     class_name character varying(255) NOT NULL,
     type integer NOT NULL,
     arg_types character varying(255) DEFAULT NULL::character varying,
@@ -2186,7 +2470,7 @@ CREATE TABLE public.t_ds_user (
     user_type integer,
     email character varying(64) DEFAULT NULL::character varying,
     phone character varying(11) DEFAULT NULL::character varying,
-    tenant_id integer,
+    tenant_id integer DEFAULT '-1'::integer,
     create_time timestamp without time zone,
     update_time timestamp without time zone,
     queue character varying(64) DEFAULT NULL::character varying,
@@ -2224,7 +2508,7 @@ ALTER TABLE public.t_ds_version_id_sequence OWNER TO root;
 
 CREATE TABLE public.t_ds_version (
     id integer DEFAULT nextval('public.t_ds_version_id_sequence'::regclass) NOT NULL,
-    version character varying(200) NOT NULL
+    version character varying(63) NOT NULL
 );
 
 
@@ -2253,7 +2537,9 @@ CREATE TABLE public.t_ds_worker_group (
     name character varying(255) NOT NULL,
     addr_list text,
     create_time timestamp without time zone,
-    update_time timestamp without time zone
+    update_time timestamp without time zone,
+    description text,
+    other_params_json text
 );
 
 
@@ -2278,6 +2564,13 @@ ALTER TABLE ONLY public.t_ds_alert_send_status ALTER COLUMN id SET DEFAULT nextv
 --
 
 ALTER TABLE ONLY public.t_ds_audit_log ALTER COLUMN id SET DEFAULT nextval('public.t_ds_audit_log_id_seq'::regclass);
+
+
+--
+-- Name: t_ds_cluster id; Type: DEFAULT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY public.t_ds_cluster ALTER COLUMN id SET DEFAULT nextval('public.t_ds_cluster_id_seq'::regclass);
 
 
 --
@@ -2337,6 +2630,13 @@ ALTER TABLE ONLY public.t_ds_environment_worker_group_relation ALTER COLUMN id S
 
 
 --
+-- Name: t_ds_fav_task id; Type: DEFAULT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY public.t_ds_fav_task ALTER COLUMN id SET DEFAULT nextval('public.t_ds_fav_task_id_seq'::regclass);
+
+
+--
 -- Name: t_ds_k8s id; Type: DEFAULT; Schema: public; Owner: root
 --
 
@@ -2379,6 +2679,13 @@ ALTER TABLE ONLY public.t_ds_relation_rule_input_entry ALTER COLUMN id SET DEFAU
 
 
 --
+-- Name: t_ds_relation_sub_workflow id; Type: DEFAULT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY public.t_ds_relation_sub_workflow ALTER COLUMN id SET DEFAULT nextval('public.t_ds_relation_sub_workflow_id_seq'::regclass);
+
+
+--
 -- Name: t_ds_task_group id; Type: DEFAULT; Schema: public; Owner: root
 --
 
@@ -2390,6 +2697,13 @@ ALTER TABLE ONLY public.t_ds_task_group ALTER COLUMN id SET DEFAULT nextval('pub
 --
 
 ALTER TABLE ONLY public.t_ds_task_group_queue ALTER COLUMN id SET DEFAULT nextval('public.t_ds_task_group_queue_id_seq'::regclass);
+
+
+--
+-- Name: t_ds_trigger_relation id; Type: DEFAULT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY public.t_ds_trigger_relation ALTER COLUMN id SET DEFAULT nextval('public.t_ds_trigger_relation_id_seq'::regclass);
 
 
 --
@@ -2440,7 +2754,7 @@ INSERT INTO public.qrtz_locks VALUES ('DolphinScheduler', 'TRIGGER_ACCESS');
 -- Data for Name: qrtz_scheduler_state; Type: TABLE DATA; Schema: public; Owner: root
 --
 
-INSERT INTO public.qrtz_scheduler_state VALUES ('DolphinScheduler', 'VM-8-4-ubuntu1688030144147', 1688030165976, 5000);
+INSERT INTO public.qrtz_scheduler_state VALUES ('DolphinScheduler', '94e4e28622931699347929924', 1699927102585, 5000);
 
 
 --
@@ -2465,27 +2779,12 @@ INSERT INTO public.qrtz_scheduler_state VALUES ('DolphinScheduler', 'VM-8-4-ubun
 -- Data for Name: t_ds_access_token; Type: TABLE DATA; Schema: public; Owner: root
 --
 
-INSERT INTO public.t_ds_access_token VALUES (1, 111, '111', '2023-08-31 16:36:05', '2023-08-31 16:36:11', '2023-08-31 16:36:15');
-INSERT INTO public.t_ds_access_token VALUES (2, 22, '111', '2023-08-31 16:36:35', '2023-08-31 16:36:38', '2023-08-31 16:36:42');
-INSERT INTO public.t_ds_access_token VALUES (3, 22, '11', '2023-08-31 16:36:55', '2023-08-31 16:36:57', '2023-08-31 16:36:59');
-INSERT INTO public.t_ds_access_token VALUES (4, 22, '11', '2023-08-31 16:36:55', '2023-08-31 16:36:57', '2023-08-31 16:36:59');
-INSERT INTO public.t_ds_access_token VALUES (5, 22, '11', '2023-08-31 16:36:55', '2023-08-31 16:36:57', '2023-08-31 16:36:59');
-INSERT INTO public.t_ds_access_token VALUES (6, 22, '11', '2023-08-31 16:36:55', '2023-08-31 16:36:57', '2023-08-31 16:36:59');
-INSERT INTO public.t_ds_access_token VALUES (7, 22, '11', '2023-08-31 16:36:55', '2023-08-31 16:36:57', '2023-08-31 16:36:59');
-INSERT INTO public.t_ds_access_token VALUES (8, 22, '11', '2023-08-31 16:36:55', '2023-08-31 16:36:57', '2023-08-31 16:36:59');
-INSERT INTO public.t_ds_access_token VALUES (9, 22, '11', '2023-08-31 16:36:55', '2023-08-31 16:36:57', '2023-08-31 16:36:59');
-INSERT INTO public.t_ds_access_token VALUES (10, 22, '11', '2023-08-31 16:36:55', '2023-08-31 16:36:57', '2023-08-31 16:36:59');
-INSERT INTO public.t_ds_access_token VALUES (11, 22, '11', '2023-08-31 16:36:55', '2023-08-31 16:36:57', '2023-08-31 16:36:59');
-INSERT INTO public.t_ds_access_token VALUES (12, 22, '11', '2023-08-31 16:36:55', '2023-08-31 16:36:57', '2023-08-31 16:36:59');
-INSERT INTO public.t_ds_access_token VALUES (13, 22, '11', '2023-08-31 16:36:55', '2023-08-31 16:36:57', '2023-08-31 16:36:59');
-INSERT INTO public.t_ds_access_token VALUES (14, 22, '11', '2023-08-31 16:36:55', '2023-08-31 16:36:57', '2023-08-31 16:36:59');
 
 
 --
 -- Data for Name: t_ds_alert; Type: TABLE DATA; Schema: public; Owner: root
 --
 
-INSERT INTO public.t_ds_alert VALUES (1, 'Fault tolerance warning', 'f5bc9bc42f1039d3bb7a079007620b36d9499bd1', '[{"type":"MASTER","host":"/nodes/master/10.0.8.4:5678","event":"SERVER_DOWN","warningLevel":"SERIOUS"}]', 0, 2, NULL, 1, '2023-06-29 16:27:41.297', '2023-06-29 16:27:41.297', NULL, NULL, NULL, 4);
 
 
 --
@@ -2504,11 +2803,17 @@ INSERT INTO public.t_ds_alert VALUES (1, 'Fault tolerance warning', 'f5bc9bc42f1
 -- Data for Name: t_ds_alertgroup; Type: TABLE DATA; Schema: public; Owner: root
 --
 
-INSERT INTO public.t_ds_alertgroup VALUES (1, '1,2', 1, 'default admin warning group', 'default admin warning group', '2018-11-29 10:20:39', '2018-11-29 10:20:39');
+INSERT INTO public.t_ds_alertgroup VALUES (1, NULL, 1, 'default admin warning group', 'default admin warning group', '2018-11-29 10:20:39', '2018-11-29 10:20:39');
 
 
 --
 -- Data for Name: t_ds_audit_log; Type: TABLE DATA; Schema: public; Owner: root
+--
+
+
+
+--
+-- Data for Name: t_ds_cluster; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 
@@ -2570,8 +2875,7 @@ INSERT INTO public.t_ds_dq_rule_execute_sql VALUES (2, 1, 'SELECT COUNT(*) AS to
 INSERT INTO public.t_ds_dq_rule_execute_sql VALUES (3, 1, 'SELECT COUNT(*) AS miss from miss_items', 'miss_count', 1, '2021-03-03 11:31:24', '2021-03-03 11:31:24', false);
 INSERT INTO public.t_ds_dq_rule_execute_sql VALUES (4, 1, 'SELECT COUNT(*) AS valids FROM invalid_length_items', 'invalid_length_count', 1, '2021-03-03 11:31:24', '2021-03-03 11:31:24', false);
 INSERT INTO public.t_ds_dq_rule_execute_sql VALUES (5, 1, 'SELECT COUNT(*) AS total FROM ${target_table} WHERE (${target_filter})', 'total_count', 2, '2021-03-03 11:31:24', '2021-03-03 11:31:24', false);
-INSERT INTO public.t_ds_dq_rule_execute_sql VALUES (6, 1, 'SELECT ${src_field} FROM ${src_table} group by ${src_field} having count(*) > 1', 'duplicate_items', 0, '2021-03-03 11:31:24', '2021-03-03 11:31:24', true);
-INSERT INTO public.t_ds_dq_rule_execute_sql VALUES (7, 1, 'SELECT COUNT(*) AS duplicates FROM duplicate_items', 'duplicate_count', 1, '2021-03-03 11:31:24', '2021-03-03 11:31:24', false);
+INSERT INTO public.t_ds_dq_rule_execute_sql VALUES (6, 1, 'SELECT ${src_field} FROM ${src_table} group by ${src_field} having count(*) > 1', 'duplicate_items', 0, '2021-03-03 11:31:24', '2021-03-03 11:31:24', true);INSERT INTO public.t_ds_dq_rule_execute_sql VALUES (7, 1, 'SELECT COUNT(*) AS duplicates FROM duplicate_items', 'duplicate_count', 1, '2021-03-03 11:31:24', '2021-03-03 11:31:24', false);
 INSERT INTO public.t_ds_dq_rule_execute_sql VALUES (8, 1, 'SELECT ${src_table}.* FROM (SELECT * FROM ${src_table} WHERE (${src_filter})) ${src_table} LEFT JOIN (SELECT * FROM ${target_table} WHERE (${target_filter})) ${target_table} ON ${on_clause} WHERE ${where_clause}', 'miss_items', 0, '2021-03-03 11:31:24', '2021-03-03 11:31:24', true);
 INSERT INTO public.t_ds_dq_rule_execute_sql VALUES (9, 1, 'SELECT * FROM ${src_table} WHERE (${src_field} not regexp ''${regexp_pattern}'') AND (${src_filter}) ', 'regexp_items', 0, '2021-03-03 11:31:24', '2021-03-03 11:31:24', true);
 INSERT INTO public.t_ds_dq_rule_execute_sql VALUES (10, 1, 'SELECT COUNT(*) AS regexps FROM regexp_items', 'regexp_count', 1, '2021-03-03 11:31:24', '2021-03-03 11:31:24', false);
@@ -2612,11 +2916,12 @@ INSERT INTO public.t_ds_dq_rule_input_entry VALUES (21, 'writer_datasource_id', 
 INSERT INTO public.t_ds_dq_rule_input_entry VALUES (22, 'target_field', 'select', '$t(target_field)', NULL, NULL, 'Please enter column, only single column is supported', 0, 0, 0, 1, 1, 0, 0, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
 INSERT INTO public.t_ds_dq_rule_input_entry VALUES (23, 'field_length', 'input', '$t(field_length)', NULL, NULL, 'Please enter length limit', 0, 3, 0, 1, 1, 0, 0, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
 INSERT INTO public.t_ds_dq_rule_input_entry VALUES (24, 'logic_operator', 'select', '$t(logic_operator)', '=', '[{"label":"=","value":"="},{"label":"<","value":"<"},{"label":"<=","value":"<="},{"label":">","value":">"},{"label":">=","value":">="},{"label":"<>","value":"<>"}]', 'please select logic operator', 0, 0, 3, 1, 1, 0, 0, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
-INSERT INTO public.t_ds_dq_rule_input_entry VALUES (25, 'regexp_pattern', 'input', '$t(regexp_pattern)', NULL, NULL, 'Please enter regexp pattern', 0, 0, 0, 1, 1, 0, 0, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
-INSERT INTO public.t_ds_dq_rule_input_entry VALUES (26, 'deadline', 'input', '$t(deadline)', NULL, NULL, 'Please enter deadline', 0, 0, 0, 1, 1, 0, 0, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
+INSERT INTO public.t_ds_dq_rule_input_entry VALUES (25, 'regexp_pattern', 'input', '$t(regexp_pattern)', NULL, NULL, 'Please enter regexp pattern', 0, 0, 0, 1, 1, 0, 0, '2021-03-03 11:31:24', '2021-03-03 11:31:24');INSERT INTO public.t_ds_dq_rule_input_entry VALUES (26, 'deadline', 'input', '$t(deadline)', NULL, NULL, 'Please enter deadline', 0, 0, 0, 1, 1, 0, 0, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
 INSERT INTO public.t_ds_dq_rule_input_entry VALUES (27, 'datetime_format', 'input', '$t(datetime_format)', NULL, NULL, 'Please enter datetime format', 0, 0, 0, 1, 1, 0, 0, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
 INSERT INTO public.t_ds_dq_rule_input_entry VALUES (28, 'enum_list', 'input', '$t(enum_list)', NULL, NULL, 'Please enter enumeration', 0, 0, 0, 1, 1, 0, 0, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
 INSERT INTO public.t_ds_dq_rule_input_entry VALUES (29, 'begin_time', 'input', '$t(begin_time)', NULL, NULL, 'Please enter begin time', 0, 0, 0, 1, 1, 0, 0, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
+INSERT INTO public.t_ds_dq_rule_input_entry VALUES (30, 'src_database', 'select', '$t(src_database)', NULL, NULL, 'Please select source database', 0, 0, 0, 1, 1, 1, 1, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
+INSERT INTO public.t_ds_dq_rule_input_entry VALUES (31, 'target_database', 'select', '$t(target_database)', NULL, NULL, 'Please select target database', 0, 0, 0, 1, 1, 1, 1, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
 
 
 --
@@ -2644,6 +2949,12 @@ INSERT INTO public.t_ds_dq_rule_input_entry VALUES (29, 'begin_time', 'input', '
 
 
 --
+-- Data for Name: t_ds_fav_task; Type: TABLE DATA; Schema: public; Owner: root
+--
+
+
+
+--
 -- Data for Name: t_ds_k8s; Type: TABLE DATA; Schema: public; Owner: root
 --
 
@@ -2659,36 +2970,49 @@ INSERT INTO public.t_ds_dq_rule_input_entry VALUES (29, 'begin_time', 'input', '
 -- Data for Name: t_ds_plugin_define; Type: TABLE DATA; Schema: public; Owner: root
 --
 
-INSERT INTO public.t_ds_plugin_define VALUES (1, 'DingTalk', 'alert', '[{"props":null,"field":"WarningType","name":"warningType","type":"radio","title":"warningType","value":"all","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"success","value":"success","disabled":false},{"label":"failure","value":"failure","disabled":false},{"label":"all","value":"all","disabled":false}]},{"props":null,"field":"WebHook","name":"$t(''webhook'')","type":"input","title":"$t(''webhook'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"Keyword","name":"$t(''keyword'')","type":"input","title":"$t(''keyword'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"Secret","name":"$t(''secret'')","type":"input","title":"$t(''secret'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"MsgType","name":"$t(''msgType'')","type":"radio","title":"$t(''msgType'')","value":"text","validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"text","value":"text","disabled":false},{"label":"markdown","value":"markdown","disabled":false}]},{"props":null,"field":"AtMobiles","name":"$t(''atMobiles'')","type":"input","title":"$t(''atMobiles'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"AtUserIds","name":"$t(''atUserIds'')","type":"input","title":"$t(''atUserIds'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"IsAtAll","name":"$t(''isAtAll'')","type":"radio","title":"$t(''isAtAll'')","value":"false","validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"YES","value":"true","disabled":false},{"label":"NO","value":"false","disabled":false}]},{"props":null,"field":"IsEnableProxy","name":"$t(''isEnableProxy'')","type":"radio","title":"$t(''isEnableProxy'')","value":"false","validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"YES","value":"true","disabled":false},{"label":"NO","value":"false","disabled":false}]},{"props":null,"field":"Proxy","name":"$t(''proxy'')","type":"input","title":"$t(''proxy'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"Port","name":"$t(''port'')","type":"input","title":"$t(''port'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"User","name":"$t(''user'')","type":"input","title":"$t(''user'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"field":"Password","name":"$t(''password'')","props":{"disabled":null,"placeholder":"if enable use authentication, you need input password","size":"small"},"type":"input","title":"$t(''password'')","value":null,"validate":null,"emit":null}]', '2023-06-29 15:48:19.191', '2023-06-29 15:48:19.191');
-INSERT INTO public.t_ds_plugin_define VALUES (2, 'Email', 'alert', '[{"props":null,"field":"WarningType","name":"warningType","type":"radio","title":"warningType","value":"all","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"success","value":"success","disabled":false},{"label":"failure","value":"failure","disabled":false},{"label":"all","value":"all","disabled":false}]},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"please input receives","size":"small"},"field":"receivers","name":"$t(''receivers'')","type":"input","title":"$t(''receivers'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"receiverCcs","name":"$t(''receiverCcs'')","type":"input","title":"$t(''receiverCcs'')","value":null,"validate":null,"emit":null},{"props":null,"field":"serverHost","name":"mail.smtp.host","type":"input","title":"mail.smtp.host","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"serverPort","name":"mail.smtp.port","type":"input","title":"mail.smtp.port","value":"25","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"sender","name":"$t(''mailSender'')","type":"input","title":"$t(''mailSender'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"enableSmtpAuth","name":"mail.smtp.auth","type":"radio","title":"mail.smtp.auth","value":"true","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"YES","value":"true","disabled":false},{"label":"NO","value":"false","disabled":false}]},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"if enable use authentication, you need input user","size":"small"},"field":"User","name":"$t(''mailUser'')","type":"input","title":"$t(''mailUser'')","value":null,"validate":null,"emit":null},{"field":"Password","name":"$t(''mailPasswd'')","props":{"disabled":null,"placeholder":"if enable use authentication, you need input password","size":"small"},"type":"input","title":"$t(''mailPasswd'')","value":null,"validate":null,"emit":null},{"props":null,"field":"starttlsEnable","name":"mail.smtp.starttls.enable","type":"radio","title":"mail.smtp.starttls.enable","value":"false","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"YES","value":"true","disabled":false},{"label":"NO","value":"false","disabled":false}]},{"props":null,"field":"sslEnable","name":"mail.smtp.ssl.enable","type":"radio","title":"mail.smtp.ssl.enable","value":"false","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"YES","value":"true","disabled":false},{"label":"NO","value":"false","disabled":false}]},{"props":null,"field":"smtpSslTrust","name":"mail.smtp.ssl.trust","type":"input","title":"mail.smtp.ssl.trust","value":"*","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"showType","name":"$t(''showType'')","type":"radio","title":"$t(''showType'')","value":"table","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"table","value":"table","disabled":false},{"label":"text","value":"text","disabled":false},{"label":"attachment","value":"attachment","disabled":false},{"label":"table attachment","value":"table attachment","disabled":false}]}]', '2023-06-29 15:48:19.283', '2023-06-29 15:48:19.283');
-INSERT INTO public.t_ds_plugin_define VALUES (3, 'Feishu', 'alert', '[{"props":null,"field":"WarningType","name":"warningType","type":"radio","title":"warningType","value":"all","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"success","value":"success","disabled":false},{"label":"failure","value":"failure","disabled":false},{"label":"all","value":"all","disabled":false}]},{"props":null,"field":"WebHook","name":"$t(''webhook'')","type":"input","title":"$t(''webhook'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"IsEnableProxy","name":"$t(''isEnableProxy'')","type":"radio","title":"$t(''isEnableProxy'')","value":"true","validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"YES","value":"true","disabled":false},{"label":"NO","value":"false","disabled":false}]},{"props":null,"field":"Proxy","name":"$t(''proxy'')","type":"input","title":"$t(''proxy'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"Port","name":"$t(''port'')","type":"input","title":"$t(''port'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"User","name":"$t(''user'')","type":"input","title":"$t(''user'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"field":"Password","name":"$t(''password'')","props":{"disabled":null,"placeholder":"if enable use authentication, you need input password","size":"small"},"type":"input","title":"$t(''password'')","value":null,"validate":null,"emit":null}]', '2023-06-29 15:48:19.339', '2023-06-29 15:48:19.339');
-INSERT INTO public.t_ds_plugin_define VALUES (4, 'Http', 'alert', '[{"props":null,"field":"WarningType","name":"warningType","type":"radio","title":"warningType","value":"all","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"success","value":"success","disabled":false},{"label":"failure","value":"failure","disabled":false},{"label":"all","value":"all","disabled":false}]},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"input request URL","size":"small"},"field":"url","name":"$t(''url'')","type":"input","title":"$t(''url'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"input request type POST or GET","size":"small"},"field":"requestType","name":"$t(''requestType'')","type":"input","title":"$t(''requestType'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"input request headers as JSON format ","size":"small"},"field":"headerParams","name":"$t(''headerParams'')","type":"input","title":"$t(''headerParams'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"input request body as JSON format ","size":"small"},"field":"bodyParams","name":"$t(''bodyParams'')","type":"input","title":"$t(''bodyParams'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"input alert msg field name","size":"small"},"field":"contentField","name":"$t(''contentField'')","type":"input","title":"$t(''contentField'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null}]', '2023-06-29 15:48:19.372', '2023-06-29 15:48:19.372');
-INSERT INTO public.t_ds_plugin_define VALUES (5, 'Script', 'alert', '[{"props":null,"field":"WarningType","name":"warningType","type":"radio","title":"warningType","value":"all","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"success","value":"success","disabled":false},{"label":"failure","value":"failure","disabled":false},{"label":"all","value":"all","disabled":false}]},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"please enter your custom parameters, which will be passed to you when calling your script","size":"small"},"field":"userParams","name":"$t(''userParams'')","type":"input","title":"$t(''userParams'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"please upload the file to the disk directory of the alert server, and ensure that the path is absolute and has the corresponding access rights","size":"small"},"field":"path","name":"$t(''scriptPath'')","type":"input","title":"$t(''scriptPath'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"type","name":"$t(''scriptType'')","type":"radio","title":"$t(''scriptType'')","value":"SHELL","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"SHELL","value":"SHELL","disabled":false}]}]', '2023-06-29 15:48:19.397', '2023-06-29 15:48:19.397');
-INSERT INTO public.t_ds_plugin_define VALUES (6, 'Slack', 'alert', '[{"props":null,"field":"WarningType","name":"warningType","type":"radio","title":"warningType","value":"all","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"success","value":"success","disabled":false},{"label":"failure","value":"failure","disabled":false},{"label":"all","value":"all","disabled":false}]},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"Input WebHook Url","size":"small"},"field":"webHook","name":"$t(''webhook'')","type":"input","title":"$t(''webhook'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"Input the bot username","size":"small"},"field":"username","name":"$t(''Username'')","type":"input","title":"$t(''Username'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null}]', '2023-06-29 15:48:19.417', '2023-06-29 15:48:19.417');
-INSERT INTO public.t_ds_plugin_define VALUES (7, 'WeChat', 'alert', '[{"props":null,"field":"WarningType","name":"warningType","type":"radio","title":"warningType","value":"all","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"success","value":"success","disabled":false},{"label":"failure","value":"failure","disabled":false},{"label":"all","value":"all","disabled":false}]},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"please input corp id ","size":"small"},"field":"corpId","name":"$t(''corpId'')","type":"input","title":"$t(''corpId'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"please input secret ","size":"small"},"field":"secret","name":"$t(''secret'')","type":"input","title":"$t(''secret'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"use `|` to separate userIds and `@all` to everyone ","size":"small"},"field":"users","name":"$t(''users'')","type":"input","title":"$t(''users'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"please input agent id or chat id ","size":"small"},"field":"agentId/chatId","name":"$t(''agentId/chatId'')","type":"input","title":"$t(''agentId/chatId'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"sendType","name":"send.type","type":"radio","title":"send.type","value":"APP/应用","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"APP/应用","value":"APP/应用","disabled":false},{"label":"GROUP CHAT/群聊","value":"GROUP CHAT/群聊","disabled":false}]},{"props":null,"field":"showType","name":"$t(''showType'')","type":"radio","title":"$t(''showType'')","value":"markdown","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"markdown","value":"markdown","disabled":false},{"label":"text","value":"text","disabled":false}]}]', '2023-06-29 15:48:19.442', '2023-06-29 15:48:19.442');
-INSERT INTO public.t_ds_plugin_define VALUES (8, 'PagerDuty', 'alert', '[{"props":null,"field":"WarningType","name":"warningType","type":"radio","title":"warningType","value":"all","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"success","value":"success","disabled":false},{"label":"failure","value":"failure","disabled":false},{"label":"all","value":"all","disabled":false}]},{"props":null,"field":"IntegrationKey","name":"integrationKey","type":"input","title":"integrationKey","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null}]', '2023-06-29 15:48:19.464', '2023-06-29 15:48:19.465');
-INSERT INTO public.t_ds_plugin_define VALUES (9, 'WebexTeams', 'alert', '[{"props":null,"field":"WarningType","name":"warningType","type":"radio","title":"warningType","value":"all","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"success","value":"success","disabled":false},{"label":"failure","value":"failure","disabled":false},{"label":"all","value":"all","disabled":false}]},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"Please enter the robot''s access token you were given","size":"small"},"field":"BotAccessToken","name":"botAccessToken","type":"input","title":"botAccessToken","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"The room ID of the message","size":"small"},"field":"RoomId","name":"roomId","type":"input","title":"roomId","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"The person ID of the message recipient","size":"small"},"field":"ToPersonId","name":"toPersonId","type":"input","title":"toPersonId","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"The email address of the message recipient","size":"small"},"field":"ToPersonEmail","name":"toPersonEmail","type":"input","title":"toPersonEmail","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"use ,(eng commas) to separate multiple emails","size":"small"},"field":"AtSomeoneInRoom","name":"atSomeoneInRoom","type":"input","title":"atSomeoneInRoom","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"Destination","name":"destination","type":"radio","title":"destination","value":"roomId","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"roomId","value":"roomId","disabled":false},{"label":"personEmail","value":"personEmail","disabled":false},{"label":"personId","value":"personId","disabled":false}]}]', '2023-06-29 15:48:19.489', '2023-06-29 15:48:19.489');
-INSERT INTO public.t_ds_plugin_define VALUES (10, 'Telegram', 'alert', '[{"props":null,"field":"WarningType","name":"warningType","type":"radio","title":"warningType","value":"all","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"success","value":"success","disabled":false},{"label":"failure","value":"failure","disabled":false},{"label":"all","value":"all","disabled":false}]},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"telegram web hook","size":"small"},"field":"webHook","name":"$t(''webHook'')","type":"input","title":"$t(''webHook'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"telegram bot token","size":"small"},"field":"botToken","name":"botToken","type":"input","title":"botToken","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"telegram channel chat id","size":"small"},"field":"chatId","name":"chatId","type":"input","title":"chatId","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"field":"parseMode","name":"parseMode","props":{"disabled":null,"placeholder":null,"size":"small"},"type":"select","title":"parseMode","value":"Txt","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"Txt","value":"Txt","disabled":false},{"label":"Markdown","value":"Markdown","disabled":false},{"label":"MarkdownV2","value":"MarkdownV2","disabled":false},{"label":"Html","value":"Html","disabled":false}]},{"props":null,"field":"IsEnableProxy","name":"$t(''isEnableProxy'')","type":"radio","title":"$t(''isEnableProxy'')","value":"false","validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"YES","value":"true","disabled":false},{"label":"NO","value":"false","disabled":false}]},{"props":null,"field":"Proxy","name":"$t(''proxy'')","type":"input","title":"$t(''proxy'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"Port","name":"$t(''port'')","type":"input","title":"$t(''port'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"User","name":"$t(''user'')","type":"input","title":"$t(''user'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"field":"Password","name":"$t(''password'')","props":{"disabled":null,"placeholder":"if enable use authentication, you need input password","size":"small"},"type":"input","title":"$t(''password'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null}]', '2023-06-29 15:48:19.771', '2023-06-29 15:48:19.771');
-INSERT INTO public.t_ds_plugin_define VALUES (11, 'CONDITIONS', 'task', '[{"props":null,"field":"name","name":"$t(''Node name'')","type":"input","title":"$t(''Node name'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"runFlag","name":"RUN_FLAG","type":"radio","title":"RUN_FLAG","value":null,"validate":null,"emit":null,"options":[{"label":"NORMAL","value":"NORMAL","disabled":false},{"label":"FORBIDDEN","value":"FORBIDDEN","disabled":false}]}]', '2023-06-29 16:15:03.606', '2023-06-29 16:15:03.606');
-INSERT INTO public.t_ds_plugin_define VALUES (12, 'DATA_QUALITY', 'task', 'null', '2023-06-29 16:15:03.668', '2023-06-29 16:15:03.668');
-INSERT INTO public.t_ds_plugin_define VALUES (13, 'DATAX', 'task', 'null', '2023-06-29 16:15:03.687', '2023-06-29 16:15:03.687');
-INSERT INTO public.t_ds_plugin_define VALUES (14, 'DEPENDENT', 'task', 'null', '2023-06-29 16:15:03.697', '2023-06-29 16:15:03.697');
-INSERT INTO public.t_ds_plugin_define VALUES (15, 'FLINK', 'task', 'null', '2023-06-29 16:15:03.709', '2023-06-29 16:15:03.709');
-INSERT INTO public.t_ds_plugin_define VALUES (16, 'HTTP', 'task', 'null', '2023-06-29 16:15:03.721', '2023-06-29 16:15:03.721');
-INSERT INTO public.t_ds_plugin_define VALUES (17, 'MR', 'task', 'null', '2023-06-29 16:15:03.745', '2023-06-29 16:15:03.745');
-INSERT INTO public.t_ds_plugin_define VALUES (18, 'PIGEON', 'task', '[{"props":null,"field":"targetJobName","name":"targetJobName","type":"input","title":"targetJobName","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null}]', '2023-06-29 16:15:03.765', '2023-06-29 16:15:03.765');
-INSERT INTO public.t_ds_plugin_define VALUES (19, 'PROCEDURE', 'task', 'null', '2023-06-29 16:15:03.781', '2023-06-29 16:15:03.781');
-INSERT INTO public.t_ds_plugin_define VALUES (20, 'PYTHON', 'task', 'null', '2023-06-29 16:15:03.82', '2023-06-29 16:15:03.82');
-INSERT INTO public.t_ds_plugin_define VALUES (21, 'SEATUNNEL', 'task', 'null', '2023-06-29 16:15:03.838', '2023-06-29 16:15:03.838');
-INSERT INTO public.t_ds_plugin_define VALUES (22, 'SHELL', 'task', '[{"props":null,"field":"name","name":"$t(''Node name'')","type":"input","title":"$t(''Node name'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"runFlag","name":"RUN_FLAG","type":"radio","title":"RUN_FLAG","value":null,"validate":null,"emit":null,"options":[{"label":"NORMAL","value":"NORMAL","disabled":false},{"label":"FORBIDDEN","value":"FORBIDDEN","disabled":false}]}]', '2023-06-29 16:15:03.864', '2023-06-29 16:15:03.864');
-INSERT INTO public.t_ds_plugin_define VALUES (23, 'SPARK', 'task', 'null', '2023-06-29 16:15:03.881', '2023-06-29 16:15:03.881');
-INSERT INTO public.t_ds_plugin_define VALUES (24, 'SQL', 'task', 'null', '2023-06-29 16:15:03.898', '2023-06-29 16:15:03.898');
-INSERT INTO public.t_ds_plugin_define VALUES (25, 'SQOOP', 'task', 'null', '2023-06-29 16:15:03.911', '2023-06-29 16:15:03.911');
-INSERT INTO public.t_ds_plugin_define VALUES (26, 'SUB_PROCESS', 'task', 'null', '2023-06-29 16:15:03.926', '2023-06-29 16:15:03.926');
-INSERT INTO public.t_ds_plugin_define VALUES (27, 'SWITCH', 'task', 'null', '2023-06-29 16:15:03.947', '2023-06-29 16:15:03.947');
-INSERT INTO public.t_ds_plugin_define VALUES (28, 'EMR', 'task', '[]', '2023-06-29 16:15:03.964', '2023-06-29 16:15:03.964');
-INSERT INTO public.t_ds_plugin_define VALUES (29, 'ZEPPELIN', 'task', 'null', '2023-06-29 16:15:03.979', '2023-06-29 16:15:03.979');
-INSERT INTO public.t_ds_plugin_define VALUES (30, 'BLOCKING', 'task', 'null', '2023-06-29 16:15:03.994', '2023-06-29 16:15:03.994');
+INSERT INTO public.t_ds_plugin_define VALUES (1, 'Script', 'alert', '[{"props":null,"field":"WarningType","name":"warningType","type":"radio","title":"warningType","value":"all","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"success","value":"success","disabled":false},{"label":"failure","value":"failure","disabled":false},{"label":"all","value":"all","disabled":false}]},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"the custom parameters passed when calling scripts","size":"small"},"field":"userParams","name":"$t(''userParams'')","type":"input","title":"$t(''userParams'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"the absolute script path under alert-server, and make sure access rights","size":"small"},"field":"path","name":"$t(''scriptPath'')","type":"input","title":"$t(''scriptPath'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"type","name":"$t(''scriptType'')","type":"radio","title":"$t(''scriptType'')","value":"SHELL","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"SHELL","value":"SHELL","disabled":false}]}]', '2023-11-07 17:04:34.922', '2023-11-07 17:04:34.922');
+INSERT INTO public.t_ds_plugin_define VALUES (2, 'WeChat', 'alert', '[{"props":null,"field":"WarningType","name":"warningType","type":"radio","title":"warningType","value":"all","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"success","value":"success","disabled":false},{"label":"failure","value":"failure","disabled":false},{"label":"all","value":"all","disabled":false}]},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"please input corp id","size":"small"},"field":"corpId","name":"$t(''corpId'')","type":"input","title":"$t(''corpId'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"please input secret","size":"small"},"field":"secret","name":"$t(''secret'')","type":"input","title":"$t(''secret'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"use `|` to separate userIds and `@all` to everyone","size":"small"},"field":"users","name":"$t(''users'')","type":"input","title":"$t(''users'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"please input agent id or chat id","size":"small"},"field":"agentId/chatId","name":"$t(''agentId/chatId'')","type":"input","title":"$t(''agentId/chatId'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"sendType","name":"send.type","type":"radio","title":"send.type","value":"APP/应用","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"APP/应用","value":"APP/应用","disabled":false},{"label":"GROUP CHAT/群聊","value":"GROUP CHAT/群聊","disabled":false}]},{"props":null,"field":"showType","name":"$t(''showType'')","type":"radio","title":"$t(''showType'')","value":"markdown","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"markdown","value":"markdown","disabled":false},{"label":"text","value":"text","disabled":false}]}]', '2023-11-07 17:04:35.018', '2023-11-07 17:04:35.018');
+INSERT INTO public.t_ds_plugin_define VALUES (3, 'Telegram', 'alert', '[{"props":null,"field":"WarningType","name":"warningType","type":"radio","title":"warningType","value":"all","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"success","value":"success","disabled":false},{"label":"failure","value":"failure","disabled":false},{"label":"all","value":"all","disabled":false}]},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"input WebHook Url","size":"small"},"field":"webHook","name":"$t(''webHook'')","type":"input","title":"$t(''webHook'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"input bot access token","size":"small"},"field":"botToken","name":"botToken","type":"input","title":"botToken","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"input telegram channel chat id","size":"small"},"field":"chatId","name":"chatId","type":"input","title":"chatId","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"field":"parseMode","name":"parseMode","props":{"disabled":null,"placeholder":null,"size":"small"},"type":"select","title":"parseMode","value":"Txt","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"Txt","value":"Txt","disabled":false},{"label":"Markdown","value":"Markdown","disabled":false},{"label":"MarkdownV2","value":"MarkdownV2","disabled":false},{"label":"Html","value":"Html","disabled":false}]},{"props":null,"field":"IsEnableProxy","name":"$t(''isEnableProxy'')","type":"radio","title":"$t(''isEnableProxy'')","value":"false","validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"YES","value":"true","disabled":false},{"label":"NO","value":"false","disabled":false}]},{"props":null,"field":"Proxy","name":"$t(''proxy'')","type":"input","title":"$t(''proxy'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"Port","name":"$t(''port'')","type":"input-number","title":"$t(''port'')","value":null,"validate":[{"required":false,"message":null,"type":"number","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"User","name":"$t(''user'')","type":"input","title":"$t(''user'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":"password","maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"if enable use authentication, you need input password","size":"small"},"field":"Password","name":"$t(''password'')","type":"input","title":"$t(''password'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null}]', '2023-11-07 17:04:35.097', '2023-11-07 17:04:35.097');
+INSERT INTO public.t_ds_plugin_define VALUES (4, 'Email', 'alert', '[{"props":null,"field":"WarningType","name":"warningType","type":"radio","title":"warningType","value":"all","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"success","value":"success","disabled":false},{"label":"failure","value":"failure","disabled":false},{"label":"all","value":"all","disabled":false}]},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"please input receivers","size":"small"},"field":"receivers","name":"$t(''receivers'')","type":"input","title":"$t(''receivers'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"receiverCcs","name":"$t(''receiverCcs'')","type":"input","title":"$t(''receiverCcs'')","value":null,"validate":null,"emit":null},{"props":null,"field":"serverHost","name":"mail.smtp.host","type":"input","title":"mail.smtp.host","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"serverPort","name":"mail.smtp.port","type":"input-number","title":"mail.smtp.port","value":25,"validate":[{"required":true,"message":null,"type":"number","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"sender","name":"$t(''mailSender'')","type":"input","title":"$t(''mailSender'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"enableSmtpAuth","name":"mail.smtp.auth","type":"radio","title":"mail.smtp.auth","value":"true","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"YES","value":"true","disabled":false},{"label":"NO","value":"false","disabled":false}]},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"if enable use authentication, you need input user","size":"small"},"field":"User","name":"$t(''mailUser'')","type":"input","title":"$t(''mailUser'')","value":null,"validate":null,"emit":null},{"props":{"disabled":null,"type":"password","maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"if enable use authentication, you need input password","size":"small"},"field":"Password","name":"$t(''mailPasswd'')","type":"input","title":"$t(''mailPasswd'')","value":null,"validate":null,"emit":null},{"props":null,"field":"starttlsEnable","name":"mail.smtp.starttls.enable","type":"radio","title":"mail.smtp.starttls.enable","value":"false","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"YES","value":"true","disabled":false},{"label":"NO","value":"false","disabled":false}]},{"props":null,"field":"sslEnable","name":"mail.smtp.ssl.enable","type":"radio","title":"mail.smtp.ssl.enable","value":"false","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"YES","value":"true","disabled":false},{"label":"NO","value":"false","disabled":false}]},{"props":null,"field":"smtpSslTrust","name":"mail.smtp.ssl.trust","type":"input","title":"mail.smtp.ssl.trust","value":"*","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"showType","name":"$t(''showType'')","type":"radio","title":"$t(''showType'')","value":"table","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"table","value":"table","disabled":false},{"label":"text","value":"text","disabled":false},{"label":"attachment","value":"attachment","disabled":false},{"label":"table attachment","value":"table attachment","disabled":false}]}]', '2023-11-07 17:04:35.108', '2023-11-07 17:04:35.108');
+INSERT INTO public.t_ds_plugin_define VALUES (5, 'Slack', 'alert', '[{"props":null,"field":"WarningType","name":"warningType","type":"radio","title":"warningType","value":"all","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"success","value":"success","disabled":false},{"label":"failure","value":"failure","disabled":false},{"label":"all","value":"all","disabled":false}]},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"input WebHook Url","size":"small"},"field":"webHook","name":"$t(''webhook'')","type":"input","title":"$t(''webhook'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"input the bot username","size":"small"},"field":"username","name":"$t(''Username'')","type":"input","title":"$t(''Username'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null}]', '2023-11-07 17:04:35.13', '2023-11-07 17:04:35.13');
+INSERT INTO public.t_ds_plugin_define VALUES (6, 'Feishu', 'alert', '[{"props":null,"field":"WarningType","name":"warningType","type":"radio","title":"warningType","value":"all","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"success","value":"success","disabled":false},{"label":"failure","value":"failure","disabled":false},{"label":"all","value":"all","disabled":false}]},{"props":null,"field":"WebHook","name":"$t(''webhook'')","type":"input","title":"$t(''webhook'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"IsEnableProxy","name":"$t(''isEnableProxy'')","type":"radio","title":"$t(''isEnableProxy'')","value":"true","validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"YES","value":"true","disabled":false},{"label":"NO","value":"false","disabled":false}]},{"props":null,"field":"Proxy","name":"$t(''proxy'')","type":"input","title":"$t(''proxy'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"Port","name":"$t(''port'')","type":"input-number","title":"$t(''port'')","value":null,"validate":[{"required":false,"message":null,"type":"number","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"User","name":"$t(''user'')","type":"input","title":"$t(''user'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":"password","maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"if enable use authentication, you need input password","size":"small"},"field":"Password","name":"$t(''password'')","type":"input","title":"$t(''password'')","value":null,"validate":null,"emit":null}]', '2023-11-07 17:04:35.152', '2023-11-07 17:04:35.152');
+INSERT INTO public.t_ds_plugin_define VALUES (7, 'Http', 'alert', '[{"props":null,"field":"WarningType","name":"warningType","type":"radio","title":"warningType","value":"all","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"success","value":"success","disabled":false},{"label":"failure","value":"failure","disabled":false},{"label":"all","value":"all","disabled":false}]},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"input request URL","size":"small"},"field":"url","name":"$t(''url'')","type":"input","title":"$t(''url'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"input request type POST or GET","size":"small"},"field":"requestType","name":"$t(''requestType'')","type":"input","title":"$t(''requestType'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"input request headers as JSON format","size":"small"},"field":"headerParams","name":"$t(''headerParams'')","type":"input","title":"$t(''headerParams'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"input request body as JSON format","size":"small"},"field":"bodyParams","name":"$t(''bodyParams'')","type":"input","title":"$t(''bodyParams'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"input alert msg field name","size":"small"},"field":"contentField","name":"$t(''contentField'')","type":"input","title":"$t(''contentField'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null}]', '2023-11-07 17:04:35.173', '2023-11-07 17:04:35.173');
+INSERT INTO public.t_ds_plugin_define VALUES (8, 'DingTalk', 'alert', '[{"props":null,"field":"WarningType","name":"warningType","type":"radio","title":"warningType","value":"all","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"success","value":"success","disabled":false},{"label":"failure","value":"failure","disabled":false},{"label":"all","value":"all","disabled":false}]},{"props":null,"field":"WebHook","name":"$t(''webhook'')","type":"input","title":"$t(''webhook'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"Keyword","name":"$t(''keyword'')","type":"input","title":"$t(''keyword'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"Secret","name":"$t(''secret'')","type":"input","title":"$t(''secret'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"MsgType","name":"$t(''msgType'')","type":"radio","title":"$t(''msgType'')","value":"text","validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"text","value":"text","disabled":false},{"label":"markdown","value":"markdown","disabled":false}]},{"props":null,"field":"AtMobiles","name":"$t(''atMobiles'')","type":"input","title":"$t(''atMobiles'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"AtUserIds","name":"$t(''atUserIds'')","type":"input","title":"$t(''atUserIds'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"IsAtAll","name":"$t(''isAtAll'')","type":"radio","title":"$t(''isAtAll'')","value":"false","validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"YES","value":"true","disabled":false},{"label":"NO","value":"false","disabled":false}]},{"props":null,"field":"IsEnableProxy","name":"$t(''isEnableProxy'')","type":"radio","title":"$t(''isEnableProxy'')","value":"false","validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"YES","value":"true","disabled":false},{"label":"NO","value":"false","disabled":false}]},{"props":null,"field":"Proxy","name":"$t(''proxy'')","type":"input","title":"$t(''proxy'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"Port","name":"$t(''port'')","type":"input-number","title":"$t(''port'')","value":null,"validate":[{"required":false,"message":null,"type":"number","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"User","name":"$t(''user'')","type":"input","title":"$t(''user'')","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":"password","maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"if enable use authentication, you need input password","size":"small"},"field":"Password","name":"$t(''password'')","type":"input","title":"$t(''password'')","value":null,"validate":null,"emit":null}]', '2023-11-07 17:04:35.183', '2023-11-07 17:04:35.183');
+INSERT INTO public.t_ds_plugin_define VALUES (9, 'WebexTeams', 'alert', '[{"props":null,"field":"WarningType","name":"warningType","type":"radio","title":"warningType","value":"all","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"success","value":"success","disabled":false},{"label":"failure","value":"failure","disabled":false},{"label":"all","value":"all","disabled":false}]},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"input bot access token","size":"small"},"field":"BotAccessToken","name":"botAccessToken","type":"input","title":"botAccessToken","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"input the room ID the alert message send to","size":"small"},"field":"RoomId","name":"roomId","type":"input","title":"roomId","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"input the person ID of the alert message recipient","size":"small"},"field":"ToPersonId","name":"toPersonId","type":"input","title":"toPersonId","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"input the email address of the alert message recipient","size":"small"},"field":"ToPersonEmail","name":"toPersonEmail","type":"input","title":"toPersonEmail","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":{"disabled":null,"type":null,"maxlength":null,"minlength":null,"clearable":null,"prefixIcon":null,"suffixIcon":null,"rows":null,"autosize":null,"autocomplete":null,"name":null,"readonly":null,"max":null,"min":null,"step":null,"resize":null,"autofocus":null,"form":null,"label":null,"tabindex":null,"validateEvent":null,"showPassword":null,"placeholder":"use `,`(eng commas) to separate multiple emails, to specify the person you mention in the room","size":"small"},"field":"AtSomeoneInRoom","name":"atSomeoneInRoom","type":"input","title":"atSomeoneInRoom","value":null,"validate":[{"required":false,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"Destination","name":"destination","type":"radio","title":"destination","value":"roomId","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"roomId","value":"roomId","disabled":false},{"label":"personEmail","value":"personEmail","disabled":false},{"label":"personId","value":"personId","disabled":false}]}]', '2023-11-07 17:04:35.198', '2023-11-07 17:04:35.198');
+INSERT INTO public.t_ds_plugin_define VALUES (10, 'PagerDuty', 'alert', '[{"props":null,"field":"WarningType","name":"warningType","type":"radio","title":"warningType","value":"all","validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null,"options":[{"label":"success","value":"success","disabled":false},{"label":"failure","value":"failure","disabled":false},{"label":"all","value":"all","disabled":false}]},{"props":null,"field":"IntegrationKey","name":"integrationKey","type":"input","title":"integrationKey","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null}]', '2023-11-07 17:04:35.207', '2023-11-07 17:04:35.207');
+INSERT INTO public.t_ds_plugin_define VALUES (34, 'JAVA', 'task', 'null', '2023-11-07 17:05:52.664', '2023-11-07 17:05:52.664');
+INSERT INTO public.t_ds_plugin_define VALUES (35, 'JUPYTER', 'task', 'null', '2023-11-07 17:05:52.694', '2023-11-07 17:05:52.694');
+INSERT INTO public.t_ds_plugin_define VALUES (36, 'SPARK', 'task', 'null', '2023-11-07 17:05:52.698', '2023-11-07 17:05:52.698');
+INSERT INTO public.t_ds_plugin_define VALUES (37, 'FLINK_STREAM', 'task', 'null', '2023-11-07 17:05:52.703', '2023-11-07 17:05:52.703');
+INSERT INTO public.t_ds_plugin_define VALUES (38, 'PYTHON', 'task', 'null', '2023-11-07 17:05:52.706', '2023-11-07 17:05:52.706');
+INSERT INTO public.t_ds_plugin_define VALUES (39, 'DATASYNC', 'task', '[]', '2023-11-07 17:05:52.729', '2023-11-07 17:05:52.729');
+INSERT INTO public.t_ds_plugin_define VALUES (40, 'DATA_FACTORY', 'task', '[]', '2023-11-07 17:05:52.739', '2023-11-07 17:05:52.739');
+INSERT INTO public.t_ds_plugin_define VALUES (41, 'CHUNJUN', 'task', 'null', '2023-11-07 17:05:52.742', '2023-11-07 17:05:52.742');
+INSERT INTO public.t_ds_plugin_define VALUES (42, 'REMOTESHELL', 'task', '[{"props":null,"field":"name","name":"$t(''Node name'')","type":"input","title":"$t(''Node name'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"runFlag","name":"RUN_FLAG","type":"radio","title":"RUN_FLAG","value":null,"validate":null,"emit":null,"options":[{"label":"NORMAL","value":"NORMAL","disabled":false},{"label":"FORBIDDEN","value":"FORBIDDEN","disabled":false}]}]', '2023-11-07 17:05:52.845', '2023-11-07 17:05:52.845');
+INSERT INTO public.t_ds_plugin_define VALUES (43, 'PIGEON', 'task', '[{"props":null,"field":"targetJobName","name":"targetJobName","type":"input","title":"targetJobName","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null}]', '2023-11-07 17:05:52.85', '2023-11-07 17:05:52.85');
+INSERT INTO public.t_ds_plugin_define VALUES (44, 'SHELL', 'task', '[{"props":null,"field":"name","name":"$t(''Node name'')","type":"input","title":"$t(''Node name'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"runFlag","name":"RUN_FLAG","type":"radio","title":"RUN_FLAG","value":null,"validate":null,"emit":null,"options":[{"label":"NORMAL","value":"NORMAL","disabled":false},{"label":"FORBIDDEN","value":"FORBIDDEN","disabled":false}]}]', '2023-11-07 17:05:52.855', '2023-11-07 17:05:52.855');
+INSERT INTO public.t_ds_plugin_define VALUES (45, 'PROCEDURE', 'task', 'null', '2023-11-07 17:05:52.858', '2023-11-07 17:05:52.858');
+INSERT INTO public.t_ds_plugin_define VALUES (46, 'SQOOP', 'task', 'null', '2023-11-07 17:05:52.86', '2023-11-07 17:05:52.86');
+INSERT INTO public.t_ds_plugin_define VALUES (47, 'MR', 'task', 'null', '2023-11-07 17:05:52.864', '2023-11-07 17:05:52.864');
+INSERT INTO public.t_ds_plugin_define VALUES (48, 'PYTORCH', 'task', '[]', '2023-11-07 17:05:52.867', '2023-11-07 17:05:52.867');
+INSERT INTO public.t_ds_plugin_define VALUES (49, 'K8S', 'task', 'null', '2023-11-07 17:05:52.871', '2023-11-07 17:05:52.871');
+INSERT INTO public.t_ds_plugin_define VALUES (50, 'SAGEMAKER', 'task', '[]', '2023-11-07 17:05:52.876', '2023-11-07 17:05:52.876');
+INSERT INTO public.t_ds_plugin_define VALUES (51, 'SEATUNNEL', 'task', 'null', '2023-11-07 17:05:52.878', '2023-11-07 17:05:52.878');
+INSERT INTO public.t_ds_plugin_define VALUES (52, 'HTTP', 'task', 'null', '2023-11-07 17:05:52.881', '2023-11-07 17:05:52.881');
+INSERT INTO public.t_ds_plugin_define VALUES (53, 'EMR', 'task', '[]', '2023-11-07 17:05:52.883', '2023-11-07 17:05:52.883');
+INSERT INTO public.t_ds_plugin_define VALUES (54, 'DMS', 'task', '[]', '2023-11-07 17:05:52.885', '2023-11-07 17:05:52.885');
+INSERT INTO public.t_ds_plugin_define VALUES (55, 'DATA_QUALITY', 'task', 'null', '2023-11-07 17:05:52.888', '2023-11-07 17:05:52.888');
+INSERT INTO public.t_ds_plugin_define VALUES (56, 'KUBEFLOW', 'task', '[]', '2023-11-07 17:05:52.89', '2023-11-07 17:05:52.89');
+INSERT INTO public.t_ds_plugin_define VALUES (57, 'SQL', 'task', 'null', '2023-11-07 17:05:52.893', '2023-11-07 17:05:52.893');
+INSERT INTO public.t_ds_plugin_define VALUES (58, 'DVC', 'task', '[{"props":null,"field":"name","name":"$t(''Node name'')","type":"input","title":"$t(''Node name'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"runFlag","name":"RUN_FLAG","type":"radio","title":"RUN_FLAG","value":null,"validate":null,"emit":null,"options":[{"label":"NORMAL","value":"NORMAL","disabled":false},{"label":"FORBIDDEN","value":"FORBIDDEN","disabled":false}]}]', '2023-11-07 17:05:52.896', '2023-11-07 17:05:52.896');
+INSERT INTO public.t_ds_plugin_define VALUES (59, 'DATAX', 'task', 'null', '2023-11-07 17:05:52.899', '2023-11-07 17:05:52.899');
+INSERT INTO public.t_ds_plugin_define VALUES (60, 'ZEPPELIN', 'task', 'null', '2023-11-07 17:05:52.903', '2023-11-07 17:05:52.903');
+INSERT INTO public.t_ds_plugin_define VALUES (61, 'DINKY', 'task', '[]', '2023-11-07 17:05:52.913', '2023-11-07 17:05:52.913');
+INSERT INTO public.t_ds_plugin_define VALUES (62, 'MLFLOW', 'task', '[{"props":null,"field":"name","name":"$t(''Node name'')","type":"input","title":"$t(''Node name'')","value":null,"validate":[{"required":true,"message":null,"type":"string","trigger":"blur","min":null,"max":null}],"emit":null},{"props":null,"field":"runFlag","name":"RUN_FLAG","type":"radio","title":"RUN_FLAG","value":null,"validate":null,"emit":null,"options":[{"label":"NORMAL","value":"NORMAL","disabled":false},{"label":"FORBIDDEN","value":"FORBIDDEN","disabled":false}]}]', '2023-11-07 17:05:52.918', '2023-11-07 17:05:52.918');
+INSERT INTO public.t_ds_plugin_define VALUES (63, 'OPENMLDB', 'task', 'null', '2023-11-07 17:05:52.921', '2023-11-07 17:05:52.921');
+INSERT INTO public.t_ds_plugin_define VALUES (64, 'LINKIS', 'task', 'null', '2023-11-07 17:05:52.923', '2023-11-07 17:05:52.923');
+INSERT INTO public.t_ds_plugin_define VALUES (65, 'FLINK', 'task', 'null', '2023-11-07 17:05:52.926', '2023-11-07 17:05:52.926');
+INSERT INTO public.t_ds_plugin_define VALUES (66, 'HIVECLI', 'task', 'null', '2023-11-07 17:05:52.929', '2023-11-07 17:05:52.929');
 
 
 --
@@ -2725,6 +3049,31 @@ INSERT INTO public.t_ds_plugin_define VALUES (30, 'BLOCKING', 'task', 'null', '2
 -- Data for Name: t_ds_project; Type: TABLE DATA; Schema: public; Owner: root
 --
 
+INSERT INTO public.t_ds_project VALUES (1, 'test', 11572261263264, '', 1, 1, '2023-11-13 09:24:51.112', '2023-11-13 09:24:51.112');
+INSERT INTO public.t_ds_project VALUES (2, 'test1', 11572266441760, '', 1, 1, '2023-11-13 09:25:31.576', '2023-11-13 09:25:31.576');
+INSERT INTO public.t_ds_project VALUES (3, 'ssss', 11572498688544, 'sss', 1, 1, '2023-11-13 09:55:46.005', '2023-11-13 09:55:46.005');
+INSERT INTO public.t_ds_project VALUES (4, 'sadasd', 11573872077856, 'aaaa', 1, 1, '2023-11-13 12:54:35.608', '2023-11-13 12:54:35.608');
+INSERT INTO public.t_ds_project VALUES (5, 'ssssasdfasdf', 11573985504288, 'adsfasdf', 1, 1, '2023-11-13 13:09:21.752', '2023-11-13 13:09:21.752');
+INSERT INTO public.t_ds_project VALUES (6, 'asdf', 11574585717536, '', 1, 1, '2023-11-13 14:27:30.918', '2023-11-13 14:27:30.918');
+INSERT INTO public.t_ds_project VALUES (7, 'asdfs', 11574586707744, '', 1, 1, '2023-11-13 14:27:38.654', '2023-11-13 14:27:38.654');
+INSERT INTO public.t_ds_project VALUES (8, '112323', 11574587347104, '', 1, 1, '2023-11-13 14:27:43.649', '2023-11-13 14:27:43.649');
+INSERT INTO public.t_ds_project VALUES (9, '123', 11574587851040, '', 1, 1, '2023-11-13 14:27:47.586', '2023-11-13 14:27:47.586');
+INSERT INTO public.t_ds_project VALUES (10, '333', 11574588372128, '', 1, 1, '2023-11-13 14:27:51.657', '2023-11-13 14:27:51.657');
+INSERT INTO public.t_ds_project VALUES (11, '4444', 11574588974624, '', 1, 1, '2023-11-13 14:27:56.364', '2023-11-13 14:27:56.364');
+
+
+--
+-- Data for Name: t_ds_project_parameter; Type: TABLE DATA; Schema: public; Owner: root
+--
+
+INSERT INTO public.t_ds_project_parameter VALUES (1, '111', '2222', 11583360942752, 11574588974624, 1, '2023-11-14 09:30:07.364', '2023-11-14 09:30:07.364');
+
+
+--
+-- Data for Name: t_ds_project_preference; Type: TABLE DATA; Schema: public; Owner: root
+--
+
+INSERT INTO public.t_ds_project_preference VALUES (1, 11583362883616, 11574588974624, '{"taskPriority":"MEDIUM","workerGroup":"default","environmentCode":null,"failRetryTimes":0,"failRetryInterval":1,"cpuQuota":-1,"memoryMax":-1,"timeoutFlag":false,"timeoutNotifyStrategy":["WARN"],"timeout":30,"warningType":"NONE","tenant":"default","alertGroups":1}', 1, 1, '2023-11-14 09:30:22.527', '2023-11-14 09:30:31.177');
 
 
 --
@@ -2920,6 +3269,24 @@ INSERT INTO public.t_ds_relation_rule_input_entry VALUES (147, 10, 10, NULL, 10,
 INSERT INTO public.t_ds_relation_rule_input_entry VALUES (148, 10, 17, NULL, 11, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
 INSERT INTO public.t_ds_relation_rule_input_entry VALUES (149, 10, 19, NULL, 12, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
 INSERT INTO public.t_ds_relation_rule_input_entry VALUES (150, 8, 29, NULL, 7, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
+INSERT INTO public.t_ds_relation_rule_input_entry VALUES (151, 1, 30, NULL, 2, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
+INSERT INTO public.t_ds_relation_rule_input_entry VALUES (152, 2, 30, NULL, 2, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
+INSERT INTO public.t_ds_relation_rule_input_entry VALUES (153, 3, 30, NULL, 2, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
+INSERT INTO public.t_ds_relation_rule_input_entry VALUES (154, 4, 30, NULL, 2, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
+INSERT INTO public.t_ds_relation_rule_input_entry VALUES (155, 5, 30, NULL, 2, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
+INSERT INTO public.t_ds_relation_rule_input_entry VALUES (156, 6, 30, NULL, 2, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
+INSERT INTO public.t_ds_relation_rule_input_entry VALUES (157, 7, 30, NULL, 2, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
+INSERT INTO public.t_ds_relation_rule_input_entry VALUES (158, 8, 30, NULL, 2, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
+INSERT INTO public.t_ds_relation_rule_input_entry VALUES (159, 9, 30, NULL, 2, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
+INSERT INTO public.t_ds_relation_rule_input_entry VALUES (160, 10, 30, NULL, 2, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
+INSERT INTO public.t_ds_relation_rule_input_entry VALUES (161, 3, 31, NULL, 6, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
+INSERT INTO public.t_ds_relation_rule_input_entry VALUES (162, 4, 31, NULL, 7, '2021-03-03 11:31:24', '2021-03-03 11:31:24');
+
+
+--
+-- Data for Name: t_ds_relation_sub_workflow; Type: TABLE DATA; Schema: public; Owner: root
+--
+
 
 
 --
@@ -2944,7 +3311,7 @@ INSERT INTO public.t_ds_relation_rule_input_entry VALUES (150, 8, 29, NULL, 7, '
 -- Data for Name: t_ds_session; Type: TABLE DATA; Schema: public; Owner: root
 --
 
-INSERT INTO public.t_ds_session VALUES ('4757b696-676f-461e-bee7-87d2d864e3e2', 1, '127.0.0.1', '2023-10-11 16:50:45.275841');
+INSERT INTO public.t_ds_session VALUES ('bad8d8c3-209e-4858-b639-26cf232300ef', 1, '125.35.75.30', '2023-11-13 09:55:27.504');
 
 
 --
@@ -2981,6 +3348,13 @@ INSERT INTO public.t_ds_session VALUES ('4757b696-676f-461e-bee7-87d2d864e3e2', 
 -- Data for Name: t_ds_tenant; Type: TABLE DATA; Schema: public; Owner: root
 --
 
+INSERT INTO public.t_ds_tenant VALUES (-1, 'default', 'default tenant', 1, '2018-03-27 15:48:50', '2018-10-24 17:40:22');
+
+
+--
+-- Data for Name: t_ds_trigger_relation; Type: TABLE DATA; Schema: public; Owner: root
+--
+
 
 
 --
@@ -2993,14 +3367,14 @@ INSERT INTO public.t_ds_session VALUES ('4757b696-676f-461e-bee7-87d2d864e3e2', 
 -- Data for Name: t_ds_user; Type: TABLE DATA; Schema: public; Owner: root
 --
 
-INSERT INTO public.t_ds_user VALUES (1, 'admin', '7ad2410b2f4c074479a8937a28a22b8f', 0, 'xxx@qq.com', '', 0, '2018-03-27 15:48:50', '2018-10-24 17:40:22', NULL, 1, NULL);
+INSERT INTO public.t_ds_user VALUES (1, 'admin', '7ad2410b2f4c074479a8937a28a22b8f', 0, 'xxx@qq.com', '', -1, '2018-03-27 15:48:50', '2018-10-24 17:40:22', NULL, 1, NULL);
 
 
 --
 -- Data for Name: t_ds_version; Type: TABLE DATA; Schema: public; Owner: root
 --
 
-INSERT INTO public.t_ds_version VALUES (1, '3.0.1');
+INSERT INTO public.t_ds_version VALUES (1, '3.2.0');
 
 
 --
@@ -3013,14 +3387,14 @@ INSERT INTO public.t_ds_version VALUES (1, '3.0.1');
 -- Name: t_ds_access_token_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
-SELECT pg_catalog.setval('public.t_ds_access_token_id_sequence', 1, true);
+SELECT pg_catalog.setval('public.t_ds_access_token_id_sequence', 1, false);
 
 
 --
 -- Name: t_ds_alert_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
-SELECT pg_catalog.setval('public.t_ds_alert_id_sequence', 1, true);
+SELECT pg_catalog.setval('public.t_ds_alert_id_sequence', 1, false);
 
 
 --
@@ -3041,7 +3415,7 @@ SELECT pg_catalog.setval('public.t_ds_alert_send_status_id_seq', 1, false);
 -- Name: t_ds_alertgroup_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
-SELECT pg_catalog.setval('public.t_ds_alertgroup_id_sequence', 1, true);
+SELECT pg_catalog.setval('public.t_ds_alertgroup_id_sequence', 33, true);
 
 
 --
@@ -3049,6 +3423,13 @@ SELECT pg_catalog.setval('public.t_ds_alertgroup_id_sequence', 1, true);
 --
 
 SELECT pg_catalog.setval('public.t_ds_audit_log_id_seq', 1, false);
+
+
+--
+-- Name: t_ds_cluster_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
+--
+
+SELECT pg_catalog.setval('public.t_ds_cluster_id_seq', 1, false);
 
 
 --
@@ -3122,6 +3503,13 @@ SELECT pg_catalog.setval('public.t_ds_environment_worker_group_relation_id_seq',
 
 
 --
+-- Name: t_ds_fav_task_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
+--
+
+SELECT pg_catalog.setval('public.t_ds_fav_task_id_seq', 1, false);
+
+
+--
 -- Name: t_ds_k8s_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
@@ -3139,7 +3527,7 @@ SELECT pg_catalog.setval('public.t_ds_k8s_namespace_id_seq', 1, false);
 -- Name: t_ds_plugin_define_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
-SELECT pg_catalog.setval('public.t_ds_plugin_define_id_seq', 30, true);
+SELECT pg_catalog.setval('public.t_ds_plugin_define_id_seq', 66, true);
 
 
 --
@@ -3181,14 +3569,28 @@ SELECT pg_catalog.setval('public.t_ds_process_task_relation_log_id_sequence', 1,
 -- Name: t_ds_project_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
-SELECT pg_catalog.setval('public.t_ds_project_id_sequence', 1, false);
+SELECT pg_catalog.setval('public.t_ds_project_id_sequence', 11, true);
+
+
+--
+-- Name: t_ds_project_parameter_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
+--
+
+SELECT pg_catalog.setval('public.t_ds_project_parameter_id_sequence', 1, true);
+
+
+--
+-- Name: t_ds_project_preference_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
+--
+
+SELECT pg_catalog.setval('public.t_ds_project_preference_id_sequence', 1, true);
 
 
 --
 -- Name: t_ds_queue_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
-SELECT pg_catalog.setval('public.t_ds_queue_id_sequence', 1, true);
+SELECT pg_catalog.setval('public.t_ds_queue_id_sequence', 33, true);
 
 
 --
@@ -3238,6 +3640,13 @@ SELECT pg_catalog.setval('public.t_ds_relation_rule_execute_sql_id_seq', 1, fals
 --
 
 SELECT pg_catalog.setval('public.t_ds_relation_rule_input_entry_id_seq', 1, false);
+
+
+--
+-- Name: t_ds_relation_sub_workflow_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
+--
+
+SELECT pg_catalog.setval('public.t_ds_relation_sub_workflow_id_seq', 1, false);
 
 
 --
@@ -3304,6 +3713,13 @@ SELECT pg_catalog.setval('public.t_ds_tenant_id_sequence', 1, false);
 
 
 --
+-- Name: t_ds_trigger_relation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
+--
+
+SELECT pg_catalog.setval('public.t_ds_trigger_relation_id_seq', 1, false);
+
+
+--
 -- Name: t_ds_udfs_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
@@ -3314,14 +3730,14 @@ SELECT pg_catalog.setval('public.t_ds_udfs_id_sequence', 1, false);
 -- Name: t_ds_user_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
-SELECT pg_catalog.setval('public.t_ds_user_id_sequence', 1, true);
+SELECT pg_catalog.setval('public.t_ds_user_id_sequence', 33, true);
 
 
 --
 -- Name: t_ds_version_id_sequence; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
-SELECT pg_catalog.setval('public.t_ds_version_id_sequence', 1, true);
+SELECT pg_catalog.setval('public.t_ds_version_id_sequence', 33, true);
 
 
 --
@@ -3337,6 +3753,22 @@ SELECT pg_catalog.setval('public.t_ds_worker_group_id_sequence', 1, false);
 
 ALTER TABLE ONLY public.t_ds_alert_send_status
     ADD CONSTRAINT alert_send_status_unique UNIQUE (alert_id, alert_plugin_instance_id);
+
+
+--
+-- Name: t_ds_cluster cluster_code_unique; Type: CONSTRAINT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY public.t_ds_cluster
+    ADD CONSTRAINT cluster_code_unique UNIQUE (code);
+
+
+--
+-- Name: t_ds_cluster cluster_name_unique; Type: CONSTRAINT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY public.t_ds_cluster
+    ADD CONSTRAINT cluster_name_unique UNIQUE (name);
 
 
 --
@@ -3368,7 +3800,7 @@ ALTER TABLE ONLY public.t_ds_environment_worker_group_relation
 --
 
 ALTER TABLE ONLY public.t_ds_k8s_namespace
-    ADD CONSTRAINT k8s_namespace_unique UNIQUE (namespace, k8s);
+    ADD CONSTRAINT k8s_namespace_unique UNIQUE (namespace, cluster_code);
 
 
 --
@@ -3540,6 +3972,14 @@ ALTER TABLE ONLY public.t_ds_audit_log
 
 
 --
+-- Name: t_ds_cluster t_ds_cluster_pkey; Type: CONSTRAINT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY public.t_ds_cluster
+    ADD CONSTRAINT t_ds_cluster_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: t_ds_command t_ds_command_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
@@ -3636,6 +4076,14 @@ ALTER TABLE ONLY public.t_ds_error_command
 
 
 --
+-- Name: t_ds_fav_task t_ds_fav_task_pkey; Type: CONSTRAINT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY public.t_ds_fav_task
+    ADD CONSTRAINT t_ds_fav_task_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: t_ds_k8s_namespace t_ds_k8s_namespace_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
@@ -3708,11 +4156,27 @@ ALTER TABLE ONLY public.t_ds_process_task_relation
 
 
 --
+-- Name: t_ds_project_parameter t_ds_project_parameter_pkey; Type: CONSTRAINT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY public.t_ds_project_parameter
+    ADD CONSTRAINT t_ds_project_parameter_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: t_ds_project t_ds_project_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY public.t_ds_project
     ADD CONSTRAINT t_ds_project_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: t_ds_project_preference t_ds_project_preference_pkey; Type: CONSTRAINT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY public.t_ds_project_preference
+    ADD CONSTRAINT t_ds_project_preference_pkey PRIMARY KEY (id);
 
 
 --
@@ -3785,6 +4249,14 @@ ALTER TABLE ONLY public.t_ds_relation_rule_execute_sql
 
 ALTER TABLE ONLY public.t_ds_relation_rule_input_entry
     ADD CONSTRAINT t_ds_relation_rule_input_entry_pk PRIMARY KEY (id);
+
+
+--
+-- Name: t_ds_relation_sub_workflow t_ds_relation_sub_workflow_pkey; Type: CONSTRAINT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY public.t_ds_relation_sub_workflow
+    ADD CONSTRAINT t_ds_relation_sub_workflow_pkey PRIMARY KEY (id);
 
 
 --
@@ -3876,6 +4348,22 @@ ALTER TABLE ONLY public.t_ds_tenant
 
 
 --
+-- Name: t_ds_trigger_relation t_ds_trigger_relation_pkey; Type: CONSTRAINT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY public.t_ds_trigger_relation
+    ADD CONSTRAINT t_ds_trigger_relation_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: t_ds_trigger_relation t_ds_trigger_relation_unique; Type: CONSTRAINT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY public.t_ds_trigger_relation
+    ADD CONSTRAINT t_ds_trigger_relation_unique UNIQUE (trigger_type, job_id, trigger_code);
+
+
+--
 -- Name: t_ds_udfs t_ds_udfs_pkey; Type: CONSTRAINT; Schema: public; Owner: root
 --
 
@@ -3889,327 +4377,3 @@ ALTER TABLE ONLY public.t_ds_udfs
 
 ALTER TABLE ONLY public.t_ds_user
     ADD CONSTRAINT t_ds_user_pkey PRIMARY KEY (id);
-
-
---
--- Name: t_ds_version t_ds_version_pkey; Type: CONSTRAINT; Schema: public; Owner: root
---
-
-ALTER TABLE ONLY public.t_ds_version
-    ADD CONSTRAINT t_ds_version_pkey PRIMARY KEY (id);
-
-
---
--- Name: t_ds_worker_group t_ds_worker_group_pkey; Type: CONSTRAINT; Schema: public; Owner: root
---
-
-ALTER TABLE ONLY public.t_ds_worker_group
-    ADD CONSTRAINT t_ds_worker_group_pkey PRIMARY KEY (id);
-
-
---
--- Name: idx_qrtz_ft_inst_job_req_rcvry; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX idx_qrtz_ft_inst_job_req_rcvry ON public.qrtz_fired_triggers USING btree (sched_name, instance_name, requests_recovery);
-
-
---
--- Name: idx_qrtz_ft_j_g; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX idx_qrtz_ft_j_g ON public.qrtz_fired_triggers USING btree (sched_name, job_name, job_group);
-
-
---
--- Name: idx_qrtz_ft_jg; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX idx_qrtz_ft_jg ON public.qrtz_fired_triggers USING btree (sched_name, job_group);
-
-
---
--- Name: idx_qrtz_ft_t_g; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX idx_qrtz_ft_t_g ON public.qrtz_fired_triggers USING btree (sched_name, trigger_name, trigger_group);
-
-
---
--- Name: idx_qrtz_ft_tg; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX idx_qrtz_ft_tg ON public.qrtz_fired_triggers USING btree (sched_name, trigger_group);
-
-
---
--- Name: idx_qrtz_ft_trig_inst_name; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX idx_qrtz_ft_trig_inst_name ON public.qrtz_fired_triggers USING btree (sched_name, instance_name);
-
-
---
--- Name: idx_qrtz_j_grp; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX idx_qrtz_j_grp ON public.qrtz_job_details USING btree (sched_name, job_group);
-
-
---
--- Name: idx_qrtz_j_req_recovery; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX idx_qrtz_j_req_recovery ON public.qrtz_job_details USING btree (sched_name, requests_recovery);
-
-
---
--- Name: idx_qrtz_t_c; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX idx_qrtz_t_c ON public.qrtz_triggers USING btree (sched_name, calendar_name);
-
-
---
--- Name: idx_qrtz_t_g; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX idx_qrtz_t_g ON public.qrtz_triggers USING btree (sched_name, trigger_group);
-
-
---
--- Name: idx_qrtz_t_j; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX idx_qrtz_t_j ON public.qrtz_triggers USING btree (sched_name, job_name, job_group);
-
-
---
--- Name: idx_qrtz_t_jg; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX idx_qrtz_t_jg ON public.qrtz_triggers USING btree (sched_name, job_group);
-
-
---
--- Name: idx_qrtz_t_n_g_state; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX idx_qrtz_t_n_g_state ON public.qrtz_triggers USING btree (sched_name, trigger_group, trigger_state);
-
-
---
--- Name: idx_qrtz_t_n_state; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX idx_qrtz_t_n_state ON public.qrtz_triggers USING btree (sched_name, trigger_name, trigger_group, trigger_state);
-
-
---
--- Name: idx_qrtz_t_next_fire_time; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX idx_qrtz_t_next_fire_time ON public.qrtz_triggers USING btree (sched_name, next_fire_time);
-
-
---
--- Name: idx_qrtz_t_nft_misfire; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX idx_qrtz_t_nft_misfire ON public.qrtz_triggers USING btree (sched_name, misfire_instr, next_fire_time);
-
-
---
--- Name: idx_qrtz_t_nft_st; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX idx_qrtz_t_nft_st ON public.qrtz_triggers USING btree (sched_name, trigger_state, next_fire_time);
-
-
---
--- Name: idx_qrtz_t_nft_st_misfire; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX idx_qrtz_t_nft_st_misfire ON public.qrtz_triggers USING btree (sched_name, misfire_instr, next_fire_time, trigger_state);
-
-
---
--- Name: idx_qrtz_t_nft_st_misfire_grp; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX idx_qrtz_t_nft_st_misfire_grp ON public.qrtz_triggers USING btree (sched_name, misfire_instr, next_fire_time, trigger_group, trigger_state);
-
-
---
--- Name: idx_qrtz_t_state; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX idx_qrtz_t_state ON public.qrtz_triggers USING btree (sched_name, trigger_state);
-
-
---
--- Name: idx_sign; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX idx_sign ON public.t_ds_alert USING btree (sign);
-
-
---
--- Name: idx_status; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX idx_status ON public.t_ds_alert USING btree (alert_status);
-
-
---
--- Name: idx_task_definition_log_code_version; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX idx_task_definition_log_code_version ON public.t_ds_task_definition_log USING btree (code, version);
-
-
---
--- Name: idx_task_definition_log_project_code; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX idx_task_definition_log_project_code ON public.t_ds_task_definition_log USING btree (project_code);
-
-
---
--- Name: idx_task_instance_code_version; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX idx_task_instance_code_version ON public.t_ds_task_instance USING btree (task_code, task_definition_version);
-
-
---
--- Name: priority_id_index; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX priority_id_index ON public.t_ds_command USING btree (process_instance_priority, id);
-
-
---
--- Name: process_definition_index; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX process_definition_index ON public.t_ds_process_definition USING btree (code, id);
-
-
---
--- Name: process_instance_index; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX process_instance_index ON public.t_ds_process_instance USING btree (process_definition_code, id);
-
-
---
--- Name: process_task_relation_idx_post_task_code_version; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX process_task_relation_idx_post_task_code_version ON public.t_ds_process_task_relation USING btree (post_task_code, post_task_version);
-
-
---
--- Name: process_task_relation_idx_pre_task_code_version; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX process_task_relation_idx_pre_task_code_version ON public.t_ds_process_task_relation USING btree (pre_task_code, pre_task_version);
-
-
---
--- Name: process_task_relation_idx_project_code_process_definition_code; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX process_task_relation_idx_project_code_process_definition_code ON public.t_ds_process_task_relation USING btree (project_code, process_definition_code);
-
-
---
--- Name: process_task_relation_log_idx_project_code_process_definition_c; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX process_task_relation_log_idx_project_code_process_definition_c ON public.t_ds_process_task_relation_log USING btree (project_code, process_definition_code);
-
-
---
--- Name: relation_project_user_id_index; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX relation_project_user_id_index ON public.t_ds_relation_project_user USING btree (user_id);
-
-
---
--- Name: start_time_index; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX start_time_index ON public.t_ds_process_instance USING btree (start_time, end_time);
-
-
---
--- Name: task_definition_index; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX task_definition_index ON public.t_ds_task_definition USING btree (project_code, id);
-
-
---
--- Name: unique_code; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE UNIQUE INDEX unique_code ON public.t_ds_project USING btree (code);
-
-
---
--- Name: unique_func_name; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE UNIQUE INDEX unique_func_name ON public.t_ds_udfs USING btree (func_name);
-
-
---
--- Name: unique_name; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE UNIQUE INDEX unique_name ON public.t_ds_project USING btree (name);
-
-
---
--- Name: unique_queue_name; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE UNIQUE INDEX unique_queue_name ON public.t_ds_queue USING btree (queue_name);
-
-
---
--- Name: unique_tenant_code; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE UNIQUE INDEX unique_tenant_code ON public.t_ds_tenant USING btree (tenant_code);
-
-
---
--- Name: user_id_index; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX user_id_index ON public.t_ds_project USING btree (user_id);
-
-
---
--- Name: version_index; Type: INDEX; Schema: public; Owner: root
---
-
-CREATE INDEX version_index ON public.t_ds_version USING btree (version);
-
-
---
--- Name: t_ds_task_instance foreign_key_instance_id; Type: FK CONSTRAINT; Schema: public; Owner: root
---
-
-ALTER TABLE ONLY public.t_ds_task_instance
-    ADD CONSTRAINT foreign_key_instance_id FOREIGN KEY (process_instance_id) REFERENCES public.t_ds_process_instance(id) ON DELETE CASCADE;
-
-
---
--- PostgreSQL database dump complete
---
-

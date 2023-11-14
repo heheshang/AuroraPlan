@@ -10,9 +10,12 @@ pub struct Model {
     pub id: i32,
     pub name: Option<String>,
     pub task_type: Option<String>,
+    pub task_execute_type: Option<i32>,
     pub task_code: i64,
     pub task_definition_version: Option<i32>,
     pub process_instance_id: Option<i32>,
+    pub process_instance_name: Option<String>,
+    pub project_code: Option<i64>,
     pub state: Option<i32>,
     pub submit_time: Option<DateTime>,
     pub start_time: Option<DateTime>,
@@ -29,6 +32,8 @@ pub struct Model {
     #[sea_orm(column_type = "Text", nullable)]
     pub task_params: Option<String>,
     pub flag: Option<i32>,
+    pub is_cache: Option<i32>,
+    pub cache_key: Option<String>,
     pub retry_interval: Option<i32>,
     pub max_retry_times: Option<i32>,
     pub task_instance_priority: Option<i32>,
@@ -37,30 +42,19 @@ pub struct Model {
     #[sea_orm(column_type = "Text", nullable)]
     pub environment_config: Option<String>,
     pub executor_id: Option<i32>,
+    pub executor_name: Option<String>,
     pub first_submit_time: Option<DateTime>,
     pub delay_time: Option<i32>,
     pub task_group_id: Option<i32>,
     #[sea_orm(column_type = "Text", nullable)]
     pub var_pool: Option<String>,
     pub dry_run: Option<i32>,
+    pub cpu_quota: i32,
+    pub memory_max: i32,
+    pub test_flag: Option<i32>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {
-    #[sea_orm(
-        belongs_to = "super::t_ds_process_instance::Entity",
-        from = "Column::ProcessInstanceId",
-        to = "super::t_ds_process_instance::Column::Id",
-        on_update = "NoAction",
-        on_delete = "Cascade"
-    )]
-    TDsProcessInstance,
-}
-
-impl Related<super::t_ds_process_instance::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::TDsProcessInstance.def()
-    }
-}
+pub enum Relation {}
 
 impl ActiveModelBehavior for ActiveModel {}

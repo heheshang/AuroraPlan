@@ -23,7 +23,6 @@ pub struct Model {
     pub warning_group_id: Option<i32>,
     pub flag: Option<i32>,
     pub timeout: Option<i32>,
-    pub tenant_id: Option<i32>,
     pub execution_type: Option<i32>,
     pub operator: Option<i32>,
     pub operate_time: Option<DateTime>,

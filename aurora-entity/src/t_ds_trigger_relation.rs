@@ -4,20 +4,15 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
-#[sea_orm(table_name = "t_ds_worker_group")]
+#[sea_orm(table_name = "t_ds_trigger_relation")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: i64,
-    #[sea_orm(unique)]
-    pub name: String,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub addr_list: Option<String>,
+    pub id: i32,
+    pub trigger_type: i32,
+    pub trigger_code: i64,
+    pub job_id: i64,
     pub create_time: Option<DateTime>,
     pub update_time: Option<DateTime>,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub description: Option<String>,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub other_params_json: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
