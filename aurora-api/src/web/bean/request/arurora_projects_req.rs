@@ -36,3 +36,19 @@ pub struct ProjectCreateParams {
     pub description: Option<String>,
     pub userName: String,
 }
+
+#[allow(non_snake_case)]
+#[derive(Deserialize, Serialize, Debug)]
+pub struct ProjectParamCreate {
+    pub projectParameterName: String,
+    pub projectParameterValue: String,
+}
+
+#[allow(non_snake_case)]
+#[derive(Deserialize, Clone, Debug)]
+pub struct ProjectParameterListParams {
+    pub pageSize: u64,
+    pub pageNo: u64,
+    pub searchVal: Option<String>,
+    pub projectCode: u64,
+}

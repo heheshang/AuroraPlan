@@ -24,6 +24,7 @@ pub mod ds_process_instance;
 pub mod ds_process_task_relation;
 pub mod ds_process_task_relation_log;
 pub mod ds_project;
+pub mod ds_project_parameter;
 pub mod ds_queue;
 pub mod ds_relation_datasource_user;
 pub mod ds_relation_namespace_user;

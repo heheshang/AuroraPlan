@@ -15,6 +15,10 @@ async fn main() -> Result<()> {
 
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
+        .with_file(true)
+        .with_line_number(true)
+        // .compact()
+        // .pretty()
         .init();
 
     // establish database connection
@@ -25,6 +29,7 @@ async fn main() -> Result<()> {
     let addr: SocketAddr = format!("{}:{}", host, port).parse()?;
 
     let connection: sea_orm::DatabaseConnection = SeaDatabase::connect(url).await?;
+
     tracing::info!("aurora-service: connection: {:?}", connection);
     let router = build_router(connection).await;
 

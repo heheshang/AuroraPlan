@@ -15,8 +15,8 @@ pub struct Model {
     pub flag: Option<i32>,
     pub create_time: Option<DateTime>,
     pub update_time: Option<DateTime>,
-    #[sea_orm(ignore)]
-    pub user_name: String,
+    // #[sea_orm(ignore)]
+    // pub user_name: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

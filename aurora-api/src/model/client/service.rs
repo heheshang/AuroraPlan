@@ -26,6 +26,7 @@ use aurora_proto::{
     ds_process_task_relation::ds_process_task_relation_service_client::DsProcessTaskRelationServiceClient,
     ds_process_task_relation_log::ds_process_task_relation_log_service_client::DsProcessTaskRelationLogServiceClient,
     ds_project::ds_project_service_client::DsProjectServiceClient,
+    ds_project_parameter::project_parameter_service_client::ProjectParameterServiceClient,
     ds_queue::ds_queue_service_client::DsQueueServiceClient,
     ds_relation_datasource_user::ds_relation_datasource_user_service_client::DsRelationDatasourceUserServiceClient,
     ds_relation_namespace_user::ds_relation_namespace_user_service_client::DsRelationNamespaceUserServiceClient,
@@ -277,6 +278,11 @@ build_client!(
     _DS_PROJECT,
     _ds_project_service_client,
     DsProjectServiceClient
+);
+build_client!(
+    _DS_PROJECT_PARAMETER,
+    _ds_project_parameter_service_client,
+    ProjectParameterServiceClient
 );
 build_client!(_DS_QUEUE, _ds_queue_service_client, DsQueueServiceClient);
 build_client!(

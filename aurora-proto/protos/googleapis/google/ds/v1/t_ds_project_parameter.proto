@@ -1,0 +1,108 @@
+
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+package ds_project_parameter;
+message ProjectParameter {
+    int32 id=1;
+    string param_name=2;
+    string param_value=3;
+    int64 code=4;
+    int64 project_code=5;
+    optional int32 user_id=6;
+    optional string create_time=7;
+    optional string update_time=8;
+}
+
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service ProjectParameterService {
+  rpc ListProjectParameters(ListProjectParametersRequest) returns (ListProjectParametersResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/ProjectParameters"
+    };
+  }
+
+  rpc GetProjectParameter(GetProjectParameterRequest) returns (ProjectParameter) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=ProjectParameters/*}"
+    };
+  }
+
+  rpc CreateProjectParameter(CreateProjectParameterRequest) returns (ProjectParameter) {
+    option (google.api.http) = {
+      post: "/v1alpha1/ProjectParameters"
+      body: "ProjectParameter"
+    };
+  }
+
+  rpc UpdateProjectParameter(UpdateProjectParameterRequest) returns (ProjectParameter) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{ProjectParameter.name=ProjectParameters/*}"
+      body: "ProjectParameter"
+    };
+  }
+
+  rpc DeleteProjectParameter(DeleteProjectParameterRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=ProjectParameters/*}"
+    };
+  }
+}
+
+// message ProjectParameter {
+// ! This should be defined elsewere
+// }
+
+message ListProjectParametersRequest {
+
+
+  // The maximum number of items to return.
+  uint64 page_size = 1;
+
+  uint64 page_num = 2;
+  optional string search_val=3 ;
+  uint64 project_code=4;
+}
+
+message ListProjectParametersResponse {
+  // The field name should match the noun "ProjectParameter" in the method name.
+  // There will be a maximum number of items returned based on the page_size field in the request.
+  repeated ProjectParameter total_list = 1;
+
+  // Token to retrieve the next page of results, or empty if there are no more results in the list.
+   uint64 current_page = 2;
+  uint64 page_size = 3;
+  uint64 start = 4;
+  uint64 total = 5;
+  uint64 total_page = 6;
+}
+
+message GetProjectParameterRequest {
+  // The field will contain name of the resource requested.
+  string name = 1;
+}
+
+message CreateProjectParameterRequest {
+  // The ProjectParameter resource to create.
+  // The field name should match the Noun in the method name.
+  ProjectParameter ProjectParameter = 3;
+}
+
+message UpdateProjectParameterRequest {
+  // The ProjectParameter resource which replaces the resource on the server.
+  ProjectParameter ProjectParameter = 1;
+
+  // The update mask applies to the resource. For the `FieldMask` definition,
+  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#fieldmask
+   google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteProjectParameterRequest {
+  // The resource name of the ProjectParameter to be deleted.
+  string name = 1;
+}

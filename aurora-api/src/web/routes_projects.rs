@@ -1,7 +1,7 @@
 use aurora_common::core_results::results::{ApiResult, Result};
 use axum::{
     extract::Json,
-    extract::Query,
+    extract::{Path, Query},
     middleware,
     response::IntoResponse,
     routing::{get, patch, post},
@@ -10,23 +10,31 @@ use axum::{
 use serde::Deserialize;
 use serde_json::json;
 use tower_cookies::Cookies;
+use tracing::info;
 
 use crate::{
     ctx::Ctx,
-    model::{self, projects::service::create},
+    model::{
+        self,
+        projects::service::{_create_project_paramter, _project_parameter_list, create},
+    },
 };
 use crate::{
     model::projects::service::list, web::bean::response::arurora_projects_res::DsProjectRes,
 };
 
-use super::bean::{
-    request::arurora_projects_req::{
-        DefineUserCountParams, ProcessStateCountParams, ProjectCreateParams, ProjectListParams,
-        TaskStateCountParams,
+use super::{
+    bean::{
+        request::arurora_projects_req::{
+            DefineUserCountParams, ProcessStateCountParams, ProjectCreateParams, ProjectListParams,
+            ProjectParamCreate, ProjectParameterListParams, TaskStateCountParams,
+        },
+        response::arurora_projects_res::{
+            DsProjectList, DsProjectParamterRes, ProjectParameterList,
+        },
     },
-    response::arurora_projects_res::DsProjectList,
+    mw::mw_auth::mw_ctx_require,
 };
-use super::mw::mw_auth::mw_ctx_require;
 
 pub fn routes() -> Router {
     let routes = Router::new()
@@ -39,11 +47,49 @@ pub fn routes() -> Router {
             "/projects/analysis/process-state-count",
             get(process_state_count),
         )
-        .route("/projects", get(project_list).post(create_project));
+        .route("/projects", get(project_list).post(create_project))
+        .route(
+            "/projects/:project_code/project-parameter",
+            post(create_project_parameter).get(project_parameter_list),
+        );
 
     Router::new()
         .nest("/aurora", routes)
         .route_layer(middleware::from_fn(mw_ctx_require))
+}
+pub async fn project_parameter_list(
+    cookies: Cookies,
+    ctx: Ctx,
+    Path(project_code): Path<u64>,
+    param: Query<ProjectParameterListParams>,
+) -> Result<ApiResult<ProjectParameterList>> {
+    let res = _project_parameter_list(
+        &param.pageNo,
+        &param.pageSize,
+        &param.searchVal,
+        &project_code,
+    )
+    .await?;
+    Ok(ApiResult::build(Some(ProjectParameterList::from(res))))
+}
+pub async fn create_project_parameter(
+    cookies: Cookies,
+    ctx: Ctx,
+    Path(project_code): Path<i64>,
+    param: Form<ProjectParamCreate>,
+) -> Result<ApiResult<DsProjectParamterRes>> {
+    info!("projectCode: {:?} ,param :{:#?} ", project_code, param);
+    let user_id = ctx.user_id;
+    let project_parameter_name = param.projectParameterName.clone();
+    let project_parameter_value = param.projectParameterValue.clone();
+    let res = _create_project_paramter(
+        user_id,
+        project_code,
+        project_parameter_name,
+        project_parameter_value,
+    )
+    .await?;
+    Ok(ApiResult::build(Some(DsProjectParamterRes::from(res))))
 }
 
 pub async fn create_project(

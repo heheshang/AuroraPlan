@@ -25,6 +25,7 @@ use proto::{
     ds_process_task_relation::ds_process_task_relation_service_server::DsProcessTaskRelationServiceServer,
     ds_process_task_relation_log::ds_process_task_relation_log_service_server::DsProcessTaskRelationLogServiceServer,
     ds_project::ds_project_service_server::DsProjectServiceServer,
+    ds_project_parameter::project_parameter_service_server::ProjectParameterServiceServer,
     ds_queue::ds_queue_service_server::DsQueueServiceServer,
     ds_relation_datasource_user::ds_relation_datasource_user_service_server::DsRelationDatasourceUserServiceServer,
     ds_relation_namespace_user::ds_relation_namespace_user_service_server::DsRelationNamespaceUserServiceServer,
@@ -137,6 +138,7 @@ impl AuroraRpcServer {
     );
 
     create_service!(ds_project, DsProjectServiceServer);
+    create_service!(ds_project_parameter, ProjectParameterServiceServer);
 
     create_service!(ds_queue, DsQueueServiceServer);
 

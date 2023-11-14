@@ -1,8 +1,14 @@
-use crate::model::client::service::_ds_project_service_client;
-use crate::web::bean::response::arurora_projects_res::DsProjectList;
+use crate::{
+    model::client::service::{_ds_project_parameter_service_client, _ds_project_service_client},
+    web::bean::response::arurora_projects_res::DsProjectList,
+};
 use aurora_common::{core_error::error::Error, core_results::results::Result};
 use aurora_proto::{
     ds_project::{DsProject, ListDsProjectsRequest},
+    ds_project_parameter::{
+        CreateProjectParameterRequest, ListProjectParametersRequest, ListProjectParametersResponse,
+        ProjectParameter,
+    },
     pb::ds_project::CreateDsProjectRequest,
 };
 use tracing::log::error;
@@ -49,4 +55,56 @@ pub async fn list(
             err
         })?
         .into())
+}
+
+pub async fn _create_project_paramter(
+    user_id: i32,
+    project_code: i64,
+    project_parameter_name: String,
+    project_parameter_value: String,
+) -> Result<ProjectParameter> {
+    let client = _ds_project_parameter_service_client().await?;
+    let request = tonic::Request::new(CreateProjectParameterRequest {
+        project_parameter: Some(ProjectParameter {
+            user_id: Some(user_id),
+            project_code,
+            param_name: project_parameter_name,
+            param_value: project_parameter_value,
+            ..Default::default()
+        }),
+    });
+    client
+        .clone()
+        .create_project_parameter(request)
+        .await
+        .map(|res| res.into_inner())
+        .map_err(|e| {
+            let err: Error = e.into();
+            error!("create_project_paramter error: {:?}", err);
+            err
+        })
+}
+pub async fn _project_parameter_list(
+    page_num: &u64,
+    page_size: &u64,
+    search_val: &Option<String>,
+    project_code: &u64,
+) -> Result<ListProjectParametersResponse> {
+    let client = _ds_project_parameter_service_client().await?;
+    let request = tonic::Request::new(ListProjectParametersRequest {
+        page_num: *page_num,
+        page_size: *page_size,
+        search_val: search_val.clone(),
+        project_code: *project_code,
+    });
+    client
+        .clone()
+        .list_project_parameters(request)
+        .await
+        .map(|res| res.into_inner())
+        .map_err(|e| {
+            let err: Error = e.into();
+            error!("list_project_parameter error: {:?}", err);
+            err
+        })
 }

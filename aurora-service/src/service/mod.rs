@@ -35,6 +35,7 @@ pub mod ds_process_instance;
 pub mod ds_process_task_relation;
 pub mod ds_process_task_relation_log;
 pub mod ds_project;
+pub mod ds_project_parameter;
 pub mod ds_queue;
 pub mod ds_relation_datasource_user;
 pub mod ds_relation_namespace_user;
@@ -110,6 +111,7 @@ pub(crate) async fn build_router(conn: DatabaseConnection) -> Router {
         .add_optional_service(Some(grpc_server.clone().ds_process_task_relation()))
         .add_optional_service(Some(grpc_server.clone().ds_process_task_relation_log()))
         .add_optional_service(Some(grpc_server.clone().ds_project()))
+        .add_optional_service(Some(grpc_server.clone().ds_project_parameter()))
         .add_optional_service(Some(grpc_server.clone().ds_queue()))
         .add_optional_service(Some(grpc_server.clone().ds_relation_datasource_user()))
         .add_optional_service(Some(grpc_server.clone().ds_relation_namespace_user()))

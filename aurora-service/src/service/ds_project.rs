@@ -1,11 +1,12 @@
 use super::dao_service::AuroraRpcServer;
 use aurora_common::core_error::error::{AuroraErrorInfo, Error};
-use entity::t_ds_project::{self, ActiveModel, Column, Entity};
-use entity::t_ds_user::Column as UserColumn;
+use entity::t_ds_project::{self, ActiveModel, Column, Entity, ProjectToUserLink};
 use proto::ds_project::ds_project_service_server::DsProjectService;
 use proto::ds_project::DsProjectListRes;
-use sea_orm::QueryOrder;
-use sea_orm::{entity::prelude::*, QuerySelect, SelectColumns, Set};
+use sea_orm::{debug_print, Set};
+use sea_orm::{
+    ActiveModelTrait, ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder,
+};
 use snowflake::SnowflakeIdBucket;
 use tracing::{error, info};
 
@@ -28,23 +29,27 @@ impl DsProjectService for AuroraRpcServer {
         );
         let pages = Entity::find()
             .order_by_desc(Column::CreateTime)
-            // .find_with_linked(ProjectToUserLink)
             .filter(t_ds_project::Column::Name.like(format!("%{}%", search_val)))
-            .join(
-                sea_orm::JoinType::LeftJoin,
-                t_ds_project::Relation::TDsProjectUser.def(),
-            )
-            .select_only()
-            .select_column_as(Column::Name, Column::Name.to_string())
-            .select_column_as(Column::Id, Column::Id.to_string())
-            .select_column_as(Column::Code, Column::Code.to_string())
-            .select_column_as(Column::Description, Column::Description.to_string())
-            .select_column_as(Column::Flag, Column::Flag.to_string())
-            .select_column_as(Column::CreateTime, Column::CreateTime.to_string())
-            .select_column_as(Column::UpdateTime, Column::UpdateTime.to_string())
-            .select_column_as(UserColumn::UserName, UserColumn::UserName.to_string())
+            .find_also_linked(ProjectToUserLink)
+            // .find_with_linked(ProjectToUserLink)
+            // .join(
+            //     sea_orm::JoinType::LeftJoin,
+            //     t_ds_project::Relation::TDsProjectUser.def(),
+            // )
+            // // .select_only()
+            // // .select_only()
+            // .column_as(Column::Name, Column::Name.to_string())
+            // .column_as(Column::Id, Column::Id.to_string())
+            // .column_as(Column::Code, Column::Code.to_string())
+            // .column_as(Column::Description, Column::Description.to_string())
+            // .column(Column::Flag)
+            // .column_as(Column::UserId, Column::UserId.to_string())
+            // .column_as(Column::CreateTime, Column::CreateTime.to_string())
+            // .column_as(Column::UpdateTime, Column::UpdateTime.to_string())
+            // .select_column(UserColumn::UserName)
             .paginate(conn, page_size);
-        info!("query sql:{:#?}", pages);
+        // info!("query sql:{:#?}", pages);
+        debug_print!("query sql:{:#?}", pages);
         let page_num = match page_num {
             0 => 0,
             _ => page_num - 1,
@@ -73,16 +78,20 @@ impl DsProjectService for AuroraRpcServer {
             page_size,
             total_list: items
                 .into_iter()
-                .map(|v| DsProjectListRes {
-                    id: v.id,
-                    name: v.name,
-                    code: v.code,
-                    description: v.description,
-                    flag: v.flag,
-                    create_time: Some(v.create_time.unwrap().to_string()),
-                    update_time: Some(v.update_time.unwrap().to_string()),
-                    user_name: v.user_name,
-                    ..Default::default()
+                .map(|(v, u)| {
+                    info!("v: {:#?} ", v);
+                    info!("u: {:#?} ", u);
+                    DsProjectListRes {
+                        id: v.id,
+                        name: v.name,
+                        code: v.code,
+                        user_id: v.user_id,
+                        description: v.description,
+                        flag: v.flag,
+                        create_time: Some(v.create_time.unwrap().to_string()),
+                        update_time: Some(v.update_time.unwrap().to_string()),
+                        user_name: u.unwrap().user_name.unwrap(),
+                    }
                 })
                 .collect(),
             current_page: current_page + 1,
@@ -149,6 +158,9 @@ mod tests {
     use super::*;
     use entity::t_ds_project::Entity;
     use entity::t_ds_project::ProjectToUserLink;
+    use sea_orm::Iden;
+    use sea_orm::QuerySelect;
+    use sea_orm::RelationTrait;
     use sea_orm::{QueryTrait, SelectColumns};
     #[test]
     fn test_link_sql() {

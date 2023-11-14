@@ -28,7 +28,8 @@ use crate::{
     t_ds_process_instance::Model as DsProcessInstanceModel,
     t_ds_process_task_relation::Model as DsProcessTaskRelationModel,
     t_ds_process_task_relation_log::Model as DsProcessTaskRelationLogModel,
-    t_ds_project::Model as DsProjectModel, t_ds_queue::Model as DsQueueModel,
+    t_ds_project::Model as DsProjectModel,
+    t_ds_project_parameter::Model as DsProjectParameterModel, t_ds_queue::Model as DsQueueModel,
     t_ds_relation_datasource_user::Model as DsRelationDatasourceUserModel,
     t_ds_relation_namespace_user::Model as DsRelationNamespaceUserModel,
     t_ds_relation_process_instance::Model as DsRelationProcessInstanceModel,
@@ -61,7 +62,8 @@ use proto::{
     ds_process_definition_log::DsProcessDefinitionLog, ds_process_instance::DsProcessInstance,
     ds_process_task_relation::DsProcessTaskRelation,
     ds_process_task_relation_log::DsProcessTaskRelationLog, ds_project::DsProject,
-    ds_queue::DsQueue, ds_relation_datasource_user::DsRelationDatasourceUser,
+    ds_project_parameter::ProjectParameter, ds_queue::DsQueue,
+    ds_relation_datasource_user::DsRelationDatasourceUser,
     ds_relation_namespace_user::DsRelationNamespaceUser,
     ds_relation_process_instance::DsRelationProcessInstance,
     ds_relation_project_user::DsRelationProjectUser,
@@ -89,7 +91,7 @@ macro_rules! impl_from {
         }
     };
 }
-
+impl_from!(DsProjectParameterModel, ProjectParameter);
 impl_from!(DsAccessTokenModel, DsAccessToken);
 impl_from!(DsAlertModel, DsAlert);
 impl_from!(DsAlertPluginInstanceModel, DsAlertPluginInstance);
