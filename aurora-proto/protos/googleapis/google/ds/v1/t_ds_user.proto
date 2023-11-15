@@ -20,7 +20,7 @@ message DsUser{
     int32 id=1;
     optional string user_name=2;
     optional string user_password=3;
-    optional int32 user_type=4;
+    optional UserType user_type=4;
     optional string email=5;
     optional string phone=6;
     optional int32 tenant_id=7;
@@ -33,6 +33,10 @@ message DsUser{
     optional Flag state = 11;
     optional string time_zone = 12;
 
+}
+enum UserType{
+    ADMIN_USER = 0;
+    GENERAL_USER=1;
 }
 
 enum Flag {

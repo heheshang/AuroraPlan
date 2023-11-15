@@ -124,6 +124,7 @@ fn main() {
             "ds_udfs.DsUdfs",
             "ds_user.DsUser",
             "ds_user.Flag",
+            "ds_user.UserType",
             "ds_version.DsVersion",
             "ds_worker_group.DsWorkerGroup",
             "qrtz_blob_triggers.QrtzBlobTrigger",

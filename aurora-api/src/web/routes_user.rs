@@ -2,7 +2,7 @@ use std::{collections::HashMap, net::SocketAddr};
 
 use crate::{
     ctx::Ctx, cypt::security::get_authenticator, log, model, web,
-    web::bean::request::ds_user_req::UserLoginInfoReq,
+    web::bean::request::user::UserLoginInfoReq,
 };
 use aurora_common::{
     core_error::error::Error,
@@ -18,7 +18,7 @@ use tower_cookies::Cookies;
 use tracing::error;
 
 use super::{
-    bean::{request::ds_user_req::UserInfoReq, response::ds_user_res::UserInfoRes},
+    bean::{request::user::UserInfoReq, response::user::UserInfoRes},
     mw::mw_auth::mw_ctx_require,
 };
 

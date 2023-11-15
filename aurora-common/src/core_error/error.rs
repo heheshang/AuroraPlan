@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 
 use axum::{
     http::Extensions,
@@ -438,10 +438,21 @@ impl From<tonic::Status> for Error {
         }
         let code = value.code();
         if code == tonic::Code::Unknown {
-            let metadata = value.metadata();
-            let error_code = metadata.get("error_code").unwrap().to_str().unwrap();
-            let cn_msg = metadata.get("cn_msg").unwrap().to_str().unwrap();
-            let en_msg = metadata.get("en_msg").unwrap().to_str().unwrap();
+            let message = value.message().split('~');
+            let mut map = HashMap::new();
+            for m in message {
+                let kv = m.split(':').collect::<Vec<&str>>();
+                if kv.len() == 2 {
+                    map.insert(kv[0].to_string(), kv[1].to_string());
+                }
+            }
+
+            let error_code = String::from("50000");
+            let cn_msg = String::from("未知错误");
+            let en_msg = String::from("unknown error");
+            let error_code = map.get("code").unwrap_or(&error_code);
+            let cn_msg = map.get("cn_msg").unwrap_or(&cn_msg);
+            let en_msg = map.get("en_msg").unwrap_or(&en_msg);
             let error_code: i32 = error_code.parse().unwrap();
             let error = AuroraErrorInfo {
                 code: error_code,

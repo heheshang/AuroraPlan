@@ -20,13 +20,15 @@ impl ProjectParameterService for AuroraRpcServer {
         let search_val = _req.get_ref().clone().search_val.unwrap_or_default();
         let page_size = _req.get_ref().clone().page_size;
         let page_num = _req.get_ref().clone().page_num;
+        let project_code = _req.get_ref().clone().project_code;
         info!(
-            "search_val: {},page_size: {} ,page_num:{}",
-            search_val, page_size, page_num
+            "search_val: {},page_size: {} ,page_num:{} ,project_code:{}",
+            search_val, page_size, page_num, project_code
         );
         let pages = Entity::find()
             .order_by_desc(Column::CreateTime)
             .filter(t_ds_project_parameter::Column::ParamName.like(format!("%{}%", search_val)))
+            .filter(t_ds_project_parameter::Column::ProjectCode.eq(project_code as i64))
             .paginate(conn, page_size);
         info!("query sql:{:#?}", pages);
         let page_num = match page_num {

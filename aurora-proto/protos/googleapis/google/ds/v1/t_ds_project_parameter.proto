@@ -75,7 +75,7 @@ message ListProjectParametersResponse {
   repeated ProjectParameter total_list = 1;
 
   // Token to retrieve the next page of results, or empty if there are no more results in the list.
-   uint64 current_page = 2;
+  uint64 current_page = 2;
   uint64 page_size = 3;
   uint64 start = 4;
   uint64 total = 5;
@@ -99,7 +99,7 @@ message UpdateProjectParameterRequest {
 
   // The update mask applies to the resource. For the `FieldMask` definition,
   // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#fieldmask
-   google.protobuf.FieldMask update_mask = 2;
+  google.protobuf.FieldMask update_mask = 2;
 }
 
 message DeleteProjectParameterRequest {

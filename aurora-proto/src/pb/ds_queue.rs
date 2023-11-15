@@ -17,43 +17,60 @@ pub struct DsQueue {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ListDsQueuesRequest {
-    /// The maximum number of items to return.
-    #[prost(int32, tag = "1")]
-    pub page_size: i32,
-    #[prost(int32, tag = "2")]
-    pub page_num: i32,
+    #[prost(uint64, tag = "1")]
+    pub page_size: u64,
+    #[prost(uint64, tag = "2")]
+    pub page_num: u64,
+    #[prost(string, optional, tag = "3")]
+    pub search_val: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ListDsQueuesResponse {
-    /// The field name should match the noun "DsQueue" in the method name.
     /// There will be a maximum number of items returned based on the page_size field in the request.
     #[prost(message, repeated, tag = "1")]
-    pub ds_queues: ::prost::alloc::vec::Vec<DsQueue>,
+    pub total_list: ::prost::alloc::vec::Vec<DsQueue>,
     /// Token to retrieve the next page of results, or empty if there are no more results in the list.
-    #[prost(string, tag = "2")]
-    pub next_page_token: ::prost::alloc::string::String,
+    #[prost(uint64, tag = "2")]
+    pub current_page: u64,
+    #[prost(uint64, tag = "3")]
+    pub page_size: u64,
+    #[prost(uint64, tag = "4")]
+    pub start: u64,
+    #[prost(uint64, tag = "5")]
+    pub total: u64,
+    #[prost(uint64, tag = "6")]
+    pub total_page: u64,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct GetDsQueueRequest {
-    /// The field will contain name of the resource requested.
     #[prost(string, tag = "1")]
-    pub name: ::prost::alloc::string::String,
+    pub queue: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub queue_name: ::prost::alloc::string::String,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct VerifyQueueRequest {
+    #[prost(string, tag = "1")]
+    pub queue: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub queue_name: ::prost::alloc::string::String,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct VerifyQueue {
+    #[prost(message, optional, tag = "1")]
+    pub ds_queue: ::core::option::Option<DsQueue>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct CreateDsQueueRequest {
-    /// The parent resource name where the DsQueue is to be created.
     #[prost(string, tag = "1")]
-    pub parent: ::prost::alloc::string::String,
-    /// The DsQueue id to use for this DsQueue.
+    pub queue: ::prost::alloc::string::String,
     #[prost(string, tag = "2")]
-    pub ds_queue_id: ::prost::alloc::string::String,
-    /// The DsQueue resource to create.
-    /// The field name should match the Noun in the method name.
-    #[prost(message, optional, tag = "3")]
-    pub ds_queue: ::core::option::Option<DsQueue>,
+    pub queue_name: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -61,17 +78,13 @@ pub struct UpdateDsQueueRequest {
     /// The DsQueue resource which replaces the resource on the server.
     #[prost(message, optional, tag = "1")]
     pub ds_queue: ::core::option::Option<DsQueue>,
-    /// The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
-    /// see <https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask>
-    #[prost(message, optional, tag = "2")]
-    pub update_mask: ::core::option::Option<::prost_types::FieldMask>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct DeleteDsQueueRequest {
     /// The resource name of the DsQueue to be deleted.
-    #[prost(string, tag = "1")]
-    pub name: ::prost::alloc::string::String,
+    #[prost(int32, tag = "1")]
+    pub id: i32,
 }
 /// Generated client implementations.
 pub mod ds_queue_service_client {
@@ -194,6 +207,24 @@ pub mod ds_queue_service_client {
                 .insert(GrpcMethod::new("ds_queue.DsQueueService", "GetDsQueue"));
             self.inner.unary(req, path, codec).await
         }
+        pub async fn verify_ds_queue(
+            &mut self,
+            request: impl tonic::IntoRequest<super::VerifyQueueRequest>,
+        ) -> std::result::Result<tonic::Response<super::VerifyQueue>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path =
+                http::uri::PathAndQuery::from_static("/ds_queue.DsQueueService/VerifyDsQueue");
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("ds_queue.DsQueueService", "VerifyDsQueue"));
+            self.inner.unary(req, path, codec).await
+        }
         pub async fn create_ds_queue(
             &mut self,
             request: impl tonic::IntoRequest<super::CreateDsQueueRequest>,
@@ -265,6 +296,10 @@ pub mod ds_queue_service_server {
             &self,
             request: tonic::Request<super::GetDsQueueRequest>,
         ) -> std::result::Result<tonic::Response<super::DsQueue>, tonic::Status>;
+        async fn verify_ds_queue(
+            &self,
+            request: tonic::Request<super::VerifyQueueRequest>,
+        ) -> std::result::Result<tonic::Response<super::VerifyQueue>, tonic::Status>;
         async fn create_ds_queue(
             &self,
             request: tonic::Request<super::CreateDsQueueRequest>,
@@ -418,6 +453,46 @@ pub mod ds_queue_service_server {
                     let fut = async move {
                         let inner = inner.0;
                         let method = GetDsQueueSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/ds_queue.DsQueueService/VerifyDsQueue" => {
+                    #[allow(non_camel_case_types)]
+                    struct VerifyDsQueueSvc<T: DsQueueService>(pub Arc<T>);
+                    impl<T: DsQueueService> tonic::server::UnaryService<super::VerifyQueueRequest>
+                        for VerifyDsQueueSvc<T>
+                    {
+                        type Response = super::VerifyQueue;
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::VerifyQueueRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move { (*inner).verify_ds_queue(request).await };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let inner = inner.0;
+                        let method = VerifyDsQueueSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(

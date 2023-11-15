@@ -14,7 +14,7 @@ pub struct DsUser {
     pub user_name: ::core::option::Option<::prost::alloc::string::String>,
     #[prost(string, optional, tag = "3")]
     pub user_password: ::core::option::Option<::prost::alloc::string::String>,
-    #[prost(int32, optional, tag = "4")]
+    #[prost(enumeration = "UserType", optional, tag = "4")]
     pub user_type: ::core::option::Option<i32>,
     #[prost(string, optional, tag = "5")]
     pub email: ::core::option::Option<::prost::alloc::string::String>,
@@ -116,6 +116,34 @@ pub struct DeleteDsUserRequest {
     /// The resource name of the DsUser to be deleted.
     #[prost(string, tag = "1")]
     pub name: ::prost::alloc::string::String,
+}
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum UserType {
+    AdminUser = 0,
+    GeneralUser = 1,
+}
+impl UserType {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            UserType::AdminUser => "ADMIN_USER",
+            UserType::GeneralUser => "GENERAL_USER",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "ADMIN_USER" => Some(Self::AdminUser),
+            "GENERAL_USER" => Some(Self::GeneralUser),
+            _ => None,
+        }
+    }
 }
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]

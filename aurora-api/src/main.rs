@@ -1,23 +1,13 @@
 mod ctx;
-pub mod cypt;
+mod cypt;
 mod log;
-pub mod model;
+mod model;
 mod utils;
 mod web;
-
-use crate::web::mw::{
-    mw_auth::mw_ctx_resolve, mw_req_map::log_path_params, mw_res_map::mw_response_map,
-};
 use anyhow::Result;
 use aurora_config::api_config::Settings;
-
-use axum::{middleware, Router};
 use std::{env, net::SocketAddr};
-use tower_cookies::CookieManagerLayer;
 use tracing::{info, Level};
-use web::routes_projects;
-use web::routes_resources;
-use web::routes_user;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -26,6 +16,7 @@ async fn main() -> Result<()> {
     let port = settings.server.port;
 
     let addr: SocketAddr = format!("{}:{}", host, port).parse()?;
+
     env::set_var("RUST_LOG", "info");
     env::set_var("RUST_BACKTRACE", "1");
     tracing_subscriber::fmt()
@@ -39,29 +30,13 @@ async fn main() -> Result<()> {
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
 
-    info!("log init success!");
-    info!("{:<12}->{}", "listen", addr);
-
-    let route_all = Router::new().nest("/api",
-        Router::new()
-        // .merge(using_serve_dir())
-        .merge(routes_user::routes())
-        .merge(routes_projects::routes())
-        .merge(routes_resources::routes())
-        // .route("/aurora/ui/home", get(hello))
-        .layer(middleware::map_request(log_path_params))
-        .layer(middleware::map_response(mw_response_map))
-        .layer(middleware::from_fn(mw_ctx_resolve))
-        .layer(CookieManagerLayer::new())
-)
-        // .fallback(get_service(StaticFiles::new("./static/")))
-        // .merge(using_serve_dir())
-        ;
-
+    let route_all = web::route_all().await;
     axum::Server::bind(&addr)
         .serve(route_all.into_make_service_with_connect_info::<SocketAddr>())
         .await?;
 
+    info!("log init success!");
+    info!("{:<12}->{}", "listen", addr);
     Ok(())
 }
 

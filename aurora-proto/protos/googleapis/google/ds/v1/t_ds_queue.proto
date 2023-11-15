@@ -26,7 +26,12 @@ service DsQueueService {
     };
   }
 
-  rpc GetDsQueue(GetDsQueueRequest) returns (DsQueue) {
+  rpc GetDsQueue(GetDsQueueRequest) returns (   DsQueue) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsQueues/*}"
+    };
+  }
+  rpc VerifyDsQueue(VerifyQueueRequest) returns ( VerifyQueue) {
     option (google.api.http) = {
       get: "/v1alpha1/{name=DsQueues/*}"
     };
@@ -59,49 +64,49 @@ service DsQueueService {
 
 message ListDsQueuesRequest {
 
-
-  // The maximum number of items to return.
-  int32 page_size = 1;
-
- int32 page_num = 2;
+  uint64 page_size = 1;
+  uint64 page_num = 2;
+  optional string search_val=3 ;
 }
 
 message ListDsQueuesResponse {
-  // The field name should match the noun "DsQueue" in the method name.
   // There will be a maximum number of items returned based on the page_size field in the request.
-  repeated DsQueue DsQueues = 1;
-
+  repeated DsQueue total_list = 1;
   // Token to retrieve the next page of results, or empty if there are no more results in the list.
-  string next_page_token = 2;
+  uint64 current_page = 2;
+  uint64 page_size = 3;
+  uint64 start = 4;
+  uint64 total = 5;
+  uint64 total_page = 6;
+
 }
 
 message GetDsQueueRequest {
-  // The field will contain name of the resource requested.
-  string name = 1;
+  string queue = 1;
+  string queue_name = 2;
 }
 
+message VerifyQueueRequest {
+  string queue = 1;
+  string queue_name = 2;
+}
+message VerifyQueue {
+ optional DsQueue DsQueue = 1;
+}
 message CreateDsQueueRequest {
-  // The parent resource name where the DsQueue is to be created.
-  string parent = 1;
 
-  // The DsQueue id to use for this DsQueue.
-  string DsQueue_id = 2;
-
-  // The DsQueue resource to create.
-  // The field name should match the Noun in the method name.
-  DsQueue DsQueue = 3;
+  string queue = 1;
+  string queue_name = 2;
 }
 
 message UpdateDsQueueRequest {
   // The DsQueue resource which replaces the resource on the server.
   DsQueue DsQueue = 1;
 
-  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
-  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
-  google.protobuf.FieldMask update_mask = 2;
+  
 }
 
 message DeleteDsQueueRequest {
   // The resource name of the DsQueue to be deleted.
-  string name = 1;
+  int32 id = 1;
 }

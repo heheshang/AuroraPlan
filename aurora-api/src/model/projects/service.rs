@@ -1,6 +1,6 @@
 use crate::{
     model::client::service::{_ds_project_parameter_service_client, _ds_project_service_client},
-    web::bean::response::arurora_projects_res::DsProjectList,
+    web::bean::response::projects::DsProjectList,
 };
 use aurora_common::{core_error::error::Error, core_results::results::Result};
 use aurora_proto::{

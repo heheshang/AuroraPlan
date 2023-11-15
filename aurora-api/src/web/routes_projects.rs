@@ -19,19 +19,15 @@ use crate::{
         projects::service::{_create_project_paramter, _project_parameter_list, create},
     },
 };
-use crate::{
-    model::projects::service::list, web::bean::response::arurora_projects_res::DsProjectRes,
-};
+use crate::{model::projects::service::list, web::bean::response::projects::DsProjectRes};
 
 use super::{
     bean::{
-        request::arurora_projects_req::{
+        request::projects::{
             DefineUserCountParams, ProcessStateCountParams, ProjectCreateParams, ProjectListParams,
             ProjectParamCreate, ProjectParameterListParams, TaskStateCountParams,
         },
-        response::arurora_projects_res::{
-            DsProjectList, DsProjectParamterRes, ProjectParameterList,
-        },
+        response::projects::{DsProjectList, DsProjectParamterRes, ProjectParameterList},
     },
     mw::mw_auth::mw_ctx_require,
 };

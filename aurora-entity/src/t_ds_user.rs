@@ -21,6 +21,16 @@ pub struct Model {
     pub time_zone: Option<String>,
 }
 
+// #[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize, Deserialize)]
+// #[sea_orm(rs_type = "i32", db_type = "Integer")]
+// #[allow(non_camel_case_types)]
+// pub enum Usertype {
+//     #[sea_orm(num_value = 1)]
+//     ADMIN_USER,
+//     #[sea_orm(num_value = 2)]
+//     GENERAL_USER,
+// }
+
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {}
 
