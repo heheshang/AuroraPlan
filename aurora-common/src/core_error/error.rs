@@ -458,6 +458,7 @@ impl From<tonic::Status> for Error {
                 code: error_code,
                 cn_msg: cn_msg.to_string(),
                 en_msg: en_msg.to_string(),
+                error_data: None,
             };
             let error: Error = error.into();
             error
@@ -1899,6 +1900,7 @@ pub struct AuroraErrorInfo {
     pub en_msg: String,
     // #[cfg(feature = "cn_msg")]
     pub cn_msg: String,
+    pub error_data: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
@@ -1932,6 +1934,7 @@ impl AuroraErrorInfo {
             code,
             en_msg,
             cn_msg,
+            error_data: None,
         }
     }
 }
@@ -2010,6 +2013,7 @@ impl Default for AuroraErrorInfo {
             code: 0,
             en_msg: "success".to_string(),
             cn_msg: "成功".to_string(),
+            error_data: None,
         }
     }
 }
