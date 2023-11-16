@@ -3,7 +3,10 @@ use crate::{
     model::{session::service::_get_session, user::service::_get_user},
     web::{set_token_cookie, AUTH_TOKEN},
 };
-use aurora_common::{core_error::error::Error, core_results::results::Result};
+use aurora_common::{
+    core_error::error::{AuroraData, Error},
+    core_results::results::Result,
+};
 // use crate::web::{Error, Result};
 use async_trait::async_trait;
 use axum::{
@@ -40,7 +43,12 @@ pub async fn mw_ctx_resolve<B>(
 
     let ctx_ext_result = _ctx_resolve(&cookies).await;
 
-    if ctx_ext_result.is_err() && !matches!(ctx_ext_result, Err(Error::LoginSessionFailed)) {
+    if ctx_ext_result.is_err()
+        && !matches!(
+            ctx_ext_result,
+            Err(Error::LoginSessionFailed(AuroraData::Null))
+        )
+    {
         cookies.remove(Cookie::named(AUTH_TOKEN))
     }
 
@@ -59,7 +67,7 @@ async fn _ctx_resolve(
     let session_id = cookies
         .get(AUTH_TOKEN)
         .map(|c| c.value().to_string())
-        .ok_or(Error::LoginSessionFailed)?;
+        .ok_or(Error::LoginSessionFailed(AuroraData::Null))?;
 
     let session = _get_session(session_id).await?;
     let user = _get_user(session.user_id).await?;
@@ -77,10 +85,11 @@ async fn _ctx_resolve(
     //     .map_err(|_| CtxExtError::FailValidate)?;
 
     // -- Update Token
-    set_token_cookie(cookies, session.id.as_str()).map_err(|_| Error::LoginSessionFailed)?;
+    set_token_cookie(cookies, session.id.as_str())
+        .map_err(|_| Error::LoginSessionFailed(AuroraData::Null))?;
 
     // -- Create CtxExtResult
-    Ctx::new(user.id).map_err(|_ex| Error::LoginSessionFailed)
+    Ctx::new(user.id).map_err(|_ex| Error::LoginSessionFailed(AuroraData::Null))
 }
 
 // region:    --- Ctx Extractor
@@ -94,9 +103,9 @@ impl<S: Send + Sync> FromRequestParts<S> for Ctx {
         parts
             .extensions
             .get::<CtxExtResult>()
-            .ok_or(Error::UserNotExist)?
+            .ok_or(Error::UserNotExist(AuroraData::Null))?
             .clone()
-            .map_err(|_| Error::UserNotExist)
+            .map_err(|_| Error::UserNotExist(AuroraData::Null))
     }
 }
 // endregion: --- Ctx Extractor

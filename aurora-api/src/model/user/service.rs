@@ -1,5 +1,8 @@
 use crate::model::client::service::_ds_user_service_client;
-use aurora_common::{core_error::error::Error, core_results::results::Result};
+use aurora_common::{
+    core_error::error::{AuroraData, Error},
+    core_results::results::Result,
+};
 use aurora_proto::ds_user::{DsUser, GetDsUserByIdRequest, QueryUserByNamePasswordRequest};
 use tracing::{error, info};
 
@@ -25,7 +28,7 @@ pub async fn query_user_by_name_password(
         .map(|res| res.into_inner())
         .map_err(|e| {
             error!("query_user_by_name_password error: {:?}", e);
-            Error::UserNamePasswdError
+            Error::UserNamePasswdError(AuroraData::Null)
         })
 }
 
@@ -39,6 +42,6 @@ pub async fn _get_user(id: i32) -> Result<DsUser> {
         .map(|res| res.into_inner().ds_user.unwrap())
         .map_err(|e| {
             error!("get_user_by_id error: {:?}", e);
-            Error::UserNotExist
+            Error::UserNotExist(AuroraData::Null)
         })
 }

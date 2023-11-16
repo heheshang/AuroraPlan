@@ -66,8 +66,8 @@ use tonic::Request;
 use tonic_health::pb::{health_client::HealthClient, HealthCheckRequest};
 use tracing::{error, info, warn};
 
+use aurora_common::core_error::error::AuroraData;
 use aurora_common::{core_error::error::Error, core_results::results::Result};
-
 thread_local! {
     pub static SETTINGS:RefCell<Settings> = RefCell::new(Settings::new().unwrap());
 }
@@ -100,13 +100,13 @@ macro_rules! build_client {
             let client = match $service_type::connect(addr.unwrap()).await {
                 Ok(client) => Ok(client),
                 Err(_) => {
-                    return Err(Error::InternalServerErrorArgs);
+                    return Err(Error::InternalServerErrorArgs(AuroraData::Null));
                 }
             };
             match $contanst_name.get_or_init(|| async { client }).await {
                 Ok(client) => Ok(client.clone()),
                 Err(_) => {
-                    return Err(Error::InternalServerErrorArgs);
+                    return Err(Error::InternalServerErrorArgs(AuroraData::Null));
                 }
             }
         }

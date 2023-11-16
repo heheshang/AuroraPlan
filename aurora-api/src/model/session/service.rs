@@ -1,4 +1,7 @@
-use aurora_common::{core_error::error::Error, core_results::results::Result};
+use aurora_common::{
+    core_error::error::{AuroraData, Error},
+    core_results::results::Result,
+};
 use aurora_proto::{
     ds_session::{
         CreateDsSessionRequest, DeleteDsSessionRequest, GetDsSessionByIdRequest,
@@ -99,7 +102,7 @@ pub async fn get_ds_session_by_user_id(user_id: i32) -> Result<Vec<DsSession>> {
         .map(|res| res.into_inner().ds_sessions)
         .map_err(|e| {
             error!("get_ds_session_by_user_id error: {:?}", e);
-            Error::LoginSessionFailed
+            Error::LoginSessionFailed(AuroraData::Null)
         })
 }
 
@@ -115,6 +118,6 @@ pub async fn update_ds_session(ds_session: DsSession) -> Result<()> {
         .map(|_| ())
         .map_err(|e| {
             error!("update_ds_session error: {:?}", e);
-            Error::LoginSessionFailed
+            Error::LoginSessionFailed(AuroraData::Null)
         })
 }

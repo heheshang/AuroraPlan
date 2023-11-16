@@ -1,5 +1,5 @@
 use aurora_common::{
-    core_error::error::Error,
+    core_error::error::{AuroraData, Error},
     core_results::results::{GrpcRequest, GrpcResponse},
 };
 use entity::t_ds_access_token;
@@ -25,18 +25,16 @@ impl DsAccessTokenService for AuroraRpcServer {
             .order_by_asc(t_ds_access_token::Column::Id)
             .paginate(&self.conn, page_size);
 
-        let num_pages = paginator
-            .num_pages()
-            .await
-            .map_err(|_| Into::<tonic::Status>::into(Error::InternalServerErrorArgs))?
-            as i32;
+        let num_pages = paginator.num_pages().await.map_err(|_| {
+            Into::<tonic::Status>::into(Error::InternalServerErrorArgs(AuroraData::Null))
+        })? as i32;
         // Fetch paginated AccessToken
         let res: (Vec<t_ds_access_token::Model>, i32) = paginator
             .fetch_page(page_num - 1)
             .await
             .map(|p| (p, num_pages))
             .map_err(|_| {
-                let res: tonic::Status = Error::InternalServerErrorArgs.into();
+                let res: tonic::Status = Error::InternalServerErrorArgs(AuroraData::Null).into();
                 res
             })?;
 

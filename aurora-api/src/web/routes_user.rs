@@ -5,7 +5,7 @@ use crate::{
     web::bean::request::user::UserLoginInfoReq,
 };
 use aurora_common::{
-    core_error::error::Error,
+    core_error::error::{AuroraData, Error},
     core_results::results::{ApiResult, Result},
 };
 use axum::{
@@ -42,12 +42,12 @@ pub async fn login(
     let user_name = payload.user_name.clone();
     let user_password = payload.user_password.clone();
     if user_name.is_empty() {
-        return Err(Error::UserNamePasswdError);
+        return Err(Error::UserNamePasswdError(AuroraData::Null));
     }
     // let ip = "127.0.0.1".to_string();
     let ip = addr.ip().to_string();
     if ip.is_empty() {
-        return Err(Error::IpIsEmpty);
+        return Err(Error::IpIsEmpty(AuroraData::Null));
     }
     get_authenticator()
         .authenticate(user_name, user_password, ip)

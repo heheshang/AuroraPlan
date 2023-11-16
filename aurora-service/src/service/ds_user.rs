@@ -1,6 +1,6 @@
 use super::dao_service::AuroraRpcServer;
 use aurora_common::{
-    core_error::error::{AuroraErrorInfo, Error},
+    core_error::error::{AuroraData, AuroraErrorInfo, Error},
     core_results::results::{GrpcRequest, GrpcResponse},
 };
 use entity::t_ds_user::{self};
@@ -25,7 +25,7 @@ impl DsUserService for AuroraRpcServer {
         match db_user {
             Some(v) => Ok(tonic::Response::new(v.into())),
             None => {
-                let res: tonic::Status = Error::UserNotExist.into();
+                let res: tonic::Status = Error::UserNotExist(AuroraData::Null).into();
                 Err(res)
             }
         }
@@ -107,7 +107,7 @@ impl DsUserService for AuroraRpcServer {
         match db_user {
             Some(v) => Ok(tonic::Response::new(v.into())),
             None => Err(tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
-                Error::UserNotExist.into(),
+                Error::UserNotExist(AuroraData::Null).into(),
             ))),
         }
     }

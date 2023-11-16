@@ -1,6 +1,6 @@
 use super::dao_service::AuroraRpcServer;
 use aurora_common::{
-    core_error::error::{AuroraErrorInfo, Error},
+    core_error::error::{AuroraData, AuroraErrorInfo, Error},
     core_results::results::{GrpcRequest, GrpcResponse},
 };
 use entity::t_ds_session::{self, Model};
@@ -60,7 +60,7 @@ impl DsSessionService for AuroraRpcServer {
         match res {
             Some(v) => Ok(tonic::Response::new(v.into())),
             None => Err(tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
-                Error::LoginSessionFailed.into(),
+                Error::LoginSessionFailed(AuroraData::Null).into(),
             ))),
         }
     }
@@ -106,7 +106,7 @@ impl DsSessionService for AuroraRpcServer {
             Ok(tonic::Response::new(()))
         } else {
             Err(tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
-                Error::LoginSessionFailed.into(),
+                Error::LoginSessionFailed(AuroraData::Null).into(),
             )))
         }
     }
@@ -126,7 +126,7 @@ impl DsSessionService for AuroraRpcServer {
         match ds_session {
             Some(v) => Ok(tonic::Response::new(v.into())),
             None => Err(tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
-                Error::LoginSessionFailed.into(),
+                Error::LoginSessionFailed(AuroraData::Null).into(),
             ))),
         }
     }
@@ -144,7 +144,7 @@ impl DsSessionService for AuroraRpcServer {
             .await
             .map_err(|_| {
                 tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
-                    Error::LoginSessionFailed.into(),
+                    Error::LoginSessionFailed(AuroraData::Null).into(),
                 ))
             })?;
 

@@ -1,5 +1,5 @@
 use super::dao_service::AuroraRpcServer;
-use aurora_common::core_error::error::{AuroraErrorInfo, Error};
+use aurora_common::core_error::error::{AuroraData, AuroraErrorInfo, Error};
 use entity::t_ds_project::{self, ActiveModel, Column, Entity, ProjectToUserLink};
 use proto::ds_project::ds_project_service_server::DsProjectService;
 use proto::ds_project::DsProjectListRes;
@@ -133,7 +133,7 @@ impl DsProjectService for AuroraRpcServer {
         match res {
             Ok(v) => Ok(tonic::Response::new(v.into())),
             Err(_) => Err(tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
-                Error::CreateProjectError.into(),
+                Error::CreateProjectError(AuroraData::Null).into(),
             ))),
         }
     }

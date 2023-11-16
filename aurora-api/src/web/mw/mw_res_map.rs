@@ -32,7 +32,7 @@ pub async fn mw_response_map(
         (
             status_code,
             Json(json!({
-                  "data": "",
+                  "data":error.error_data ,
                   "failed":true,
                   "success":false,
                   "code":error.code,

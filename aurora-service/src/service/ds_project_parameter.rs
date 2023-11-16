@@ -1,5 +1,5 @@
 use super::dao_service::AuroraRpcServer;
-use aurora_common::core_error::error::{AuroraErrorInfo, Error};
+use aurora_common::core_error::error::{AuroraData, AuroraErrorInfo, Error};
 use entity::t_ds_project_parameter::{self, ActiveModel, Column, Entity};
 use proto::ds_project_parameter::project_parameter_service_server::ProjectParameterService;
 use sea_orm::{entity::prelude::*, ActiveValue::NotSet, QueryOrder, Set};
@@ -101,7 +101,7 @@ impl ProjectParameterService for AuroraRpcServer {
         match res {
             Ok(v) => Ok(tonic::Response::new(v.into())),
             Err(_) => Err(tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
-                Error::InternalServerErrorArgs.into(),
+                Error::InternalServerErrorArgs(AuroraData::Null).into(),
             ))),
         }
     }

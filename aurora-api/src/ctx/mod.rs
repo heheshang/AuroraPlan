@@ -1,7 +1,10 @@
 #![allow(unused)]
 // region:    --- Modules
 
-use aurora_common::{core_error::error::Error, core_results::results::Result};
+use aurora_common::{
+    core_error::error::{AuroraData, Error},
+    core_results::results::Result,
+};
 
 // endregion: --- Modules
 
@@ -18,7 +21,7 @@ impl Ctx {
 
     pub fn new(user_id: i32) -> Result<Self> {
         if user_id == 0 {
-            Err(Error::UserNotExist)
+            Err(Error::UserNotExist(AuroraData::Null))
         } else {
             Ok(Self { user_id })
         }
