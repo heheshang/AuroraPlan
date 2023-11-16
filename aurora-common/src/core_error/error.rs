@@ -11,7 +11,7 @@ use tracing::error;
 //dolphinscheduler/dolphinscheduler-api/src/main/java/org/apache/dolphinscheduler/api/enums/Status.java
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum Error {
-    SUCCESS(AuroraData),
+    SUCCESS(AuroraData, Option<Vec<String>>),
     InternalServerErrorArgs(AuroraData),
     RequestParamsNotValidError(AuroraData), //(10001, "request parameter {0} is not valid", "请求参数[{0}]无效"),
     TaskTimeoutParamsError(AuroraData), //(10002, "task timeout parameter is not valid", "任务超时参数无效"),
@@ -401,11 +401,15 @@ impl IntoResponse for Error {
 impl From<Error> for tonic::Status {
     fn from(value: Error) -> Self {
         match value {
-            Error::SUCCESS(_) => tonic::Status::new(tonic::Code::Ok, "success"),
+            Error::SUCCESS(_, _) => tonic::Status::new(tonic::Code::Ok, "success"),
             _ => {
                 let code = tonic::Code::Unknown;
 
                 let info: AuroraErrorInfo = value.into();
+                error!(
+                    "{:<12} -  From<Error> for tonic::Status {info:#?}",
+                    "FROM_ERROR"
+                );
                 let mut metadata = tonic::metadata::MetadataMap::new();
                 metadata.insert("error_code", format!("{}", info.code).parse().unwrap());
                 metadata.insert("cn_msg", info.cn_msg.parse().unwrap());
@@ -425,14 +429,14 @@ impl From<AuroraErrorInfo> for String {
 
 impl Default for Error {
     fn default() -> Self {
-        Self::SUCCESS(AuroraData::Null)
+        Self::SUCCESS(AuroraData::Null, None)
     }
 }
 
 impl From<tonic::Status> for Error {
     fn from(value: tonic::Status) -> Self {
         if value.code() == tonic::Code::Ok {
-            return Error::SUCCESS(AuroraData::Null);
+            return Error::SUCCESS(AuroraData::Null, None);
         }
         if value.code() == tonic::Code::Internal {
             return Error::InternalServerErrorArgs(AuroraData::Null);
@@ -476,9 +480,10 @@ impl From<tonic::Status> for Error {
 }
 impl core::fmt::Display for Error {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        error!("core::fmt::Display for Error -->{}", self);
         match self {
-            Error::SUCCESS(data) => {
-                let ss: AuroraErrorInfo = Error::SUCCESS(data.clone()).into();
+            Error::SUCCESS(data, _) => {
+                let ss: AuroraErrorInfo = Error::SUCCESS(data.clone(), None).into();
                 write!(f, "{}", ss)
             }
             Error::InternalServerErrorArgs(data) => {
@@ -2119,6 +2124,7 @@ impl From<String> for AuroraErrorInfo {
 impl std::error::Error for AuroraErrorInfo {}
 impl core::fmt::Display for AuroraErrorInfo {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        error!("AuroraErrorInfo: {:?}", self);
         write!(
             f,
             "code|{}~en_msg|{}~cn_msg|{}~error_data|{}",
@@ -2138,7 +2144,7 @@ impl From<AuroraErrorInfo> for Error {
             value.cn_msg.as_str(),
             value.error_data.clone(),
         ) {
-            (0, ..) => Error::SUCCESS(value.error_data),
+            (0, ..) => Error::SUCCESS(value.error_data, None),
             (10000, ..) => Error::InternalServerErrorArgs(value.error_data),
             (10001, ..) => Error::RequestParamsNotValidError(value.error_data),
             (10002, ..) => Error::TaskTimeoutParamsError(value.error_data),
@@ -2657,7 +2663,7 @@ impl From<AuroraErrorInfo> for Error {
 impl From<Error> for AuroraErrorInfo {
     fn from(status: Error) -> Self {
         match status {
-            Error::SUCCESS(_) => AuroraErrorInfo::new(0, "success".to_string(), "成功".to_string()),
+            Error::SUCCESS(_,_) => AuroraErrorInfo::new(0, "success".to_string(), "成功".to_string()),
             Error::InternalServerErrorArgs(data) => AuroraErrorInfo::new(
                 10000,
                 "internal server error please check the log".to_string(),
@@ -3295,12 +3301,15 @@ impl From<Error> for AuroraErrorInfo {
                 "queue value {0} already exists".to_string(),
                 "队列值[{0}]已存在".to_string(),
             ).new_with_data(data),
-            Error::QueueNameExist (data)=> AuroraErrorInfo {
-                code: 10130,
-                en_msg: "queue name {0} already exists".to_string(),
-                cn_msg: "队列名称[{0}]已存在".to_string(),
-                error_data:data,
-            },
+            Error::QueueNameExist (data)=>{
+                error!("queue name {} already exists",data);
+                AuroraErrorInfo {
+                    code: 10130,
+                    en_msg: "queue name {0} already exists".to_string(),
+                    cn_msg: "队列名称[{0}]已存在".to_string(),
+                    error_data:data,
+                }
+            }
             Error::UpdateQueueError (data)=> AuroraErrorInfo::new(
                 10131,
                 "update queue error".to_string(),
