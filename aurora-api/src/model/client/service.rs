@@ -64,7 +64,7 @@ use aurora_proto::{
 use std::cell::RefCell;
 use tonic::Request;
 use tonic_health::pb::{health_client::HealthClient, HealthCheckRequest};
-use tracing::{error, info, warn};
+use tracing::{debug, error, warn};
 
 use aurora_common::core_error::error::AuroraData;
 use aurora_common::{core_error::error::Error, core_results::results::Result};
@@ -95,7 +95,7 @@ macro_rules! build_client {
             }
 
             let addr_str = format!("http://{host}:{port}").clone();
-            info!("addr_str:{}", addr_str);
+            debug!("addr_str:{}", addr_str);
             let addr = tonic::transport::Endpoint::from_shared(addr_str);
             let client = match $service_type::connect(addr.unwrap()).await {
                 Ok(client) => Ok(client),
@@ -117,7 +117,7 @@ async fn check_client() -> core::result::Result<(), Box<dyn std::error::Error>> 
     let host = SETTINGS.with(|settings| settings.borrow().service.host.clone());
     let port = SETTINGS.with(|settings| settings.borrow().service.port);
     loop {
-        info!("host:{},port:{}", host, port);
+        debug!("host:{},port:{}", host, port);
         let conn = tonic::transport::Endpoint::new(format!("http://{}:{}", host, port))?
             .connect()
             .await?;
@@ -148,7 +148,7 @@ async fn check_client() -> core::result::Result<(), Box<dyn std::error::Error>> 
                 match status.code() {
                 tonic::Code::Unimplemented =>
                    error!("error: this server does not implement the grpc health protocol (grpc.health.v1.Health): {}", status.message()),
-                tonic::Code::DeadlineExceeded => info!("timeout: health rpc did not complete within 1 second"),
+                tonic::Code::DeadlineExceeded => error!("timeout: health rpc did not complete within 1 second"),
                 _ => error!("error: health rpc failed: {}", status.message()),
             };
                 continue;

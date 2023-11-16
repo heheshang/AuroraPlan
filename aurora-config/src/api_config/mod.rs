@@ -98,8 +98,8 @@ impl Settings {
             // .set_override("database.url", "postgres://")?
             .build()?;
 
-        tracing::info!("debug: {:?}", s.get_bool("debug"));
-        tracing::info!("database: {:?}", s.get::<String>("database.url"));
+        tracing::debug!("debug: {:?}", s.get_bool("debug"));
+        tracing::debug!("database: {:?}", s.get::<String>("database.url"));
         // You can deserialize (and thus freeze) the entire configuration as
         s.try_deserialize()
     }
