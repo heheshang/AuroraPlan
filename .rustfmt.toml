@@ -1,0 +1,22 @@
+
+# max_width：指定每行的最大宽度，默认为100个字符。
+# tab_spaces：指定缩进的空格数，默认为4个空格。
+# fn_args_layout：指定函数参数列表的布局方式，可选值为Horizontal（水平布局）和Vertical（垂直布局）。
+# chain_width：指定链式调用的最大宽度，默认为100个字符。
+# chain_split：指定链式调用的换行方式，可选值为Vertical（垂直分隔符）和Horizontal（水平分隔符）。
+# reorder_imports：指定是否对导入语句进行重新排序，默认为true。
+# reorder_modules：指定是否对模块进行重新排序，默认为true。
+# format_strings：指定是否格式化字符串字面量，默认为true。
+# format_macro_matchers：指定是否格式化宏匹配项，默认为true。
+# format_macro_bodies：指定是否格式化宏的主体，默认为true。
+# # chain_split = "Vertical"
+max_width = 120
+tab_spaces = 2
+fn_args_layout = "Horizontal"
+chain_width = 80
+chain_split = "Vertical"
+reorder_imports = true
+reorder_modules = true
+format_strings = true
+format_macro_matchers = true
+format_macro_bodies = true
