@@ -4,7 +4,7 @@ use axum::{
     extract::{Path, Query},
     middleware,
     response::IntoResponse,
-    routing::{get, patch, post, put},
+    routing::{delete, get, patch, post, put},
     Form, Router,
 };
 use serde::Deserialize;
@@ -17,8 +17,8 @@ use crate::{
     model::{
         self,
         projects::service::{
-            _create_project_paramter, _delete_project_parameter, _project_parameter_list,
-            _update_project_parameter, create,
+            self, _create_project_paramter, _delete_project, _delete_project_parameter,
+            _project_parameter_list, _update_project_parameter, create, update,
         },
     },
 };
@@ -47,7 +47,11 @@ pub fn routes() -> Router {
             "/projects/analysis/process-state-count",
             get(process_state_count),
         )
-        .route("/projects", get(project_list).post(create_project))
+        .route(
+            "/projects",
+            get(project_list).post(create_project).put(update_project),
+        )
+        .route("/projects/:project_code", delete(delete_project))
         .route(
             "/projects/:project_code/project-parameter",
             post(create_project_parameter).get(project_parameter_list),
@@ -138,6 +142,27 @@ pub async fn create_project(
     let description = param.description.clone();
     let res = create(user_id, name, description).await?;
     Ok(ApiResult::build(Some(DsProjectRes::from(res))))
+}
+pub async fn update_project(
+    cookies: Cookies,
+    ctx: Ctx,
+    param: Form<ProjectCreateParams>,
+) -> Result<ApiResult<DsProjectRes>> {
+    let user_id = ctx.user_id;
+    let name = param.projectName.clone();
+    let description = param.description.clone();
+    let res = update(user_id, name, description).await?;
+    Ok(ApiResult::build(Some(DsProjectRes::from(res))))
+}
+
+pub async fn delete_project(
+    cookies: Cookies,
+    ctx: Ctx,
+    Path(project_code): Path<i32>,
+) -> Result<ApiResult<()>> {
+    let user_id: i32 = ctx.user_id;
+    _delete_project(project_code).await?;
+    Ok(ApiResult::build(Some(())))
 }
 
 pub async fn define_user_count(

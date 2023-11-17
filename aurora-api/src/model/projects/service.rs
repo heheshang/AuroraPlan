@@ -4,7 +4,9 @@ use crate::{
 };
 use aurora_common::{core_error::error::Error, core_results::results::Result};
 use aurora_proto::{
-    ds_project::{DsProject, ListDsProjectsRequest},
+    ds_project::{
+        DeleteDsProjectRequest, DsProject, ListDsProjectsRequest, UpdateDsProjectRequest,
+    },
     ds_project_parameter::{
         CreateProjectParameterRequest, DeleteProjectParameterRequest, ListProjectParametersRequest,
         ListProjectParametersResponse, ProjectParameter, UpdateProjectParameterRequest,
@@ -31,7 +33,39 @@ pub async fn create(user_id: i32, name: String, description: Option<String>) -> 
             err
         })
 }
+pub async fn update(user_id: i32, name: String, description: Option<String>) -> Result<DsProject> {
+    let client = _ds_project_service_client().await?;
+    let request = tonic::Request::new(UpdateDsProjectRequest {
+        name,
+        user_id,
+        description,
+    });
+    client
+        .clone()
+        .update_ds_project(request)
+        .await
+        .map(|res| res.into_inner())
+        .map_err(|e| {
+            let err: Error = e.into();
+            error!("update_project error: {:?}", err);
+            err
+        })
+}
 
+pub async fn _delete_project(project_code: i32) -> Result<()> {
+    let client = _ds_project_service_client().await?;
+    let request = tonic::Request::new(DeleteDsProjectRequest { id: project_code });
+    client
+        .clone()
+        .delete_ds_project(request)
+        .await
+        .map_err(|e| {
+            let err: Error = e.into();
+            error!("update_project error: {:?}", err);
+            err
+        })?;
+    Ok(())
+}
 pub async fn list(
     page_num: &u64,
     page_size: &u64,

@@ -110,15 +110,12 @@ message CreateDsProjectRequest {
 }
 
 message UpdateDsProjectRequest {
-  // The DsProject resource which replaces the resource on the server.
-  DsProject DsProject = 1;
-
-  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
-  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
-  google.protobuf.FieldMask update_mask = 2;
+  string name = 1;
+  
+  optional string description=3 ;
+  int32 user_id=4 ;
 }
 
 message DeleteDsProjectRequest {
-  // The resource name of the DsProject to be deleted.
-  string name = 1;
+ int32 id = 1;
 }

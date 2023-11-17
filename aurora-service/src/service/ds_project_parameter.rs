@@ -12,7 +12,7 @@ impl AuroraRpcServer {
         code: i64,
         project_code: i64,
     ) -> Result<Option<Model>> {
-        let conn: &DatabaseConnection = &self.conn;
+        let conn: &DatabaseConnection = &self.db;
         let res = Entity::find()
             .filter(t_ds_project_parameter::Column::Code.eq(code))
             .filter(t_ds_project_parameter::Column::ProjectCode.eq(project_code))
@@ -37,7 +37,7 @@ impl ProjectParameterService for AuroraRpcServer {
         tonic::Status,
     > {
         info!("request: {:?}", _req);
-        let conn = &self.conn;
+        let conn = &self.db;
         let search_val = _req.get_ref().clone().search_val.unwrap_or_default();
         let page_size = _req.get_ref().clone().page_size;
         let page_num = _req.get_ref().clone().page_num;
@@ -105,7 +105,7 @@ impl ProjectParameterService for AuroraRpcServer {
         tonic::Status,
     > {
         info!("request: {:?}", _request);
-        let conn = &self.conn;
+        let conn = &self.db;
         let project_parameter = _request.get_ref().project_parameter.clone().unwrap();
         let code = aurora_common::utils::code_generate_utils::gen_code().unwrap_or_default();
         let res = ActiveModel {
@@ -136,7 +136,7 @@ impl ProjectParameterService for AuroraRpcServer {
         tonic::Status,
     > {
         info!("request: {:?}", _request);
-        let conn = &self.conn;
+        let conn = &self.db;
         let code = _request.get_ref().code;
         let project_code = _request.get_ref().project_code;
         let param_name = _request.get_ref().param_name.clone();
@@ -170,7 +170,7 @@ impl ProjectParameterService for AuroraRpcServer {
         _request: tonic::Request<proto::ds_project_parameter::DeleteProjectParameterRequest>,
     ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
         info!("request: {:?}", _request);
-        let conn = &self.conn;
+        let conn = &self.db;
         let code = _request.get_ref().code;
         let project_code = _request.get_ref().project_code;
         let res = conn

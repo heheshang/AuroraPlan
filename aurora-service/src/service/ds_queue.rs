@@ -15,7 +15,7 @@ type Result<T> = std::result::Result<T, tonic::Status>;
 
 impl AuroraRpcServer {
     async fn queue_name_count(&self, queue_name: &str) -> Result<u64> {
-        let conn = &self.conn;
+        let conn = &self.db;
         let res = Entity::find()
             .filter(Column::QueueName.eq(queue_name))
             .count(conn)
@@ -29,7 +29,7 @@ impl AuroraRpcServer {
         Ok(res)
     }
     async fn queue_value_count(&self, queue: &str) -> Result<u64> {
-        let conn = &self.conn;
+        let conn = &self.db;
         let res = Entity::find()
             .filter(Column::Queue.eq(queue))
             .count(conn)
@@ -43,7 +43,7 @@ impl AuroraRpcServer {
         Ok(res)
     }
     async fn queue_name_count_extra(&self, queue_name: &str, id: i32) -> Result<u64> {
-        let conn = &self.conn;
+        let conn = &self.db;
         let res = Entity::find()
             .filter(Column::QueueName.eq(queue_name))
             .filter(Column::Id.ne(id))
@@ -58,7 +58,7 @@ impl AuroraRpcServer {
         Ok(res)
     }
     async fn queue_value_count_extra(&self, queue: &str, id: i32) -> Result<u64> {
-        let conn = &self.conn;
+        let conn = &self.db;
         let res = Entity::find()
             .filter(Column::Queue.eq(queue))
             .filter(Column::Id.ne(id))
@@ -73,7 +73,7 @@ impl AuroraRpcServer {
         Ok(res)
     }
     async fn find_by_id(&self, id: i32) -> Result<DsQueue> {
-        let conn = &self.conn;
+        let conn = &self.db;
         let res: DsQueue = Entity::find_by_id(id)
             .one(conn)
             .await
@@ -96,7 +96,7 @@ impl DsQueueService for AuroraRpcServer {
     ) -> std::result::Result<tonic::Response<proto::ds_queue::ListDsQueuesResponse>, tonic::Status>
     {
         info!("request: {:?}", _req);
-        let conn = &self.conn;
+        let conn = &self.db;
         let search_val = _req.get_ref().clone().search_val.unwrap_or_default();
         let page_size = _req.get_ref().clone().page_size;
         let page_num = _req.get_ref().clone().page_num;
@@ -147,7 +147,7 @@ impl DsQueueService for AuroraRpcServer {
         &self,
         _req: tonic::Request<proto::ds_queue::GetDsQueueRequest>,
     ) -> std::result::Result<tonic::Response<proto::ds_queue::DsQueue>, tonic::Status> {
-        let conn = &self.conn;
+        let conn = &self.db;
         let queue = _req.get_ref().clone().queue;
         Entity::find()
             .filter(entity::t_ds_queue::Column::Queue.eq(queue))
@@ -165,7 +165,7 @@ impl DsQueueService for AuroraRpcServer {
         &self,
         _req: tonic::Request<proto::ds_queue::CreateDsQueueRequest>,
     ) -> std::result::Result<tonic::Response<proto::ds_queue::DsQueue>, tonic::Status> {
-        let conn = &self.conn;
+        let conn = &self.db;
         let queue = _req.get_ref().clone().queue;
         let queue_name = _req.get_ref().clone().queue_name;
 
@@ -199,7 +199,7 @@ impl DsQueueService for AuroraRpcServer {
         &self,
         _req: tonic::Request<proto::ds_queue::UpdateDsQueueRequest>,
     ) -> std::result::Result<tonic::Response<proto::ds_queue::DsQueue>, tonic::Status> {
-        let conn = &self.conn;
+        let conn = &self.db;
         let queue = _req.get_ref().clone().ds_queue.unwrap_or_default().queue;
         let id = _req.get_ref().clone().ds_queue.unwrap_or_default().id;
         let queue_name = _req
@@ -242,7 +242,7 @@ impl DsQueueService for AuroraRpcServer {
         &self,
         _req: tonic::Request<proto::ds_queue::DeleteDsQueueRequest>,
     ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
-        let conn = &self.conn;
+        let conn = &self.db;
         let res = Entity::delete_by_id(_req.get_ref().clone().id)
             .exec(conn)
             .await

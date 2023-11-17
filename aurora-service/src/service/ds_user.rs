@@ -14,7 +14,7 @@ use sea_orm::entity::prelude::*;
 #[tonic::async_trait]
 impl DsUserService for AuroraRpcServer {
     async fn get_ds_user(&self, req: GrpcRequest<GetDsUserRequest>) -> GrpcResponse<DsUser> {
-        let conn = &self.conn;
+        let conn = &self.db;
         let name = req.into_inner().name;
         let db_user: Option<t_ds_user::Model> = t_ds_user::Entity::find()
             .filter(t_ds_user::Column::UserName.eq(name))
@@ -32,7 +32,7 @@ impl DsUserService for AuroraRpcServer {
     }
 
     async fn update_ds_user(&self, req: GrpcRequest<UpdateDsUserRequest>) -> GrpcResponse<DsUser> {
-        let conn = &self.conn;
+        let conn = &self.db;
         if let Some(user) = req.into_inner().ds_user {
             let db_user = t_ds_user::Entity::find_by_id(user.id)
                 .one(conn)
@@ -72,7 +72,7 @@ impl DsUserService for AuroraRpcServer {
         &self,
         req: GrpcRequest<GetDsUserByIdRequest>,
     ) -> GrpcResponse<GetDsUserByIdResponse> {
-        let conn = &self.conn;
+        let conn = &self.db;
         let id = req.into_inner().id;
         let db_user: Option<t_ds_user::Model> = t_ds_user::Entity::find()
             .filter(t_ds_user::Column::Id.eq(id))
@@ -94,7 +94,7 @@ impl DsUserService for AuroraRpcServer {
         &self,
         req: tonic::Request<proto::ds_user::QueryUserByNamePasswordRequest>,
     ) -> std::result::Result<tonic::Response<proto::ds_user::DsUser>, tonic::Status> {
-        let conn = &self.conn;
+        let conn = &self.db;
         let user_name = &req.get_ref().user_name;
         let user_password = &req.get_ref().user_password;
         let db_user: Option<t_ds_user::Model> = t_ds_user::Entity::find()

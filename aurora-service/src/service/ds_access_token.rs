@@ -23,7 +23,7 @@ impl DsAccessTokenService for AuroraRpcServer {
 
         let paginator = t_ds_access_token::Entity::find()
             .order_by_asc(t_ds_access_token::Column::Id)
-            .paginate(&self.conn, page_size);
+            .paginate(&self.db, page_size);
 
         let num_pages = paginator.num_pages().await.map_err(|_| {
             Into::<tonic::Status>::into(Error::InternalServerErrorArgs(AuroraData::Null, None))

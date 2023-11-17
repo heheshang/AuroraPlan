@@ -4,6 +4,7 @@ use aurora_common::utils::code_generate_utils::gen_code;
 use entity::t_ds_project::{self, ActiveModel, Column, Entity, ProjectToUserLink};
 use proto::ds_project::ds_project_service_server::DsProjectService;
 use proto::ds_project::DsProjectListRes;
+use sea_orm::sea_query::Expr;
 use sea_orm::{debug_print, Set};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder,
@@ -19,7 +20,7 @@ impl DsProjectService for AuroraRpcServer {
         tonic::Response<proto::ds_project::ListDsProjectsResponse>,
         tonic::Status,
     > {
-        let conn = &self.conn;
+        let conn = &self.db;
         let search_val = _req.get_ref().clone().search_val.unwrap_or_default();
         let page_size = _req.get_ref().clone().page_size;
         let page_num = _req.get_ref().clone().page_num;
@@ -112,7 +113,7 @@ impl DsProjectService for AuroraRpcServer {
         &self,
         _req: tonic::Request<proto::ds_project::CreateDsProjectRequest>,
     ) -> std::result::Result<tonic::Response<proto::ds_project::DsProject>, tonic::Status> {
-        let conn = &self.conn;
+        let conn = &self.db;
         let req = _req.into_inner();
         let current_time = chrono::prelude::Local::now().naive_local();
 
@@ -142,14 +143,55 @@ impl DsProjectService for AuroraRpcServer {
         &self,
         _req: tonic::Request<proto::ds_project::UpdateDsProjectRequest>,
     ) -> std::result::Result<tonic::Response<proto::ds_project::DsProject>, tonic::Status> {
-        todo!()
+        let conn = &self.db;
+        let current_time = chrono::prelude::Local::now().naive_local();
+        Entity::update_many()
+            .col_expr(Column::UserId, Expr::value(_req.get_ref().user_id))
+            .col_expr(Column::Name, Expr::value(_req.get_ref().name.clone()))
+            .col_expr(
+                Column::Description,
+                Expr::value(_req.get_ref().description.clone()),
+            )
+            .col_expr(Column::UpdateTime, Expr::value(current_time))
+            .exec(conn)
+            .await
+            .map_err(|_| {
+                tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
+                    Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
+                ))
+            })?;
+        match Entity::find()
+            .filter(Column::Name.eq(_req.get_ref().name.clone()))
+            .filter(Column::UserId.eq(_req.get_ref().user_id))
+            .filter(Column::Description.eq(_req.get_ref().description.clone()))
+            .one(conn)
+            .await
+            .map_err(|_| {
+                tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
+                    Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
+                ))
+            })? {
+            Some(v) => Ok(tonic::Response::new(v.into())),
+            None => Err(tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
+                Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
+            ))),
+        }
     }
 
     async fn delete_ds_project(
         &self,
         _req: tonic::Request<proto::ds_project::DeleteDsProjectRequest>,
     ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
-        todo!()
+        let db = &self.db;
+        Entity::delete_by_id(_req.into_inner().id)
+            .exec(db)
+            .await
+            .map_err(|_| {
+                tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
+                    Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
+                ))
+            })?;
+        Ok(tonic::Response::new(()))
     }
 }
 

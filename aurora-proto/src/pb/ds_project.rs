@@ -91,20 +91,18 @@ pub struct CreateDsProjectRequest {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct UpdateDsProjectRequest {
-    /// The DsProject resource which replaces the resource on the server.
-    #[prost(message, optional, tag = "1")]
-    pub ds_project: ::core::option::Option<DsProject>,
-    /// The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
-    /// see <https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask>
-    #[prost(message, optional, tag = "2")]
-    pub update_mask: ::core::option::Option<::prost_types::FieldMask>,
+    #[prost(string, tag = "1")]
+    pub name: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "3")]
+    pub description: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(int32, tag = "4")]
+    pub user_id: i32,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct DeleteDsProjectRequest {
-    /// The resource name of the DsProject to be deleted.
-    #[prost(string, tag = "1")]
-    pub name: ::prost::alloc::string::String,
+    #[prost(int32, tag = "1")]
+    pub id: i32,
 }
 /// Generated client implementations.
 pub mod ds_project_service_client {

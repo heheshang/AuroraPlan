@@ -46,7 +46,7 @@ impl DsSessionService for AuroraRpcServer {
                     .unwrap_or(current_time),
             )),
         };
-        let conn = &self.conn;
+        let conn = &self.db;
         let _ = t_ds_session::Entity::insert(model.clone())
             .exec(conn)
             .await
@@ -83,7 +83,7 @@ impl DsSessionService for AuroraRpcServer {
             )),
         };
 
-        let conn = &self.conn;
+        let conn = &self.db;
         let res = t_ds_session::Entity::update(model.clone())
             .filter(t_ds_session::Column::Id.eq(id))
             .exec(conn)
@@ -96,7 +96,7 @@ impl DsSessionService for AuroraRpcServer {
         &self,
         request: tonic::Request<proto::ds_session::DeleteDsSessionRequest>,
     ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
-        let conn = &self.conn;
+        let conn = &self.db;
         let id = request.into_inner().id;
         let del_res = t_ds_session::Entity::delete_by_id(id)
             .exec(conn)
@@ -115,7 +115,7 @@ impl DsSessionService for AuroraRpcServer {
         &self,
         request: GrpcRequest<GetDsSessionByIdRequest>,
     ) -> GrpcResponse<DsSession> {
-        let conn = &self.conn;
+        let conn = &self.db;
         let id = request.into_inner().id;
         let ds_session: Option<t_ds_session::Model> = t_ds_session::Entity::find()
             .filter(t_ds_session::Column::Id.eq(id))
@@ -135,7 +135,7 @@ impl DsSessionService for AuroraRpcServer {
         &self,
         request: GrpcRequest<GetDsSessionUserIdRequest>,
     ) -> GrpcResponse<GetDsSessionUserIdResponse> {
-        let conn = &self.conn;
+        let conn = &self.db;
         let user_id = request.into_inner().user_id;
         let ds_sessions: Vec<t_ds_session::Model> = t_ds_session::Entity::find()
             .filter(t_ds_session::Column::UserId.eq(user_id))

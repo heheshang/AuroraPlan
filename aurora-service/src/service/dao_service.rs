@@ -64,7 +64,7 @@ use sea_orm::DatabaseConnection;
 
 #[derive(Default, Debug, Clone)]
 pub struct AuroraRpcServer {
-    pub conn: DatabaseConnection,
+    pub db: DatabaseConnection,
 }
 macro_rules! create_service {
     ($fn_name:ident, $service_type:ident) => {
@@ -222,6 +222,6 @@ impl AuroraRpcServer {
     create_service!(qrtz_triggers, QrtzTriggerServiceServer);
 
     pub fn new(conn: DatabaseConnection) -> Self {
-        Self { conn }
+        Self { db: conn }
     }
 }
