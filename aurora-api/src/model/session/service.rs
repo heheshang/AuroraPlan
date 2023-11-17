@@ -13,7 +13,10 @@ use tracing::{error, info};
 
 use crate::model::client::service::_ds_session_service_client;
 
-pub async fn create_ds_session(user: &DsUser, extra: &str) -> Result<DsSession> {
+pub async fn create_ds_session(
+    user: &DsUser,
+    extra: &str,
+) -> Result<DsSession> {
     let client = _ds_session_service_client().await?;
     info!("user: {:?}, extra: {}", user, extra);
     let user_id = user.id;
@@ -63,16 +66,11 @@ pub async fn delete_ds_session_by_id(session_id: String) -> Result<()> {
     let request = tonic::Request::new(DeleteDsSessionRequest {
         id: session_id.clone(),
     });
-    client
-        .clone()
-        .delete_ds_session(request)
-        .await
-        .map(|_| ())
-        .map_err(|e| {
-            let err: Error = e.into();
-            error!("delete_ds_session_by_id error: {:?}", err);
-            err
-        })
+    client.clone().delete_ds_session(request).await.map(|_| ()).map_err(|e| {
+        let err: Error = e.into();
+        error!("delete_ds_session_by_id error: {:?}", err);
+        err
+    })
 }
 
 pub async fn _get_session(session_id: String) -> Result<DsSession> {
@@ -111,13 +109,8 @@ pub async fn update_ds_session(ds_session: DsSession) -> Result<()> {
     let request = tonic::Request::new(UpdateDsSessionRequest {
         ds_session: Some(ds_session),
     });
-    client
-        .clone()
-        .update_ds_session(request)
-        .await
-        .map(|_| ())
-        .map_err(|e| {
-            error!("update_ds_session error: {:?}", e);
-            Error::LoginSessionFailed(AuroraData::Null, None)
-        })
+    client.clone().update_ds_session(request).await.map(|_| ()).map_err(|e| {
+        error!("update_ds_session error: {:?}", e);
+        Error::LoginSessionFailed(AuroraData::Null, None)
+    })
 }

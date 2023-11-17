@@ -107,7 +107,10 @@ pub mod ds_alert_send_status_service_client {
             let inner = tonic::client::Grpc::new(inner);
             Self { inner }
         }
-        pub fn with_origin(inner: T, origin: Uri) -> Self {
+        pub fn with_origin(
+            inner: T,
+            origin: Uri,
+        ) -> Self {
             let inner = tonic::client::Grpc::with_origin(inner, origin);
             Self { inner }
         }
@@ -134,13 +137,19 @@ pub mod ds_alert_send_status_service_client {
         /// This requires the server to support it otherwise it might respond with an
         /// error.
         #[must_use]
-        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
+        pub fn send_compressed(
+            mut self,
+            encoding: CompressionEncoding,
+        ) -> Self {
             self.inner = self.inner.send_compressed(encoding);
             self
         }
         /// Enable decompressing responses.
         #[must_use]
-        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
+        pub fn accept_compressed(
+            mut self,
+            encoding: CompressionEncoding,
+        ) -> Self {
             self.inner = self.inner.accept_compressed(encoding);
             self
         }
@@ -148,7 +157,10 @@ pub mod ds_alert_send_status_service_client {
         ///
         /// Default: `4MB`
         #[must_use]
-        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
+        pub fn max_decoding_message_size(
+            mut self,
+            limit: usize,
+        ) -> Self {
             self.inner = self.inner.max_decoding_message_size(limit);
             self
         }
@@ -156,7 +168,10 @@ pub mod ds_alert_send_status_service_client {
         ///
         /// Default: `usize::MAX`
         #[must_use]
-        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
+        pub fn max_encoding_message_size(
+            mut self,
+            limit: usize,
+        ) -> Self {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
@@ -320,7 +335,10 @@ pub mod ds_alert_send_status_service_server {
                 max_encoding_message_size: None,
             }
         }
-        pub fn with_interceptor<F>(inner: T, interceptor: F) -> InterceptedService<Self, F>
+        pub fn with_interceptor<F>(
+            inner: T,
+            interceptor: F,
+        ) -> InterceptedService<Self, F>
         where
             F: tonic::service::Interceptor,
         {
@@ -328,13 +346,19 @@ pub mod ds_alert_send_status_service_server {
         }
         /// Enable decompressing requests with the given encoding.
         #[must_use]
-        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
+        pub fn accept_compressed(
+            mut self,
+            encoding: CompressionEncoding,
+        ) -> Self {
             self.accept_compression_encodings.enable(encoding);
             self
         }
         /// Compress responses with the given encoding, if the client supports it.
         #[must_use]
-        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
+        pub fn send_compressed(
+            mut self,
+            encoding: CompressionEncoding,
+        ) -> Self {
             self.send_compression_encodings.enable(encoding);
             self
         }
@@ -342,7 +366,10 @@ pub mod ds_alert_send_status_service_server {
         ///
         /// Default: `4MB`
         #[must_use]
-        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
+        pub fn max_decoding_message_size(
+            mut self,
+            limit: usize,
+        ) -> Self {
             self.max_decoding_message_size = Some(limit);
             self
         }
@@ -350,7 +377,10 @@ pub mod ds_alert_send_status_service_server {
         ///
         /// Default: `usize::MAX`
         #[must_use]
-        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
+        pub fn max_encoding_message_size(
+            mut self,
+            limit: usize,
+        ) -> Self {
             self.max_encoding_message_size = Some(limit);
             self
         }
@@ -370,7 +400,10 @@ pub mod ds_alert_send_status_service_server {
         ) -> Poll<std::result::Result<(), Self::Error>> {
             Poll::Ready(Ok(()))
         }
-        fn call(&mut self, req: http::Request<B>) -> Self::Future {
+        fn call(
+            &mut self,
+            req: http::Request<B>,
+        ) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
                 "/ds_alert_send_status.DsAlertSendStatusService/ListDsAlertSendStatus" => {
@@ -612,7 +645,10 @@ pub mod ds_alert_send_status_service_server {
         }
     }
     impl<T: std::fmt::Debug> std::fmt::Debug for _Inner<T> {
-        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        fn fmt(
+            &self,
+            f: &mut std::fmt::Formatter<'_>,
+        ) -> std::fmt::Result {
             write!(f, "{:?}", self.0)
         }
     }

@@ -26,7 +26,12 @@ impl FromStr for AuthenticatorType {
 
 #[async_trait]
 pub trait Authenticator: Sync + Send {
-    async fn login(&self, username: String, password: String, extra: String) -> Result<DsUser>;
+    async fn login(
+        &self,
+        username: String,
+        password: String,
+        extra: String,
+    ) -> Result<DsUser>;
     async fn authenticate(
         &self,
         username: String,
@@ -39,7 +44,10 @@ pub trait Authenticator: Sync + Send {
         map.insert("sessionId".to_string(), session.id);
         return Ok(map);
     }
-    async fn get_auth_user(&self, session_id: String) -> Result<DsUser> {
+    async fn get_auth_user(
+        &self,
+        session_id: String,
+    ) -> Result<DsUser> {
         let sesion_res = session_service::_get_session(session_id).await?;
         user::service::_get_user(sesion_res.user_id).await
     }
@@ -52,7 +60,12 @@ pub struct LdapAuthenticator;
 
 #[async_trait]
 impl Authenticator for PasswordAuthenticator {
-    async fn login(&self, username: String, password: String, extra: String) -> Result<DsUser> {
+    async fn login(
+        &self,
+        username: String,
+        password: String,
+        extra: String,
+    ) -> Result<DsUser> {
         info!(
             "username:{},password:{},extra:{}",
             username, password, extra
@@ -63,7 +76,12 @@ impl Authenticator for PasswordAuthenticator {
 
 #[async_trait]
 impl Authenticator for LdapAuthenticator {
-    async fn login(&self, username: String, password: String, extra: String) -> Result<DsUser> {
+    async fn login(
+        &self,
+        username: String,
+        password: String,
+        extra: String,
+    ) -> Result<DsUser> {
         info!(
             "username:{},password:{},extra:{}",
             username, password, extra

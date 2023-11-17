@@ -63,7 +63,10 @@ pub async fn login(
 }
 pub async fn logout() {}
 
-pub async fn user_info(cookies: Cookies, ctx: Ctx) -> Result<ApiResult<UserInfoRes>> {
+pub async fn user_info(
+    cookies: Cookies,
+    ctx: Ctx,
+) -> Result<ApiResult<UserInfoRes>> {
     let user_id = ctx.user_id();
     let user = model::user::service::_get_user(user_id).await?;
     Ok(ApiResult::build(Some(UserInfoRes::from(user))))

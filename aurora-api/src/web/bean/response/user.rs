@@ -28,7 +28,10 @@ mod convert_user_type {
 
     use aurora_common::enums::UserType::UserType;
     use serde::{self, Deserialize, Deserializer, Serializer};
-    pub fn serialize<S>(user_type: &Option<i32>, serializer: S) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(
+        user_type: &Option<i32>,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {

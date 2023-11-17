@@ -183,14 +183,11 @@ impl DsProjectService for AuroraRpcServer {
         _req: tonic::Request<proto::ds_project::DeleteDsProjectRequest>,
     ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
         let db = &self.db;
-        Entity::delete_by_id(_req.into_inner().id)
-            .exec(db)
-            .await
-            .map_err(|_| {
-                tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
-                    Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
-                ))
-            })?;
+        Entity::delete_by_id(_req.into_inner().id).exec(db).await.map_err(|_| {
+            tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
+                Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
+            ))
+        })?;
         Ok(tonic::Response::new(()))
     }
 }

@@ -11,7 +11,10 @@ pub struct Message {
 }
 
 impl Message {
-    fn new(code: i32, descp: String) -> Message {
+    fn new(
+        code: i32,
+        descp: String,
+    ) -> Message {
         Message { code, descp }
     }
 }

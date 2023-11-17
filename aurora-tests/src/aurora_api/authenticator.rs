@@ -7,9 +7,7 @@ async fn main() -> Result<()> {
     let username = "admin".to_string();
     let password = "dolphinscheduler123".to_string();
     let extra = "127.0.0.1".to_string();
-    let res = get_authenticator()
-        .authenticate(username, password, extra)
-        .await?;
+    let res = get_authenticator().authenticate(username, password, extra).await?;
     println!("res: {:?}", res);
     Ok(())
 }

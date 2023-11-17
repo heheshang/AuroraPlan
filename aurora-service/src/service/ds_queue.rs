@@ -14,7 +14,10 @@ use tracing::{error, info};
 type Result<T> = std::result::Result<T, tonic::Status>;
 
 impl AuroraRpcServer {
-    async fn queue_name_count(&self, queue_name: &str) -> Result<u64> {
+    async fn queue_name_count(
+        &self,
+        queue_name: &str,
+    ) -> Result<u64> {
         let conn = &self.db;
         let res = Entity::find()
             .filter(Column::QueueName.eq(queue_name))
@@ -28,13 +31,13 @@ impl AuroraRpcServer {
 
         Ok(res)
     }
-    async fn queue_value_count(&self, queue: &str) -> Result<u64> {
+    async fn queue_value_count(
+        &self,
+        queue: &str,
+    ) -> Result<u64> {
         let conn = &self.db;
-        let res = Entity::find()
-            .filter(Column::Queue.eq(queue))
-            .count(conn)
-            .await
-            .map_err(|_e| {
+        let res =
+            Entity::find().filter(Column::Queue.eq(queue)).count(conn).await.map_err(|_e| {
                 tonic::Status::from_error(
                     Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
                 )
@@ -42,7 +45,11 @@ impl AuroraRpcServer {
         info!("res: {:?}", res);
         Ok(res)
     }
-    async fn queue_name_count_extra(&self, queue_name: &str, id: i32) -> Result<u64> {
+    async fn queue_name_count_extra(
+        &self,
+        queue_name: &str,
+        id: i32,
+    ) -> Result<u64> {
         let conn = &self.db;
         let res = Entity::find()
             .filter(Column::QueueName.eq(queue_name))
@@ -57,7 +64,11 @@ impl AuroraRpcServer {
 
         Ok(res)
     }
-    async fn queue_value_count_extra(&self, queue: &str, id: i32) -> Result<u64> {
+    async fn queue_value_count_extra(
+        &self,
+        queue: &str,
+        id: i32,
+    ) -> Result<u64> {
         let conn = &self.db;
         let res = Entity::find()
             .filter(Column::Queue.eq(queue))
@@ -72,7 +83,10 @@ impl AuroraRpcServer {
         info!("res: {:?}", res);
         Ok(res)
     }
-    async fn find_by_id(&self, id: i32) -> Result<DsQueue> {
+    async fn find_by_id(
+        &self,
+        id: i32,
+    ) -> Result<DsQueue> {
         let conn = &self.db;
         let res: DsQueue = Entity::find_by_id(id)
             .one(conn)
@@ -202,12 +216,7 @@ impl DsQueueService for AuroraRpcServer {
         let conn = &self.db;
         let queue = _req.get_ref().clone().ds_queue.unwrap_or_default().queue;
         let id = _req.get_ref().clone().ds_queue.unwrap_or_default().id;
-        let queue_name = _req
-            .get_ref()
-            .clone()
-            .ds_queue
-            .unwrap_or_default()
-            .queue_name;
+        let queue_name = _req.get_ref().clone().ds_queue.unwrap_or_default().queue_name;
         let entity = Self::find_by_id(self, id).await?;
         if Self::queue_name_count_extra(self, &queue_name.clone().unwrap_or_default(), id).await?
             >= 1
@@ -243,10 +252,8 @@ impl DsQueueService for AuroraRpcServer {
         _req: tonic::Request<proto::ds_queue::DeleteDsQueueRequest>,
     ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
         let conn = &self.db;
-        let res = Entity::delete_by_id(_req.get_ref().clone().id)
-            .exec(conn)
-            .await
-            .map_err(|_e| {
+        let res =
+            Entity::delete_by_id(_req.get_ref().clone().id).exec(conn).await.map_err(|_e| {
                 tonic::Status::from_error(
                     Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
                 )

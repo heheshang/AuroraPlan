@@ -75,9 +75,7 @@ pub(crate) async fn build_router(conn: DatabaseConnection) -> Router {
     tracing::info!("build_router");
     let grpc_server = AuroraRpcServer::new(conn);
     let (mut health_reporter, health_service) = tonic_health::server::health_reporter();
-    health_reporter
-        .set_serving::<GreeterServer<MyGreeter>>()
-        .await;
+    health_reporter.set_serving::<GreeterServer<MyGreeter>>().await;
     // tokio::spawn(twiddle_service_status(health_reporter));
     let greeter = GreeterServer::new(MyGreeter::default());
     Server::builder()

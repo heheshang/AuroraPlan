@@ -496,7 +496,10 @@ impl From<tonic::Status> for Error {
     }
 }
 impl core::fmt::Display for Error {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut core::fmt::Formatter,
+    ) -> core::fmt::Result {
         error!("core::fmt::Display for Error -->{}", self);
         match self {
             Error::SUCCESS(data, _) => {
@@ -2342,7 +2345,11 @@ impl From<AuroraErrorInfo> for DisplayErrorInfo {
 }
 
 impl AuroraErrorInfo {
-    pub fn new(code: i32, en_msg: String, cn_msg: String) -> Self {
+    pub fn new(
+        code: i32,
+        en_msg: String,
+        cn_msg: String,
+    ) -> Self {
         AuroraErrorInfo {
             code,
             en_msg,
@@ -2351,13 +2358,19 @@ impl AuroraErrorInfo {
             error_param: None,
         }
     }
-    pub fn new_with_data(&mut self, error_data: AuroraData) -> Self {
+    pub fn new_with_data(
+        &mut self,
+        error_data: AuroraData,
+    ) -> Self {
         AuroraErrorInfo {
             error_data,
             ..self.clone()
         }
     }
-    pub fn parse(&mut self, error_param: ErrorParam) -> Self {
+    pub fn parse(
+        &mut self,
+        error_param: ErrorParam,
+    ) -> Self {
         let en_msg = AuroraErrorInfo::format_err_msg(&self.en_msg, error_param.clone());
         let cn_msg = AuroraErrorInfo::format_err_msg(&self.cn_msg, error_param.clone());
         AuroraErrorInfo {
@@ -2368,7 +2381,10 @@ impl AuroraErrorInfo {
         }
     }
     // #[warn(dead_code)]
-    fn format_err_msg(text: &str, args: Option<Vec<String>>) -> String {
+    fn format_err_msg(
+        text: &str,
+        args: Option<Vec<String>>,
+    ) -> String {
         if args.is_none() {
             return text.to_string();
         }
@@ -2479,7 +2495,10 @@ impl From<String> for AuroraErrorInfo {
 
 impl std::error::Error for AuroraErrorInfo {}
 impl core::fmt::Display for AuroraErrorInfo {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut core::fmt::Formatter,
+    ) -> core::fmt::Result {
         error!("AuroraErrorInfo: {:?}", self);
         let error_param = self.error_param.clone().unwrap_or_default();
         let error_param = error_param.join(",");

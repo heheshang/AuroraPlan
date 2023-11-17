@@ -11,7 +11,10 @@ use aurora_proto::ds_queue::{
 };
 use tracing::{error, info};
 
-pub async fn create(queue: &str, queue_name: &str) -> Result<Queue> {
+pub async fn create(
+    queue: &str,
+    queue_name: &str,
+) -> Result<Queue> {
     let client = _ds_queue_service_client().await?;
     let request = tonic::Request::new(CreateDsQueueRequest {
         queue: queue.to_string(),
@@ -29,7 +32,10 @@ pub async fn create(queue: &str, queue_name: &str) -> Result<Queue> {
         })?;
     Ok(res.into())
 }
-pub async fn verify(queue: &str, queue_name: &str) -> Result<VerifyQueue> {
+pub async fn verify(
+    queue: &str,
+    queue_name: &str,
+) -> Result<VerifyQueue> {
     let client = _ds_queue_service_client().await?;
     let request = tonic::Request::new(VerifyQueueRequest {
         queue: queue.to_string(),
@@ -87,7 +93,11 @@ pub async fn delete(id: i32) -> Result<()> {
         })
 }
 
-pub async fn update(id: i32, queue: &str, queue_name: &str) -> Result<Queue> {
+pub async fn update(
+    id: i32,
+    queue: &str,
+    queue_name: &str,
+) -> Result<Queue> {
     let client = _ds_queue_service_client().await?;
     let request = tonic::Request::new(UpdateDsQueueRequest {
         ds_queue: Some(aurora_proto::ds_queue::DsQueue {

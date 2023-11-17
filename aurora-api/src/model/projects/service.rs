@@ -15,7 +15,11 @@ use aurora_proto::{
 };
 use tracing::log::error;
 
-pub async fn create(user_id: i32, name: String, description: Option<String>) -> Result<DsProject> {
+pub async fn create(
+    user_id: i32,
+    name: String,
+    description: Option<String>,
+) -> Result<DsProject> {
     let client = _ds_project_service_client().await?;
     let request = tonic::Request::new(CreateDsProjectRequest {
         name,
@@ -33,7 +37,11 @@ pub async fn create(user_id: i32, name: String, description: Option<String>) -> 
             err
         })
 }
-pub async fn update(user_id: i32, name: String, description: Option<String>) -> Result<DsProject> {
+pub async fn update(
+    user_id: i32,
+    name: String,
+    description: Option<String>,
+) -> Result<DsProject> {
     let client = _ds_project_service_client().await?;
     let request = tonic::Request::new(UpdateDsProjectRequest {
         name,
@@ -55,15 +63,11 @@ pub async fn update(user_id: i32, name: String, description: Option<String>) -> 
 pub async fn _delete_project(project_code: i32) -> Result<()> {
     let client = _ds_project_service_client().await?;
     let request = tonic::Request::new(DeleteDsProjectRequest { id: project_code });
-    client
-        .clone()
-        .delete_ds_project(request)
-        .await
-        .map_err(|e| {
-            let err: Error = e.into();
-            error!("update_project error: {:?}", err);
-            err
-        })?;
+    client.clone().delete_ds_project(request).await.map_err(|e| {
+        let err: Error = e.into();
+        error!("update_project error: {:?}", err);
+        err
+    })?;
     Ok(())
 }
 pub async fn list(
@@ -119,7 +123,10 @@ pub async fn _create_project_paramter(
             err
         })
 }
-pub async fn _delete_project_parameter(code: i64, project_code: i64) -> Result<()> {
+pub async fn _delete_project_parameter(
+    code: i64,
+    project_code: i64,
+) -> Result<()> {
     let client = _ds_project_parameter_service_client().await?;
     let request = tonic::Request::new(DeleteProjectParameterRequest { code, project_code });
 

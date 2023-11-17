@@ -13,7 +13,10 @@ use sea_orm::entity::prelude::*;
 
 #[tonic::async_trait]
 impl DsUserService for AuroraRpcServer {
-    async fn get_ds_user(&self, req: GrpcRequest<GetDsUserRequest>) -> GrpcResponse<DsUser> {
+    async fn get_ds_user(
+        &self,
+        req: GrpcRequest<GetDsUserRequest>,
+    ) -> GrpcResponse<DsUser> {
         let conn = &self.db;
         let name = req.into_inner().name;
         let db_user: Option<t_ds_user::Model> = t_ds_user::Entity::find()
@@ -31,7 +34,10 @@ impl DsUserService for AuroraRpcServer {
         }
     }
 
-    async fn update_ds_user(&self, req: GrpcRequest<UpdateDsUserRequest>) -> GrpcResponse<DsUser> {
+    async fn update_ds_user(
+        &self,
+        req: GrpcRequest<UpdateDsUserRequest>,
+    ) -> GrpcResponse<DsUser> {
         let conn = &self.db;
         if let Some(user) = req.into_inner().ds_user {
             let db_user = t_ds_user::Entity::find_by_id(user.id)
@@ -64,7 +70,10 @@ impl DsUserService for AuroraRpcServer {
         todo!()
     }
 
-    async fn delete_ds_user(&self, _request: GrpcRequest<DeleteDsUserRequest>) -> GrpcResponse<()> {
+    async fn delete_ds_user(
+        &self,
+        _request: GrpcRequest<DeleteDsUserRequest>,
+    ) -> GrpcResponse<()> {
         todo!()
     }
 

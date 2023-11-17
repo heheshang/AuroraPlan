@@ -30,10 +30,7 @@ impl AuthenticatorFactory for PwdAuthenticatorFactory {
 
 pub fn get_authenticator() -> Box<dyn Authenticator> {
     let settings = Settings::new().unwrap();
-    let auth_type = settings
-        .security
-        .authentication_type
-        .unwrap_or("PASSWORD".to_string());
+    let auth_type = settings.security.authentication_type.unwrap_or("PASSWORD".to_string());
     let r#type = AuthenticatorType::from_str(auth_type.as_str()).unwrap();
     match r#type {
         AuthenticatorType::Password => PwdAuthenticatorFactory::build(),

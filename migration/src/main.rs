@@ -22,28 +22,17 @@ async fn run() -> Result<(), DbErr> {
     let db_url = Settings::new().expect("load config error").database.url;
     println!("db_url: {:?}", db_url);
 
-    let current_dir = env::current_dir().unwrap_or(
-        DbErr::Custom("current_dir is not set".to_string())
-            .to_string()
-            .into(),
-    );
+    let current_dir = env::current_dir()
+        .unwrap_or(DbErr::Custom("current_dir is not set".to_string()).to_string().into());
     println!("current_dir: {:?}", current_dir);
 
     let init_sql_path = current_dir
         .to_str()
-        .unwrap_or(
-            DbErr::Custom("current_dir is not set".to_string())
-                .to_string()
-                .as_str(),
-        )
+        .unwrap_or(DbErr::Custom("current_dir is not set".to_string()).to_string().as_str())
         .split("migration")
         .collect::<Vec<_>>()
         .first()
-        .unwrap_or(
-            &DbErr::Custom("current_dir is not set".to_string())
-                .to_string()
-                .as_str(),
-        )
+        .unwrap_or(&DbErr::Custom("current_dir is not set".to_string()).to_string().as_str())
         .to_string()
         + "/migration/init.sql";
 
@@ -60,8 +49,7 @@ async fn run() -> Result<(), DbErr> {
     let db = Database::connect(&db_url).await?;
     match db.get_database_backend() {
         sea_orm::DatabaseBackend::MySql => {
-            db.execute(Statement::from_string(db.get_database_backend(), ""))
-                .await?;
+            db.execute(Statement::from_string(db.get_database_backend(), "")).await?;
         }
         sea_orm::DatabaseBackend::Postgres => {
             for l in sql_content.split(';') {
@@ -74,8 +62,7 @@ async fn run() -> Result<(), DbErr> {
             }
         }
         sea_orm::DatabaseBackend::Sqlite => {
-            db.execute(Statement::from_string(db.get_database_backend(), ""))
-                .await?;
+            db.execute(Statement::from_string(db.get_database_backend(), "")).await?;
         }
     };
 

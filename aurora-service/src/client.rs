@@ -45,9 +45,7 @@ use tonic_health::pb::{health_client::HealthClient, HealthCheckRequest};
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     loop {
         tokio::time::sleep(Duration::from_secs(1)).await;
-        let conn = tonic::transport::Endpoint::new("http://0.0.0.0:50051")?
-            .connect()
-            .await?;
+        let conn = tonic::transport::Endpoint::new("http://0.0.0.0:50051")?.connect().await?;
 
         // let request = tonic::Request::new(HelloRequest {
         //     name: "Tonic".into(),
