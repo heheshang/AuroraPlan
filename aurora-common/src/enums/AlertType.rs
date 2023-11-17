@@ -26,10 +26,7 @@ pub struct Message {
 }
 
 impl Message {
-    fn new(
-        code: i32,
-        descp: String,
-    ) -> Message {
+    fn new(code: i32, descp: String) -> Message {
         Message { code, descp }
     }
 }
@@ -37,21 +34,11 @@ impl Message {
 impl AlertType {
     pub fn get_message(&self) -> Message {
         match self {
-            AlertType::PROCESS_INSTANCE_FAILURE => {
-                Message::new(0, "process instance failure".to_string())
-            }
-            AlertType::PROCESS_INSTANCE_SUCCESS => {
-                Message::new(1, "process instance success".to_string())
-            }
-            AlertType::PROCESS_INSTANCE_BLOCKED => {
-                Message::new(2, "process instance blocked".to_string())
-            }
-            AlertType::PROCESS_INSTANCE_TIMEOUT => {
-                Message::new(3, "process instance timeout".to_string())
-            }
-            AlertType::FAULT_TOLERANCE_WARNING => {
-                Message::new(4, "fault tolerance warning".to_string())
-            }
+            AlertType::PROCESS_INSTANCE_FAILURE => Message::new(0, "process instance failure".to_string()),
+            AlertType::PROCESS_INSTANCE_SUCCESS => Message::new(1, "process instance success".to_string()),
+            AlertType::PROCESS_INSTANCE_BLOCKED => Message::new(2, "process instance blocked".to_string()),
+            AlertType::PROCESS_INSTANCE_TIMEOUT => Message::new(3, "process instance timeout".to_string()),
+            AlertType::FAULT_TOLERANCE_WARNING => Message::new(4, "fault tolerance warning".to_string()),
             AlertType::TASK_FAILURE => Message::new(5, "task failure".to_string()),
             AlertType::TASK_SUCCESS => Message::new(6, "task success".to_string()),
             AlertType::TASK_TIMEOUT => Message::new(7, "task timeout".to_string()),

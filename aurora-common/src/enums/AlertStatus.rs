@@ -19,10 +19,7 @@ pub struct Message {
 }
 
 impl Message {
-    fn new(
-        code: i32,
-        descp: String,
-    ) -> Message {
+    fn new(code: i32, descp: String) -> Message {
         Message { code, descp }
     }
 }
@@ -33,9 +30,7 @@ impl AlertStatus {
             AlertStatus::WAIT_EXECUTION => Message::new(0, "waiting executed".to_string()),
             AlertStatus::EXECUTION_SUCCESS => Message::new(1, "execute successfully".to_string()),
             AlertStatus::EXECUTION_FAILURE => Message::new(2, "execute failed".to_string()),
-            AlertStatus::EXECUTION_PARTIAL_SUCCESS => {
-                Message::new(3, "execute partial successfully".to_string())
-            }
+            AlertStatus::EXECUTION_PARTIAL_SUCCESS => Message::new(3, "execute partial successfully".to_string()),
         }
     }
 

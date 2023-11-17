@@ -43,8 +43,7 @@ use proto::{
     ds_task_group::ds_task_group_service_server::DsTaskGroupServiceServer,
     ds_task_group_queue::ds_task_group_queue_service_server::DsTaskGroupQueueServiceServer,
     ds_task_instance::ds_task_instance_service_server::DsTaskInstanceServiceServer,
-    ds_tenant::ds_tenant_service_server::DsTenantServiceServer,
-    ds_udfs::ds_udfs_service_server::DsUdfsServiceServer,
+    ds_tenant::ds_tenant_service_server::DsTenantServiceServer, ds_udfs::ds_udfs_service_server::DsUdfsServiceServer,
     ds_user::ds_user_service_server::DsUserServiceServer,
     ds_version::ds_version_service_server::DsVersionServiceServer,
     ds_worker_group::ds_worker_group_service_server::DsWorkerGroupServiceServer,
@@ -101,10 +100,7 @@ impl AuroraRpcServer {
 
     create_service!(ds_dq_rule_input_entry, DsDqRuleInputEntryServiceServer);
 
-    create_service!(
-        ds_dq_task_statistics_value,
-        DsDqTaskStatisticsValueServiceServer
-    );
+    create_service!(ds_dq_task_statistics_value, DsDqTaskStatisticsValueServiceServer);
 
     create_service!(ds_environment, DsEnvironmentServiceServer);
 
@@ -123,51 +119,30 @@ impl AuroraRpcServer {
 
     create_service!(ds_process_definition, DsProcessDefinitionServiceServer);
 
-    create_service!(
-        ds_process_definition_log,
-        DsProcessDefinitionLogServiceServer
-    );
+    create_service!(ds_process_definition_log, DsProcessDefinitionLogServiceServer);
 
     create_service!(ds_process_instance, DsProcessInstanceServiceServer);
 
     create_service!(ds_process_task_relation, DsProcessTaskRelationServiceServer);
 
-    create_service!(
-        ds_process_task_relation_log,
-        DsProcessTaskRelationLogServiceServer
-    );
+    create_service!(ds_process_task_relation_log, DsProcessTaskRelationLogServiceServer);
 
     create_service!(ds_project, DsProjectServiceServer);
     create_service!(ds_project_parameter, ProjectParameterServiceServer);
 
     create_service!(ds_queue, DsQueueServiceServer);
 
-    create_service!(
-        ds_relation_datasource_user,
-        DsRelationDatasourceUserServiceServer
-    );
+    create_service!(ds_relation_datasource_user, DsRelationDatasourceUserServiceServer);
 
-    create_service!(
-        ds_relation_namespace_user,
-        DsRelationNamespaceUserServiceServer
-    );
+    create_service!(ds_relation_namespace_user, DsRelationNamespaceUserServiceServer);
 
-    create_service!(
-        ds_relation_process_instance,
-        DsRelationProcessInstanceServiceServer
-    );
+    create_service!(ds_relation_process_instance, DsRelationProcessInstanceServiceServer);
 
     create_service!(ds_relation_project_user, DsRelationProjectUserServiceServer);
 
-    create_service!(
-        ds_relation_resources_user,
-        DsRelationResourcesUserServiceServer
-    );
+    create_service!(ds_relation_resources_user, DsRelationResourcesUserServiceServer);
 
-    create_service!(
-        ds_relation_rule_execute_sql,
-        DsRelationRuleExecuteSqlServiceServer
-    );
+    create_service!(ds_relation_rule_execute_sql, DsRelationRuleExecuteSqlServiceServer);
 
     create_service!(ds_relation_rule_input, DsRelationRuleInputServiceServer);
 

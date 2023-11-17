@@ -6,10 +6,7 @@ impl DsSchedulesService for AuroraRpcServer {
     async fn list_ds_scheduless(
         &self,
         _req: tonic::Request<proto::ds_schedules::ListDsSchedulessRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_schedules::ListDsSchedulessResponse>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_schedules::ListDsSchedulessResponse>, tonic::Status> {
         todo!()
     }
 

@@ -6,10 +6,7 @@ impl DsVersionService for AuroraRpcServer {
     async fn list_ds_versions(
         &self,
         _req: tonic::Request<proto::ds_version::ListDsVersionsRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_version::ListDsVersionsResponse>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_version::ListDsVersionsResponse>, tonic::Status> {
         todo!()
     }
 

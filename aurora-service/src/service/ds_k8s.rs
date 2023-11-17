@@ -6,8 +6,7 @@ impl DsK8sService for AuroraRpcServer {
     async fn list_ds_k8ss(
         &self,
         _req: tonic::Request<proto::ds_k8s::ListDsK8ssRequest>,
-    ) -> std::result::Result<tonic::Response<proto::ds_k8s::ListDsK8ssResponse>, tonic::Status>
-    {
+    ) -> std::result::Result<tonic::Response<proto::ds_k8s::ListDsK8ssResponse>, tonic::Status> {
         todo!()
     }
 

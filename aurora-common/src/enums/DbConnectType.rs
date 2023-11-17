@@ -11,10 +11,7 @@ pub struct Message {
 }
 
 impl Message {
-    fn new(
-        code: i32,
-        descp: String,
-    ) -> Message {
+    fn new(code: i32, descp: String) -> Message {
         Message { code, descp }
     }
 }
@@ -22,9 +19,7 @@ impl Message {
 impl DbConnectType {
     pub fn get_message(&self) -> Message {
         match self {
-            DbConnectType::ORACLE_SERVICE_NAME => {
-                Message::new(0, "Oracle Service Name".to_string())
-            }
+            DbConnectType::ORACLE_SERVICE_NAME => Message::new(0, "Oracle Service Name".to_string()),
             DbConnectType::ORACLE_SID => Message::new(1, "Oracle SID".to_string()),
         }
     }

@@ -105,28 +105,19 @@ pub mod ds_worker_group_service_client {
             let inner = tonic::client::Grpc::new(inner);
             Self { inner }
         }
-        pub fn with_origin(
-            inner: T,
-            origin: Uri,
-        ) -> Self {
+        pub fn with_origin(inner: T, origin: Uri) -> Self {
             let inner = tonic::client::Grpc::with_origin(inner, origin);
             Self { inner }
         }
-        pub fn with_interceptor<F>(
-            inner: T,
-            interceptor: F,
-        ) -> DsWorkerGroupServiceClient<InterceptedService<T, F>>
+        pub fn with_interceptor<F>(inner: T, interceptor: F) -> DsWorkerGroupServiceClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
             T: tonic::codegen::Service<
                 http::Request<tonic::body::BoxBody>,
-                Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
-                >,
+                Response = http::Response<<T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody>,
             >,
-            <T as tonic::codegen::Service<http::Request<tonic::body::BoxBody>>>::Error:
-                Into<StdError> + Send + Sync,
+            <T as tonic::codegen::Service<http::Request<tonic::body::BoxBody>>>::Error: Into<StdError> + Send + Sync,
         {
             DsWorkerGroupServiceClient::new(InterceptedService::new(inner, interceptor))
         }
@@ -135,19 +126,13 @@ pub mod ds_worker_group_service_client {
         /// This requires the server to support it otherwise it might respond with an
         /// error.
         #[must_use]
-        pub fn send_compressed(
-            mut self,
-            encoding: CompressionEncoding,
-        ) -> Self {
+        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
             self.inner = self.inner.send_compressed(encoding);
             self
         }
         /// Enable decompressing responses.
         #[must_use]
-        pub fn accept_compressed(
-            mut self,
-            encoding: CompressionEncoding,
-        ) -> Self {
+        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
             self.inner = self.inner.accept_compressed(encoding);
             self
         }
@@ -155,10 +140,7 @@ pub mod ds_worker_group_service_client {
         ///
         /// Default: `4MB`
         #[must_use]
-        pub fn max_decoding_message_size(
-            mut self,
-            limit: usize,
-        ) -> Self {
+        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
             self.inner = self.inner.max_decoding_message_size(limit);
             self
         }
@@ -166,28 +148,19 @@ pub mod ds_worker_group_service_client {
         ///
         /// Default: `usize::MAX`
         #[must_use]
-        pub fn max_encoding_message_size(
-            mut self,
-            limit: usize,
-        ) -> Self {
+        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
         pub async fn list_ds_worker_groups(
             &mut self,
             request: impl tonic::IntoRequest<super::ListDsWorkerGroupsRequest>,
-        ) -> std::result::Result<tonic::Response<super::ListDsWorkerGroupsResponse>, tonic::Status>
-        {
+        ) -> std::result::Result<tonic::Response<super::ListDsWorkerGroupsResponse>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/ds_worker_group.DsWorkerGroupService/ListDsWorkerGroups",
-            );
+            let path = http::uri::PathAndQuery::from_static("/ds_worker_group.DsWorkerGroupService/ListDsWorkerGroups");
             let mut req = request.into_request();
             req.extensions_mut().insert(GrpcMethod::new(
                 "ds_worker_group.DsWorkerGroupService",
@@ -200,15 +173,10 @@ pub mod ds_worker_group_service_client {
             request: impl tonic::IntoRequest<super::GetDsWorkerGroupRequest>,
         ) -> std::result::Result<tonic::Response<super::DsWorkerGroup>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/ds_worker_group.DsWorkerGroupService/GetDsWorkerGroup",
-            );
+            let path = http::uri::PathAndQuery::from_static("/ds_worker_group.DsWorkerGroupService/GetDsWorkerGroup");
             let mut req = request.into_request();
             req.extensions_mut().insert(GrpcMethod::new(
                 "ds_worker_group.DsWorkerGroupService",
@@ -221,15 +189,11 @@ pub mod ds_worker_group_service_client {
             request: impl tonic::IntoRequest<super::CreateDsWorkerGroupRequest>,
         ) -> std::result::Result<tonic::Response<super::DsWorkerGroup>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/ds_worker_group.DsWorkerGroupService/CreateDsWorkerGroup",
-            );
+            let path =
+                http::uri::PathAndQuery::from_static("/ds_worker_group.DsWorkerGroupService/CreateDsWorkerGroup");
             let mut req = request.into_request();
             req.extensions_mut().insert(GrpcMethod::new(
                 "ds_worker_group.DsWorkerGroupService",
@@ -242,15 +206,11 @@ pub mod ds_worker_group_service_client {
             request: impl tonic::IntoRequest<super::UpdateDsWorkerGroupRequest>,
         ) -> std::result::Result<tonic::Response<super::DsWorkerGroup>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/ds_worker_group.DsWorkerGroupService/UpdateDsWorkerGroup",
-            );
+            let path =
+                http::uri::PathAndQuery::from_static("/ds_worker_group.DsWorkerGroupService/UpdateDsWorkerGroup");
             let mut req = request.into_request();
             req.extensions_mut().insert(GrpcMethod::new(
                 "ds_worker_group.DsWorkerGroupService",
@@ -263,15 +223,11 @@ pub mod ds_worker_group_service_client {
             request: impl tonic::IntoRequest<super::DeleteDsWorkerGroupRequest>,
         ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/ds_worker_group.DsWorkerGroupService/DeleteDsWorkerGroup",
-            );
+            let path =
+                http::uri::PathAndQuery::from_static("/ds_worker_group.DsWorkerGroupService/DeleteDsWorkerGroup");
             let mut req = request.into_request();
             req.extensions_mut().insert(GrpcMethod::new(
                 "ds_worker_group.DsWorkerGroupService",
@@ -333,10 +289,7 @@ pub mod ds_worker_group_service_server {
                 max_encoding_message_size: None,
             }
         }
-        pub fn with_interceptor<F>(
-            inner: T,
-            interceptor: F,
-        ) -> InterceptedService<Self, F>
+        pub fn with_interceptor<F>(inner: T, interceptor: F) -> InterceptedService<Self, F>
         where
             F: tonic::service::Interceptor,
         {
@@ -344,19 +297,13 @@ pub mod ds_worker_group_service_server {
         }
         /// Enable decompressing requests with the given encoding.
         #[must_use]
-        pub fn accept_compressed(
-            mut self,
-            encoding: CompressionEncoding,
-        ) -> Self {
+        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
             self.accept_compression_encodings.enable(encoding);
             self
         }
         /// Compress responses with the given encoding, if the client supports it.
         #[must_use]
-        pub fn send_compressed(
-            mut self,
-            encoding: CompressionEncoding,
-        ) -> Self {
+        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
             self.send_compression_encodings.enable(encoding);
             self
         }
@@ -364,10 +311,7 @@ pub mod ds_worker_group_service_server {
         ///
         /// Default: `4MB`
         #[must_use]
-        pub fn max_decoding_message_size(
-            mut self,
-            limit: usize,
-        ) -> Self {
+        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
             self.max_decoding_message_size = Some(limit);
             self
         }
@@ -375,10 +319,7 @@ pub mod ds_worker_group_service_server {
         ///
         /// Default: `usize::MAX`
         #[must_use]
-        pub fn max_encoding_message_size(
-            mut self,
-            limit: usize,
-        ) -> Self {
+        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
             self.max_encoding_message_size = Some(limit);
             self
         }
@@ -392,31 +333,21 @@ pub mod ds_worker_group_service_server {
         type Response = http::Response<tonic::body::BoxBody>;
         type Error = std::convert::Infallible;
         type Future = BoxFuture<Self::Response, Self::Error>;
-        fn poll_ready(
-            &mut self,
-            _cx: &mut Context<'_>,
-        ) -> Poll<std::result::Result<(), Self::Error>> {
+        fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<std::result::Result<(), Self::Error>> {
             Poll::Ready(Ok(()))
         }
-        fn call(
-            &mut self,
-            req: http::Request<B>,
-        ) -> Self::Future {
+        fn call(&mut self, req: http::Request<B>) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
                 "/ds_worker_group.DsWorkerGroupService/ListDsWorkerGroups" => {
                     #[allow(non_camel_case_types)]
                     struct ListDsWorkerGroupsSvc<T: DsWorkerGroupService>(pub Arc<T>);
-                    impl<T: DsWorkerGroupService>
-                        tonic::server::UnaryService<super::ListDsWorkerGroupsRequest>
+                    impl<T: DsWorkerGroupService> tonic::server::UnaryService<super::ListDsWorkerGroupsRequest>
                         for ListDsWorkerGroupsSvc<T>
                     {
                         type Response = super::ListDsWorkerGroupsResponse;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::ListDsWorkerGroupsRequest>,
-                        ) -> Self::Future {
+                        fn call(&mut self, request: tonic::Request<super::ListDsWorkerGroupsRequest>) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move { (*inner).list_ds_worker_groups(request).await };
                             Box::pin(fut)
@@ -432,14 +363,8 @@ pub mod ds_worker_group_service_server {
                         let method = ListDsWorkerGroupsSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
@@ -448,16 +373,10 @@ pub mod ds_worker_group_service_server {
                 "/ds_worker_group.DsWorkerGroupService/GetDsWorkerGroup" => {
                     #[allow(non_camel_case_types)]
                     struct GetDsWorkerGroupSvc<T: DsWorkerGroupService>(pub Arc<T>);
-                    impl<T: DsWorkerGroupService>
-                        tonic::server::UnaryService<super::GetDsWorkerGroupRequest>
-                        for GetDsWorkerGroupSvc<T>
-                    {
+                    impl<T: DsWorkerGroupService> tonic::server::UnaryService<super::GetDsWorkerGroupRequest> for GetDsWorkerGroupSvc<T> {
                         type Response = super::DsWorkerGroup;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::GetDsWorkerGroupRequest>,
-                        ) -> Self::Future {
+                        fn call(&mut self, request: tonic::Request<super::GetDsWorkerGroupRequest>) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move { (*inner).get_ds_worker_group(request).await };
                             Box::pin(fut)
@@ -473,14 +392,8 @@ pub mod ds_worker_group_service_server {
                         let method = GetDsWorkerGroupSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
@@ -489,16 +402,12 @@ pub mod ds_worker_group_service_server {
                 "/ds_worker_group.DsWorkerGroupService/CreateDsWorkerGroup" => {
                     #[allow(non_camel_case_types)]
                     struct CreateDsWorkerGroupSvc<T: DsWorkerGroupService>(pub Arc<T>);
-                    impl<T: DsWorkerGroupService>
-                        tonic::server::UnaryService<super::CreateDsWorkerGroupRequest>
+                    impl<T: DsWorkerGroupService> tonic::server::UnaryService<super::CreateDsWorkerGroupRequest>
                         for CreateDsWorkerGroupSvc<T>
                     {
                         type Response = super::DsWorkerGroup;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::CreateDsWorkerGroupRequest>,
-                        ) -> Self::Future {
+                        fn call(&mut self, request: tonic::Request<super::CreateDsWorkerGroupRequest>) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move { (*inner).create_ds_worker_group(request).await };
                             Box::pin(fut)
@@ -514,14 +423,8 @@ pub mod ds_worker_group_service_server {
                         let method = CreateDsWorkerGroupSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
@@ -530,16 +433,12 @@ pub mod ds_worker_group_service_server {
                 "/ds_worker_group.DsWorkerGroupService/UpdateDsWorkerGroup" => {
                     #[allow(non_camel_case_types)]
                     struct UpdateDsWorkerGroupSvc<T: DsWorkerGroupService>(pub Arc<T>);
-                    impl<T: DsWorkerGroupService>
-                        tonic::server::UnaryService<super::UpdateDsWorkerGroupRequest>
+                    impl<T: DsWorkerGroupService> tonic::server::UnaryService<super::UpdateDsWorkerGroupRequest>
                         for UpdateDsWorkerGroupSvc<T>
                     {
                         type Response = super::DsWorkerGroup;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::UpdateDsWorkerGroupRequest>,
-                        ) -> Self::Future {
+                        fn call(&mut self, request: tonic::Request<super::UpdateDsWorkerGroupRequest>) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move { (*inner).update_ds_worker_group(request).await };
                             Box::pin(fut)
@@ -555,14 +454,8 @@ pub mod ds_worker_group_service_server {
                         let method = UpdateDsWorkerGroupSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
@@ -571,16 +464,12 @@ pub mod ds_worker_group_service_server {
                 "/ds_worker_group.DsWorkerGroupService/DeleteDsWorkerGroup" => {
                     #[allow(non_camel_case_types)]
                     struct DeleteDsWorkerGroupSvc<T: DsWorkerGroupService>(pub Arc<T>);
-                    impl<T: DsWorkerGroupService>
-                        tonic::server::UnaryService<super::DeleteDsWorkerGroupRequest>
+                    impl<T: DsWorkerGroupService> tonic::server::UnaryService<super::DeleteDsWorkerGroupRequest>
                         for DeleteDsWorkerGroupSvc<T>
                     {
                         type Response = ();
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::DeleteDsWorkerGroupRequest>,
-                        ) -> Self::Future {
+                        fn call(&mut self, request: tonic::Request<super::DeleteDsWorkerGroupRequest>) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move { (*inner).delete_ds_worker_group(request).await };
                             Box::pin(fut)
@@ -596,14 +485,8 @@ pub mod ds_worker_group_service_server {
                         let method = DeleteDsWorkerGroupSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
@@ -638,10 +521,7 @@ pub mod ds_worker_group_service_server {
         }
     }
     impl<T: std::fmt::Debug> std::fmt::Debug for _Inner<T> {
-        fn fmt(
-            &self,
-            f: &mut std::fmt::Formatter<'_>,
-        ) -> std::fmt::Result {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             write!(f, "{:?}", self.0)
         }
     }

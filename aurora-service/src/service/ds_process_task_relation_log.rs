@@ -5,9 +5,7 @@ use proto::ds_process_task_relation_log::ds_process_task_relation_log_service_se
 impl DsProcessTaskRelationLogService for AuroraRpcServer {
     async fn list_ds_process_task_relation_logs(
         &self,
-        _req: tonic::Request<
-            proto::ds_process_task_relation_log::ListDsProcessTaskRelationLogsRequest,
-        >,
+        _req: tonic::Request<proto::ds_process_task_relation_log::ListDsProcessTaskRelationLogsRequest>,
     ) -> std::result::Result<
         tonic::Response<proto::ds_process_task_relation_log::ListDsProcessTaskRelationLogsResponse>,
         tonic::Status,
@@ -17,9 +15,7 @@ impl DsProcessTaskRelationLogService for AuroraRpcServer {
 
     async fn get_ds_process_task_relation_log(
         &self,
-        _req: tonic::Request<
-            proto::ds_process_task_relation_log::GetDsProcessTaskRelationLogRequest,
-        >,
+        _req: tonic::Request<proto::ds_process_task_relation_log::GetDsProcessTaskRelationLogRequest>,
     ) -> std::result::Result<
         tonic::Response<proto::ds_process_task_relation_log::DsProcessTaskRelationLog>,
         tonic::Status,
@@ -29,9 +25,7 @@ impl DsProcessTaskRelationLogService for AuroraRpcServer {
 
     async fn create_ds_process_task_relation_log(
         &self,
-        _req: tonic::Request<
-            proto::ds_process_task_relation_log::CreateDsProcessTaskRelationLogRequest,
-        >,
+        _req: tonic::Request<proto::ds_process_task_relation_log::CreateDsProcessTaskRelationLogRequest>,
     ) -> std::result::Result<
         tonic::Response<proto::ds_process_task_relation_log::DsProcessTaskRelationLog>,
         tonic::Status,
@@ -41,9 +35,7 @@ impl DsProcessTaskRelationLogService for AuroraRpcServer {
 
     async fn update_ds_process_task_relation_log(
         &self,
-        _req: tonic::Request<
-            proto::ds_process_task_relation_log::UpdateDsProcessTaskRelationLogRequest,
-        >,
+        _req: tonic::Request<proto::ds_process_task_relation_log::UpdateDsProcessTaskRelationLogRequest>,
     ) -> std::result::Result<
         tonic::Response<proto::ds_process_task_relation_log::DsProcessTaskRelationLog>,
         tonic::Status,
@@ -53,9 +45,7 @@ impl DsProcessTaskRelationLogService for AuroraRpcServer {
 
     async fn delete_ds_process_task_relation_log(
         &self,
-        _req: tonic::Request<
-            proto::ds_process_task_relation_log::DeleteDsProcessTaskRelationLogRequest,
-        >,
+        _req: tonic::Request<proto::ds_process_task_relation_log::DeleteDsProcessTaskRelationLogRequest>,
     ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
         todo!()
     }

@@ -16,10 +16,7 @@ pub struct Message {
 }
 
 impl Message {
-    fn new(
-        code: i32,
-        descp: String,
-    ) -> Message {
+    fn new(code: i32, descp: String) -> Message {
         Message { code, descp }
     }
 }
@@ -29,12 +26,8 @@ impl ProcessExecutionTypeEnum {
         match self {
             ProcessExecutionTypeEnum::PARALLEL => Message::new(0, "parallel".to_string()),
             ProcessExecutionTypeEnum::SERIAL_WAIT => Message::new(1, "serial wait".to_string()),
-            ProcessExecutionTypeEnum::SERIAL_DISCARD => {
-                Message::new(2, "serial discard".to_string())
-            }
-            ProcessExecutionTypeEnum::SERIAL_PRIORITY => {
-                Message::new(3, "serial priority".to_string())
-            }
+            ProcessExecutionTypeEnum::SERIAL_DISCARD => Message::new(2, "serial discard".to_string()),
+            ProcessExecutionTypeEnum::SERIAL_PRIORITY => Message::new(3, "serial priority".to_string()),
         }
     }
 

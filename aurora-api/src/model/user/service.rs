@@ -6,11 +6,7 @@ use aurora_common::{
 use aurora_proto::ds_user::{DsUser, GetDsUserByIdRequest, QueryUserByNamePasswordRequest};
 use tracing::{error, info};
 
-pub async fn query_user_by_name_password(
-    user_name: String,
-    user_password: String,
-    extra: String,
-) -> Result<DsUser> {
+pub async fn query_user_by_name_password(user_name: String, user_password: String, extra: String) -> Result<DsUser> {
     info!(
         "query_user_by_name_password user_name: {:?} ,user_password: {:?},extra: {:?}",
         user_name, user_password, extra

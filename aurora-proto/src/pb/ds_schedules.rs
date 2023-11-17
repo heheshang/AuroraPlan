@@ -127,28 +127,19 @@ pub mod ds_schedules_service_client {
             let inner = tonic::client::Grpc::new(inner);
             Self { inner }
         }
-        pub fn with_origin(
-            inner: T,
-            origin: Uri,
-        ) -> Self {
+        pub fn with_origin(inner: T, origin: Uri) -> Self {
             let inner = tonic::client::Grpc::with_origin(inner, origin);
             Self { inner }
         }
-        pub fn with_interceptor<F>(
-            inner: T,
-            interceptor: F,
-        ) -> DsSchedulesServiceClient<InterceptedService<T, F>>
+        pub fn with_interceptor<F>(inner: T, interceptor: F) -> DsSchedulesServiceClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
             T: tonic::codegen::Service<
                 http::Request<tonic::body::BoxBody>,
-                Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
-                >,
+                Response = http::Response<<T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody>,
             >,
-            <T as tonic::codegen::Service<http::Request<tonic::body::BoxBody>>>::Error:
-                Into<StdError> + Send + Sync,
+            <T as tonic::codegen::Service<http::Request<tonic::body::BoxBody>>>::Error: Into<StdError> + Send + Sync,
         {
             DsSchedulesServiceClient::new(InterceptedService::new(inner, interceptor))
         }
@@ -157,19 +148,13 @@ pub mod ds_schedules_service_client {
         /// This requires the server to support it otherwise it might respond with an
         /// error.
         #[must_use]
-        pub fn send_compressed(
-            mut self,
-            encoding: CompressionEncoding,
-        ) -> Self {
+        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
             self.inner = self.inner.send_compressed(encoding);
             self
         }
         /// Enable decompressing responses.
         #[must_use]
-        pub fn accept_compressed(
-            mut self,
-            encoding: CompressionEncoding,
-        ) -> Self {
+        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
             self.inner = self.inner.accept_compressed(encoding);
             self
         }
@@ -177,10 +162,7 @@ pub mod ds_schedules_service_client {
         ///
         /// Default: `4MB`
         #[must_use]
-        pub fn max_decoding_message_size(
-            mut self,
-            limit: usize,
-        ) -> Self {
+        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
             self.inner = self.inner.max_decoding_message_size(limit);
             self
         }
@@ -188,33 +170,22 @@ pub mod ds_schedules_service_client {
         ///
         /// Default: `usize::MAX`
         #[must_use]
-        pub fn max_encoding_message_size(
-            mut self,
-            limit: usize,
-        ) -> Self {
+        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
         pub async fn list_ds_scheduless(
             &mut self,
             request: impl tonic::IntoRequest<super::ListDsSchedulessRequest>,
-        ) -> std::result::Result<tonic::Response<super::ListDsSchedulessResponse>, tonic::Status>
-        {
+        ) -> std::result::Result<tonic::Response<super::ListDsSchedulessResponse>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/ds_schedules.DsSchedulesService/ListDsScheduless",
-            );
+            let path = http::uri::PathAndQuery::from_static("/ds_schedules.DsSchedulesService/ListDsScheduless");
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new(
-                "ds_schedules.DsSchedulesService",
-                "ListDsScheduless",
-            ));
+            req.extensions_mut()
+                .insert(GrpcMethod::new("ds_schedules.DsSchedulesService", "ListDsScheduless"));
             self.inner.unary(req, path, codec).await
         }
         pub async fn get_ds_schedules(
@@ -222,20 +193,13 @@ pub mod ds_schedules_service_client {
             request: impl tonic::IntoRequest<super::GetDsSchedulesRequest>,
         ) -> std::result::Result<tonic::Response<super::DsSchedules>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/ds_schedules.DsSchedulesService/GetDsSchedules",
-            );
+            let path = http::uri::PathAndQuery::from_static("/ds_schedules.DsSchedulesService/GetDsSchedules");
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new(
-                "ds_schedules.DsSchedulesService",
-                "GetDsSchedules",
-            ));
+            req.extensions_mut()
+                .insert(GrpcMethod::new("ds_schedules.DsSchedulesService", "GetDsSchedules"));
             self.inner.unary(req, path, codec).await
         }
         pub async fn create_ds_schedules(
@@ -243,20 +207,13 @@ pub mod ds_schedules_service_client {
             request: impl tonic::IntoRequest<super::CreateDsSchedulesRequest>,
         ) -> std::result::Result<tonic::Response<super::DsSchedules>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/ds_schedules.DsSchedulesService/CreateDsSchedules",
-            );
+            let path = http::uri::PathAndQuery::from_static("/ds_schedules.DsSchedulesService/CreateDsSchedules");
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new(
-                "ds_schedules.DsSchedulesService",
-                "CreateDsSchedules",
-            ));
+            req.extensions_mut()
+                .insert(GrpcMethod::new("ds_schedules.DsSchedulesService", "CreateDsSchedules"));
             self.inner.unary(req, path, codec).await
         }
         pub async fn update_ds_schedules(
@@ -264,20 +221,13 @@ pub mod ds_schedules_service_client {
             request: impl tonic::IntoRequest<super::UpdateDsSchedulesRequest>,
         ) -> std::result::Result<tonic::Response<super::DsSchedules>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/ds_schedules.DsSchedulesService/UpdateDsSchedules",
-            );
+            let path = http::uri::PathAndQuery::from_static("/ds_schedules.DsSchedulesService/UpdateDsSchedules");
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new(
-                "ds_schedules.DsSchedulesService",
-                "UpdateDsSchedules",
-            ));
+            req.extensions_mut()
+                .insert(GrpcMethod::new("ds_schedules.DsSchedulesService", "UpdateDsSchedules"));
             self.inner.unary(req, path, codec).await
         }
         pub async fn delete_ds_schedules(
@@ -285,20 +235,13 @@ pub mod ds_schedules_service_client {
             request: impl tonic::IntoRequest<super::DeleteDsSchedulesRequest>,
         ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/ds_schedules.DsSchedulesService/DeleteDsSchedules",
-            );
+            let path = http::uri::PathAndQuery::from_static("/ds_schedules.DsSchedulesService/DeleteDsSchedules");
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new(
-                "ds_schedules.DsSchedulesService",
-                "DeleteDsSchedules",
-            ));
+            req.extensions_mut()
+                .insert(GrpcMethod::new("ds_schedules.DsSchedulesService", "DeleteDsSchedules"));
             self.inner.unary(req, path, codec).await
         }
     }
@@ -355,10 +298,7 @@ pub mod ds_schedules_service_server {
                 max_encoding_message_size: None,
             }
         }
-        pub fn with_interceptor<F>(
-            inner: T,
-            interceptor: F,
-        ) -> InterceptedService<Self, F>
+        pub fn with_interceptor<F>(inner: T, interceptor: F) -> InterceptedService<Self, F>
         where
             F: tonic::service::Interceptor,
         {
@@ -366,19 +306,13 @@ pub mod ds_schedules_service_server {
         }
         /// Enable decompressing requests with the given encoding.
         #[must_use]
-        pub fn accept_compressed(
-            mut self,
-            encoding: CompressionEncoding,
-        ) -> Self {
+        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
             self.accept_compression_encodings.enable(encoding);
             self
         }
         /// Compress responses with the given encoding, if the client supports it.
         #[must_use]
-        pub fn send_compressed(
-            mut self,
-            encoding: CompressionEncoding,
-        ) -> Self {
+        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
             self.send_compression_encodings.enable(encoding);
             self
         }
@@ -386,10 +320,7 @@ pub mod ds_schedules_service_server {
         ///
         /// Default: `4MB`
         #[must_use]
-        pub fn max_decoding_message_size(
-            mut self,
-            limit: usize,
-        ) -> Self {
+        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
             self.max_decoding_message_size = Some(limit);
             self
         }
@@ -397,10 +328,7 @@ pub mod ds_schedules_service_server {
         ///
         /// Default: `usize::MAX`
         #[must_use]
-        pub fn max_encoding_message_size(
-            mut self,
-            limit: usize,
-        ) -> Self {
+        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
             self.max_encoding_message_size = Some(limit);
             self
         }
@@ -414,31 +342,19 @@ pub mod ds_schedules_service_server {
         type Response = http::Response<tonic::body::BoxBody>;
         type Error = std::convert::Infallible;
         type Future = BoxFuture<Self::Response, Self::Error>;
-        fn poll_ready(
-            &mut self,
-            _cx: &mut Context<'_>,
-        ) -> Poll<std::result::Result<(), Self::Error>> {
+        fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<std::result::Result<(), Self::Error>> {
             Poll::Ready(Ok(()))
         }
-        fn call(
-            &mut self,
-            req: http::Request<B>,
-        ) -> Self::Future {
+        fn call(&mut self, req: http::Request<B>) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
                 "/ds_schedules.DsSchedulesService/ListDsScheduless" => {
                     #[allow(non_camel_case_types)]
                     struct ListDsSchedulessSvc<T: DsSchedulesService>(pub Arc<T>);
-                    impl<T: DsSchedulesService>
-                        tonic::server::UnaryService<super::ListDsSchedulessRequest>
-                        for ListDsSchedulessSvc<T>
-                    {
+                    impl<T: DsSchedulesService> tonic::server::UnaryService<super::ListDsSchedulessRequest> for ListDsSchedulessSvc<T> {
                         type Response = super::ListDsSchedulessResponse;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::ListDsSchedulessRequest>,
-                        ) -> Self::Future {
+                        fn call(&mut self, request: tonic::Request<super::ListDsSchedulessRequest>) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move { (*inner).list_ds_scheduless(request).await };
                             Box::pin(fut)
@@ -454,14 +370,8 @@ pub mod ds_schedules_service_server {
                         let method = ListDsSchedulessSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
@@ -470,16 +380,10 @@ pub mod ds_schedules_service_server {
                 "/ds_schedules.DsSchedulesService/GetDsSchedules" => {
                     #[allow(non_camel_case_types)]
                     struct GetDsSchedulesSvc<T: DsSchedulesService>(pub Arc<T>);
-                    impl<T: DsSchedulesService>
-                        tonic::server::UnaryService<super::GetDsSchedulesRequest>
-                        for GetDsSchedulesSvc<T>
-                    {
+                    impl<T: DsSchedulesService> tonic::server::UnaryService<super::GetDsSchedulesRequest> for GetDsSchedulesSvc<T> {
                         type Response = super::DsSchedules;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::GetDsSchedulesRequest>,
-                        ) -> Self::Future {
+                        fn call(&mut self, request: tonic::Request<super::GetDsSchedulesRequest>) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move { (*inner).get_ds_schedules(request).await };
                             Box::pin(fut)
@@ -495,14 +399,8 @@ pub mod ds_schedules_service_server {
                         let method = GetDsSchedulesSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
@@ -511,16 +409,10 @@ pub mod ds_schedules_service_server {
                 "/ds_schedules.DsSchedulesService/CreateDsSchedules" => {
                     #[allow(non_camel_case_types)]
                     struct CreateDsSchedulesSvc<T: DsSchedulesService>(pub Arc<T>);
-                    impl<T: DsSchedulesService>
-                        tonic::server::UnaryService<super::CreateDsSchedulesRequest>
-                        for CreateDsSchedulesSvc<T>
-                    {
+                    impl<T: DsSchedulesService> tonic::server::UnaryService<super::CreateDsSchedulesRequest> for CreateDsSchedulesSvc<T> {
                         type Response = super::DsSchedules;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::CreateDsSchedulesRequest>,
-                        ) -> Self::Future {
+                        fn call(&mut self, request: tonic::Request<super::CreateDsSchedulesRequest>) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move { (*inner).create_ds_schedules(request).await };
                             Box::pin(fut)
@@ -536,14 +428,8 @@ pub mod ds_schedules_service_server {
                         let method = CreateDsSchedulesSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
@@ -552,16 +438,10 @@ pub mod ds_schedules_service_server {
                 "/ds_schedules.DsSchedulesService/UpdateDsSchedules" => {
                     #[allow(non_camel_case_types)]
                     struct UpdateDsSchedulesSvc<T: DsSchedulesService>(pub Arc<T>);
-                    impl<T: DsSchedulesService>
-                        tonic::server::UnaryService<super::UpdateDsSchedulesRequest>
-                        for UpdateDsSchedulesSvc<T>
-                    {
+                    impl<T: DsSchedulesService> tonic::server::UnaryService<super::UpdateDsSchedulesRequest> for UpdateDsSchedulesSvc<T> {
                         type Response = super::DsSchedules;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::UpdateDsSchedulesRequest>,
-                        ) -> Self::Future {
+                        fn call(&mut self, request: tonic::Request<super::UpdateDsSchedulesRequest>) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move { (*inner).update_ds_schedules(request).await };
                             Box::pin(fut)
@@ -577,14 +457,8 @@ pub mod ds_schedules_service_server {
                         let method = UpdateDsSchedulesSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
@@ -593,16 +467,10 @@ pub mod ds_schedules_service_server {
                 "/ds_schedules.DsSchedulesService/DeleteDsSchedules" => {
                     #[allow(non_camel_case_types)]
                     struct DeleteDsSchedulesSvc<T: DsSchedulesService>(pub Arc<T>);
-                    impl<T: DsSchedulesService>
-                        tonic::server::UnaryService<super::DeleteDsSchedulesRequest>
-                        for DeleteDsSchedulesSvc<T>
-                    {
+                    impl<T: DsSchedulesService> tonic::server::UnaryService<super::DeleteDsSchedulesRequest> for DeleteDsSchedulesSvc<T> {
                         type Response = ();
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::DeleteDsSchedulesRequest>,
-                        ) -> Self::Future {
+                        fn call(&mut self, request: tonic::Request<super::DeleteDsSchedulesRequest>) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move { (*inner).delete_ds_schedules(request).await };
                             Box::pin(fut)
@@ -618,14 +486,8 @@ pub mod ds_schedules_service_server {
                         let method = DeleteDsSchedulesSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
@@ -660,10 +522,7 @@ pub mod ds_schedules_service_server {
         }
     }
     impl<T: std::fmt::Debug> std::fmt::Debug for _Inner<T> {
-        fn fmt(
-            &self,
-            f: &mut std::fmt::Formatter<'_>,
-        ) -> std::fmt::Result {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             write!(f, "{:?}", self.0)
         }
     }

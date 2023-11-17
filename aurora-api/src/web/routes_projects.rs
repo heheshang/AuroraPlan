@@ -17,8 +17,8 @@ use crate::{
     model::{
         self,
         projects::service::{
-            self, _create_project_paramter, _delete_project, _delete_project_parameter,
-            _project_parameter_list, _update_project_parameter, create, update,
+            self, _create_project_paramter, _delete_project, _delete_project_parameter, _project_parameter_list,
+            _update_project_parameter, create, update,
         },
     },
 };
@@ -27,9 +27,8 @@ use crate::{model::projects::service::list, web::bean::response::projects::DsPro
 use super::{
     bean::{
         request::projects::{
-            DefineUserCountParams, ProcessStateCountParams, ProjectCreateParams, ProjectListParams,
-            ProjectParamCreate, ProjectParamDelete, ProjectParamUpdate, ProjectParameterListParams,
-            TaskStateCountParams,
+            DefineUserCountParams, ProcessStateCountParams, ProjectCreateParams, ProjectListParams, ProjectParamCreate,
+            ProjectParamDelete, ProjectParamUpdate, ProjectParameterListParams, TaskStateCountParams,
         },
         response::projects::{DsProjectList, DsProjectParamterRes, ProjectParameterList},
     },
@@ -38,19 +37,10 @@ use super::{
 
 pub fn routes() -> Router {
     let routes = Router::new()
-        .route(
-            "/projects/analysis/define-user-count",
-            get(define_user_count),
-        )
+        .route("/projects/analysis/define-user-count", get(define_user_count))
         .route("/projects/analysis/task-state-count", get(task_state_count))
-        .route(
-            "/projects/analysis/process-state-count",
-            get(process_state_count),
-        )
-        .route(
-            "/projects",
-            get(project_list).post(create_project).put(update_project),
-        )
+        .route("/projects/analysis/process-state-count", get(process_state_count))
+        .route("/projects", get(project_list).post(create_project).put(update_project))
         .route("/projects/:project_code", delete(delete_project))
         .route(
             "/projects/:project_code/project-parameter",
@@ -75,13 +65,7 @@ pub async fn project_parameter_list(
     Path(project_code): Path<u64>,
     param: Query<ProjectParameterListParams>,
 ) -> Result<ApiResult<ProjectParameterList>> {
-    let res = _project_parameter_list(
-        &param.pageNo,
-        &param.pageSize,
-        &param.searchVal,
-        &project_code,
-    )
-    .await?;
+    let res = _project_parameter_list(&param.pageNo, &param.pageSize, &param.searchVal, &project_code).await?;
     Ok(ApiResult::build(Some(ProjectParameterList::from(res))))
 }
 pub async fn create_project_parameter(
@@ -94,13 +78,7 @@ pub async fn create_project_parameter(
     let user_id = ctx.user_id;
     let project_parameter_name = param.projectParameterName.clone();
     let project_parameter_value = param.projectParameterValue.clone();
-    let res = _create_project_paramter(
-        user_id,
-        project_code,
-        project_parameter_name,
-        project_parameter_value,
-    )
-    .await?;
+    let res = _create_project_paramter(user_id, project_code, project_parameter_name, project_parameter_value).await?;
     Ok(ApiResult::build(Some(DsProjectParamterRes::from(res))))
 }
 
@@ -113,13 +91,7 @@ pub async fn update_project_parameter(
     info!("projectCode: {:?} ,param :{:#?} ", project_code, param);
     let project_parameter_name = param.projectParameterName.clone();
     let project_parameter_value = param.projectParameterValue.clone();
-    let res = _update_project_parameter(
-        code_id,
-        project_code,
-        project_parameter_name,
-        project_parameter_value,
-    )
-    .await?;
+    let res = _update_project_parameter(code_id, project_code, project_parameter_name, project_parameter_value).await?;
     Ok(ApiResult::build(Some(DsProjectParamterRes::from(res))))
 }
 pub async fn delete_project_parameter(
@@ -155,21 +127,13 @@ pub async fn update_project(
     Ok(ApiResult::build(Some(DsProjectRes::from(res))))
 }
 
-pub async fn delete_project(
-    cookies: Cookies,
-    ctx: Ctx,
-    Path(project_code): Path<i32>,
-) -> Result<ApiResult<()>> {
+pub async fn delete_project(cookies: Cookies, ctx: Ctx, Path(project_code): Path<i32>) -> Result<ApiResult<()>> {
     let user_id: i32 = ctx.user_id;
     _delete_project(project_code).await?;
     Ok(ApiResult::build(Some(())))
 }
 
-pub async fn define_user_count(
-    param: Query<DefineUserCountParams>,
-    cookies: Cookies,
-    ctx: Ctx,
-) -> impl IntoResponse {
+pub async fn define_user_count(param: Query<DefineUserCountParams>, cookies: Cookies, ctx: Ctx) -> impl IntoResponse {
     let v = json!( {
       "code": 0,
       "msg": "成功",
@@ -189,11 +153,7 @@ pub async fn define_user_count(
     Json(v)
 }
 
-pub async fn task_state_count(
-    param: Query<TaskStateCountParams>,
-    cookies: Cookies,
-    ctx: Ctx,
-) -> impl IntoResponse {
+pub async fn task_state_count(param: Query<TaskStateCountParams>, cookies: Cookies, ctx: Ctx) -> impl IntoResponse {
     let v = json!( {
 
     "code": 0,

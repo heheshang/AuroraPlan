@@ -4,9 +4,7 @@ use crate::{
 };
 use aurora_common::{core_error::error::Error, core_results::results::Result};
 use aurora_proto::{
-    ds_project::{
-        DeleteDsProjectRequest, DsProject, ListDsProjectsRequest, UpdateDsProjectRequest,
-    },
+    ds_project::{DeleteDsProjectRequest, DsProject, ListDsProjectsRequest, UpdateDsProjectRequest},
     ds_project_parameter::{
         CreateProjectParameterRequest, DeleteProjectParameterRequest, ListProjectParametersRequest,
         ListProjectParametersResponse, ProjectParameter, UpdateProjectParameterRequest,
@@ -15,11 +13,7 @@ use aurora_proto::{
 };
 use tracing::log::error;
 
-pub async fn create(
-    user_id: i32,
-    name: String,
-    description: Option<String>,
-) -> Result<DsProject> {
+pub async fn create(user_id: i32, name: String, description: Option<String>) -> Result<DsProject> {
     let client = _ds_project_service_client().await?;
     let request = tonic::Request::new(CreateDsProjectRequest {
         name,
@@ -37,11 +31,7 @@ pub async fn create(
             err
         })
 }
-pub async fn update(
-    user_id: i32,
-    name: String,
-    description: Option<String>,
-) -> Result<DsProject> {
+pub async fn update(user_id: i32, name: String, description: Option<String>) -> Result<DsProject> {
     let client = _ds_project_service_client().await?;
     let request = tonic::Request::new(UpdateDsProjectRequest {
         name,
@@ -70,11 +60,7 @@ pub async fn _delete_project(project_code: i32) -> Result<()> {
     })?;
     Ok(())
 }
-pub async fn list(
-    page_num: &u64,
-    page_size: &u64,
-    search_val: &Option<String>,
-) -> Result<DsProjectList> {
+pub async fn list(page_num: &u64, page_size: &u64, search_val: &Option<String>) -> Result<DsProjectList> {
     let client = _ds_project_service_client().await?;
     let request = tonic::Request::new(ListDsProjectsRequest {
         page_num: *page_num,
@@ -123,10 +109,7 @@ pub async fn _create_project_paramter(
             err
         })
 }
-pub async fn _delete_project_parameter(
-    code: i64,
-    project_code: i64,
-) -> Result<()> {
+pub async fn _delete_project_parameter(code: i64, project_code: i64) -> Result<()> {
     let client = _ds_project_parameter_service_client().await?;
     let request = tonic::Request::new(DeleteProjectParameterRequest { code, project_code });
 

@@ -6,9 +6,7 @@ use std::str::FromStr;
 
 use aurora_config::api_config::Settings;
 
-use self::authenticator::{
-    Authenticator, AuthenticatorType, LdapAuthenticator, PasswordAuthenticator,
-};
+use self::authenticator::{Authenticator, AuthenticatorType, LdapAuthenticator, PasswordAuthenticator};
 
 trait AuthenticatorFactory {
     fn build() -> Box<dyn Authenticator>;

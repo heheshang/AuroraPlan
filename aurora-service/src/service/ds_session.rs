@@ -5,8 +5,8 @@ use aurora_common::{
 };
 use entity::t_ds_session::{self, Model};
 use proto::ds_session::{
-    ds_session_service_server::DsSessionService, DsSession, GetDsSessionByIdRequest,
-    GetDsSessionUserIdRequest, GetDsSessionUserIdResponse,
+    ds_session_service_server::DsSessionService, DsSession, GetDsSessionByIdRequest, GetDsSessionUserIdRequest,
+    GetDsSessionUserIdResponse,
 };
 use sea_orm::entity::prelude::*;
 
@@ -15,10 +15,7 @@ impl DsSessionService for AuroraRpcServer {
     async fn list_ds_sessions(
         &self,
         _req: tonic::Request<proto::ds_session::ListDsSessionsRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_session::ListDsSessionsResponse>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_session::ListDsSessionsResponse>, tonic::Status> {
         todo!()
     }
 
@@ -42,8 +39,7 @@ impl DsSessionService for AuroraRpcServer {
             user_id: sea_orm::ActiveValue::Set(Some(ds_session.user_id)),
             ip: sea_orm::ActiveValue::Set(ds_session.ip),
             last_login_time: sea_orm::ActiveValue::Set(Some(
-                parse_from_str(&ds_session.last_login_time.unwrap(), "%Y-%m-%d %H:%M:%S")
-                    .unwrap_or(current_time),
+                parse_from_str(&ds_session.last_login_time.unwrap(), "%Y-%m-%d %H:%M:%S").unwrap_or(current_time),
             )),
         };
         let conn = &self.db;
@@ -78,8 +74,7 @@ impl DsSessionService for AuroraRpcServer {
             user_id: sea_orm::ActiveValue::Set(Some(ds_session.user_id)),
             ip: sea_orm::ActiveValue::Set(ds_session.ip),
             last_login_time: sea_orm::ActiveValue::Set(Some(
-                parse_from_str(&ds_session.last_login_time.unwrap(), "%Y-%m-%d %H:%M:%S")
-                    .unwrap_or(current_time),
+                parse_from_str(&ds_session.last_login_time.unwrap(), "%Y-%m-%d %H:%M:%S").unwrap_or(current_time),
             )),
         };
 
@@ -111,10 +106,7 @@ impl DsSessionService for AuroraRpcServer {
         }
     }
 
-    async fn get_ds_session_by_id(
-        &self,
-        request: GrpcRequest<GetDsSessionByIdRequest>,
-    ) -> GrpcResponse<DsSession> {
+    async fn get_ds_session_by_id(&self, request: GrpcRequest<GetDsSessionByIdRequest>) -> GrpcResponse<DsSession> {
         let conn = &self.db;
         let id = request.into_inner().id;
         let ds_session: Option<t_ds_session::Model> = t_ds_session::Entity::find()

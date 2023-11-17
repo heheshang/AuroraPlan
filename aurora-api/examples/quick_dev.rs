@@ -79,10 +79,12 @@ async fn task_state_count() -> Result<()> {
 //http://pt003:12345/dolphinscheduler/projects/analysis/process-state-count?startDate=2023-11-07%2000%3A00%3A00&endDate=2023-11-07%2009%3A04%3A42&projectCode=0
 async fn process_state_count() -> Result<()> {
     let hc = login!();
-    hc.do_get("/api/aurora/projects/analysis/process-state-count?projectCode=0&startDate=2023-11-07&endDate=2023-11-00")
-        .await?
-        .print()
-        .await?;
+    hc.do_get(
+        "/api/aurora/projects/analysis/process-state-count?projectCode=0&startDate=2023-11-07&endDate=2023-11-00",
+    )
+    .await?
+    .print()
+    .await?;
     Ok(())
 }
 //http://pt003:12345/dolphinscheduler/projects?pageSize=10&pageNo=1&searchVal=

@@ -16,30 +16,24 @@ impl DsProcessDefinitionLogService for AuroraRpcServer {
     async fn get_ds_process_definition_log(
         &self,
         _req: tonic::Request<proto::ds_process_definition_log::GetDsProcessDefinitionLogRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_process_definition_log::DsProcessDefinitionLog>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_process_definition_log::DsProcessDefinitionLog>, tonic::Status>
+    {
         todo!()
     }
 
     async fn create_ds_process_definition_log(
         &self,
         _req: tonic::Request<proto::ds_process_definition_log::CreateDsProcessDefinitionLogRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_process_definition_log::DsProcessDefinitionLog>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_process_definition_log::DsProcessDefinitionLog>, tonic::Status>
+    {
         todo!()
     }
 
     async fn update_ds_process_definition_log(
         &self,
         _req: tonic::Request<proto::ds_process_definition_log::UpdateDsProcessDefinitionLogRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_process_definition_log::DsProcessDefinitionLog>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_process_definition_log::DsProcessDefinitionLog>, tonic::Status>
+    {
         todo!()
     }
 

@@ -16,30 +16,21 @@ impl DsProcessDefinitionService for AuroraRpcServer {
     async fn get_ds_process_definition(
         &self,
         _req: tonic::Request<proto::ds_process_definition::GetDsProcessDefinitionRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_process_definition::DsProcessDefinition>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_process_definition::DsProcessDefinition>, tonic::Status> {
         todo!()
     }
 
     async fn create_ds_process_definition(
         &self,
         _req: tonic::Request<proto::ds_process_definition::CreateDsProcessDefinitionRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_process_definition::DsProcessDefinition>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_process_definition::DsProcessDefinition>, tonic::Status> {
         todo!()
     }
 
     async fn update_ds_process_definition(
         &self,
         _req: tonic::Request<proto::ds_process_definition::UpdateDsProcessDefinitionRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_process_definition::DsProcessDefinition>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_process_definition::DsProcessDefinition>, tonic::Status> {
         todo!()
     }
 

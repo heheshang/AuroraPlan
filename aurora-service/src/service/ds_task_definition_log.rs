@@ -16,30 +16,21 @@ impl DsTaskDefinitionLogService for AuroraRpcServer {
     async fn get_ds_task_definition_log(
         &self,
         _req: tonic::Request<proto::ds_task_definition_log::GetDsTaskDefinitionLogRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_task_definition_log::DsTaskDefinitionLog>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_task_definition_log::DsTaskDefinitionLog>, tonic::Status> {
         todo!()
     }
 
     async fn create_ds_task_definition_log(
         &self,
         _req: tonic::Request<proto::ds_task_definition_log::CreateDsTaskDefinitionLogRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_task_definition_log::DsTaskDefinitionLog>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_task_definition_log::DsTaskDefinitionLog>, tonic::Status> {
         todo!()
     }
 
     async fn update_ds_task_definition_log(
         &self,
         _req: tonic::Request<proto::ds_task_definition_log::UpdateDsTaskDefinitionLogRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_task_definition_log::DsTaskDefinitionLog>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_task_definition_log::DsTaskDefinitionLog>, tonic::Status> {
         todo!()
     }
 

@@ -38,10 +38,7 @@ pub struct Message {
 }
 
 impl Message {
-    fn new(
-        code: i32,
-        descp: String,
-    ) -> Message {
+    fn new(code: i32, descp: String) -> Message {
         Message { code, descp }
     }
 }
@@ -61,22 +58,16 @@ impl CommandType {
             CommandType::RECOVER_TOLERANCE_FAULT_PROCESS => {
                 Message::new(2, "recover tolerance fault process".to_string())
             }
-            CommandType::RECOVER_SUSPENDED_PROCESS => {
-                Message::new(3, "recover suspended process".to_string())
-            }
+            CommandType::RECOVER_SUSPENDED_PROCESS => Message::new(3, "recover suspended process".to_string()),
             CommandType::START_FAILURE_TASK_PROCESS => {
                 Message::new(4, "start process from failure task nodes".to_string())
             }
             CommandType::COMPLEMENT_DATA => Message::new(5, "complement data".to_string()),
-            CommandType::SCHEDULER => {
-                Message::new(6, "start a new process from scheduler".to_string())
-            }
+            CommandType::SCHEDULER => Message::new(6, "start a new process from scheduler".to_string()),
             CommandType::REPEAT_RUNNING => Message::new(7, "repeat running a process".to_string()),
             CommandType::PAUSE => Message::new(8, "pause a process".to_string()),
             CommandType::STOP => Message::new(9, "stop a process".to_string()),
-            CommandType::RECOVER_WAITING_THREAD => {
-                Message::new(10, "recover waiting thread".to_string())
-            }
+            CommandType::RECOVER_WAITING_THREAD => Message::new(10, "recover waiting thread".to_string()),
             CommandType::RECOVER_SERIAL_WAIT => Message::new(11, "recover serial wait".to_string()),
         }
     }

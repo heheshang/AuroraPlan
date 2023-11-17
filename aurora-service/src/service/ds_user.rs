@@ -5,18 +5,14 @@ use aurora_common::{
 };
 use entity::t_ds_user::{self};
 use proto::ds_user::{
-    ds_user_service_server::DsUserService, CreateDsUserRequest, DeleteDsUserRequest, DsUser,
-    GetDsUserByIdRequest, GetDsUserByIdResponse, GetDsUserRequest, ListDsUsersRequest,
-    ListDsUsersResponse, UpdateDsUserRequest,
+    ds_user_service_server::DsUserService, CreateDsUserRequest, DeleteDsUserRequest, DsUser, GetDsUserByIdRequest,
+    GetDsUserByIdResponse, GetDsUserRequest, ListDsUsersRequest, ListDsUsersResponse, UpdateDsUserRequest,
 };
 use sea_orm::entity::prelude::*;
 
 #[tonic::async_trait]
 impl DsUserService for AuroraRpcServer {
-    async fn get_ds_user(
-        &self,
-        req: GrpcRequest<GetDsUserRequest>,
-    ) -> GrpcResponse<DsUser> {
+    async fn get_ds_user(&self, req: GrpcRequest<GetDsUserRequest>) -> GrpcResponse<DsUser> {
         let conn = &self.db;
         let name = req.into_inner().name;
         let db_user: Option<t_ds_user::Model> = t_ds_user::Entity::find()
@@ -34,10 +30,7 @@ impl DsUserService for AuroraRpcServer {
         }
     }
 
-    async fn update_ds_user(
-        &self,
-        req: GrpcRequest<UpdateDsUserRequest>,
-    ) -> GrpcResponse<DsUser> {
+    async fn update_ds_user(&self, req: GrpcRequest<UpdateDsUserRequest>) -> GrpcResponse<DsUser> {
         let conn = &self.db;
         if let Some(user) = req.into_inner().ds_user {
             let db_user = t_ds_user::Entity::find_by_id(user.id)
@@ -56,31 +49,19 @@ impl DsUserService for AuroraRpcServer {
         }
     }
 
-    async fn list_ds_users(
-        &self,
-        _req: GrpcRequest<ListDsUsersRequest>,
-    ) -> GrpcResponse<ListDsUsersResponse> {
+    async fn list_ds_users(&self, _req: GrpcRequest<ListDsUsersRequest>) -> GrpcResponse<ListDsUsersResponse> {
         todo!()
     }
 
-    async fn create_ds_user(
-        &self,
-        _request: GrpcRequest<CreateDsUserRequest>,
-    ) -> GrpcResponse<DsUser> {
+    async fn create_ds_user(&self, _request: GrpcRequest<CreateDsUserRequest>) -> GrpcResponse<DsUser> {
         todo!()
     }
 
-    async fn delete_ds_user(
-        &self,
-        _request: GrpcRequest<DeleteDsUserRequest>,
-    ) -> GrpcResponse<()> {
+    async fn delete_ds_user(&self, _request: GrpcRequest<DeleteDsUserRequest>) -> GrpcResponse<()> {
         todo!()
     }
 
-    async fn get_ds_user_by_id(
-        &self,
-        req: GrpcRequest<GetDsUserByIdRequest>,
-    ) -> GrpcResponse<GetDsUserByIdResponse> {
+    async fn get_ds_user_by_id(&self, req: GrpcRequest<GetDsUserByIdRequest>) -> GrpcResponse<GetDsUserByIdResponse> {
         let conn = &self.db;
         let id = req.into_inner().id;
         let db_user: Option<t_ds_user::Model> = t_ds_user::Entity::find()
@@ -93,9 +74,7 @@ impl DsUserService for AuroraRpcServer {
             Some(v) => Ok(tonic::Response::new(GetDsUserByIdResponse {
                 ds_user: Some(v.into()),
             })),
-            None => Ok(tonic::Response::new(GetDsUserByIdResponse {
-                ds_user: None,
-            })),
+            None => Ok(tonic::Response::new(GetDsUserByIdResponse { ds_user: None })),
         }
     }
 

@@ -16,30 +16,24 @@ impl DsRelationProjectUserService for AuroraRpcServer {
     async fn get_ds_relation_project_user(
         &self,
         _req: tonic::Request<proto::ds_relation_project_user::GetDsRelationProjectUserRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_relation_project_user::DsRelationProjectUser>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_relation_project_user::DsRelationProjectUser>, tonic::Status>
+    {
         todo!()
     }
 
     async fn create_ds_relation_project_user(
         &self,
         _req: tonic::Request<proto::ds_relation_project_user::CreateDsRelationProjectUserRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_relation_project_user::DsRelationProjectUser>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_relation_project_user::DsRelationProjectUser>, tonic::Status>
+    {
         todo!()
     }
 
     async fn update_ds_relation_project_user(
         &self,
         _req: tonic::Request<proto::ds_relation_project_user::UpdateDsRelationProjectUserRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_relation_project_user::DsRelationProjectUser>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_relation_project_user::DsRelationProjectUser>, tonic::Status>
+    {
         todo!()
     }
 

@@ -16,30 +16,24 @@ impl QrtzPausedTriggerGrpsService for AuroraRpcServer {
     async fn get_qrtz_paused_trigger_grps(
         &self,
         _req: tonic::Request<proto::qrtz_paused_trigger_grps::GetQrtzPausedTriggerGrpsRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::qrtz_paused_trigger_grps::QrtzPausedTriggerGrps>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::qrtz_paused_trigger_grps::QrtzPausedTriggerGrps>, tonic::Status>
+    {
         todo!()
     }
 
     async fn create_qrtz_paused_trigger_grps(
         &self,
         _req: tonic::Request<proto::qrtz_paused_trigger_grps::CreateQrtzPausedTriggerGrpsRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::qrtz_paused_trigger_grps::QrtzPausedTriggerGrps>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::qrtz_paused_trigger_grps::QrtzPausedTriggerGrps>, tonic::Status>
+    {
         todo!()
     }
 
     async fn update_qrtz_paused_trigger_grps(
         &self,
         _req: tonic::Request<proto::qrtz_paused_trigger_grps::UpdateQrtzPausedTriggerGrpsRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::qrtz_paused_trigger_grps::QrtzPausedTriggerGrps>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::qrtz_paused_trigger_grps::QrtzPausedTriggerGrps>, tonic::Status>
+    {
         todo!()
     }
 

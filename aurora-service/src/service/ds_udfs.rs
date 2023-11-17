@@ -5,8 +5,7 @@ impl DsUdfsService for AuroraRpcServer {
     async fn list_ds_udfss(
         &self,
         _req: tonic::Request<proto::ds_udfs::ListDsUdfssRequest>,
-    ) -> std::result::Result<tonic::Response<proto::ds_udfs::ListDsUdfssResponse>, tonic::Status>
-    {
+    ) -> std::result::Result<tonic::Response<proto::ds_udfs::ListDsUdfssResponse>, tonic::Status> {
         todo!()
     }
 

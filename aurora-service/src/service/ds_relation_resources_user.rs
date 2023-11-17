@@ -5,9 +5,7 @@ use proto::ds_relation_resources_user::ds_relation_resources_user_service_server
 impl DsRelationResourcesUserService for AuroraRpcServer {
     async fn list_ds_relation_resources_users(
         &self,
-        _req: tonic::Request<
-            proto::ds_relation_resources_user::ListDsRelationResourcesUsersRequest,
-        >,
+        _req: tonic::Request<proto::ds_relation_resources_user::ListDsRelationResourcesUsersRequest>,
     ) -> std::result::Result<
         tonic::Response<proto::ds_relation_resources_user::ListDsRelationResourcesUsersResponse>,
         tonic::Status,
@@ -18,42 +16,30 @@ impl DsRelationResourcesUserService for AuroraRpcServer {
     async fn get_ds_relation_resources_user(
         &self,
         _req: tonic::Request<proto::ds_relation_resources_user::GetDsRelationResourcesUserRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_relation_resources_user::DsRelationResourcesUser>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_relation_resources_user::DsRelationResourcesUser>, tonic::Status>
+    {
         todo!()
     }
 
     async fn create_ds_relation_resources_user(
         &self,
-        _req: tonic::Request<
-            proto::ds_relation_resources_user::CreateDsRelationResourcesUserRequest,
-        >,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_relation_resources_user::DsRelationResourcesUser>,
-        tonic::Status,
-    > {
+        _req: tonic::Request<proto::ds_relation_resources_user::CreateDsRelationResourcesUserRequest>,
+    ) -> std::result::Result<tonic::Response<proto::ds_relation_resources_user::DsRelationResourcesUser>, tonic::Status>
+    {
         todo!()
     }
 
     async fn update_ds_relation_resources_user(
         &self,
-        _req: tonic::Request<
-            proto::ds_relation_resources_user::UpdateDsRelationResourcesUserRequest,
-        >,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_relation_resources_user::DsRelationResourcesUser>,
-        tonic::Status,
-    > {
+        _req: tonic::Request<proto::ds_relation_resources_user::UpdateDsRelationResourcesUserRequest>,
+    ) -> std::result::Result<tonic::Response<proto::ds_relation_resources_user::DsRelationResourcesUser>, tonic::Status>
+    {
         todo!()
     }
 
     async fn delete_ds_relation_resources_user(
         &self,
-        _req: tonic::Request<
-            proto::ds_relation_resources_user::DeleteDsRelationResourcesUserRequest,
-        >,
+        _req: tonic::Request<proto::ds_relation_resources_user::DeleteDsRelationResourcesUserRequest>,
     ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
         todo!()
     }

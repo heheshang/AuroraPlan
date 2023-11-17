@@ -11,10 +11,12 @@
 # format_macro_bodies：指定是否格式化宏的主体，默认为true。
 # # chain_split = "Vertical"
 max_width = 120
-tab_spaces = 2
-fn_args_layout = "Horizontal"
+tab_spaces = 4
+# fn_params_layout = "Vertical"
+# fn_params_layout = "Compressed"
+fn_params_layout = "Tall"
 chain_width = 80
-chain_split = "Vertical"
+# chain_split = "Vertical"
 reorder_imports = true
 reorder_modules = true
 format_strings = true

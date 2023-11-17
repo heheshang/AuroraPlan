@@ -5,8 +5,7 @@ impl DsTenantService for AuroraRpcServer {
     async fn list_ds_tenants(
         &self,
         _req: tonic::Request<proto::ds_tenant::ListDsTenantsRequest>,
-    ) -> std::result::Result<tonic::Response<proto::ds_tenant::ListDsTenantsResponse>, tonic::Status>
-    {
+    ) -> std::result::Result<tonic::Response<proto::ds_tenant::ListDsTenantsResponse>, tonic::Status> {
         todo!()
     }
 

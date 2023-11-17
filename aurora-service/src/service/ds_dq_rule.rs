@@ -6,8 +6,7 @@ impl DsDqRuleService for AuroraRpcServer {
     async fn list_ds_dq_rules(
         &self,
         _req: tonic::Request<proto::ds_dq_rule::ListDsDqRulesRequest>,
-    ) -> std::result::Result<tonic::Response<proto::ds_dq_rule::ListDsDqRulesResponse>, tonic::Status>
-    {
+    ) -> std::result::Result<tonic::Response<proto::ds_dq_rule::ListDsDqRulesResponse>, tonic::Status> {
         todo!()
     }
 

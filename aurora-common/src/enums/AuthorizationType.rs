@@ -27,10 +27,7 @@ pub struct Message {
 }
 
 impl Message {
-    fn new(
-        code: i32,
-        descp: String,
-    ) -> Message {
+    fn new(code: i32, descp: String) -> Message {
         Message { code, descp }
     }
 }
@@ -39,9 +36,7 @@ impl AuthorizationType {
     pub fn get_message(&self) -> Message {
         match self {
             AuthorizationType::RESOURCE_FILE_ID => Message::new(0, "resource file id".to_string()),
-            AuthorizationType::RESOURCE_FILE_NAME => {
-                Message::new(1, "resource file name".to_string())
-            }
+            AuthorizationType::RESOURCE_FILE_NAME => Message::new(1, "resource file name".to_string()),
             AuthorizationType::UDF_FILE => Message::new(2, "udf file".to_string()),
             AuthorizationType::DATASOURCE => Message::new(3, "data source".to_string()),
             AuthorizationType::UDF => Message::new(4, "udf function".to_string()),

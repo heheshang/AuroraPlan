@@ -44,8 +44,7 @@ use aurora_proto::{
     ds_task_group::ds_task_group_service_client::DsTaskGroupServiceClient,
     ds_task_group_queue::ds_task_group_queue_service_client::DsTaskGroupQueueServiceClient,
     ds_task_instance::ds_task_instance_service_client::DsTaskInstanceServiceClient,
-    ds_tenant::ds_tenant_service_client::DsTenantServiceClient,
-    ds_udfs::ds_udfs_service_client::DsUdfsServiceClient,
+    ds_tenant::ds_tenant_service_client::DsTenantServiceClient, ds_udfs::ds_udfs_service_client::DsUdfsServiceClient,
     ds_user::ds_user_service_client::DsUserServiceClient,
     ds_version::ds_version_service_client::DsVersionServiceClient,
     ds_worker_group::ds_worker_group_service_client::DsWorkerGroupServiceClient,
@@ -73,10 +72,9 @@ thread_local! {
 }
 
 macro_rules! build_client {
-    ($contanst_name:ident,$fn_name:ident, $service_type:ident) => {
-        pub static $contanst_name: tokio::sync::OnceCell<
-            Result<$service_type<tonic::transport::Channel>>,
-        > = tokio::sync::OnceCell::const_new();
+    ($contanst_name:ident, $fn_name:ident, $service_type:ident) => {
+        pub static $contanst_name: tokio::sync::OnceCell<Result<$service_type<tonic::transport::Channel>>> =
+            tokio::sync::OnceCell::const_new();
 
         pub async fn $fn_name() -> Result<$service_type<tonic::transport::Channel>> {
             let host = SETTINGS.with(|settings| settings.borrow().service.host.clone());
@@ -146,11 +144,13 @@ async fn check_client() -> core::result::Result<(), Box<dyn std::error::Error>> 
             }
             Err(status) => {
                 match status.code() {
-                tonic::Code::Unimplemented =>
-                   error!("error: this server does not implement the grpc health protocol (grpc.health.v1.Health): {}", status.message()),
-                tonic::Code::DeadlineExceeded => error!("timeout: health rpc did not complete within 1 second"),
-                _ => error!("error: health rpc failed: {}", status.message()),
-            };
+                    tonic::Code::Unimplemented => error!(
+                        "error: this server does not implement the grpc health protocol (grpc.health.v1.Health): {}",
+                        status.message()
+                    ),
+                    tonic::Code::DeadlineExceeded => error!("timeout: health rpc did not complete within 1 second"),
+                    _ => error!("error: health rpc failed: {}", status.message()),
+                };
                 continue;
             }
         }
@@ -178,21 +178,9 @@ build_client!(
     _ds_alert_group_service_client,
     DsAlertGroupServiceClient
 );
-build_client!(
-    _DS_AUDIT_LOG,
-    _ds_audit_log_service_client,
-    DsAuditLogServiceClient
-);
-build_client!(
-    _DS_COMMAND,
-    _ds_command_service_client,
-    DsCommandServiceClient
-);
-build_client!(
-    _DS_DATASOURCE,
-    _ds_datasource_service_client,
-    DsDatasourceServiceClient
-);
+build_client!(_DS_AUDIT_LOG, _ds_audit_log_service_client, DsAuditLogServiceClient);
+build_client!(_DS_COMMAND, _ds_command_service_client, DsCommandServiceClient);
+build_client!(_DS_DATASOURCE, _ds_datasource_service_client, DsDatasourceServiceClient);
 build_client!(
     _DS_DQ_COMPARISON_TYPE,
     _ds_dq_comparison_type_service_client,
@@ -203,11 +191,7 @@ build_client!(
     _ds_dq_execute_result_service_client,
     DsDqExecuteResultServiceClient
 );
-build_client!(
-    _DS_DQ_RULE,
-    _ds_dq_rule_service_client,
-    DsDqRuleServiceClient
-);
+build_client!(_DS_DQ_RULE, _ds_dq_rule_service_client, DsDqRuleServiceClient);
 build_client!(
     _DS_DQ_RULE_EXECUTE_SQL,
     _ds_dq_rule_execute_sql_service_client,
@@ -274,11 +258,7 @@ build_client!(
     _ds_process_task_relation_log_service_client,
     DsProcessTaskRelationLogServiceClient
 );
-build_client!(
-    _DS_PROJECT,
-    _ds_project_service_client,
-    DsProjectServiceClient
-);
+build_client!(_DS_PROJECT, _ds_project_service_client, DsProjectServiceClient);
 build_client!(
     _DS_PROJECT_PARAMETER,
     _ds_project_parameter_service_client,
@@ -325,21 +305,9 @@ build_client!(
     _ds_relation_udfs_user_service_client,
     DsRelationUdfsUserServiceClient
 );
-build_client!(
-    _DS_RESOURCES,
-    _ds_resource_service_client,
-    DsResourceServiceClient
-);
-build_client!(
-    _DS_SCHEDULES,
-    _ds_schedules_service_client,
-    DsSchedulesServiceClient
-);
-build_client!(
-    _DS_SESSION,
-    _ds_session_service_client,
-    DsSessionServiceClient
-);
+build_client!(_DS_RESOURCES, _ds_resource_service_client, DsResourceServiceClient);
+build_client!(_DS_SCHEDULES, _ds_schedules_service_client, DsSchedulesServiceClient);
+build_client!(_DS_SESSION, _ds_session_service_client, DsSessionServiceClient);
 build_client!(
     _DS_TASK_DEFINITION,
     _ds_task_definition_service_client,
@@ -350,11 +318,7 @@ build_client!(
     _ds_task_definition_log_service_client,
     DsTaskDefinitionLogServiceClient
 );
-build_client!(
-    _DS_TASK_GROUP,
-    _ds_task_group_service_client,
-    DsTaskGroupServiceClient
-);
+build_client!(_DS_TASK_GROUP, _ds_task_group_service_client, DsTaskGroupServiceClient);
 build_client!(
     _DS_TASK_GROUP_QUEUE,
     _ds_task_group_queue_service_client,
@@ -368,11 +332,7 @@ build_client!(
 build_client!(_DS_TENANT, _ds_tenant_service_client, DsTenantServiceClient);
 build_client!(_DS_UDFS, _ds_udfs_service_client, DsUdfsServiceClient);
 build_client!(_DS_USER, _ds_user_service_client, DsUserServiceClient);
-build_client!(
-    _DS_VERSION,
-    _ds_version_service_client,
-    DsVersionServiceClient
-);
+build_client!(_DS_VERSION, _ds_version_service_client, DsVersionServiceClient);
 build_client!(
     _DS_WORKER_GROUP,
     _ds_worker_group_service_client,
@@ -423,11 +383,7 @@ build_client!(
     _qrtz_job_details_service_client,
     QrtzJobDetailsServiceClient
 );
-build_client!(
-    _QRTZ_LOCKS,
-    _qrtz_locks_service_client,
-    QrtzLocksServiceClient
-);
+build_client!(_QRTZ_LOCKS, _qrtz_locks_service_client, QrtzLocksServiceClient);
 build_client!(
     _QRTZ_PAUSED_TRIGGER_GRPS,
     _qrtz_paused_trigger_grps_service_client,

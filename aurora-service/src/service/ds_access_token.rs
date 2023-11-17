@@ -4,9 +4,9 @@ use aurora_common::{
 };
 use entity::t_ds_access_token;
 use proto::ds_access_token::{
-    ds_access_token_service_server::DsAccessTokenService, CreateDsAccessTokenRequest,
-    DeleteDsAccessTokenRequest, DsAccessToken, GetDsAccessTokenRequest, ListDsAccessTokensRequest,
-    ListDsAccessTokensResponse, UpdateDsAccessTokenRequest,
+    ds_access_token_service_server::DsAccessTokenService, CreateDsAccessTokenRequest, DeleteDsAccessTokenRequest,
+    DsAccessToken, GetDsAccessTokenRequest, ListDsAccessTokensRequest, ListDsAccessTokensResponse,
+    UpdateDsAccessTokenRequest,
 };
 use sea_orm::{entity::prelude::*, QueryOrder};
 
@@ -25,14 +25,15 @@ impl DsAccessTokenService for AuroraRpcServer {
             .order_by_asc(t_ds_access_token::Column::Id)
             .paginate(&self.db, page_size);
 
-        let num_pages = paginator.num_pages().await.map_err(|_| {
-            Into::<tonic::Status>::into(Error::InternalServerErrorArgs(AuroraData::Null, None))
-        })? as i32;
+        let num_pages = paginator
+            .num_pages()
+            .await
+            .map_err(|_| Into::<tonic::Status>::into(Error::InternalServerErrorArgs(AuroraData::Null, None)))?
+            as i32;
         // Fetch paginated AccessToken
         let res: (Vec<t_ds_access_token::Model>, i32) =
             paginator.fetch_page(page_num - 1).await.map(|p| (p, num_pages)).map_err(|_| {
-                let res: tonic::Status =
-                    Error::InternalServerErrorArgs(AuroraData::Null, None).into();
+                let res: tonic::Status = Error::InternalServerErrorArgs(AuroraData::Null, None).into();
                 res
             })?;
 
@@ -42,10 +43,7 @@ impl DsAccessTokenService for AuroraRpcServer {
         }))
     }
 
-    async fn get_ds_access_token(
-        &self,
-        _req: GrpcRequest<GetDsAccessTokenRequest>,
-    ) -> GrpcResponse<DsAccessToken> {
+    async fn get_ds_access_token(&self, _req: GrpcRequest<GetDsAccessTokenRequest>) -> GrpcResponse<DsAccessToken> {
         todo!()
     }
 
@@ -63,10 +61,7 @@ impl DsAccessTokenService for AuroraRpcServer {
         todo!()
     }
 
-    async fn delete_ds_access_token(
-        &self,
-        _req: GrpcRequest<DeleteDsAccessTokenRequest>,
-    ) -> GrpcResponse<()> {
+    async fn delete_ds_access_token(&self, _req: GrpcRequest<DeleteDsAccessTokenRequest>) -> GrpcResponse<()> {
         todo!()
     }
 }

@@ -96,9 +96,7 @@ pub(crate) async fn build_router(conn: DatabaseConnection) -> Router {
         .add_optional_service(Some(grpc_server.clone().ds_dq_rule_input_entry()))
         .add_optional_service(Some(grpc_server.clone().ds_dq_task_statistics_value()))
         .add_optional_service(Some(grpc_server.clone().ds_environment()))
-        .add_optional_service(Some(
-            grpc_server.clone().ds_environment_worker_group_relation(),
-        ))
+        .add_optional_service(Some(grpc_server.clone().ds_environment_worker_group_relation()))
         .add_optional_service(Some(grpc_server.clone().ds_error_command()))
         .add_optional_service(Some(grpc_server.clone().ds_k8s()))
         .add_optional_service(Some(grpc_server.clone().ds_k8s_namespace()))

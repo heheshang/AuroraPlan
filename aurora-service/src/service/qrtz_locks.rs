@@ -6,10 +6,7 @@ impl QrtzLocksService for AuroraRpcServer {
     async fn list_qrtz_lockss(
         &self,
         _req: tonic::Request<proto::qrtz_locks::ListQrtzLockssRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::qrtz_locks::ListQrtzLockssResponse>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::qrtz_locks::ListQrtzLockssResponse>, tonic::Status> {
         todo!()
     }
 

@@ -21,10 +21,7 @@ pub struct Message {
 }
 
 impl Message {
-    fn new(
-        code: i32,
-        descp: String,
-    ) -> Message {
+    fn new(code: i32, descp: String) -> Message {
         Message { code, descp }
     }
 }
@@ -46,8 +43,7 @@ impl TimeoutFlag {
     }
 
     pub fn of(status: &i32) -> TimeoutFlag {
-        let MAP: HashMap<i32, TimeoutFlag> =
-            HashMap::from([(0, TimeoutFlag::CLOSE), (1, TimeoutFlag::OPEN)]);
+        let MAP: HashMap<i32, TimeoutFlag> = HashMap::from([(0, TimeoutFlag::CLOSE), (1, TimeoutFlag::OPEN)]);
         if MAP.contains_key(status) {
             return MAP.get(status).unwrap().clone();
         }

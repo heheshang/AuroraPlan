@@ -5,9 +5,7 @@ use proto::ds_relation_rule_execute_sql::ds_relation_rule_execute_sql_service_se
 impl DsRelationRuleExecuteSqlService for AuroraRpcServer {
     async fn list_ds_relation_rule_execute_sqls(
         &self,
-        _req: tonic::Request<
-            proto::ds_relation_rule_execute_sql::ListDsRelationRuleExecuteSqlsRequest,
-        >,
+        _req: tonic::Request<proto::ds_relation_rule_execute_sql::ListDsRelationRuleExecuteSqlsRequest>,
     ) -> std::result::Result<
         tonic::Response<proto::ds_relation_rule_execute_sql::ListDsRelationRuleExecuteSqlsResponse>,
         tonic::Status,
@@ -17,9 +15,7 @@ impl DsRelationRuleExecuteSqlService for AuroraRpcServer {
 
     async fn get_ds_relation_rule_execute_sql(
         &self,
-        _req: tonic::Request<
-            proto::ds_relation_rule_execute_sql::GetDsRelationRuleExecuteSqlRequest,
-        >,
+        _req: tonic::Request<proto::ds_relation_rule_execute_sql::GetDsRelationRuleExecuteSqlRequest>,
     ) -> std::result::Result<
         tonic::Response<proto::ds_relation_rule_execute_sql::DsRelationRuleExecuteSql>,
         tonic::Status,
@@ -29,9 +25,7 @@ impl DsRelationRuleExecuteSqlService for AuroraRpcServer {
 
     async fn create_ds_relation_rule_execute_sql(
         &self,
-        _req: tonic::Request<
-            proto::ds_relation_rule_execute_sql::CreateDsRelationRuleExecuteSqlRequest,
-        >,
+        _req: tonic::Request<proto::ds_relation_rule_execute_sql::CreateDsRelationRuleExecuteSqlRequest>,
     ) -> std::result::Result<
         tonic::Response<proto::ds_relation_rule_execute_sql::DsRelationRuleExecuteSql>,
         tonic::Status,
@@ -41,9 +35,7 @@ impl DsRelationRuleExecuteSqlService for AuroraRpcServer {
 
     async fn update_ds_relation_rule_execute_sql(
         &self,
-        _req: tonic::Request<
-            proto::ds_relation_rule_execute_sql::UpdateDsRelationRuleExecuteSqlRequest,
-        >,
+        _req: tonic::Request<proto::ds_relation_rule_execute_sql::UpdateDsRelationRuleExecuteSqlRequest>,
     ) -> std::result::Result<
         tonic::Response<proto::ds_relation_rule_execute_sql::DsRelationRuleExecuteSql>,
         tonic::Status,
@@ -53,9 +45,7 @@ impl DsRelationRuleExecuteSqlService for AuroraRpcServer {
 
     async fn delete_ds_relation_rule_execute_sql(
         &self,
-        _req: tonic::Request<
-            proto::ds_relation_rule_execute_sql::DeleteDsRelationRuleExecuteSqlRequest,
-        >,
+        _req: tonic::Request<proto::ds_relation_rule_execute_sql::DeleteDsRelationRuleExecuteSqlRequest>,
     ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
         todo!()
     }

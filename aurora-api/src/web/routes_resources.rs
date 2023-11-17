@@ -1,9 +1,6 @@
 use std::{collections::HashMap, net::SocketAddr};
 
-use crate::{
-    ctx::Ctx, cypt::security::get_authenticator, log, model, web,
-    web::bean::request::user::UserLoginInfoReq,
-};
+use crate::{ctx::Ctx, cypt::security::get_authenticator, log, model, web, web::bean::request::user::UserLoginInfoReq};
 use aurora_common::{
     core_error::error::Error,
     core_results::results::{ApiResult, Result},
@@ -39,11 +36,7 @@ pub struct BaseDirParams {
     // #[serde(rename = "type")]
     r#type: String,
 }
-pub async fn base_dir(
-    param: Query<BaseDirParams>,
-    cookies: Cookies,
-    ctx: Ctx,
-) -> impl IntoResponse {
+pub async fn base_dir(param: Query<BaseDirParams>, cookies: Cookies, ctx: Ctx) -> impl IntoResponse {
     let res = json!(
         {
     "code": 0,

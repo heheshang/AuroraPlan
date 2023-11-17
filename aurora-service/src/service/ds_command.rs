@@ -6,10 +6,7 @@ impl DsCommandService for AuroraRpcServer {
     async fn list_ds_commands(
         &self,
         _req: tonic::Request<proto::ds_command::ListDsCommandsRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_command::ListDsCommandsResponse>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_command::ListDsCommandsResponse>, tonic::Status> {
         todo!()
     }
 

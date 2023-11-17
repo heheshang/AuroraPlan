@@ -4,8 +4,8 @@ use aurora_common::{
 };
 use aurora_proto::{
     ds_session::{
-        CreateDsSessionRequest, DeleteDsSessionRequest, GetDsSessionByIdRequest,
-        GetDsSessionUserIdRequest, UpdateDsSessionRequest,
+        CreateDsSessionRequest, DeleteDsSessionRequest, GetDsSessionByIdRequest, GetDsSessionUserIdRequest,
+        UpdateDsSessionRequest,
     },
     pb::{ds_session::DsSession, ds_user::DsUser},
 };
@@ -13,10 +13,7 @@ use tracing::{error, info};
 
 use crate::model::client::service::_ds_session_service_client;
 
-pub async fn create_ds_session(
-    user: &DsUser,
-    extra: &str,
-) -> Result<DsSession> {
+pub async fn create_ds_session(user: &DsUser, extra: &str) -> Result<DsSession> {
     let client = _ds_session_service_client().await?;
     info!("user: {:?}, extra: {}", user, extra);
     let user_id = user.id;
@@ -63,9 +60,7 @@ pub async fn create_ds_session(
 
 pub async fn delete_ds_session_by_id(session_id: String) -> Result<()> {
     let client = _ds_session_service_client().await?;
-    let request = tonic::Request::new(DeleteDsSessionRequest {
-        id: session_id.clone(),
-    });
+    let request = tonic::Request::new(DeleteDsSessionRequest { id: session_id.clone() });
     client.clone().delete_ds_session(request).await.map(|_| ()).map_err(|e| {
         let err: Error = e.into();
         error!("delete_ds_session_by_id error: {:?}", err);
@@ -75,9 +70,7 @@ pub async fn delete_ds_session_by_id(session_id: String) -> Result<()> {
 
 pub async fn _get_session(session_id: String) -> Result<DsSession> {
     let client = _ds_session_service_client().await?;
-    let request = tonic::Request::new(GetDsSessionByIdRequest {
-        id: session_id.clone(),
-    });
+    let request = tonic::Request::new(GetDsSessionByIdRequest { id: session_id.clone() });
     client
         .clone()
         .get_ds_session_by_id(request)

@@ -6,34 +6,28 @@ impl QrtzJobDetailsService for AuroraRpcServer {
     async fn list_qrtz_job_detailss(
         &self,
         _req: tonic::Request<proto::qrtz_job_details::ListQrtzJobDetailssRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::qrtz_job_details::ListQrtzJobDetailssResponse>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::qrtz_job_details::ListQrtzJobDetailssResponse>, tonic::Status> {
         todo!()
     }
 
     async fn get_qrtz_job_details(
         &self,
         _req: tonic::Request<proto::qrtz_job_details::GetQrtzJobDetailsRequest>,
-    ) -> std::result::Result<tonic::Response<proto::qrtz_job_details::QrtzJobDetails>, tonic::Status>
-    {
+    ) -> std::result::Result<tonic::Response<proto::qrtz_job_details::QrtzJobDetails>, tonic::Status> {
         todo!()
     }
 
     async fn create_qrtz_job_details(
         &self,
         _req: tonic::Request<proto::qrtz_job_details::CreateQrtzJobDetailsRequest>,
-    ) -> std::result::Result<tonic::Response<proto::qrtz_job_details::QrtzJobDetails>, tonic::Status>
-    {
+    ) -> std::result::Result<tonic::Response<proto::qrtz_job_details::QrtzJobDetails>, tonic::Status> {
         todo!()
     }
 
     async fn update_qrtz_job_details(
         &self,
         _req: tonic::Request<proto::qrtz_job_details::UpdateQrtzJobDetailsRequest>,
-    ) -> std::result::Result<tonic::Response<proto::qrtz_job_details::QrtzJobDetails>, tonic::Status>
-    {
+    ) -> std::result::Result<tonic::Response<proto::qrtz_job_details::QrtzJobDetails>, tonic::Status> {
         todo!()
     }
 

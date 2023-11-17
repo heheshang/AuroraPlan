@@ -6,15 +6,12 @@ use crate::{
 };
 use aurora_common::{core_error::error::Error, core_results::results::Result};
 use aurora_proto::ds_queue::{
-    CreateDsQueueRequest, DeleteDsQueueRequest, ListDsQueuesRequest, ListDsQueuesResponse,
-    UpdateDsQueueRequest, VerifyQueueRequest,
+    CreateDsQueueRequest, DeleteDsQueueRequest, ListDsQueuesRequest, ListDsQueuesResponse, UpdateDsQueueRequest,
+    VerifyQueueRequest,
 };
 use tracing::{error, info};
 
-pub async fn create(
-    queue: &str,
-    queue_name: &str,
-) -> Result<Queue> {
+pub async fn create(queue: &str, queue_name: &str) -> Result<Queue> {
     let client = _ds_queue_service_client().await?;
     let request = tonic::Request::new(CreateDsQueueRequest {
         queue: queue.to_string(),
@@ -32,10 +29,7 @@ pub async fn create(
         })?;
     Ok(res.into())
 }
-pub async fn verify(
-    queue: &str,
-    queue_name: &str,
-) -> Result<VerifyQueue> {
+pub async fn verify(queue: &str, queue_name: &str) -> Result<VerifyQueue> {
     let client = _ds_queue_service_client().await?;
     let request = tonic::Request::new(VerifyQueueRequest {
         queue: queue.to_string(),
@@ -55,11 +49,7 @@ pub async fn verify(
     Ok(res.ds_queue.unwrap().into())
 }
 
-pub async fn list(
-    page_num: &u64,
-    page_size: &u64,
-    search_val: &Option<String>,
-) -> Result<ListDsQueuesResponse> {
+pub async fn list(page_num: &u64, page_size: &u64, search_val: &Option<String>) -> Result<ListDsQueuesResponse> {
     let client = _ds_queue_service_client().await?;
     let request = tonic::Request::new(ListDsQueuesRequest {
         page_num: *page_num,
@@ -93,11 +83,7 @@ pub async fn delete(id: i32) -> Result<()> {
         })
 }
 
-pub async fn update(
-    id: i32,
-    queue: &str,
-    queue_name: &str,
-) -> Result<Queue> {
+pub async fn update(id: i32, queue: &str, queue_name: &str) -> Result<Queue> {
     let client = _ds_queue_service_client().await?;
     let request = tonic::Request::new(UpdateDsQueueRequest {
         ds_queue: Some(aurora_proto::ds_queue::DsQueue {

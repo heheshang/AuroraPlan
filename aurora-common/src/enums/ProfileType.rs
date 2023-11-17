@@ -11,11 +11,7 @@ impl ProfileType {
             H2: String::from("h2"),
             MYSQL: String::from("mysql"),
             POSTGRESQL: String::from("postgresql"),
-            DATASOURCE_PROFILE: vec![
-                String::from("h2"),
-                String::from("mysql"),
-                String::from("postgresql"),
-            ],
+            DATASOURCE_PROFILE: vec![String::from("h2"), String::from("mysql"), String::from("postgresql")],
         }
     }
 }

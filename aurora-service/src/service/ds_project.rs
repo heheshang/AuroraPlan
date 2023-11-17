@@ -6,9 +6,7 @@ use proto::ds_project::ds_project_service_server::DsProjectService;
 use proto::ds_project::DsProjectListRes;
 use sea_orm::sea_query::Expr;
 use sea_orm::{debug_print, Set};
-use sea_orm::{
-    ActiveModelTrait, ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder,
-};
+use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder};
 use tracing::{error, info};
 
 #[tonic::async_trait]
@@ -16,10 +14,7 @@ impl DsProjectService for AuroraRpcServer {
     async fn list_ds_projects(
         &self,
         _req: tonic::Request<proto::ds_project::ListDsProjectsRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_project::ListDsProjectsResponse>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_project::ListDsProjectsResponse>, tonic::Status> {
         let conn = &self.db;
         let search_val = _req.get_ref().clone().search_val.unwrap_or_default();
         let page_size = _req.get_ref().clone().page_size;
@@ -148,10 +143,7 @@ impl DsProjectService for AuroraRpcServer {
         Entity::update_many()
             .col_expr(Column::UserId, Expr::value(_req.get_ref().user_id))
             .col_expr(Column::Name, Expr::value(_req.get_ref().name.clone()))
-            .col_expr(
-                Column::Description,
-                Expr::value(_req.get_ref().description.clone()),
-            )
+            .col_expr(Column::Description, Expr::value(_req.get_ref().description.clone()))
             .col_expr(Column::UpdateTime, Expr::value(current_time))
             .exec(conn)
             .await
@@ -218,10 +210,7 @@ mod tests {
             .to_string();
         println!("{}", sql1);
         let sql2 = Entity::find()
-            .join_rev(
-                sea_orm::JoinType::Join,
-                t_ds_project::Relation::TDsProjectUser.def(),
-            )
+            .join_rev(sea_orm::JoinType::Join, t_ds_project::Relation::TDsProjectUser.def())
             .build(sea_orm::DatabaseBackend::Postgres)
             .to_string();
         println!("{}", sql2);

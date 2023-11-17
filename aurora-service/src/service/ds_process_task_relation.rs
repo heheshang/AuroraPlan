@@ -16,30 +16,24 @@ impl DsProcessTaskRelationService for AuroraRpcServer {
     async fn get_ds_process_task_relation(
         &self,
         _req: tonic::Request<proto::ds_process_task_relation::GetDsProcessTaskRelationRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_process_task_relation::DsProcessTaskRelation>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_process_task_relation::DsProcessTaskRelation>, tonic::Status>
+    {
         todo!()
     }
 
     async fn create_ds_process_task_relation(
         &self,
         _req: tonic::Request<proto::ds_process_task_relation::CreateDsProcessTaskRelationRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_process_task_relation::DsProcessTaskRelation>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_process_task_relation::DsProcessTaskRelation>, tonic::Status>
+    {
         todo!()
     }
 
     async fn update_ds_process_task_relation(
         &self,
         _req: tonic::Request<proto::ds_process_task_relation::UpdateDsProcessTaskRelationRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_process_task_relation::DsProcessTaskRelation>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_process_task_relation::DsProcessTaskRelation>, tonic::Status>
+    {
         todo!()
     }
 

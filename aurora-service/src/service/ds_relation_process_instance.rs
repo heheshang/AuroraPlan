@@ -5,13 +5,9 @@ use proto::ds_relation_process_instance::ds_relation_process_instance_service_se
 impl DsRelationProcessInstanceService for AuroraRpcServer {
     async fn list_ds_relation_process_instances(
         &self,
-        _req: tonic::Request<
-            proto::ds_relation_process_instance::ListDsRelationProcessInstancesRequest,
-        >,
+        _req: tonic::Request<proto::ds_relation_process_instance::ListDsRelationProcessInstancesRequest>,
     ) -> std::result::Result<
-        tonic::Response<
-            proto::ds_relation_process_instance::ListDsRelationProcessInstancesResponse,
-        >,
+        tonic::Response<proto::ds_relation_process_instance::ListDsRelationProcessInstancesResponse>,
         tonic::Status,
     > {
         todo!()
@@ -19,9 +15,7 @@ impl DsRelationProcessInstanceService for AuroraRpcServer {
 
     async fn get_ds_relation_process_instance(
         &self,
-        _req: tonic::Request<
-            proto::ds_relation_process_instance::GetDsRelationProcessInstanceRequest,
-        >,
+        _req: tonic::Request<proto::ds_relation_process_instance::GetDsRelationProcessInstanceRequest>,
     ) -> std::result::Result<
         tonic::Response<proto::ds_relation_process_instance::DsRelationProcessInstance>,
         tonic::Status,
@@ -31,9 +25,7 @@ impl DsRelationProcessInstanceService for AuroraRpcServer {
 
     async fn create_ds_relation_process_instance(
         &self,
-        _req: tonic::Request<
-            proto::ds_relation_process_instance::CreateDsRelationProcessInstanceRequest,
-        >,
+        _req: tonic::Request<proto::ds_relation_process_instance::CreateDsRelationProcessInstanceRequest>,
     ) -> std::result::Result<
         tonic::Response<proto::ds_relation_process_instance::DsRelationProcessInstance>,
         tonic::Status,
@@ -43,9 +35,7 @@ impl DsRelationProcessInstanceService for AuroraRpcServer {
 
     async fn update_ds_relation_process_instance(
         &self,
-        _req: tonic::Request<
-            proto::ds_relation_process_instance::UpdateDsRelationProcessInstanceRequest,
-        >,
+        _req: tonic::Request<proto::ds_relation_process_instance::UpdateDsRelationProcessInstanceRequest>,
     ) -> std::result::Result<
         tonic::Response<proto::ds_relation_process_instance::DsRelationProcessInstance>,
         tonic::Status,
@@ -55,9 +45,7 @@ impl DsRelationProcessInstanceService for AuroraRpcServer {
 
     async fn delete_ds_relation_process_instance(
         &self,
-        _req: tonic::Request<
-            proto::ds_relation_process_instance::DeleteDsRelationProcessInstanceRequest,
-        >,
+        _req: tonic::Request<proto::ds_relation_process_instance::DeleteDsRelationProcessInstanceRequest>,
     ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
         todo!()
     }

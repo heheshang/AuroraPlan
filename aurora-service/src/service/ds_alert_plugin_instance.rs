@@ -7,9 +7,7 @@ use super::dao_service::AuroraRpcServer;
 impl DsAlertPluginInstanceService for AuroraRpcServer {
     async fn list_ds_alert_plugin_instances(
         &self,
-        _request: tonic::Request<
-            proto::ds_alert_plugin_instance::ListDsAlertPluginInstancesRequest,
-        >,
+        _request: tonic::Request<proto::ds_alert_plugin_instance::ListDsAlertPluginInstancesRequest>,
     ) -> std::result::Result<
         tonic::Response<proto::ds_alert_plugin_instance::ListDsAlertPluginInstancesResponse>,
         tonic::Status,
@@ -20,30 +18,24 @@ impl DsAlertPluginInstanceService for AuroraRpcServer {
     async fn get_ds_alert_plugin_instance(
         &self,
         _req: tonic::Request<proto::ds_alert_plugin_instance::GetDsAlertPluginInstanceRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_alert_plugin_instance::DsAlertPluginInstance>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_alert_plugin_instance::DsAlertPluginInstance>, tonic::Status>
+    {
         todo!()
     }
 
     async fn create_ds_alert_plugin_instance(
         &self,
         _req: tonic::Request<proto::ds_alert_plugin_instance::CreateDsAlertPluginInstanceRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_alert_plugin_instance::DsAlertPluginInstance>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_alert_plugin_instance::DsAlertPluginInstance>, tonic::Status>
+    {
         todo!()
     }
 
     async fn update_ds_alert_plugin_instance(
         &self,
         _req: tonic::Request<proto::ds_alert_plugin_instance::UpdateDsAlertPluginInstanceRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_alert_plugin_instance::DsAlertPluginInstance>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_alert_plugin_instance::DsAlertPluginInstance>, tonic::Status>
+    {
         todo!()
     }
 

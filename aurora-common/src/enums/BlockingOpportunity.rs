@@ -18,9 +18,7 @@ impl Message {
 impl BlockingOpportunity {
     pub fn get_message(&self) -> Message {
         match self {
-            BlockingOpportunity::BLOCKING_ON_SUCCESS => {
-                Message::new("BlockingOnSuccess".to_string())
-            }
+            BlockingOpportunity::BLOCKING_ON_SUCCESS => Message::new("BlockingOnSuccess".to_string()),
             BlockingOpportunity::BLOCKING_ON_FAILED => Message::new("BlockingOnFailed".to_string()),
         }
     }

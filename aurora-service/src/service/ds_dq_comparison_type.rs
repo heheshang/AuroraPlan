@@ -16,30 +16,21 @@ impl DsDqComparisonTypeService for AuroraRpcServer {
     async fn get_ds_dq_comparison_type(
         &self,
         _req: tonic::Request<proto::ds_dq_comparison_type::GetDsDqComparisonTypeRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_dq_comparison_type::DsDqComparisonType>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_dq_comparison_type::DsDqComparisonType>, tonic::Status> {
         todo!()
     }
 
     async fn create_ds_dq_comparison_type(
         &self,
         _req: tonic::Request<proto::ds_dq_comparison_type::CreateDsDqComparisonTypeRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_dq_comparison_type::DsDqComparisonType>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_dq_comparison_type::DsDqComparisonType>, tonic::Status> {
         todo!()
     }
 
     async fn update_ds_dq_comparison_type(
         &self,
         _req: tonic::Request<proto::ds_dq_comparison_type::UpdateDsDqComparisonTypeRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_dq_comparison_type::DsDqComparisonType>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_dq_comparison_type::DsDqComparisonType>, tonic::Status> {
         todo!()
     }
 

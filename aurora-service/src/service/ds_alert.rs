@@ -5,8 +5,7 @@ impl DsAlertService for AuroraRpcServer {
     async fn list_ds_alerts(
         &self,
         _req: tonic::Request<proto::ds_alert::ListDsAlertsRequest>,
-    ) -> std::result::Result<tonic::Response<proto::ds_alert::ListDsAlertsResponse>, tonic::Status>
-    {
+    ) -> std::result::Result<tonic::Response<proto::ds_alert::ListDsAlertsResponse>, tonic::Status> {
         todo!()
     }
 

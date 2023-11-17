@@ -146,10 +146,7 @@ fn main() {
     );
     config.with_serde_as(
         "ds_user.DsUser",
-        &[(
-            &["create_time", "update_time"],
-            r#"#[serde_as(as = "DisplayFromStr")]"#,
-        )],
+        &[(&["create_time", "update_time"], r#"#[serde_as(as = "DisplayFromStr")]"#)],
     );
     config.with_derive_builder(
         &["ds_user.DsUser", "ds_session.DsSession"],

@@ -16,30 +16,21 @@ impl DsRelationUdfsUserService for AuroraRpcServer {
     async fn get_ds_relation_udfs_user(
         &self,
         _req: tonic::Request<proto::ds_relation_udfs_user::GetDsRelationUdfsUserRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_relation_udfs_user::DsRelationUdfsUser>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_relation_udfs_user::DsRelationUdfsUser>, tonic::Status> {
         todo!()
     }
 
     async fn create_ds_relation_udfs_user(
         &self,
         _req: tonic::Request<proto::ds_relation_udfs_user::CreateDsRelationUdfsUserRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_relation_udfs_user::DsRelationUdfsUser>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_relation_udfs_user::DsRelationUdfsUser>, tonic::Status> {
         todo!()
     }
 
     async fn update_ds_relation_udfs_user(
         &self,
         _req: tonic::Request<proto::ds_relation_udfs_user::UpdateDsRelationUdfsUserRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_relation_udfs_user::DsRelationUdfsUser>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_relation_udfs_user::DsRelationUdfsUser>, tonic::Status> {
         todo!()
     }
 

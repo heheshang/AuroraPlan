@@ -17,10 +17,7 @@ use self::mw::{mw_auth::mw_ctx_resolve, mw_req_map::log_path_params, mw_res_map:
 
 pub const AUTH_TOKEN: &str = "sessionId";
 
-fn set_token_cookie(
-    cookies: &Cookies,
-    session: &str,
-) -> Result<()> {
+fn set_token_cookie(cookies: &Cookies, session: &str) -> Result<()> {
     // let token = generate_web_token(user, salt)?;
 
     let mut cookie = Cookie::new(AUTH_TOKEN, session.to_string());

@@ -28,10 +28,7 @@ mod convert_user_type {
 
     use aurora_common::enums::UserType::UserType;
     use serde::{self, Deserialize, Deserializer, Serializer};
-    pub fn serialize<S>(
-        user_type: &Option<i32>,
-        serializer: S,
-    ) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(user_type: &Option<i32>, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -48,10 +45,7 @@ mod convert_user_type {
         let ss = UserType::from_str(&s);
         match ss {
             Ok(s) => Ok(Some(s.get_code())),
-            Err(_) => Err(serde::de::Error::custom(format!(
-                "invalid user type: {}",
-                s
-            ))),
+            Err(_) => Err(serde::de::Error::custom(format!("invalid user type: {}", s))),
         }
     }
 }

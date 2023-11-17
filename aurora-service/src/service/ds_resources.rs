@@ -6,10 +6,7 @@ impl DsResourceService for AuroraRpcServer {
     async fn list_ds_resources(
         &self,
         _req: tonic::Request<proto::ds_resources::ListDsResourcesRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_resources::ListDsResourcesResponse>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_resources::ListDsResourcesResponse>, tonic::Status> {
         todo!()
     }
 

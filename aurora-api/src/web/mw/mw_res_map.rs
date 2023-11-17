@@ -15,10 +15,7 @@ pub async fn mw_response_map(
     req_method: Method,
     res: Response,
 ) -> Response {
-    info!(
-        "{:<12} - mw_response_map {uri:?} {req_method:?} {res:?}",
-        "RES_MAPPER"
-    );
+    info!("{:<12} - mw_response_map {uri:?} {req_method:?} {res:?}", "RES_MAPPER");
     // let body = res.body();
     let web_error = res.extensions().get::<AuroraErrorInfo>();
     info!("web_error: {:?}", web_error);

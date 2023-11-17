@@ -22,8 +22,8 @@ async fn run() -> Result<(), DbErr> {
     let db_url = Settings::new().expect("load config error").database.url;
     println!("db_url: {:?}", db_url);
 
-    let current_dir = env::current_dir()
-        .unwrap_or(DbErr::Custom("current_dir is not set".to_string()).to_string().into());
+    let current_dir =
+        env::current_dir().unwrap_or(DbErr::Custom("current_dir is not set".to_string()).to_string().into());
     println!("current_dir: {:?}", current_dir);
 
     let init_sql_path = current_dir
@@ -53,11 +53,8 @@ async fn run() -> Result<(), DbErr> {
         }
         sea_orm::DatabaseBackend::Postgres => {
             for l in sql_content.split(';') {
-                db.execute(Statement::from_string(
-                    db.get_database_backend(),
-                    format!("{};", l),
-                ))
-                .await?;
+                db.execute(Statement::from_string(db.get_database_backend(), format!("{};", l)))
+                    .await?;
                 println!("sql : {:?} exec success", l);
             }
         }

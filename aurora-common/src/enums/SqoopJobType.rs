@@ -14,10 +14,7 @@ pub struct Message {
 }
 
 impl Message {
-    fn new(
-        code: i32,
-        descp: String,
-    ) -> Message {
+    fn new(code: i32, descp: String) -> Message {
         Message { code, descp }
     }
 }
@@ -39,8 +36,7 @@ impl SqoopJobType {
     }
 
     pub fn of(status: &i32) -> SqoopJobType {
-        let MAP: HashMap<i32, SqoopJobType> =
-            HashMap::from([(0, SqoopJobType::CUSTOM), (1, SqoopJobType::TEMPLATE)]);
+        let MAP: HashMap<i32, SqoopJobType> = HashMap::from([(0, SqoopJobType::CUSTOM), (1, SqoopJobType::TEMPLATE)]);
         if MAP.contains_key(status) {
             return MAP.get(status).unwrap().clone();
         }

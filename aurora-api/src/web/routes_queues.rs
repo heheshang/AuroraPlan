@@ -28,22 +28,14 @@ pub fn routes() -> Router {
         .route_layer(middleware::from_fn(mw_ctx_require))
 }
 
-pub async fn create(
-    cookies: Cookies,
-    ctx: Ctx,
-    param: Form<CreateQueueRequest>,
-) -> Result<ApiResult<Queue>> {
+pub async fn create(cookies: Cookies, ctx: Ctx, param: Form<CreateQueueRequest>) -> Result<ApiResult<Queue>> {
     let queue = &param.queue;
     let queue_name = &param.queue_name;
     let res = model::queues::create(queue, queue_name).await?;
     Ok(ApiResult::build(Some(res)))
 }
 
-pub async fn list(
-    cookies: Cookies,
-    ctx: Ctx,
-    param: Query<QueueListParams>,
-) -> Result<ApiResult<QueueList>> {
+pub async fn list(cookies: Cookies, ctx: Ctx, param: Query<QueueListParams>) -> Result<ApiResult<QueueList>> {
     let page_num = param.pageNo;
     let page_size = param.pageSize;
     let search_val = &param.searchVal;
@@ -51,11 +43,7 @@ pub async fn list(
     Ok(ApiResult::build(Some(res.into())))
 }
 /// 队列验证
-pub async fn verify(
-    cookies: Cookies,
-    ctx: Ctx,
-    param: Form<CreateQueueRequest>,
-) -> Result<ApiResult<VerifyQueue>> {
+pub async fn verify(cookies: Cookies, ctx: Ctx, param: Form<CreateQueueRequest>) -> Result<ApiResult<VerifyQueue>> {
     let queue = &param.queue;
     let queue_name = &param.queue_name;
     let res = model::queues::verify(queue, queue_name).await?;
@@ -63,11 +51,7 @@ pub async fn verify(
 }
 
 /// delete
-pub async fn delete_queue(
-    cookies: Cookies,
-    Path(id): Path<i32>,
-    ctx: Ctx,
-) -> Result<ApiResult<()>> {
+pub async fn delete_queue(cookies: Cookies, Path(id): Path<i32>, ctx: Ctx) -> Result<ApiResult<()>> {
     Ok(ApiResult::build(Some(model::queues::delete(id).await?)))
 }
 

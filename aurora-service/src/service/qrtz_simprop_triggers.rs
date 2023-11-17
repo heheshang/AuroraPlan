@@ -16,30 +16,21 @@ impl QrtzSimpropTriggerService for AuroraRpcServer {
     async fn get_qrtz_simprop_trigger(
         &self,
         _req: tonic::Request<proto::qrtz_simprop_triggers::GetQrtzSimpropTriggerRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::qrtz_simprop_triggers::QrtzSimpropTrigger>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::qrtz_simprop_triggers::QrtzSimpropTrigger>, tonic::Status> {
         todo!()
     }
 
     async fn create_qrtz_simprop_trigger(
         &self,
         _req: tonic::Request<proto::qrtz_simprop_triggers::CreateQrtzSimpropTriggerRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::qrtz_simprop_triggers::QrtzSimpropTrigger>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::qrtz_simprop_triggers::QrtzSimpropTrigger>, tonic::Status> {
         todo!()
     }
 
     async fn update_qrtz_simprop_trigger(
         &self,
         _req: tonic::Request<proto::qrtz_simprop_triggers::UpdateQrtzSimpropTriggerRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::qrtz_simprop_triggers::QrtzSimpropTrigger>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::qrtz_simprop_triggers::QrtzSimpropTrigger>, tonic::Status> {
         todo!()
     }
 

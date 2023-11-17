@@ -6,10 +6,7 @@ impl DsAuditLogService for AuroraRpcServer {
     async fn list_ds_audit_logs(
         &self,
         _req: tonic::Request<proto::ds_audit_log::ListDsAuditLogsRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_audit_log::ListDsAuditLogsResponse>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_audit_log::ListDsAuditLogsResponse>, tonic::Status> {
         todo!()
     }
 

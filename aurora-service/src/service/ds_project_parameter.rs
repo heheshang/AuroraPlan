@@ -7,22 +7,14 @@ use sea_orm::{DeleteResult, TransactionTrait};
 use tracing::{error, info};
 type Result<T> = std::result::Result<T, tonic::Status>;
 impl AuroraRpcServer {
-    async fn find_by_code_projectcode(
-        &self,
-        code: i64,
-        project_code: i64,
-    ) -> Result<Option<Model>> {
+    async fn find_by_code_projectcode(&self, code: i64, project_code: i64) -> Result<Option<Model>> {
         let conn: &DatabaseConnection = &self.db;
         let res = Entity::find()
             .filter(t_ds_project_parameter::Column::Code.eq(code))
             .filter(t_ds_project_parameter::Column::ProjectCode.eq(project_code))
             .one(conn)
             .await
-            .map_err(|_| {
-                tonic::Status::from_error(
-                    Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
-                )
-            })?;
+            .map_err(|_| tonic::Status::from_error(Error::InternalServerErrorArgs(AuroraData::Null, None).into()))?;
         Ok(res)
     }
 }
@@ -32,10 +24,8 @@ impl ProjectParameterService for AuroraRpcServer {
     async fn list_project_parameters(
         &self,
         _req: tonic::Request<proto::ds_project_parameter::ListProjectParametersRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_project_parameter::ListProjectParametersResponse>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_project_parameter::ListProjectParametersResponse>, tonic::Status>
+    {
         info!("request: {:?}", _req);
         let conn = &self.db;
         let search_val = _req.get_ref().clone().search_val.unwrap_or_default();
@@ -89,10 +79,7 @@ impl ProjectParameterService for AuroraRpcServer {
     async fn get_project_parameter(
         &self,
         _request: tonic::Request<proto::ds_project_parameter::GetProjectParameterRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_project_parameter::ProjectParameter>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_project_parameter::ProjectParameter>, tonic::Status> {
         info!("request: {:?}", _request);
         todo!()
     }
@@ -100,10 +87,7 @@ impl ProjectParameterService for AuroraRpcServer {
     async fn create_project_parameter(
         &self,
         _request: tonic::Request<proto::ds_project_parameter::CreateProjectParameterRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_project_parameter::ProjectParameter>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_project_parameter::ProjectParameter>, tonic::Status> {
         info!("request: {:?}", _request);
         let conn = &self.db;
         let project_parameter = _request.get_ref().project_parameter.clone().unwrap();
@@ -131,10 +115,7 @@ impl ProjectParameterService for AuroraRpcServer {
     async fn update_project_parameter(
         &self,
         _request: tonic::Request<proto::ds_project_parameter::UpdateProjectParameterRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_project_parameter::ProjectParameter>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_project_parameter::ProjectParameter>, tonic::Status> {
         info!("request: {:?}", _request);
         let conn = &self.db;
         let code = _request.get_ref().code;

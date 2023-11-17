@@ -13,40 +13,29 @@ impl DsAlertSendStatusService for AuroraRpcServer {
     async fn list_ds_alert_send_status(
         &self,
         _req: GrpcRequest<ListDsAlertSendStatusRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_alert_send_status::ListDsAlertSendStatusResponse>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_alert_send_status::ListDsAlertSendStatusResponse>, tonic::Status>
+    {
         todo!()
     }
 
     async fn get_ds_alert_send_status(
         &self,
         _req: GrpcRequest<GetDsAlertSendStatusRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_alert_send_status::DsAlertSendStatus>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_alert_send_status::DsAlertSendStatus>, tonic::Status> {
         todo!()
     }
 
     async fn create_ds_alert_send_status(
         &self,
         _req: GrpcRequest<CreateDsAlertSendStatusRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_alert_send_status::DsAlertSendStatus>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_alert_send_status::DsAlertSendStatus>, tonic::Status> {
         todo!()
     }
 
     async fn update_ds_alert_send_status(
         &self,
         _req: GrpcRequest<UpdateDsAlertSendStatusRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_alert_send_status::DsAlertSendStatus>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_alert_send_status::DsAlertSendStatus>, tonic::Status> {
         todo!()
     }
 

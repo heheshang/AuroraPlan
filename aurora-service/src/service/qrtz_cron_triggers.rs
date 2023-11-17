@@ -6,40 +6,29 @@ impl QrtzCronTriggersService for AuroraRpcServer {
     async fn list_qrtz_cron_triggerss(
         &self,
         _req: tonic::Request<proto::qrtz_cron_triggers::ListQrtzCronTriggerssRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::qrtz_cron_triggers::ListQrtzCronTriggerssResponse>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::qrtz_cron_triggers::ListQrtzCronTriggerssResponse>, tonic::Status>
+    {
         todo!()
     }
 
     async fn get_qrtz_cron_triggers(
         &self,
         _req: tonic::Request<proto::qrtz_cron_triggers::GetQrtzCronTriggersRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::qrtz_cron_triggers::QrtzCronTriggers>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::qrtz_cron_triggers::QrtzCronTriggers>, tonic::Status> {
         todo!()
     }
 
     async fn create_qrtz_cron_triggers(
         &self,
         _req: tonic::Request<proto::qrtz_cron_triggers::CreateQrtzCronTriggersRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::qrtz_cron_triggers::QrtzCronTriggers>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::qrtz_cron_triggers::QrtzCronTriggers>, tonic::Status> {
         todo!()
     }
 
     async fn update_qrtz_cron_triggers(
         &self,
         _req: tonic::Request<proto::qrtz_cron_triggers::UpdateQrtzCronTriggersRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::qrtz_cron_triggers::QrtzCronTriggers>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::qrtz_cron_triggers::QrtzCronTriggers>, tonic::Status> {
         todo!()
     }
 

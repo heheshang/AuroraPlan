@@ -157,28 +157,19 @@ pub mod ds_task_instance_service_client {
             let inner = tonic::client::Grpc::new(inner);
             Self { inner }
         }
-        pub fn with_origin(
-            inner: T,
-            origin: Uri,
-        ) -> Self {
+        pub fn with_origin(inner: T, origin: Uri) -> Self {
             let inner = tonic::client::Grpc::with_origin(inner, origin);
             Self { inner }
         }
-        pub fn with_interceptor<F>(
-            inner: T,
-            interceptor: F,
-        ) -> DsTaskInstanceServiceClient<InterceptedService<T, F>>
+        pub fn with_interceptor<F>(inner: T, interceptor: F) -> DsTaskInstanceServiceClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
             T: tonic::codegen::Service<
                 http::Request<tonic::body::BoxBody>,
-                Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
-                >,
+                Response = http::Response<<T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody>,
             >,
-            <T as tonic::codegen::Service<http::Request<tonic::body::BoxBody>>>::Error:
-                Into<StdError> + Send + Sync,
+            <T as tonic::codegen::Service<http::Request<tonic::body::BoxBody>>>::Error: Into<StdError> + Send + Sync,
         {
             DsTaskInstanceServiceClient::new(InterceptedService::new(inner, interceptor))
         }
@@ -187,19 +178,13 @@ pub mod ds_task_instance_service_client {
         /// This requires the server to support it otherwise it might respond with an
         /// error.
         #[must_use]
-        pub fn send_compressed(
-            mut self,
-            encoding: CompressionEncoding,
-        ) -> Self {
+        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
             self.inner = self.inner.send_compressed(encoding);
             self
         }
         /// Enable decompressing responses.
         #[must_use]
-        pub fn accept_compressed(
-            mut self,
-            encoding: CompressionEncoding,
-        ) -> Self {
+        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
             self.inner = self.inner.accept_compressed(encoding);
             self
         }
@@ -207,10 +192,7 @@ pub mod ds_task_instance_service_client {
         ///
         /// Default: `4MB`
         #[must_use]
-        pub fn max_decoding_message_size(
-            mut self,
-            limit: usize,
-        ) -> Self {
+        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
             self.inner = self.inner.max_decoding_message_size(limit);
             self
         }
@@ -218,28 +200,20 @@ pub mod ds_task_instance_service_client {
         ///
         /// Default: `usize::MAX`
         #[must_use]
-        pub fn max_encoding_message_size(
-            mut self,
-            limit: usize,
-        ) -> Self {
+        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
         pub async fn list_ds_task_instances(
             &mut self,
             request: impl tonic::IntoRequest<super::ListDsTaskInstancesRequest>,
-        ) -> std::result::Result<tonic::Response<super::ListDsTaskInstancesResponse>, tonic::Status>
-        {
+        ) -> std::result::Result<tonic::Response<super::ListDsTaskInstancesResponse>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/ds_task_instance.DsTaskInstanceService/ListDsTaskInstances",
-            );
+            let path =
+                http::uri::PathAndQuery::from_static("/ds_task_instance.DsTaskInstanceService/ListDsTaskInstances");
             let mut req = request.into_request();
             req.extensions_mut().insert(GrpcMethod::new(
                 "ds_task_instance.DsTaskInstanceService",
@@ -252,15 +226,11 @@ pub mod ds_task_instance_service_client {
             request: impl tonic::IntoRequest<super::GetDsTaskInstanceRequest>,
         ) -> std::result::Result<tonic::Response<super::DsTaskInstance>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/ds_task_instance.DsTaskInstanceService/GetDsTaskInstance",
-            );
+            let path =
+                http::uri::PathAndQuery::from_static("/ds_task_instance.DsTaskInstanceService/GetDsTaskInstance");
             let mut req = request.into_request();
             req.extensions_mut().insert(GrpcMethod::new(
                 "ds_task_instance.DsTaskInstanceService",
@@ -273,15 +243,11 @@ pub mod ds_task_instance_service_client {
             request: impl tonic::IntoRequest<super::CreateDsTaskInstanceRequest>,
         ) -> std::result::Result<tonic::Response<super::DsTaskInstance>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/ds_task_instance.DsTaskInstanceService/CreateDsTaskInstance",
-            );
+            let path =
+                http::uri::PathAndQuery::from_static("/ds_task_instance.DsTaskInstanceService/CreateDsTaskInstance");
             let mut req = request.into_request();
             req.extensions_mut().insert(GrpcMethod::new(
                 "ds_task_instance.DsTaskInstanceService",
@@ -294,15 +260,11 @@ pub mod ds_task_instance_service_client {
             request: impl tonic::IntoRequest<super::UpdateDsTaskInstanceRequest>,
         ) -> std::result::Result<tonic::Response<super::DsTaskInstance>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/ds_task_instance.DsTaskInstanceService/UpdateDsTaskInstance",
-            );
+            let path =
+                http::uri::PathAndQuery::from_static("/ds_task_instance.DsTaskInstanceService/UpdateDsTaskInstance");
             let mut req = request.into_request();
             req.extensions_mut().insert(GrpcMethod::new(
                 "ds_task_instance.DsTaskInstanceService",
@@ -315,15 +277,11 @@ pub mod ds_task_instance_service_client {
             request: impl tonic::IntoRequest<super::DeleteDsTaskInstanceRequest>,
         ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/ds_task_instance.DsTaskInstanceService/DeleteDsTaskInstance",
-            );
+            let path =
+                http::uri::PathAndQuery::from_static("/ds_task_instance.DsTaskInstanceService/DeleteDsTaskInstance");
             let mut req = request.into_request();
             req.extensions_mut().insert(GrpcMethod::new(
                 "ds_task_instance.DsTaskInstanceService",
@@ -385,10 +343,7 @@ pub mod ds_task_instance_service_server {
                 max_encoding_message_size: None,
             }
         }
-        pub fn with_interceptor<F>(
-            inner: T,
-            interceptor: F,
-        ) -> InterceptedService<Self, F>
+        pub fn with_interceptor<F>(inner: T, interceptor: F) -> InterceptedService<Self, F>
         where
             F: tonic::service::Interceptor,
         {
@@ -396,19 +351,13 @@ pub mod ds_task_instance_service_server {
         }
         /// Enable decompressing requests with the given encoding.
         #[must_use]
-        pub fn accept_compressed(
-            mut self,
-            encoding: CompressionEncoding,
-        ) -> Self {
+        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
             self.accept_compression_encodings.enable(encoding);
             self
         }
         /// Compress responses with the given encoding, if the client supports it.
         #[must_use]
-        pub fn send_compressed(
-            mut self,
-            encoding: CompressionEncoding,
-        ) -> Self {
+        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
             self.send_compression_encodings.enable(encoding);
             self
         }
@@ -416,10 +365,7 @@ pub mod ds_task_instance_service_server {
         ///
         /// Default: `4MB`
         #[must_use]
-        pub fn max_decoding_message_size(
-            mut self,
-            limit: usize,
-        ) -> Self {
+        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
             self.max_decoding_message_size = Some(limit);
             self
         }
@@ -427,10 +373,7 @@ pub mod ds_task_instance_service_server {
         ///
         /// Default: `usize::MAX`
         #[must_use]
-        pub fn max_encoding_message_size(
-            mut self,
-            limit: usize,
-        ) -> Self {
+        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
             self.max_encoding_message_size = Some(limit);
             self
         }
@@ -444,31 +387,21 @@ pub mod ds_task_instance_service_server {
         type Response = http::Response<tonic::body::BoxBody>;
         type Error = std::convert::Infallible;
         type Future = BoxFuture<Self::Response, Self::Error>;
-        fn poll_ready(
-            &mut self,
-            _cx: &mut Context<'_>,
-        ) -> Poll<std::result::Result<(), Self::Error>> {
+        fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<std::result::Result<(), Self::Error>> {
             Poll::Ready(Ok(()))
         }
-        fn call(
-            &mut self,
-            req: http::Request<B>,
-        ) -> Self::Future {
+        fn call(&mut self, req: http::Request<B>) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
                 "/ds_task_instance.DsTaskInstanceService/ListDsTaskInstances" => {
                     #[allow(non_camel_case_types)]
                     struct ListDsTaskInstancesSvc<T: DsTaskInstanceService>(pub Arc<T>);
-                    impl<T: DsTaskInstanceService>
-                        tonic::server::UnaryService<super::ListDsTaskInstancesRequest>
+                    impl<T: DsTaskInstanceService> tonic::server::UnaryService<super::ListDsTaskInstancesRequest>
                         for ListDsTaskInstancesSvc<T>
                     {
                         type Response = super::ListDsTaskInstancesResponse;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::ListDsTaskInstancesRequest>,
-                        ) -> Self::Future {
+                        fn call(&mut self, request: tonic::Request<super::ListDsTaskInstancesRequest>) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move { (*inner).list_ds_task_instances(request).await };
                             Box::pin(fut)
@@ -484,14 +417,8 @@ pub mod ds_task_instance_service_server {
                         let method = ListDsTaskInstancesSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
@@ -500,16 +427,12 @@ pub mod ds_task_instance_service_server {
                 "/ds_task_instance.DsTaskInstanceService/GetDsTaskInstance" => {
                     #[allow(non_camel_case_types)]
                     struct GetDsTaskInstanceSvc<T: DsTaskInstanceService>(pub Arc<T>);
-                    impl<T: DsTaskInstanceService>
-                        tonic::server::UnaryService<super::GetDsTaskInstanceRequest>
+                    impl<T: DsTaskInstanceService> tonic::server::UnaryService<super::GetDsTaskInstanceRequest>
                         for GetDsTaskInstanceSvc<T>
                     {
                         type Response = super::DsTaskInstance;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::GetDsTaskInstanceRequest>,
-                        ) -> Self::Future {
+                        fn call(&mut self, request: tonic::Request<super::GetDsTaskInstanceRequest>) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move { (*inner).get_ds_task_instance(request).await };
                             Box::pin(fut)
@@ -525,14 +448,8 @@ pub mod ds_task_instance_service_server {
                         let method = GetDsTaskInstanceSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
@@ -541,8 +458,7 @@ pub mod ds_task_instance_service_server {
                 "/ds_task_instance.DsTaskInstanceService/CreateDsTaskInstance" => {
                     #[allow(non_camel_case_types)]
                     struct CreateDsTaskInstanceSvc<T: DsTaskInstanceService>(pub Arc<T>);
-                    impl<T: DsTaskInstanceService>
-                        tonic::server::UnaryService<super::CreateDsTaskInstanceRequest>
+                    impl<T: DsTaskInstanceService> tonic::server::UnaryService<super::CreateDsTaskInstanceRequest>
                         for CreateDsTaskInstanceSvc<T>
                     {
                         type Response = super::DsTaskInstance;
@@ -552,8 +468,7 @@ pub mod ds_task_instance_service_server {
                             request: tonic::Request<super::CreateDsTaskInstanceRequest>,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
-                            let fut =
-                                async move { (*inner).create_ds_task_instance(request).await };
+                            let fut = async move { (*inner).create_ds_task_instance(request).await };
                             Box::pin(fut)
                         }
                     }
@@ -567,14 +482,8 @@ pub mod ds_task_instance_service_server {
                         let method = CreateDsTaskInstanceSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
@@ -583,8 +492,7 @@ pub mod ds_task_instance_service_server {
                 "/ds_task_instance.DsTaskInstanceService/UpdateDsTaskInstance" => {
                     #[allow(non_camel_case_types)]
                     struct UpdateDsTaskInstanceSvc<T: DsTaskInstanceService>(pub Arc<T>);
-                    impl<T: DsTaskInstanceService>
-                        tonic::server::UnaryService<super::UpdateDsTaskInstanceRequest>
+                    impl<T: DsTaskInstanceService> tonic::server::UnaryService<super::UpdateDsTaskInstanceRequest>
                         for UpdateDsTaskInstanceSvc<T>
                     {
                         type Response = super::DsTaskInstance;
@@ -594,8 +502,7 @@ pub mod ds_task_instance_service_server {
                             request: tonic::Request<super::UpdateDsTaskInstanceRequest>,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
-                            let fut =
-                                async move { (*inner).update_ds_task_instance(request).await };
+                            let fut = async move { (*inner).update_ds_task_instance(request).await };
                             Box::pin(fut)
                         }
                     }
@@ -609,14 +516,8 @@ pub mod ds_task_instance_service_server {
                         let method = UpdateDsTaskInstanceSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
@@ -625,8 +526,7 @@ pub mod ds_task_instance_service_server {
                 "/ds_task_instance.DsTaskInstanceService/DeleteDsTaskInstance" => {
                     #[allow(non_camel_case_types)]
                     struct DeleteDsTaskInstanceSvc<T: DsTaskInstanceService>(pub Arc<T>);
-                    impl<T: DsTaskInstanceService>
-                        tonic::server::UnaryService<super::DeleteDsTaskInstanceRequest>
+                    impl<T: DsTaskInstanceService> tonic::server::UnaryService<super::DeleteDsTaskInstanceRequest>
                         for DeleteDsTaskInstanceSvc<T>
                     {
                         type Response = ();
@@ -636,8 +536,7 @@ pub mod ds_task_instance_service_server {
                             request: tonic::Request<super::DeleteDsTaskInstanceRequest>,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
-                            let fut =
-                                async move { (*inner).delete_ds_task_instance(request).await };
+                            let fut = async move { (*inner).delete_ds_task_instance(request).await };
                             Box::pin(fut)
                         }
                     }
@@ -651,14 +550,8 @@ pub mod ds_task_instance_service_server {
                         let method = DeleteDsTaskInstanceSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
@@ -693,10 +586,7 @@ pub mod ds_task_instance_service_server {
         }
     }
     impl<T: std::fmt::Debug> std::fmt::Debug for _Inner<T> {
-        fn fmt(
-            &self,
-            f: &mut std::fmt::Formatter<'_>,
-        ) -> std::fmt::Result {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             write!(f, "{:?}", self.0)
         }
     }

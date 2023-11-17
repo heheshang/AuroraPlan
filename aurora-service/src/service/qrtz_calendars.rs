@@ -6,34 +6,28 @@ impl QrtzCalendarService for AuroraRpcServer {
     async fn list_qrtz_calendars(
         &self,
         _req: tonic::Request<proto::qrtz_calendars::ListQrtzCalendarsRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::qrtz_calendars::ListQrtzCalendarsResponse>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::qrtz_calendars::ListQrtzCalendarsResponse>, tonic::Status> {
         todo!()
     }
 
     async fn get_qrtz_calendar(
         &self,
         _req: tonic::Request<proto::qrtz_calendars::GetQrtzCalendarRequest>,
-    ) -> std::result::Result<tonic::Response<proto::qrtz_calendars::QrtzCalendar>, tonic::Status>
-    {
+    ) -> std::result::Result<tonic::Response<proto::qrtz_calendars::QrtzCalendar>, tonic::Status> {
         todo!()
     }
 
     async fn create_qrtz_calendar(
         &self,
         _req: tonic::Request<proto::qrtz_calendars::CreateQrtzCalendarRequest>,
-    ) -> std::result::Result<tonic::Response<proto::qrtz_calendars::QrtzCalendar>, tonic::Status>
-    {
+    ) -> std::result::Result<tonic::Response<proto::qrtz_calendars::QrtzCalendar>, tonic::Status> {
         todo!()
     }
 
     async fn update_qrtz_calendar(
         &self,
         _req: tonic::Request<proto::qrtz_calendars::UpdateQrtzCalendarRequest>,
-    ) -> std::result::Result<tonic::Response<proto::qrtz_calendars::QrtzCalendar>, tonic::Status>
-    {
+    ) -> std::result::Result<tonic::Response<proto::qrtz_calendars::QrtzCalendar>, tonic::Status> {
         todo!()
     }
 

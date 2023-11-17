@@ -20,11 +20,7 @@ use tower_cookies::{Cookie, Cookies};
 use tracing::info;
 
 #[allow(dead_code)] // For now, until we have the rpc.
-pub async fn mw_ctx_require<B>(
-    ctx: Result<Ctx>,
-    req: Request<B>,
-    next: Next<B>,
-) -> Result<Response> {
+pub async fn mw_ctx_require<B>(ctx: Result<Ctx>, req: Request<B>, next: Next<B>) -> Result<Response> {
     info!("{:<12} - mw_ctx_require - {ctx:?}", "MIDDLEWARE");
 
     let _ctx = ctx?;
@@ -43,12 +39,7 @@ pub async fn mw_ctx_resolve<B>(
 
     let ctx_ext_result = _ctx_resolve(&cookies).await;
 
-    if ctx_ext_result.is_err()
-        && !matches!(
-            ctx_ext_result,
-            Err(Error::LoginSessionFailed(AuroraData::Null, None))
-        )
-    {
+    if ctx_ext_result.is_err() && !matches!(ctx_ext_result, Err(Error::LoginSessionFailed(AuroraData::Null, None))) {
         cookies.remove(Cookie::named(AUTH_TOKEN))
     }
 
@@ -85,8 +76,7 @@ async fn _ctx_resolve(
     //     .map_err(|_| CtxExtError::FailValidate)?;
 
     // -- Update Token
-    set_token_cookie(cookies, session.id.as_str())
-        .map_err(|_| Error::LoginSessionFailed(AuroraData::Null, None))?;
+    set_token_cookie(cookies, session.id.as_str()).map_err(|_| Error::LoginSessionFailed(AuroraData::Null, None))?;
 
     // -- Create CtxExtResult
     Ctx::new(user.id).map_err(|_ex| Error::LoginSessionFailed(AuroraData::Null, None))
@@ -97,10 +87,7 @@ async fn _ctx_resolve(
 impl<S: Send + Sync> FromRequestParts<S> for Ctx {
     type Rejection = Error;
 
-    async fn from_request_parts(
-        parts: &mut Parts,
-        _state: &S,
-    ) -> Result<Self> {
+    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self> {
         info!("{:<12} - Ctx", "EXTRACTOR");
 
         parts

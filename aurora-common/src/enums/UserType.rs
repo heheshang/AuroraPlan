@@ -20,10 +20,7 @@ pub struct Message {
 }
 
 impl Message {
-    fn new(
-        code: i32,
-        descp: String,
-    ) -> Message {
+    fn new(code: i32, descp: String) -> Message {
         Message { code, descp }
     }
 }
@@ -45,8 +42,7 @@ impl UserType {
     }
 
     pub fn of(status: &i32) -> UserType {
-        let MAP: HashMap<i32, UserType> =
-            HashMap::from([(0, UserType::ADMIN_USER), (1, UserType::GENERAL_USER)]);
+        let MAP: HashMap<i32, UserType> = HashMap::from([(0, UserType::ADMIN_USER), (1, UserType::GENERAL_USER)]);
         if MAP.contains_key(status) {
             return MAP.get(status).unwrap().clone();
         }

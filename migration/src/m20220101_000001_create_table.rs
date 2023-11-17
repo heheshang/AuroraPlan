@@ -5,10 +5,7 @@ pub struct Migration;
 
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
-    async fn up(
-        &self,
-        manager: &SchemaManager,
-    ) -> Result<(), DbErr> {
+    async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         // Replace the sample below with your own migration scripts
         // todo!();
 
@@ -24,13 +21,7 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(Post::Table)
                     .if_not_exists()
-                    .col(
-                        ColumnDef::new(Post::Id)
-                            .integer()
-                            .not_null()
-                            .auto_increment()
-                            .primary_key(),
-                    )
+                    .col(ColumnDef::new(Post::Id).integer().not_null().auto_increment().primary_key())
                     .col(ColumnDef::new(Post::Title).string().not_null())
                     .col(ColumnDef::new(Post::Text).string().not_null())
                     .to_owned(),
@@ -38,10 +29,7 @@ impl MigrationTrait for Migration {
             .await
     }
 
-    async fn down(
-        &self,
-        manager: &SchemaManager,
-    ) -> Result<(), DbErr> {
+    async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         // Replace the sample below with your own migration scripts
         // todo!();
 

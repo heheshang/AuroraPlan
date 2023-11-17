@@ -18,11 +18,7 @@ pub struct Message {
 }
 
 impl Message {
-    fn new(
-        code: i32,
-        descp: String,
-        hasUi: bool,
-    ) -> Message {
+    fn new(code: i32, descp: String, hasUi: bool) -> Message {
         Message { code, descp, hasUi }
     }
 }
@@ -50,11 +46,8 @@ impl PluginType {
 }
 
 pub fn of(status: &i32) -> PluginType {
-    let PLUGIN_TYPE_MAP: HashMap<i32, PluginType> = HashMap::from([
-        (0, PluginType::ALERT),
-        (1, PluginType::REGISTER),
-        (2, PluginType::TASK),
-    ]);
+    let PLUGIN_TYPE_MAP: HashMap<i32, PluginType> =
+        HashMap::from([(0, PluginType::ALERT), (1, PluginType::REGISTER), (2, PluginType::TASK)]);
     if PLUGIN_TYPE_MAP.contains_key(status) {
         return PLUGIN_TYPE_MAP.get(status).unwrap().clone();
     }

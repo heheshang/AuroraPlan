@@ -16,30 +16,21 @@ impl DsDqRuleInputEntryService for AuroraRpcServer {
     async fn get_ds_dq_rule_input_entry(
         &self,
         _req: tonic::Request<proto::ds_dq_rule_input_entry::GetDsDqRuleInputEntryRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_dq_rule_input_entry::DsDqRuleInputEntry>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_dq_rule_input_entry::DsDqRuleInputEntry>, tonic::Status> {
         todo!()
     }
 
     async fn create_ds_dq_rule_input_entry(
         &self,
         _req: tonic::Request<proto::ds_dq_rule_input_entry::CreateDsDqRuleInputEntryRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_dq_rule_input_entry::DsDqRuleInputEntry>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_dq_rule_input_entry::DsDqRuleInputEntry>, tonic::Status> {
         todo!()
     }
 
     async fn update_ds_dq_rule_input_entry(
         &self,
         _req: tonic::Request<proto::ds_dq_rule_input_entry::UpdateDsDqRuleInputEntryRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::ds_dq_rule_input_entry::DsDqRuleInputEntry>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::ds_dq_rule_input_entry::DsDqRuleInputEntry>, tonic::Status> {
         todo!()
     }
 

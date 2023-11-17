@@ -1,9 +1,6 @@
 use std::{collections::HashMap, net::SocketAddr};
 
-use crate::{
-    ctx::Ctx, cypt::security::get_authenticator, log, model, web,
-    web::bean::request::user::UserLoginInfoReq,
-};
+use crate::{ctx::Ctx, cypt::security::get_authenticator, log, model, web, web::bean::request::user::UserLoginInfoReq};
 use aurora_common::{
     core_error::error::{AuroraData, Error},
     core_results::results::{ApiResult, Result},
@@ -63,10 +60,7 @@ pub async fn login(
 }
 pub async fn logout() {}
 
-pub async fn user_info(
-    cookies: Cookies,
-    ctx: Ctx,
-) -> Result<ApiResult<UserInfoRes>> {
+pub async fn user_info(cookies: Cookies, ctx: Ctx) -> Result<ApiResult<UserInfoRes>> {
     let user_id = ctx.user_id();
     let user = model::user::service::_get_user(user_id).await?;
     Ok(ApiResult::build(Some(UserInfoRes::from(user))))

@@ -104,28 +104,19 @@ pub mod ds_udfs_service_client {
             let inner = tonic::client::Grpc::new(inner);
             Self { inner }
         }
-        pub fn with_origin(
-            inner: T,
-            origin: Uri,
-        ) -> Self {
+        pub fn with_origin(inner: T, origin: Uri) -> Self {
             let inner = tonic::client::Grpc::with_origin(inner, origin);
             Self { inner }
         }
-        pub fn with_interceptor<F>(
-            inner: T,
-            interceptor: F,
-        ) -> DsUdfsServiceClient<InterceptedService<T, F>>
+        pub fn with_interceptor<F>(inner: T, interceptor: F) -> DsUdfsServiceClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
             T: tonic::codegen::Service<
                 http::Request<tonic::body::BoxBody>,
-                Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
-                >,
+                Response = http::Response<<T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody>,
             >,
-            <T as tonic::codegen::Service<http::Request<tonic::body::BoxBody>>>::Error:
-                Into<StdError> + Send + Sync,
+            <T as tonic::codegen::Service<http::Request<tonic::body::BoxBody>>>::Error: Into<StdError> + Send + Sync,
         {
             DsUdfsServiceClient::new(InterceptedService::new(inner, interceptor))
         }
@@ -134,19 +125,13 @@ pub mod ds_udfs_service_client {
         /// This requires the server to support it otherwise it might respond with an
         /// error.
         #[must_use]
-        pub fn send_compressed(
-            mut self,
-            encoding: CompressionEncoding,
-        ) -> Self {
+        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
             self.inner = self.inner.send_compressed(encoding);
             self
         }
         /// Enable decompressing responses.
         #[must_use]
-        pub fn accept_compressed(
-            mut self,
-            encoding: CompressionEncoding,
-        ) -> Self {
+        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
             self.inner = self.inner.accept_compressed(encoding);
             self
         }
@@ -154,10 +139,7 @@ pub mod ds_udfs_service_client {
         ///
         /// Default: `4MB`
         #[must_use]
-        pub fn max_decoding_message_size(
-            mut self,
-            limit: usize,
-        ) -> Self {
+        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
             self.inner = self.inner.max_decoding_message_size(limit);
             self
         }
@@ -165,23 +147,16 @@ pub mod ds_udfs_service_client {
         ///
         /// Default: `usize::MAX`
         #[must_use]
-        pub fn max_encoding_message_size(
-            mut self,
-            limit: usize,
-        ) -> Self {
+        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
         pub async fn list_ds_udfss(
             &mut self,
             request: impl tonic::IntoRequest<super::ListDsUdfssRequest>,
-        ) -> std::result::Result<tonic::Response<super::ListDsUdfssResponse>, tonic::Status>
-        {
+        ) -> std::result::Result<tonic::Response<super::ListDsUdfssResponse>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static("/ds_udfs.DsUdfsService/ListDsUdfss");
@@ -195,10 +170,7 @@ pub mod ds_udfs_service_client {
             request: impl tonic::IntoRequest<super::GetDsUdfsRequest>,
         ) -> std::result::Result<tonic::Response<super::DsUdfs>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static("/ds_udfs.DsUdfsService/GetDsUdfs");
@@ -212,10 +184,7 @@ pub mod ds_udfs_service_client {
             request: impl tonic::IntoRequest<super::CreateDsUdfsRequest>,
         ) -> std::result::Result<tonic::Response<super::DsUdfs>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static("/ds_udfs.DsUdfsService/CreateDsUdfs");
@@ -229,10 +198,7 @@ pub mod ds_udfs_service_client {
             request: impl tonic::IntoRequest<super::UpdateDsUdfsRequest>,
         ) -> std::result::Result<tonic::Response<super::DsUdfs>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static("/ds_udfs.DsUdfsService/UpdateDsUdfs");
@@ -246,10 +212,7 @@ pub mod ds_udfs_service_client {
             request: impl tonic::IntoRequest<super::DeleteDsUdfsRequest>,
         ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static("/ds_udfs.DsUdfsService/DeleteDsUdfs");
@@ -312,10 +275,7 @@ pub mod ds_udfs_service_server {
                 max_encoding_message_size: None,
             }
         }
-        pub fn with_interceptor<F>(
-            inner: T,
-            interceptor: F,
-        ) -> InterceptedService<Self, F>
+        pub fn with_interceptor<F>(inner: T, interceptor: F) -> InterceptedService<Self, F>
         where
             F: tonic::service::Interceptor,
         {
@@ -323,19 +283,13 @@ pub mod ds_udfs_service_server {
         }
         /// Enable decompressing requests with the given encoding.
         #[must_use]
-        pub fn accept_compressed(
-            mut self,
-            encoding: CompressionEncoding,
-        ) -> Self {
+        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
             self.accept_compression_encodings.enable(encoding);
             self
         }
         /// Compress responses with the given encoding, if the client supports it.
         #[must_use]
-        pub fn send_compressed(
-            mut self,
-            encoding: CompressionEncoding,
-        ) -> Self {
+        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
             self.send_compression_encodings.enable(encoding);
             self
         }
@@ -343,10 +297,7 @@ pub mod ds_udfs_service_server {
         ///
         /// Default: `4MB`
         #[must_use]
-        pub fn max_decoding_message_size(
-            mut self,
-            limit: usize,
-        ) -> Self {
+        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
             self.max_decoding_message_size = Some(limit);
             self
         }
@@ -354,10 +305,7 @@ pub mod ds_udfs_service_server {
         ///
         /// Default: `usize::MAX`
         #[must_use]
-        pub fn max_encoding_message_size(
-            mut self,
-            limit: usize,
-        ) -> Self {
+        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
             self.max_encoding_message_size = Some(limit);
             self
         }
@@ -371,30 +319,19 @@ pub mod ds_udfs_service_server {
         type Response = http::Response<tonic::body::BoxBody>;
         type Error = std::convert::Infallible;
         type Future = BoxFuture<Self::Response, Self::Error>;
-        fn poll_ready(
-            &mut self,
-            _cx: &mut Context<'_>,
-        ) -> Poll<std::result::Result<(), Self::Error>> {
+        fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<std::result::Result<(), Self::Error>> {
             Poll::Ready(Ok(()))
         }
-        fn call(
-            &mut self,
-            req: http::Request<B>,
-        ) -> Self::Future {
+        fn call(&mut self, req: http::Request<B>) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
                 "/ds_udfs.DsUdfsService/ListDsUdfss" => {
                     #[allow(non_camel_case_types)]
                     struct ListDsUdfssSvc<T: DsUdfsService>(pub Arc<T>);
-                    impl<T: DsUdfsService> tonic::server::UnaryService<super::ListDsUdfssRequest>
-                        for ListDsUdfssSvc<T>
-                    {
+                    impl<T: DsUdfsService> tonic::server::UnaryService<super::ListDsUdfssRequest> for ListDsUdfssSvc<T> {
                         type Response = super::ListDsUdfssResponse;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::ListDsUdfssRequest>,
-                        ) -> Self::Future {
+                        fn call(&mut self, request: tonic::Request<super::ListDsUdfssRequest>) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move { (*inner).list_ds_udfss(request).await };
                             Box::pin(fut)
@@ -410,14 +347,8 @@ pub mod ds_udfs_service_server {
                         let method = ListDsUdfssSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
@@ -429,10 +360,7 @@ pub mod ds_udfs_service_server {
                     impl<T: DsUdfsService> tonic::server::UnaryService<super::GetDsUdfsRequest> for GetDsUdfsSvc<T> {
                         type Response = super::DsUdfs;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::GetDsUdfsRequest>,
-                        ) -> Self::Future {
+                        fn call(&mut self, request: tonic::Request<super::GetDsUdfsRequest>) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move { (*inner).get_ds_udfs(request).await };
                             Box::pin(fut)
@@ -448,14 +376,8 @@ pub mod ds_udfs_service_server {
                         let method = GetDsUdfsSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
@@ -464,15 +386,10 @@ pub mod ds_udfs_service_server {
                 "/ds_udfs.DsUdfsService/CreateDsUdfs" => {
                     #[allow(non_camel_case_types)]
                     struct CreateDsUdfsSvc<T: DsUdfsService>(pub Arc<T>);
-                    impl<T: DsUdfsService> tonic::server::UnaryService<super::CreateDsUdfsRequest>
-                        for CreateDsUdfsSvc<T>
-                    {
+                    impl<T: DsUdfsService> tonic::server::UnaryService<super::CreateDsUdfsRequest> for CreateDsUdfsSvc<T> {
                         type Response = super::DsUdfs;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::CreateDsUdfsRequest>,
-                        ) -> Self::Future {
+                        fn call(&mut self, request: tonic::Request<super::CreateDsUdfsRequest>) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move { (*inner).create_ds_udfs(request).await };
                             Box::pin(fut)
@@ -488,14 +405,8 @@ pub mod ds_udfs_service_server {
                         let method = CreateDsUdfsSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
@@ -504,15 +415,10 @@ pub mod ds_udfs_service_server {
                 "/ds_udfs.DsUdfsService/UpdateDsUdfs" => {
                     #[allow(non_camel_case_types)]
                     struct UpdateDsUdfsSvc<T: DsUdfsService>(pub Arc<T>);
-                    impl<T: DsUdfsService> tonic::server::UnaryService<super::UpdateDsUdfsRequest>
-                        for UpdateDsUdfsSvc<T>
-                    {
+                    impl<T: DsUdfsService> tonic::server::UnaryService<super::UpdateDsUdfsRequest> for UpdateDsUdfsSvc<T> {
                         type Response = super::DsUdfs;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::UpdateDsUdfsRequest>,
-                        ) -> Self::Future {
+                        fn call(&mut self, request: tonic::Request<super::UpdateDsUdfsRequest>) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move { (*inner).update_ds_udfs(request).await };
                             Box::pin(fut)
@@ -528,14 +434,8 @@ pub mod ds_udfs_service_server {
                         let method = UpdateDsUdfsSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
@@ -544,15 +444,10 @@ pub mod ds_udfs_service_server {
                 "/ds_udfs.DsUdfsService/DeleteDsUdfs" => {
                     #[allow(non_camel_case_types)]
                     struct DeleteDsUdfsSvc<T: DsUdfsService>(pub Arc<T>);
-                    impl<T: DsUdfsService> tonic::server::UnaryService<super::DeleteDsUdfsRequest>
-                        for DeleteDsUdfsSvc<T>
-                    {
+                    impl<T: DsUdfsService> tonic::server::UnaryService<super::DeleteDsUdfsRequest> for DeleteDsUdfsSvc<T> {
                         type Response = ();
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::DeleteDsUdfsRequest>,
-                        ) -> Self::Future {
+                        fn call(&mut self, request: tonic::Request<super::DeleteDsUdfsRequest>) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move { (*inner).delete_ds_udfs(request).await };
                             Box::pin(fut)
@@ -568,14 +463,8 @@ pub mod ds_udfs_service_server {
                         let method = DeleteDsUdfsSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
@@ -610,10 +499,7 @@ pub mod ds_udfs_service_server {
         }
     }
     impl<T: std::fmt::Debug> std::fmt::Debug for _Inner<T> {
-        fn fmt(
-            &self,
-            f: &mut std::fmt::Formatter<'_>,
-        ) -> std::fmt::Result {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             write!(f, "{:?}", self.0)
         }
     }

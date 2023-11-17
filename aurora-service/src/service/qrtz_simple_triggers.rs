@@ -6,40 +6,29 @@ impl QrtzSimpleTriggerService for AuroraRpcServer {
     async fn list_qrtz_simple_triggers(
         &self,
         _req: tonic::Request<proto::qrtz_simple_triggers::ListQrtzSimpleTriggersRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::qrtz_simple_triggers::ListQrtzSimpleTriggersResponse>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::qrtz_simple_triggers::ListQrtzSimpleTriggersResponse>, tonic::Status>
+    {
         todo!()
     }
 
     async fn get_qrtz_simple_trigger(
         &self,
         _req: tonic::Request<proto::qrtz_simple_triggers::GetQrtzSimpleTriggerRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::qrtz_simple_triggers::QrtzSimpleTrigger>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::qrtz_simple_triggers::QrtzSimpleTrigger>, tonic::Status> {
         todo!()
     }
 
     async fn create_qrtz_simple_trigger(
         &self,
         _req: tonic::Request<proto::qrtz_simple_triggers::CreateQrtzSimpleTriggerRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::qrtz_simple_triggers::QrtzSimpleTrigger>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::qrtz_simple_triggers::QrtzSimpleTrigger>, tonic::Status> {
         todo!()
     }
 
     async fn update_qrtz_simple_trigger(
         &self,
         _req: tonic::Request<proto::qrtz_simple_triggers::UpdateQrtzSimpleTriggerRequest>,
-    ) -> std::result::Result<
-        tonic::Response<proto::qrtz_simple_triggers::QrtzSimpleTrigger>,
-        tonic::Status,
-    > {
+    ) -> std::result::Result<tonic::Response<proto::qrtz_simple_triggers::QrtzSimpleTrigger>, tonic::Status> {
         todo!()
     }
 

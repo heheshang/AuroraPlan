@@ -20,10 +20,7 @@ pub struct Message {
 }
 
 impl Message {
-    fn new(
-        code: i32,
-        descp: String,
-    ) -> Message {
+    fn new(code: i32, descp: String) -> Message {
         Message { code, descp }
     }
 }
@@ -31,9 +28,7 @@ impl Message {
 impl StateEventType {
     pub fn get_message(&self) -> Message {
         match self {
-            StateEventType::PROCESS_STATE_CHANGE => {
-                Message::new(0, "PROCESS_STATE_CHANGE".to_string())
-            }
+            StateEventType::PROCESS_STATE_CHANGE => Message::new(0, "PROCESS_STATE_CHANGE".to_string()),
             StateEventType::TASK_STATE_CHANGE => Message::new(1, "TASK_STATE_CHANGE".to_string()),
             StateEventType::PROCESS_TIMEOUT => Message::new(2, "PROCESS_TIMEOUT".to_string()),
             StateEventType::TASK_TIMEOUT => Message::new(3, "TASK_TIMEOUT".to_string()),

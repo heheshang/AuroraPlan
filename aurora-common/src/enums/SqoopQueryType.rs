@@ -15,10 +15,7 @@ pub struct Message {
 }
 
 impl Message {
-    fn new(
-        code: i32,
-        descp: String,
-    ) -> Message {
+    fn new(code: i32, descp: String) -> Message {
         Message { code, descp }
     }
 }
@@ -39,8 +36,7 @@ impl SqoopQueryType {
     }
 
     pub fn of(status: &i32) -> SqoopQueryType {
-        let MAP: HashMap<i32, SqoopQueryType> =
-            HashMap::from([(0, SqoopQueryType::FORM), (1, SqoopQueryType::SQL)]);
+        let MAP: HashMap<i32, SqoopQueryType> = HashMap::from([(0, SqoopQueryType::FORM), (1, SqoopQueryType::SQL)]);
         if MAP.contains_key(status) {
             return MAP.get(status).unwrap().clone();
         }

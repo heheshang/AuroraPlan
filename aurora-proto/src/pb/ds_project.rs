@@ -136,28 +136,19 @@ pub mod ds_project_service_client {
             let inner = tonic::client::Grpc::new(inner);
             Self { inner }
         }
-        pub fn with_origin(
-            inner: T,
-            origin: Uri,
-        ) -> Self {
+        pub fn with_origin(inner: T, origin: Uri) -> Self {
             let inner = tonic::client::Grpc::with_origin(inner, origin);
             Self { inner }
         }
-        pub fn with_interceptor<F>(
-            inner: T,
-            interceptor: F,
-        ) -> DsProjectServiceClient<InterceptedService<T, F>>
+        pub fn with_interceptor<F>(inner: T, interceptor: F) -> DsProjectServiceClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
             T: tonic::codegen::Service<
                 http::Request<tonic::body::BoxBody>,
-                Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
-                >,
+                Response = http::Response<<T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody>,
             >,
-            <T as tonic::codegen::Service<http::Request<tonic::body::BoxBody>>>::Error:
-                Into<StdError> + Send + Sync,
+            <T as tonic::codegen::Service<http::Request<tonic::body::BoxBody>>>::Error: Into<StdError> + Send + Sync,
         {
             DsProjectServiceClient::new(InterceptedService::new(inner, interceptor))
         }
@@ -166,19 +157,13 @@ pub mod ds_project_service_client {
         /// This requires the server to support it otherwise it might respond with an
         /// error.
         #[must_use]
-        pub fn send_compressed(
-            mut self,
-            encoding: CompressionEncoding,
-        ) -> Self {
+        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
             self.inner = self.inner.send_compressed(encoding);
             self
         }
         /// Enable decompressing responses.
         #[must_use]
-        pub fn accept_compressed(
-            mut self,
-            encoding: CompressionEncoding,
-        ) -> Self {
+        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
             self.inner = self.inner.accept_compressed(encoding);
             self
         }
@@ -186,10 +171,7 @@ pub mod ds_project_service_client {
         ///
         /// Default: `4MB`
         #[must_use]
-        pub fn max_decoding_message_size(
-            mut self,
-            limit: usize,
-        ) -> Self {
+        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
             self.inner = self.inner.max_decoding_message_size(limit);
             self
         }
@@ -197,32 +179,22 @@ pub mod ds_project_service_client {
         ///
         /// Default: `usize::MAX`
         #[must_use]
-        pub fn max_encoding_message_size(
-            mut self,
-            limit: usize,
-        ) -> Self {
+        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
         pub async fn list_ds_projects(
             &mut self,
             request: impl tonic::IntoRequest<super::ListDsProjectsRequest>,
-        ) -> std::result::Result<tonic::Response<super::ListDsProjectsResponse>, tonic::Status>
-        {
+        ) -> std::result::Result<tonic::Response<super::ListDsProjectsResponse>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path =
-                http::uri::PathAndQuery::from_static("/ds_project.DsProjectService/ListDsProjects");
+            let path = http::uri::PathAndQuery::from_static("/ds_project.DsProjectService/ListDsProjects");
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new(
-                "ds_project.DsProjectService",
-                "ListDsProjects",
-            ));
+            req.extensions_mut()
+                .insert(GrpcMethod::new("ds_project.DsProjectService", "ListDsProjects"));
             self.inner.unary(req, path, codec).await
         }
         pub async fn get_ds_project(
@@ -230,19 +202,13 @@ pub mod ds_project_service_client {
             request: impl tonic::IntoRequest<super::GetDsProjectRequest>,
         ) -> std::result::Result<tonic::Response<super::DsProject>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path =
-                http::uri::PathAndQuery::from_static("/ds_project.DsProjectService/GetDsProject");
+            let path = http::uri::PathAndQuery::from_static("/ds_project.DsProjectService/GetDsProject");
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new(
-                "ds_project.DsProjectService",
-                "GetDsProject",
-            ));
+            req.extensions_mut()
+                .insert(GrpcMethod::new("ds_project.DsProjectService", "GetDsProject"));
             self.inner.unary(req, path, codec).await
         }
         pub async fn create_ds_project(
@@ -250,20 +216,13 @@ pub mod ds_project_service_client {
             request: impl tonic::IntoRequest<super::CreateDsProjectRequest>,
         ) -> std::result::Result<tonic::Response<super::DsProject>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/ds_project.DsProjectService/CreateDsProject",
-            );
+            let path = http::uri::PathAndQuery::from_static("/ds_project.DsProjectService/CreateDsProject");
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new(
-                "ds_project.DsProjectService",
-                "CreateDsProject",
-            ));
+            req.extensions_mut()
+                .insert(GrpcMethod::new("ds_project.DsProjectService", "CreateDsProject"));
             self.inner.unary(req, path, codec).await
         }
         pub async fn update_ds_project(
@@ -271,20 +230,13 @@ pub mod ds_project_service_client {
             request: impl tonic::IntoRequest<super::UpdateDsProjectRequest>,
         ) -> std::result::Result<tonic::Response<super::DsProject>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/ds_project.DsProjectService/UpdateDsProject",
-            );
+            let path = http::uri::PathAndQuery::from_static("/ds_project.DsProjectService/UpdateDsProject");
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new(
-                "ds_project.DsProjectService",
-                "UpdateDsProject",
-            ));
+            req.extensions_mut()
+                .insert(GrpcMethod::new("ds_project.DsProjectService", "UpdateDsProject"));
             self.inner.unary(req, path, codec).await
         }
         pub async fn delete_ds_project(
@@ -292,20 +244,13 @@ pub mod ds_project_service_client {
             request: impl tonic::IntoRequest<super::DeleteDsProjectRequest>,
         ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/ds_project.DsProjectService/DeleteDsProject",
-            );
+            let path = http::uri::PathAndQuery::from_static("/ds_project.DsProjectService/DeleteDsProject");
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new(
-                "ds_project.DsProjectService",
-                "DeleteDsProject",
-            ));
+            req.extensions_mut()
+                .insert(GrpcMethod::new("ds_project.DsProjectService", "DeleteDsProject"));
             self.inner.unary(req, path, codec).await
         }
     }
@@ -362,10 +307,7 @@ pub mod ds_project_service_server {
                 max_encoding_message_size: None,
             }
         }
-        pub fn with_interceptor<F>(
-            inner: T,
-            interceptor: F,
-        ) -> InterceptedService<Self, F>
+        pub fn with_interceptor<F>(inner: T, interceptor: F) -> InterceptedService<Self, F>
         where
             F: tonic::service::Interceptor,
         {
@@ -373,19 +315,13 @@ pub mod ds_project_service_server {
         }
         /// Enable decompressing requests with the given encoding.
         #[must_use]
-        pub fn accept_compressed(
-            mut self,
-            encoding: CompressionEncoding,
-        ) -> Self {
+        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
             self.accept_compression_encodings.enable(encoding);
             self
         }
         /// Compress responses with the given encoding, if the client supports it.
         #[must_use]
-        pub fn send_compressed(
-            mut self,
-            encoding: CompressionEncoding,
-        ) -> Self {
+        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
             self.send_compression_encodings.enable(encoding);
             self
         }
@@ -393,10 +329,7 @@ pub mod ds_project_service_server {
         ///
         /// Default: `4MB`
         #[must_use]
-        pub fn max_decoding_message_size(
-            mut self,
-            limit: usize,
-        ) -> Self {
+        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
             self.max_decoding_message_size = Some(limit);
             self
         }
@@ -404,10 +337,7 @@ pub mod ds_project_service_server {
         ///
         /// Default: `usize::MAX`
         #[must_use]
-        pub fn max_encoding_message_size(
-            mut self,
-            limit: usize,
-        ) -> Self {
+        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
             self.max_encoding_message_size = Some(limit);
             self
         }
@@ -421,31 +351,19 @@ pub mod ds_project_service_server {
         type Response = http::Response<tonic::body::BoxBody>;
         type Error = std::convert::Infallible;
         type Future = BoxFuture<Self::Response, Self::Error>;
-        fn poll_ready(
-            &mut self,
-            _cx: &mut Context<'_>,
-        ) -> Poll<std::result::Result<(), Self::Error>> {
+        fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<std::result::Result<(), Self::Error>> {
             Poll::Ready(Ok(()))
         }
-        fn call(
-            &mut self,
-            req: http::Request<B>,
-        ) -> Self::Future {
+        fn call(&mut self, req: http::Request<B>) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
                 "/ds_project.DsProjectService/ListDsProjects" => {
                     #[allow(non_camel_case_types)]
                     struct ListDsProjectsSvc<T: DsProjectService>(pub Arc<T>);
-                    impl<T: DsProjectService>
-                        tonic::server::UnaryService<super::ListDsProjectsRequest>
-                        for ListDsProjectsSvc<T>
-                    {
+                    impl<T: DsProjectService> tonic::server::UnaryService<super::ListDsProjectsRequest> for ListDsProjectsSvc<T> {
                         type Response = super::ListDsProjectsResponse;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::ListDsProjectsRequest>,
-                        ) -> Self::Future {
+                        fn call(&mut self, request: tonic::Request<super::ListDsProjectsRequest>) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move { (*inner).list_ds_projects(request).await };
                             Box::pin(fut)
@@ -461,14 +379,8 @@ pub mod ds_project_service_server {
                         let method = ListDsProjectsSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
@@ -477,16 +389,10 @@ pub mod ds_project_service_server {
                 "/ds_project.DsProjectService/GetDsProject" => {
                     #[allow(non_camel_case_types)]
                     struct GetDsProjectSvc<T: DsProjectService>(pub Arc<T>);
-                    impl<T: DsProjectService>
-                        tonic::server::UnaryService<super::GetDsProjectRequest>
-                        for GetDsProjectSvc<T>
-                    {
+                    impl<T: DsProjectService> tonic::server::UnaryService<super::GetDsProjectRequest> for GetDsProjectSvc<T> {
                         type Response = super::DsProject;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::GetDsProjectRequest>,
-                        ) -> Self::Future {
+                        fn call(&mut self, request: tonic::Request<super::GetDsProjectRequest>) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move { (*inner).get_ds_project(request).await };
                             Box::pin(fut)
@@ -502,14 +408,8 @@ pub mod ds_project_service_server {
                         let method = GetDsProjectSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
@@ -518,16 +418,10 @@ pub mod ds_project_service_server {
                 "/ds_project.DsProjectService/CreateDsProject" => {
                     #[allow(non_camel_case_types)]
                     struct CreateDsProjectSvc<T: DsProjectService>(pub Arc<T>);
-                    impl<T: DsProjectService>
-                        tonic::server::UnaryService<super::CreateDsProjectRequest>
-                        for CreateDsProjectSvc<T>
-                    {
+                    impl<T: DsProjectService> tonic::server::UnaryService<super::CreateDsProjectRequest> for CreateDsProjectSvc<T> {
                         type Response = super::DsProject;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::CreateDsProjectRequest>,
-                        ) -> Self::Future {
+                        fn call(&mut self, request: tonic::Request<super::CreateDsProjectRequest>) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move { (*inner).create_ds_project(request).await };
                             Box::pin(fut)
@@ -543,14 +437,8 @@ pub mod ds_project_service_server {
                         let method = CreateDsProjectSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
@@ -559,16 +447,10 @@ pub mod ds_project_service_server {
                 "/ds_project.DsProjectService/UpdateDsProject" => {
                     #[allow(non_camel_case_types)]
                     struct UpdateDsProjectSvc<T: DsProjectService>(pub Arc<T>);
-                    impl<T: DsProjectService>
-                        tonic::server::UnaryService<super::UpdateDsProjectRequest>
-                        for UpdateDsProjectSvc<T>
-                    {
+                    impl<T: DsProjectService> tonic::server::UnaryService<super::UpdateDsProjectRequest> for UpdateDsProjectSvc<T> {
                         type Response = super::DsProject;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::UpdateDsProjectRequest>,
-                        ) -> Self::Future {
+                        fn call(&mut self, request: tonic::Request<super::UpdateDsProjectRequest>) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move { (*inner).update_ds_project(request).await };
                             Box::pin(fut)
@@ -584,14 +466,8 @@ pub mod ds_project_service_server {
                         let method = UpdateDsProjectSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
@@ -600,16 +476,10 @@ pub mod ds_project_service_server {
                 "/ds_project.DsProjectService/DeleteDsProject" => {
                     #[allow(non_camel_case_types)]
                     struct DeleteDsProjectSvc<T: DsProjectService>(pub Arc<T>);
-                    impl<T: DsProjectService>
-                        tonic::server::UnaryService<super::DeleteDsProjectRequest>
-                        for DeleteDsProjectSvc<T>
-                    {
+                    impl<T: DsProjectService> tonic::server::UnaryService<super::DeleteDsProjectRequest> for DeleteDsProjectSvc<T> {
                         type Response = ();
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::DeleteDsProjectRequest>,
-                        ) -> Self::Future {
+                        fn call(&mut self, request: tonic::Request<super::DeleteDsProjectRequest>) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move { (*inner).delete_ds_project(request).await };
                             Box::pin(fut)
@@ -625,14 +495,8 @@ pub mod ds_project_service_server {
                         let method = DeleteDsProjectSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
@@ -667,10 +531,7 @@ pub mod ds_project_service_server {
         }
     }
     impl<T: std::fmt::Debug> std::fmt::Debug for _Inner<T> {
-        fn fmt(
-            &self,
-            f: &mut std::fmt::Formatter<'_>,
-        ) -> std::fmt::Result {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             write!(f, "{:?}", self.0)
         }
     }
