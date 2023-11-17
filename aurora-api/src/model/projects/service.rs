@@ -6,8 +6,8 @@ use aurora_common::{core_error::error::Error, core_results::results::Result};
 use aurora_proto::{
     ds_project::{DsProject, ListDsProjectsRequest},
     ds_project_parameter::{
-        CreateProjectParameterRequest, ListProjectParametersRequest, ListProjectParametersResponse,
-        ProjectParameter,
+        CreateProjectParameterRequest, DeleteProjectParameterRequest, ListProjectParametersRequest,
+        ListProjectParametersResponse, ProjectParameter, UpdateProjectParameterRequest,
     },
     pb::ds_project::CreateDsProjectRequest,
 };
@@ -73,6 +73,7 @@ pub async fn _create_project_paramter(
             ..Default::default()
         }),
     });
+
     client
         .clone()
         .create_project_parameter(request)
@@ -81,6 +82,45 @@ pub async fn _create_project_paramter(
         .map_err(|e| {
             let err: Error = e.into();
             error!("create_project_paramter error: {:?}", err);
+            err
+        })
+}
+pub async fn _delete_project_parameter(code: i64, project_code: i64) -> Result<()> {
+    let client = _ds_project_parameter_service_client().await?;
+    let request = tonic::Request::new(DeleteProjectParameterRequest { code, project_code });
+
+    client
+        .clone()
+        .delete_project_parameter(request)
+        .await
+        .map(|res| res.into_inner())
+        .map_err(|e| {
+            let err: Error = e.into();
+            error!("delete project parameter error: {:?}", err);
+            err
+        })
+}
+pub async fn _update_project_parameter(
+    code: i64,
+    project_code: i64,
+    project_parameter_name: String,
+    project_parameter_value: String,
+) -> Result<ProjectParameter> {
+    let client = _ds_project_parameter_service_client().await?;
+    let request = tonic::Request::new(UpdateProjectParameterRequest {
+        code,
+        project_code,
+        param_name: project_parameter_name,
+        param_value: project_parameter_value,
+    });
+    client
+        .clone()
+        .update_project_parameter(request)
+        .await
+        .map(|res| res.into_inner())
+        .map_err(|e| {
+            let err: Error = e.into();
+            error!("update project paramter error: {:?}", err);
             err
         })
 }

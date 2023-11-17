@@ -50,5 +50,18 @@ pub struct ProjectParameterListParams {
     pub pageSize: u64,
     pub pageNo: u64,
     pub searchVal: Option<String>,
-    pub projectCode: u64,
+}
+
+#[allow(non_snake_case)]
+#[derive(Deserialize, Serialize, Debug)]
+pub struct ProjectParamUpdate {
+    pub code: i64,
+    pub projectParameterName: String,
+    pub projectParameterValue: String,
+}
+
+#[allow(non_snake_case)]
+#[derive(Deserialize, Serialize, Debug)]
+pub struct ProjectParamDelete {
+    pub code: i64,
 }

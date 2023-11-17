@@ -70,20 +70,23 @@ pub struct CreateProjectParameterRequest {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct UpdateProjectParameterRequest {
-    /// The ProjectParameter resource which replaces the resource on the server.
-    #[prost(message, optional, tag = "1")]
-    pub project_parameter: ::core::option::Option<ProjectParameter>,
-    /// The update mask applies to the resource. For the `FieldMask` definition,
-    /// see <https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#fieldmask>
-    #[prost(message, optional, tag = "2")]
-    pub update_mask: ::core::option::Option<::prost_types::FieldMask>,
+    #[prost(string, tag = "1")]
+    pub param_name: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub param_value: ::prost::alloc::string::String,
+    #[prost(int64, tag = "3")]
+    pub code: i64,
+    #[prost(int64, tag = "4")]
+    pub project_code: i64,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct DeleteProjectParameterRequest {
     /// The resource name of the ProjectParameter to be deleted.
-    #[prost(string, tag = "1")]
-    pub name: ::prost::alloc::string::String,
+    #[prost(int64, tag = "1")]
+    pub code: i64,
+    #[prost(int64, tag = "2")]
+    pub project_code: i64,
 }
 /// Generated client implementations.
 pub mod project_parameter_service_client {

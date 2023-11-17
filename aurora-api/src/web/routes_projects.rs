@@ -4,7 +4,7 @@ use axum::{
     extract::{Path, Query},
     middleware,
     response::IntoResponse,
-    routing::{get, patch, post},
+    routing::{get, patch, post, put},
     Form, Router,
 };
 use serde::Deserialize;
@@ -16,7 +16,10 @@ use crate::{
     ctx::Ctx,
     model::{
         self,
-        projects::service::{_create_project_paramter, _project_parameter_list, create},
+        projects::service::{
+            _create_project_paramter, _delete_project_parameter, _project_parameter_list,
+            _update_project_parameter, create,
+        },
     },
 };
 use crate::{model::projects::service::list, web::bean::response::projects::DsProjectRes};
@@ -25,7 +28,8 @@ use super::{
     bean::{
         request::projects::{
             DefineUserCountParams, ProcessStateCountParams, ProjectCreateParams, ProjectListParams,
-            ProjectParamCreate, ProjectParameterListParams, TaskStateCountParams,
+            ProjectParamCreate, ProjectParamDelete, ProjectParamUpdate, ProjectParameterListParams,
+            TaskStateCountParams,
         },
         response::projects::{DsProjectList, DsProjectParamterRes, ProjectParameterList},
     },
@@ -47,6 +51,14 @@ pub fn routes() -> Router {
         .route(
             "/projects/:project_code/project-parameter",
             post(create_project_parameter).get(project_parameter_list),
+        )
+        .route(
+            "/projects/:project_code/project-parameter/:code_id",
+            put(update_project_parameter),
+        )
+        .route(
+            "/projects/:project_code/project-parameter/delete",
+            post(delete_project_parameter),
         );
 
     Router::new()
@@ -88,6 +100,34 @@ pub async fn create_project_parameter(
     Ok(ApiResult::build(Some(DsProjectParamterRes::from(res))))
 }
 
+pub async fn update_project_parameter(
+    cookies: Cookies,
+    ctx: Ctx,
+    Path((project_code, code_id)): Path<(i64, i64)>,
+    param: Form<ProjectParamUpdate>,
+) -> Result<ApiResult<DsProjectParamterRes>> {
+    info!("projectCode: {:?} ,param :{:#?} ", project_code, param);
+    let project_parameter_name = param.projectParameterName.clone();
+    let project_parameter_value = param.projectParameterValue.clone();
+    let res = _update_project_parameter(
+        code_id,
+        project_code,
+        project_parameter_name,
+        project_parameter_value,
+    )
+    .await?;
+    Ok(ApiResult::build(Some(DsProjectParamterRes::from(res))))
+}
+pub async fn delete_project_parameter(
+    cookies: Cookies,
+    ctx: Ctx,
+    Path(project_code): Path<i64>,
+    param: Form<ProjectParamDelete>,
+) -> Result<ApiResult<bool>> {
+    info!("projectCode: {:?} ,param :{:#?} ", project_code, param);
+    _delete_project_parameter(param.code, project_code).await?;
+    Ok(ApiResult::build(Some(true)))
+}
 pub async fn create_project(
     cookies: Cookies,
     ctx: Ctx,

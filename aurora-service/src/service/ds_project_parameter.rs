@@ -1,10 +1,31 @@
 use super::dao_service::AuroraRpcServer;
 use aurora_common::core_error::error::{AuroraData, AuroraErrorInfo, Error};
-use entity::t_ds_project_parameter::{self, ActiveModel, Column, Entity};
+use entity::t_ds_project_parameter::{self, ActiveModel, Column, Entity, Model};
 use proto::ds_project_parameter::project_parameter_service_server::ProjectParameterService;
 use sea_orm::{entity::prelude::*, ActiveValue::NotSet, QueryOrder, Set};
-use snowflake::SnowflakeIdBucket;
+use sea_orm::{DeleteResult, TransactionTrait};
 use tracing::{error, info};
+type Result<T> = std::result::Result<T, tonic::Status>;
+impl AuroraRpcServer {
+    async fn find_by_code_projectcode(
+        &self,
+        code: i64,
+        project_code: i64,
+    ) -> Result<Option<Model>> {
+        let conn: &DatabaseConnection = &self.conn;
+        let res = Entity::find()
+            .filter(t_ds_project_parameter::Column::Code.eq(code))
+            .filter(t_ds_project_parameter::Column::ProjectCode.eq(project_code))
+            .one(conn)
+            .await
+            .map_err(|_| {
+                tonic::Status::from_error(
+                    Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
+                )
+            })?;
+        Ok(res)
+    }
+}
 
 #[tonic::async_trait]
 impl ProjectParameterService for AuroraRpcServer {
@@ -86,9 +107,10 @@ impl ProjectParameterService for AuroraRpcServer {
         info!("request: {:?}", _request);
         let conn = &self.conn;
         let project_parameter = _request.get_ref().project_parameter.clone().unwrap();
+        let code = aurora_common::utils::code_generate_utils::gen_code().unwrap_or_default();
         let res = ActiveModel {
             id: NotSet,
-            code: Set(SnowflakeIdBucket::new(1, 1).get_id()),
+            code: Set(code),
             user_id: Set(project_parameter.user_id),
             project_code: Set(project_parameter.project_code),
             param_name: Set(project_parameter.param_name),
@@ -114,7 +136,33 @@ impl ProjectParameterService for AuroraRpcServer {
         tonic::Status,
     > {
         info!("request: {:?}", _request);
-        todo!()
+        let conn = &self.conn;
+        let code = _request.get_ref().code;
+        let project_code = _request.get_ref().project_code;
+        let param_name = _request.get_ref().param_name.clone();
+        let param_value = _request.get_ref().param_value.clone();
+        Entity::update_many()
+            .col_expr(Column::ParamName, Expr::value(param_name))
+            .col_expr(Column::ParamValue, Expr::value(param_value))
+            .filter(t_ds_project_parameter::Column::Code.eq(code))
+            .filter(t_ds_project_parameter::Column::ProjectCode.eq(project_code))
+            .exec(conn)
+            .await
+            .map_err(|e| {
+                error!("update_project_parameter error {:?}", e);
+                tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
+                    Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
+                ))
+            })?;
+
+        let res = Self::find_by_code_projectcode(self, code, project_code).await?;
+        info!("update_project_parameter res: {:?}", res);
+        match res {
+            Some(v) => Ok(tonic::Response::new(v.into())),
+            None => Err(tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
+                Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
+            ))),
+        }
     }
 
     async fn delete_project_parameter(
@@ -122,6 +170,28 @@ impl ProjectParameterService for AuroraRpcServer {
         _request: tonic::Request<proto::ds_project_parameter::DeleteProjectParameterRequest>,
     ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
         info!("request: {:?}", _request);
-        todo!()
+        let conn = &self.conn;
+        let code = _request.get_ref().code;
+        let project_code = _request.get_ref().project_code;
+        let res = conn
+            .transaction::<_, DeleteResult, DbErr>(|tx| {
+                Box::pin(async move {
+                    let res = Entity::delete_many()
+                        .filter(t_ds_project_parameter::Column::Code.eq(code))
+                        .filter(t_ds_project_parameter::Column::ProjectCode.eq(project_code))
+                        .exec(tx)
+                        .await?;
+                    Ok(res)
+                })
+            })
+            .await
+            .map_err(|_e| {
+                error!("delete_project_parameter error: {:?}", _e);
+                tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
+                    Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
+                ))
+            })?;
+        info!("delete_project_parameter res: {:?}", res);
+        Ok(tonic::Response::new(()))
     }
 }

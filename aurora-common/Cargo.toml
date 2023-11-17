@@ -24,3 +24,4 @@ serde_with = { workspace = true, optional = false }
 tokio = { workspace = true, features = ["full"] }
 tonic = { workspace = true }
 tracing = { workspace = true }
+rs-snowflake = { workspace = true }
