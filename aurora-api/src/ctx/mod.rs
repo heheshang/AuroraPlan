@@ -21,7 +21,7 @@ impl Ctx {
 
     pub fn new(user_id: i32) -> Result<Self> {
         if user_id == 0 {
-            Err(Error::UserNotExist(AuroraData::Null))
+            Err(Error::UserNotExist(AuroraData::Null, None))
         } else {
             Ok(Self { user_id })
         }

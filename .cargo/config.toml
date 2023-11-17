@@ -34,4 +34,4 @@ registry = "https://code.aliyun.com/rustcc/crates.io-index.git"
 [build]
 rustc-wrapper = "sccache"
 incremental = true
-rustflags=["-Z","threads=8"]
+# rustflags=["-Z","threads=4"]

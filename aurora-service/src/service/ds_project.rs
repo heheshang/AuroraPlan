@@ -133,7 +133,7 @@ impl DsProjectService for AuroraRpcServer {
         match res {
             Ok(v) => Ok(tonic::Response::new(v.into())),
             Err(_) => Err(tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
-                Error::CreateProjectError(AuroraData::Null).into(),
+                Error::CreateProjectError(AuroraData::Null, None).into(),
             ))),
         }
     }

@@ -60,7 +60,7 @@ impl DsSessionService for AuroraRpcServer {
         match res {
             Some(v) => Ok(tonic::Response::new(v.into())),
             None => Err(tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
-                Error::LoginSessionFailed(AuroraData::Null).into(),
+                Error::LoginSessionFailed(AuroraData::Null, None).into(),
             ))),
         }
     }
@@ -106,7 +106,7 @@ impl DsSessionService for AuroraRpcServer {
             Ok(tonic::Response::new(()))
         } else {
             Err(tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
-                Error::LoginSessionFailed(AuroraData::Null).into(),
+                Error::LoginSessionFailed(AuroraData::Null, None).into(),
             )))
         }
     }
@@ -126,7 +126,7 @@ impl DsSessionService for AuroraRpcServer {
         match ds_session {
             Some(v) => Ok(tonic::Response::new(v.into())),
             None => Err(tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
-                Error::LoginSessionFailed(AuroraData::Null).into(),
+                Error::LoginSessionFailed(AuroraData::Null, None).into(),
             ))),
         }
     }
@@ -144,7 +144,7 @@ impl DsSessionService for AuroraRpcServer {
             .await
             .map_err(|_| {
                 tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
-                    Error::LoginSessionFailed(AuroraData::Null).into(),
+                    Error::LoginSessionFailed(AuroraData::Null, None).into(),
                 ))
             })?;
 

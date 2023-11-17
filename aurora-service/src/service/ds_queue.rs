@@ -21,7 +21,9 @@ impl AuroraRpcServer {
             .count(conn)
             .await
             .map_err(|_e| {
-                tonic::Status::from_error(Error::InternalServerErrorArgs(AuroraData::Null).into())
+                tonic::Status::from_error(
+                    Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
+                )
             })?;
 
         Ok(res)
@@ -33,7 +35,9 @@ impl AuroraRpcServer {
             .count(conn)
             .await
             .map_err(|_e| {
-                tonic::Status::from_error(Error::InternalServerErrorArgs(AuroraData::Null).into())
+                tonic::Status::from_error(
+                    Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
+                )
             })?;
         info!("res: {:?}", res);
         Ok(res)
@@ -46,7 +50,9 @@ impl AuroraRpcServer {
             .count(conn)
             .await
             .map_err(|_e| {
-                tonic::Status::from_error(Error::InternalServerErrorArgs(AuroraData::Null).into())
+                tonic::Status::from_error(
+                    Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
+                )
             })?;
 
         Ok(res)
@@ -59,7 +65,9 @@ impl AuroraRpcServer {
             .count(conn)
             .await
             .map_err(|_e| {
-                tonic::Status::from_error(Error::InternalServerErrorArgs(AuroraData::Null).into())
+                tonic::Status::from_error(
+                    Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
+                )
             })?;
         info!("res: {:?}", res);
         Ok(res)
@@ -71,7 +79,9 @@ impl AuroraRpcServer {
             .await
             .map(|v| v.unwrap_or_default().into())
             .map_err(|_e| {
-                tonic::Status::from_error(Error::InternalServerErrorArgs(AuroraData::Null).into())
+                tonic::Status::from_error(
+                    Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
+                )
             })?;
         info!("res: {:?}", res);
         Ok(res)
@@ -144,7 +154,11 @@ impl DsQueueService for AuroraRpcServer {
             .one(conn)
             .await
             .map(|v| tonic::Response::new(v.unwrap_or_default().into()))
-            .map_err(|_e| tonic::Status::from_error(Error::QueueNameExist(AuroraData::Null).into()))
+            .map_err(|_e| {
+                tonic::Status::from_error(
+                    Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
+                )
+            })
     }
 
     async fn create_ds_queue(
@@ -157,12 +171,12 @@ impl DsQueueService for AuroraRpcServer {
 
         if Self::queue_name_count(self, &queue_name).await? >= 1 {
             return Err(tonic::Status::from_error(
-                Error::QueueNameExist(AuroraData::Null).into(),
+                Error::QueueNameExist(AuroraData::Null, Some(vec![queue_name])).into(),
             ));
         }
         if Self::queue_value_count(self, &queue).await? >= 1 {
             return Err(tonic::Status::from_error(
-                Error::QueueValueExist(AuroraData::Null).into(),
+                Error::QueueValueExist(AuroraData::Null, None).into(),
             ));
         }
         let res = ActiveModel {
@@ -176,7 +190,7 @@ impl DsQueueService for AuroraRpcServer {
         .await
         .map(|v| v.into())
         .map_err(|_e| {
-            tonic::Status::from_error(Error::InternalServerErrorArgs(AuroraData::Null).into())
+            tonic::Status::from_error(Error::InternalServerErrorArgs(AuroraData::Null, None).into())
         })?;
         Ok(tonic::Response::new(res))
     }
@@ -198,11 +212,13 @@ impl DsQueueService for AuroraRpcServer {
         if Self::queue_name_count_extra(self, &queue_name.clone().unwrap_or_default(), id).await?
             >= 1
         {
-            let err: AuroraErrorInfo = Error::QueueNameExist(json!(entity)).into();
+            let err: AuroraErrorInfo =
+                Error::QueueNameExist(json!(entity), Some(vec![queue_name.unwrap_or_default()]))
+                    .into();
             return Err(tonic::Status::from_error(Box::new(err)));
         }
         if Self::queue_value_count_extra(self, &queue.clone().unwrap_or_default(), id).await? >= 1 {
-            let mut err: AuroraErrorInfo = Error::QueueValueExist(AuroraData::Null).into();
+            let mut err: AuroraErrorInfo = Error::QueueValueExist(AuroraData::Null, None).into();
             err.error_data = json!(entity);
             return Err(tonic::Status::from_error(Box::new(err)));
         }
@@ -218,7 +234,7 @@ impl DsQueueService for AuroraRpcServer {
         .await
         .map(|v| tonic::Response::new(v.into()))
         .map_err(|_e| {
-            tonic::Status::from_error(Error::InternalServerErrorArgs(AuroraData::Null).into())
+            tonic::Status::from_error(Error::InternalServerErrorArgs(AuroraData::Null, None).into())
         })
     }
 
@@ -231,14 +247,16 @@ impl DsQueueService for AuroraRpcServer {
             .exec(conn)
             .await
             .map_err(|_e| {
-                tonic::Status::from_error(Error::InternalServerErrorArgs(AuroraData::Null).into())
+                tonic::Status::from_error(
+                    Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
+                )
             })?;
 
         if res.rows_affected > 0 {
             Ok(tonic::Response::new(()))
         } else {
             Err(tonic::Status::from_error(
-                Error::InternalServerErrorArgs(AuroraData::Null).into(),
+                Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
             ))
         }
     }
@@ -251,12 +269,12 @@ impl DsQueueService for AuroraRpcServer {
         let queue_name = request.get_ref().clone().queue_name;
         if Self::queue_name_count(self, &queue_name).await? >= 1 {
             return Err(tonic::Status::from_error(
-                Error::QueueNameExist(AuroraData::Null).into(),
+                Error::QueueNameExist(AuroraData::Null, Some(vec![queue_name])).into(),
             ));
         }
         if Self::queue_value_count(self, &queue).await? >= 1 {
             return Err(tonic::Status::from_error(
-                Error::QueueValueExist(AuroraData::Null).into(),
+                Error::QueueValueExist(AuroraData::Null, None).into(),
             ));
         }
 

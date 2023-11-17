@@ -25,7 +25,7 @@ impl DsUserService for AuroraRpcServer {
         match db_user {
             Some(v) => Ok(tonic::Response::new(v.into())),
             None => {
-                let res: tonic::Status = Error::UserNotExist(AuroraData::Null).into();
+                let res: tonic::Status = Error::UserNotExist(AuroraData::Null, None).into();
                 Err(res)
             }
         }
@@ -107,7 +107,7 @@ impl DsUserService for AuroraRpcServer {
         match db_user {
             Some(v) => Ok(tonic::Response::new(v.into())),
             None => Err(tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
-                Error::UserNotExist(AuroraData::Null).into(),
+                Error::UserNotExist(AuroraData::Null, None).into(),
             ))),
         }
     }

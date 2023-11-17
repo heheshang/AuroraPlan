@@ -28,7 +28,7 @@ pub async fn query_user_by_name_password(
         .map(|res| res.into_inner())
         .map_err(|e| {
             error!("query_user_by_name_password error: {:?}", e);
-            Error::UserNamePasswdError(AuroraData::Null)
+            Error::UserNamePasswdError(AuroraData::Null, None)
         })
 }
 
@@ -42,6 +42,6 @@ pub async fn _get_user(id: i32) -> Result<DsUser> {
         .map(|res| res.into_inner().ds_user.unwrap())
         .map_err(|e| {
             error!("get_user_by_id error: {:?}", e);
-            Error::UserNotExist(AuroraData::Null)
+            Error::UserNotExist(AuroraData::Null, None)
         })
 }

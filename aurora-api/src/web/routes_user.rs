@@ -42,12 +42,12 @@ pub async fn login(
     let user_name = payload.user_name.clone();
     let user_password = payload.user_password.clone();
     if user_name.is_empty() {
-        return Err(Error::UserNamePasswdError(AuroraData::Null));
+        return Err(Error::UserNamePasswdError(AuroraData::Null, None));
     }
     // let ip = "127.0.0.1".to_string();
     let ip = addr.ip().to_string();
     if ip.is_empty() {
-        return Err(Error::IpIsEmpty(AuroraData::Null));
+        return Err(Error::IpIsEmpty(AuroraData::Null, None));
     }
     get_authenticator()
         .authenticate(user_name, user_password, ip)

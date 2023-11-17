@@ -26,7 +26,7 @@ impl DsAccessTokenService for AuroraRpcServer {
             .paginate(&self.conn, page_size);
 
         let num_pages = paginator.num_pages().await.map_err(|_| {
-            Into::<tonic::Status>::into(Error::InternalServerErrorArgs(AuroraData::Null))
+            Into::<tonic::Status>::into(Error::InternalServerErrorArgs(AuroraData::Null, None))
         })? as i32;
         // Fetch paginated AccessToken
         let res: (Vec<t_ds_access_token::Model>, i32) = paginator
@@ -34,7 +34,8 @@ impl DsAccessTokenService for AuroraRpcServer {
             .await
             .map(|p| (p, num_pages))
             .map_err(|_| {
-                let res: tonic::Status = Error::InternalServerErrorArgs(AuroraData::Null).into();
+                let res: tonic::Status =
+                    Error::InternalServerErrorArgs(AuroraData::Null, None).into();
                 res
             })?;
 

@@ -46,7 +46,7 @@ pub async fn mw_ctx_resolve<B>(
     if ctx_ext_result.is_err()
         && !matches!(
             ctx_ext_result,
-            Err(Error::LoginSessionFailed(AuroraData::Null))
+            Err(Error::LoginSessionFailed(AuroraData::Null, None))
         )
     {
         cookies.remove(Cookie::named(AUTH_TOKEN))
@@ -67,7 +67,7 @@ async fn _ctx_resolve(
     let session_id = cookies
         .get(AUTH_TOKEN)
         .map(|c| c.value().to_string())
-        .ok_or(Error::LoginSessionFailed(AuroraData::Null))?;
+        .ok_or(Error::LoginSessionFailed(AuroraData::Null, None))?;
 
     let session = _get_session(session_id).await?;
     let user = _get_user(session.user_id).await?;
@@ -86,10 +86,10 @@ async fn _ctx_resolve(
 
     // -- Update Token
     set_token_cookie(cookies, session.id.as_str())
-        .map_err(|_| Error::LoginSessionFailed(AuroraData::Null))?;
+        .map_err(|_| Error::LoginSessionFailed(AuroraData::Null, None))?;
 
     // -- Create CtxExtResult
-    Ctx::new(user.id).map_err(|_ex| Error::LoginSessionFailed(AuroraData::Null))
+    Ctx::new(user.id).map_err(|_ex| Error::LoginSessionFailed(AuroraData::Null, None))
 }
 
 // region:    --- Ctx Extractor
@@ -103,9 +103,9 @@ impl<S: Send + Sync> FromRequestParts<S> for Ctx {
         parts
             .extensions
             .get::<CtxExtResult>()
-            .ok_or(Error::UserNotExist(AuroraData::Null))?
+            .ok_or(Error::UserNotExist(AuroraData::Null, None))?
             .clone()
-            .map_err(|_| Error::UserNotExist(AuroraData::Null))
+            .map_err(|_| Error::UserNotExist(AuroraData::Null, None))
     }
 }
 // endregion: --- Ctx Extractor

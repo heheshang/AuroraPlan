@@ -100,13 +100,13 @@ macro_rules! build_client {
             let client = match $service_type::connect(addr.unwrap()).await {
                 Ok(client) => Ok(client),
                 Err(_) => {
-                    return Err(Error::InternalServerErrorArgs(AuroraData::Null));
+                    return Err(Error::InternalServerErrorArgs(AuroraData::Null, None));
                 }
             };
             match $contanst_name.get_or_init(|| async { client }).await {
                 Ok(client) => Ok(client.clone()),
                 Err(_) => {
-                    return Err(Error::InternalServerErrorArgs(AuroraData::Null));
+                    return Err(Error::InternalServerErrorArgs(AuroraData::Null, None));
                 }
             }
         }

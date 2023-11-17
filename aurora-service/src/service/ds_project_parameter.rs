@@ -101,7 +101,7 @@ impl ProjectParameterService for AuroraRpcServer {
         match res {
             Ok(v) => Ok(tonic::Response::new(v.into())),
             Err(_) => Err(tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
-                Error::InternalServerErrorArgs(AuroraData::Null).into(),
+                Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
             ))),
         }
     }
