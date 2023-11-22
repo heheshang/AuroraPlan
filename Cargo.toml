@@ -8,6 +8,7 @@ members = [
     "aurora-service",
     "aurora-tests",
     "migration",
+    "aurora-base",
 ]
 
 resolver = "2"
@@ -79,4 +80,4 @@ inherits = "release"
 debug = true
 
 [profile.dev]
-incremental = true
+# incremental = true

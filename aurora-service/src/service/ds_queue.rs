@@ -246,4 +246,21 @@ impl DsQueueService for AuroraRpcServer {
             }),
         }))
     }
+
+    async fn all_ds_queues(
+        &self,
+        _request: tonic::Request<()>,
+    ) -> std::result::Result<tonic::Response<proto::ds_queue::AllDsQueuesResponse>, tonic::Status> {
+        let db = &self.db;
+        Ok(Entity::find()
+            .order_by(Column::CreateTime, sea_orm::Order::Asc)
+            .all(db)
+            .await
+            .map(|v| {
+                tonic::Response::new(proto::ds_queue::AllDsQueuesResponse {
+                    data: v.into_iter().map(|v| v.into()).collect(),
+                })
+            })
+            .map_err(|_e| tonic::Status::from_error(Error::InternalServerErrorArgs(AuroraData::Null, None).into()))?)
+    }
 }

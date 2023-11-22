@@ -56,11 +56,19 @@ service DsQueueService {
       delete: "/v1alpha1/{name=DsQueues/*}"
     };
   }
+  rpc AllDsQueues (google.protobuf.Empty) returns (AllDsQueuesResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsQueues"
+    };
+  }
 }
 
 // message DsQueue {
 // ! This should be defined elsewhere
 // }
+message AllDsQueuesResponse {
+repeated DsQueue data = 1;
+}
 
 message ListDsQueuesRequest {
 

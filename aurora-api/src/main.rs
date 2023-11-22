@@ -9,18 +9,27 @@ use aurora_config::api_config::Settings;
 use std::{env, net::SocketAddr};
 use tracing::{info, Level};
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     let settings = Settings::new()?;
     let host = settings.server.host;
     let port = settings.server.port;
+    let _ = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .thread_name("aurora-api")
+        .thread_stack_size(30 * 1024 * 1024)
+        .build()
+        .unwrap()
+        .block_on(start(host, port));
+    Ok(())
+}
 
+async fn start(host: String, port: u32) -> Result<()> {
     let addr: SocketAddr = format!("{}:{}", host, port).parse()?;
 
-    env::set_var("RUST_LOG", "info");
-    env::set_var("RUST_BACKTRACE", "1");
+    env::set_var("RUST_LOG", "debug");
+    env::set_var("RUST_BACKTRACE", "full");
     tracing_subscriber::fmt()
-        .with_max_level(Level::INFO)
+        .with_max_level(Level::DEBUG)
         .with_target(true)
         .with_thread_names(true)
         .with_thread_ids(true)
@@ -39,7 +48,6 @@ async fn main() -> Result<()> {
     info!("{:<12}->{}", "listen", addr);
     Ok(())
 }
-
 // fn using_serve_dir() -> Router {
 //     // serve the file in the "assets" directory under `/assets`
 //     let path = get_ui_source_path();

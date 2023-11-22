@@ -14,6 +14,15 @@ pub struct DsQueue {
     #[prost(string, optional, tag = "5")]
     pub update_time: ::core::option::Option<::prost::alloc::string::String>,
 }
+/// message DsQueue {
+/// ! This should be defined elsewhere
+/// }
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct AllDsQueuesResponse {
+    #[prost(message, repeated, tag = "1")]
+    pub data: ::prost::alloc::vec::Vec<DsQueue>,
+}
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ListDsQueuesRequest {
@@ -249,6 +258,20 @@ pub mod ds_queue_service_client {
                 .insert(GrpcMethod::new("ds_queue.DsQueueService", "DeleteDsQueue"));
             self.inner.unary(req, path, codec).await
         }
+        pub async fn all_ds_queues(
+            &mut self,
+            request: impl tonic::IntoRequest<()>,
+        ) -> std::result::Result<tonic::Response<super::AllDsQueuesResponse>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static("/ds_queue.DsQueueService/AllDsQueues");
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("ds_queue.DsQueueService", "AllDsQueues"));
+            self.inner.unary(req, path, codec).await
+        }
     }
 }
 /// Generated server implementations.
@@ -282,6 +305,10 @@ pub mod ds_queue_service_server {
             &self,
             request: tonic::Request<super::DeleteDsQueueRequest>,
         ) -> std::result::Result<tonic::Response<()>, tonic::Status>;
+        async fn all_ds_queues(
+            &self,
+            request: tonic::Request<()>,
+        ) -> std::result::Result<tonic::Response<super::AllDsQueuesResponse>, tonic::Status>;
     }
     /// Generated according to https://cloud.google.com/apis/design/standard_methods
     #[derive(Debug)]
@@ -522,6 +549,35 @@ pub mod ds_queue_service_server {
                     let fut = async move {
                         let inner = inner.0;
                         let method = DeleteDsQueueSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/ds_queue.DsQueueService/AllDsQueues" => {
+                    #[allow(non_camel_case_types)]
+                    struct AllDsQueuesSvc<T: DsQueueService>(pub Arc<T>);
+                    impl<T: DsQueueService> tonic::server::UnaryService<()> for AllDsQueuesSvc<T> {
+                        type Response = super::AllDsQueuesResponse;
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        fn call(&mut self, request: tonic::Request<()>) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move { (*inner).all_ds_queues(request).await };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let inner = inner.0;
+                        let method = AllDsQueuesSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(accept_compression_encodings, send_compression_encodings)

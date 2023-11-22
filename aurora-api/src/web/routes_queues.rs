@@ -21,6 +21,7 @@ pub fn routes() -> Router {
     let routes = Router::new()
         .route("/queues", get(list).post(create))
         .route("/queues/:id", delete(delete_queue).put(update_queue))
+        .route("/queues/list", get(list_all_queue))
         .route("/queues/verify", post(verify));
 
     Router::new()
@@ -28,6 +29,10 @@ pub fn routes() -> Router {
         .route_layer(middleware::from_fn(mw_ctx_require))
 }
 
+pub async fn list_all_queue(cookies: Cookies, ctx: Ctx) -> Result<ApiResult<Vec<Queue>>> {
+    let res = model::queues::list_all_queue().await?;
+    Ok(ApiResult::build(Some(res)))
+}
 pub async fn create(cookies: Cookies, ctx: Ctx, param: Form<CreateQueueRequest>) -> Result<ApiResult<Queue>> {
     let queue = &param.queue;
     let queue_name = &param.queue_name;

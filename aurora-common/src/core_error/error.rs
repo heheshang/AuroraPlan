@@ -407,10 +407,10 @@ impl From<Error> for tonic::Status {
 
                 let info: AuroraErrorInfo = value.into();
                 error!("{:<12} -  From<Error> for tonic::Status {info:#?}", "FROM_ERROR");
-                let mut metadata = tonic::metadata::MetadataMap::new();
-                metadata.insert("error_code", format!("{}", info.code).parse().unwrap());
-                metadata.insert("cn_msg", info.cn_msg.parse().unwrap());
-                metadata.insert("en_msg", info.en_msg.parse().unwrap());
+                let metadata = tonic::metadata::MetadataMap::new();
+                // metadata.insert("error_code", format!("{}", info.code).parse().unwrap());
+                // metadata.insert("cn_msg", info.cn_msg.parse().unwrap());
+                // metadata.insert("en_msg", info.en_msg.parse().unwrap());
                 let message: String = info.into();
                 tonic::Status::with_metadata(code, message, metadata)
             }
@@ -467,11 +467,11 @@ impl From<tonic::Status> for Error {
                 .collect::<Vec<String>>();
 
             error!(
-                "error_code:{},cn_msg:{},en_msg:{},error_data:{}",
-                error_code, cn_msg, en_msg, error_data
+                "error_code:{},cn_msg:{},en_msg:{},error_data:{},error_param:{:?}",
+                error_code, cn_msg, en_msg, error_data, error_param
             );
             let error_code: i32 = error_code.parse().unwrap();
-            let error = AuroraErrorInfo {
+            let info = AuroraErrorInfo {
                 code: error_code,
                 cn_msg: cn_msg.to_string(),
                 en_msg: en_msg.to_string(),
@@ -479,13 +479,29 @@ impl From<tonic::Status> for Error {
                 error_param: Some(error_param),
                 // error_param: error_param.map(|s| s.to_string()),
             };
-            let error: Error = error.into();
+            error!("From<tonic::Status> for Error -->{}", info);
+            let error = info.into();
+            error!("From<tonic::Status> for Error -->{}", error);
             error
         } else {
             Error::InternalServerErrorArgs(AuroraData::Null, None)
         }
     }
 }
+
+#[test]
+fn test_error_into() {
+    let error = AuroraErrorInfo {
+        code: 10009,
+        cn_msg: "操作系统租户[{}]已经存在".to_string(),
+        en_msg: "The operating system tenant [{}] already exists".to_string(),
+        error_data: AuroraData::String("".to_string()),
+        error_param: Some(vec!["sssss".to_string()]),
+    };
+    let error: Error = error.into();
+    println!("{}", error);
+}
+
 impl core::fmt::Display for Error {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         error!("core::fmt::Display for Error -->{}", self);
@@ -2004,12 +2020,19 @@ impl AuroraErrorInfo {
         }
     }
     pub fn new_with_data(&mut self, error_data: AuroraData) -> Self {
+        if error_data.is_null() {
+            return self.clone();
+        }
         AuroraErrorInfo {
             error_data,
             ..self.clone()
         }
     }
     pub fn parse(&mut self, error_param: ErrorParam) -> Self {
+        if error_param.is_none() {
+            return self.clone();
+        }
+
         let en_msg = AuroraErrorInfo::format_err_msg(&self.en_msg, error_param.clone());
         let cn_msg = AuroraErrorInfo::format_err_msg(&self.cn_msg, error_param.clone());
         AuroraErrorInfo {
@@ -2137,7 +2160,7 @@ impl core::fmt::Display for AuroraErrorInfo {
         let error_param = error_param.join(",");
         write!(
             f,
-            "code|{}~en_msg|{}~cn_msg|{}~error_data|{}~error_param|{:?}",
+            "code|{}~en_msg|{}~cn_msg|{}~error_data|{}~error_param|{}",
             self.code,
             self.en_msg,
             self.cn_msg,
@@ -2157,13 +2180,18 @@ fn test_aururo_display() {
 
 impl From<AuroraErrorInfo> for Error {
     fn from(value: AuroraErrorInfo) -> Self {
-        match (
-            value.code,
-            value.en_msg.as_str(),
-            value.cn_msg.as_str(),
-            value.error_data.clone(),
-            value.error_param.clone(),
-        ) {
+        error!("AuroraErrorInfo: {:?}", value);
+        if value.code == 0 {
+            return Error::SUCCESS(value.error_data, None);
+        }
+        if value.code == 10000 {
+            return Error::InternalServerErrorArgs(value.error_data, value.error_param);
+        }
+        if value.code == 10009 {
+            return Error::OsTenantCodeExist(value.error_data, value.error_param);
+        }
+
+        let res = match (value.code, value.en_msg.as_str(), value.cn_msg.as_str()) {
             (0, ..) => Error::SUCCESS(value.error_data, None),
             (10000, ..) => Error::InternalServerErrorArgs(value.error_data, value.error_param),
             (10001, ..) => Error::RequestParamsNotValidError(value.error_data, value.error_param),
@@ -2171,6 +2199,7 @@ impl From<AuroraErrorInfo> for Error {
             (10003, ..) => Error::UserNameExist(value.error_data, value.error_param),
             (10004, ..) => Error::UserNameNull(value.error_data, value.error_param),
             (10006, ..) => Error::HdfsOperationError(value.error_data, value.error_param),
+            (10009, ..) => return Error::OsTenantCodeExist(value.error_data, value.error_param),
             (10018, ..) => Error::ProjectNotFound(value.error_data, value.error_param),
             (10019, ..) => Error::ProjectAlreadyExists(value.error_data, value.error_param),
             (10020, ..) => Error::TaskInstanceNotExists(value.error_data, value.error_param),
@@ -2648,8 +2677,9 @@ impl From<AuroraErrorInfo> for Error {
             (1300014, ..) => Error::QueryCanUseK8sClusterError(value.error_data, value.error_param), //(1300014, "login user query can used k8s cluster list error", "查询可用k8s集群错误")
             (1300015, ..) => Error::ResourceFullNameTooLongError(value.error_data, value.error_param), //(1300015, "resource's fullname is too long error", "资源文件名过长")
             (1300016, ..) => Error::TenantFullNameTooLongError(value.error_data, value.error_param), //(1300016, "tenant's fullname is too long error", "租户名过长");
-            (..) => Error::InternalServerErrorArgs(value.error_data, value.error_param),
-        }
+            _ => Error::InternalServerErrorArgs(value.error_data, value.error_param),
+        };
+        res
     }
 }
 
@@ -2662,656 +2692,774 @@ impl From<Error> for AuroraErrorInfo {
                 "internal server error please check the log".to_string(),
                 "内部服务错误，请查看日志".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::RequestParamsNotValidError(data, _param) => AuroraErrorInfo::new(
                 10001,
                 "request parameter {0} is not valid".to_string(),
                 "请求参数[{0}]无效".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::TaskTimeoutParamsError(data, _param) => AuroraErrorInfo::new(
                 10002,
                 "task timeout parameter is not valid".to_string(),
                 "任务超时参数无效".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UserNameExist(data, _param) => AuroraErrorInfo::new(
                 10003,
                 "user name already exists".to_string(),
                 "用户名已存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UserNameNull(data, _param) => {
                 AuroraErrorInfo::new(10004, "user name is null".to_string(), "用户名不能为空".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::HdfsOperationError(data, _param) => {
                 AuroraErrorInfo::new(10006, "hdfs operation error".to_string(), "hdfs操作错误".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::TaskInstanceNotFound(data, _param) => AuroraErrorInfo::new(
                 10008,
                 "task instance not found".to_string(),
                 "任务实例不存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::OsTenantCodeExist(data, _param) => AuroraErrorInfo::new(
                 10009,
                 "os tenant code {0} already exists".to_string(),
                 "操作系统租户[{0}]已存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UserNotExist(data, _param) => {
                 AuroraErrorInfo::new(10010, "user {0} not exists".to_string(), "用户[{0}]不存在".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::AlertGroupNotExist(data, _param) => {
                 AuroraErrorInfo::new(10011, "alarm group not found".to_string(), "告警组不存在".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::AlertGroupExist(data, _param) => AuroraErrorInfo::new(
                 10012,
                 "alarm group already exists".to_string(),
                 "告警组名称已存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UserNamePasswdError(data, _param) => AuroraErrorInfo::new(
                 10013,
                 "user name or password error".to_string(),
                 "用户名或密码错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::LoginSessionFailed(data, _param) => AuroraErrorInfo::new(
                 10014,
                 "create session failed!".to_string(),
                 "创建session失败".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DatasourceExist(data, _param) => AuroraErrorInfo::new(
                 10015,
                 "data source name already exists".to_string(),
                 "数据源名称已存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DatasourceConnectFailed(data, _param) => AuroraErrorInfo::new(
                 10016,
                 "data source connection failed".to_string(),
                 "建立数据源连接失败".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::TenantNotExist(data, _param) => {
                 AuroraErrorInfo::new(10017, "tenant not exists".to_string(), "租户不存在".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::ProjectNotFound(data, _param) => AuroraErrorInfo::new(
                 10018,
                 "project {0} not found ".to_string(),
                 "项目[{0}]不存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ProjectAlreadyExists(data, _param) => AuroraErrorInfo::new(
                 10019,
                 "project {0} already exists".to_string(),
                 "项目名称[{0}]已存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::TaskInstanceNotExists(data, _param) => AuroraErrorInfo::new(
                 10020,
                 "task instance {0} does not exist".to_string(),
                 "任务实例[{0}]不存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::TaskInstanceNotSubWorkflowInstance(data, _param) => AuroraErrorInfo::new(
                 10021,
                 "task instance {0} is not sub process instance".to_string(),
                 "任务实例[{0}]不是子流程实例".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ScheduleCronNotExists(data, _param) => AuroraErrorInfo::new(
                 10022,
                 "scheduler crontab {0} does not exist".to_string(),
                 "调度配置定时表达式[{0}]不存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ScheduleCronOnlineForbidUpdate(data, _param) => AuroraErrorInfo::new(
                 10023,
                 "online status does not allow update operations".to_string(),
                 "调度配置上线状态不允许修改".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ScheduleCronCheckFailed(data, _param) => AuroraErrorInfo::new(
                 10024,
                 "scheduler crontab expression validation failure: {0}".to_string(),
                 "调度配置定时表达式验证失败: {0}".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::MasterNotExists(data, _param) => AuroraErrorInfo::new(
                 10025,
                 "master does not exist".to_string(),
                 "无可用master节点".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ScheduleStatusUnknown(data, _param) => {
                 AuroraErrorInfo::new(10026, "unknown status: {0}".to_string(), "未知状态: {0}".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::CreateAlertGroupError(data, _param) => AuroraErrorInfo::new(
                 10027,
                 "create alert group error".to_string(),
                 "创建告警组错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryAllAlertgroupError(data, _param) => AuroraErrorInfo::new(
                 10028,
                 "query all alertgroup error".to_string(),
                 "查询告警组错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ListPagingAlertGroupError(data, _param) => AuroraErrorInfo::new(
                 10029,
                 "list paging alert group error".to_string(),
                 "分页查询告警组错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UpdateAlertGroupError(data, _param) => AuroraErrorInfo::new(
                 10030,
                 "update alert group error".to_string(),
                 "更新告警组错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteAlertGroupError(data, _param) => AuroraErrorInfo::new(
                 10031,
                 "delete alert group error".to_string(),
                 "删除告警组错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::AlertGroupGrantUserError(data, _param) => AuroraErrorInfo::new(
                 10032,
                 "alert group grant user error".to_string(),
                 "告警组授权用户错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::CreateDatasourceError(data, _param) => AuroraErrorInfo::new(
                 10033,
                 "create datasource error".to_string(),
                 "创建数据源错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UpdateDatasourceError(data, _param) => AuroraErrorInfo::new(
                 10034,
                 "update datasource error".to_string(),
                 "更新数据源错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryDatasourceError(data, _param) => AuroraErrorInfo::new(
                 10035,
                 "query datasource error".to_string(),
                 "查询数据源错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ConnectDatasourceFailure(data, _param) => AuroraErrorInfo::new(
                 10036,
                 "connect datasource failure".to_string(),
                 "建立数据源连接失败".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ConnectionTestFailure(data, _param) => AuroraErrorInfo::new(
                 10037,
                 "connection test failure".to_string(),
                 "测试数据源连接失败".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteDataSourceFailure(data, _param) => AuroraErrorInfo::new(
                 10038,
                 "delete data source failure".to_string(),
                 "删除数据源失败".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::VerifyDatasourceNameFailure(data, _param) => AuroraErrorInfo::new(
                 10039,
                 "verify datasource name failure".to_string(),
                 "验证数据源名称失败".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UnauthorizedDatasource(data, _param) => AuroraErrorInfo::new(
                 10040,
                 "unauthorized datasource".to_string(),
                 "未经授权的数据源".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::AuthorizedDataSource(data, _param) => AuroraErrorInfo::new(
                 10041,
                 "authorized data source".to_string(),
                 "授权数据源失败".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::LoginSuccess(data, _param) => {
-                AuroraErrorInfo::new(10042, "login success".to_string(), "登录成功".to_string()).new_with_data(data)
+                AuroraErrorInfo::new(10042, "login success".to_string(), "登录成功".to_string())
+                    .new_with_data(data)
+                    .parse(_param)
             }
             Error::UserLoginFailure(data, _param) => {
                 AuroraErrorInfo::new(10043, "user login failure".to_string(), "用户登录失败".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::ListWorkersError(data, _param) => AuroraErrorInfo::new(
                 10044,
                 "list workers error".to_string(),
                 "查询worker列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ListMastersError(data, _param) => AuroraErrorInfo::new(
                 10045,
                 "list masters error".to_string(),
                 "查询master列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UpdateProjectError(data, _param) => AuroraErrorInfo::new(
                 10046,
                 "update project error".to_string(),
                 "更新项目信息错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryProjectDetailsByCodeError(data, _param) => AuroraErrorInfo::new(
                 10047,
                 "query project details by code error".to_string(),
                 "查询项目详细信息错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::CreateProjectError(data, _param) => {
                 AuroraErrorInfo::new(10048, "create project error".to_string(), "创建项目错误".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::LoginUserQueryProjectListPagingError(data, _param) => AuroraErrorInfo::new(
                 10049,
                 "login user query project list paging error".to_string(),
                 "分页查询项目列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteProjectError(data, _param) => {
                 AuroraErrorInfo::new(10050, "delete project error".to_string(), "删除项目错误".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::QueryUnauthorizedProjectError(data, _param) => AuroraErrorInfo::new(
                 10051,
                 "query unauthorized project error".to_string(),
                 "查询未授权项目错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryAuthorizedProject(data, _param) => AuroraErrorInfo::new(
                 10052,
                 "query authorized project".to_string(),
                 "查询授权项目错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryQueueListError(data, _param) => AuroraErrorInfo::new(
                 10053,
                 "query queue list error".to_string(),
                 "查询队列列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::CreateResourceError(data, _param) => {
                 AuroraErrorInfo::new(10054, "create resource error".to_string(), "创建资源错误".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::UpdateResourceError(data, _param) => {
                 AuroraErrorInfo::new(10055, "update resource error".to_string(), "更新资源错误".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::QueryResourcesListError(data, _param) => AuroraErrorInfo::new(
                 10056,
                 "query resources list error".to_string(),
                 "查询资源列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryResourcesListPaging(data, _param) => AuroraErrorInfo::new(
                 10057,
                 "query resources list paging".to_string(),
                 "分页查询资源列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteResourceError(data, _param) => {
                 AuroraErrorInfo::new(10058, "delete resource error".to_string(), "删除资源错误".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::VerifyResourceByNameAndTypeError(data, _param) => AuroraErrorInfo::new(
                 10059,
                 "verify resource by name and type error".to_string(),
                 "资源名称或类型验证错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ViewResourceFileOnLineError(data, _param) => AuroraErrorInfo::new(
                 10060,
                 "view resource file online error".to_string(),
                 "查看资源文件错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::CreateResourceFileOnLineError(data, _param) => AuroraErrorInfo::new(
                 10061,
                 "create resource file online error".to_string(),
                 "创建资源文件错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ResourceFileIsEmpty(data, _param) => AuroraErrorInfo::new(
                 10062,
                 "resource file is empty".to_string(),
                 "资源文件内容不能为空".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::EditResourceFileOnLineError(data, _param) => AuroraErrorInfo::new(
                 10063,
                 "edit resource file online error".to_string(),
                 "更新资源文件错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DownloadResourceFileError(data, _param) => AuroraErrorInfo::new(
                 10064,
                 "download resource file error".to_string(),
                 "下载资源文件错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::CreateUdfFunctionError(data, _param) => AuroraErrorInfo::new(
                 10065,
                 "create udf function error".to_string(),
                 "创建UDF函数错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ViewUdfFunctionError(data, _param) => AuroraErrorInfo::new(
                 10066,
                 "view udf function error".to_string(),
                 "查询UDF函数错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UpdateUdfFunctionError(data, _param) => AuroraErrorInfo::new(
                 10067,
                 "update udf function error".to_string(),
                 "更新UDF函数错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryUdfFunctionListPagingError(data, _param) => AuroraErrorInfo::new(
                 10068,
                 "query udf function list paging error".to_string(),
                 "分页查询UDF函数列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryDatasourceByTypeError(data, _param) => AuroraErrorInfo::new(
                 10069,
                 "query datasource by type error".to_string(),
                 "查询数据源信息错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::VerifyUdfFunctionNameError(data, _param) => AuroraErrorInfo::new(
                 10070,
                 "verify udf function name error".to_string(),
                 "UDF函数名称验证错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteUdfFunctionError(data, _param) => AuroraErrorInfo::new(
                 10071,
                 "delete udf function error".to_string(),
                 "删除UDF函数错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::AuthorizedFileResourceError(data, _param) => AuroraErrorInfo::new(
                 10072,
                 "authorized file resource error".to_string(),
                 "授权资源文件错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::AuthorizeResourceTree(data, _param) => AuroraErrorInfo::new(
                 10073,
                 "authorize resource tree display error".to_string(),
                 "授权资源目录树错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UnauthorizedUdfFunctionError(data, _param) => AuroraErrorInfo::new(
                 10074,
                 "unauthorized udf function error".to_string(),
                 "查询未授权UDF函数错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::AuthorizedUdfFunctionError(data, _param) => AuroraErrorInfo::new(
                 10075,
                 "authorized udf function error".to_string(),
                 "授权UDF函数错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::CreateScheduleError(data, _param) => AuroraErrorInfo::new(
                 10076,
                 "create schedule error".to_string(),
                 "创建调度配置错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UpdateScheduleError(data, _param) => AuroraErrorInfo::new(
                 10077,
                 "update schedule error".to_string(),
                 "更新调度配置错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::PublishScheduleOnlineError(data, _param) => AuroraErrorInfo::new(
                 10078,
                 "publish schedule online error".to_string(),
                 "上线调度配置错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::OfflineScheduleError(data, _param) => AuroraErrorInfo::new(
                 10079,
                 "offline schedule error".to_string(),
                 "下线调度配置错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryScheduleListPagingError(data, _param) => AuroraErrorInfo::new(
                 10080,
                 "query schedule list paging error".to_string(),
                 "分页查询调度配置列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryScheduleListError(data, _param) => AuroraErrorInfo::new(
                 10081,
                 "query schedule list error".to_string(),
                 "查询调度配置列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryTaskListPagingError(data, _param) => AuroraErrorInfo::new(
                 10082,
                 "query task list paging error".to_string(),
                 "分页查询任务列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryTaskRecordListPagingError(data, _param) => AuroraErrorInfo::new(
                 10083,
                 "query task record list paging error".to_string(),
                 "分页查询任务记录错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::CreateTenantError(data, _param) => {
                 AuroraErrorInfo::new(10084, "create tenant error".to_string(), "创建租户错误".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::QueryTenantListPagingError(data, _param) => AuroraErrorInfo::new(
                 10085,
                 "query tenant list paging error".to_string(),
                 "分页查询租户列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryTenantListError(data, _param) => AuroraErrorInfo::new(
                 10086,
                 "query tenant list error".to_string(),
                 "查询租户列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UpdateTenantError(data, _param) => {
                 AuroraErrorInfo::new(10087, "update tenant error".to_string(), "更新租户错误".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::DeleteTenantByIdError(data, _param) => AuroraErrorInfo::new(
                 10088,
                 "delete tenant by id error".to_string(),
                 "删除租户错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::VerifyOsTenantCodeError(data, _param) => AuroraErrorInfo::new(
                 10089,
                 "verify os tenant code error".to_string(),
                 "操作系统租户验证错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::CreateUserError(data, _param) => {
                 AuroraErrorInfo::new(10090, "create user error".to_string(), "创建用户错误".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::QueryUserListPagingError(data, _param) => AuroraErrorInfo::new(
                 10091,
                 "query user list paging error".to_string(),
                 "分页查询用户列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UpdateUserError(data, _param) => {
                 AuroraErrorInfo::new(10092, "update user error".to_string(), "更新用户错误".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::DeleteUserByIdError(data, _param) => {
                 AuroraErrorInfo::new(10093, "delete user by id error".to_string(), "删除用户错误".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::GrantProjectError(data, _param) => {
                 AuroraErrorInfo::new(10094, "grant project error".to_string(), "授权项目错误".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::GrantResourceError(data, _param) => {
                 AuroraErrorInfo::new(10095, "grant resource error".to_string(), "授权资源错误".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::GrantUdfFunctionError(data, _param) => AuroraErrorInfo::new(
                 10096,
                 "grant udf function error".to_string(),
                 "授权UDF函数错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::GrantDatasourceError(data, _param) => AuroraErrorInfo::new(
                 10097,
                 "grant datasource error".to_string(),
                 "授权数据源错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::GetUserInfoError(data, _param) => {
                 AuroraErrorInfo::new(10098, "get user info error".to_string(), "获取用户信息错误".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::UserListError(data, _param) => {
                 AuroraErrorInfo::new(10099, "user list error".to_string(), "查询用户列表错误".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::VerifyUsernameError(data, _param) => {
                 AuroraErrorInfo::new(10100, "verify username error".to_string(), "用户名验证错误".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::UnauthorizedUserError(data, _param) => AuroraErrorInfo::new(
                 10101,
                 "unauthorized user error".to_string(),
                 "查询未授权用户错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::AuthorizedUserError(data, _param) => AuroraErrorInfo::new(
                 10102,
                 "authorized user error".to_string(),
                 "查询授权用户错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryTaskInstanceLogError(data, _param) => AuroraErrorInfo::new(
                 10103,
                 "view task instance log error".to_string(),
                 "查询任务实例日志错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DownloadTaskInstanceLogFileError(data, _param) => AuroraErrorInfo::new(
                 10104,
                 "download task instance log file error".to_string(),
                 "下载任务日志文件错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::CreateProcessDefinitionError(data, _param) => AuroraErrorInfo::new(
                 10105,
                 "create process definition error".to_string(),
                 "创建工作流错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::VerifyProcessDefinitionNameUniqueError(data, _param) => AuroraErrorInfo::new(
                 10106,
                 "verify process definition name unique error".to_string(),
                 "工作流定义名称验证错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UpdateProcessDefinitionError(data, _param) => AuroraErrorInfo::new(
                 10107,
                 "update process definition error".to_string(),
                 "更新工作流定义错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ReleaseProcessDefinitionError(data, _param) => AuroraErrorInfo::new(
                 10108,
                 "release process definition error".to_string(),
                 "上线工作流错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryDetailOfProcessDefinitionError(data, _param) => AuroraErrorInfo::new(
                 10109,
                 "query detail of process definition error".to_string(),
                 "查询工作流详细信息错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryProcessDefinitionList(data, _param) => AuroraErrorInfo::new(
                 10110,
                 "query process definition list".to_string(),
                 "查询工作流列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::EncapsulationTreeviewStructureError(data, _param) => AuroraErrorInfo::new(
                 10111,
                 "encapsulation treeview structure error".to_string(),
                 "查询工作流树形图数据错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::GetTasksListByProcessDefinitionIdError(data, _param) => AuroraErrorInfo::new(
                 10112,
                 "get tasks list by process definition id error".to_string(),
                 "查询工作流定义节点信息错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryProcessInstanceListPagingError(data, _param) => AuroraErrorInfo::new(
                 10113,
                 "query process instance list paging error".to_string(),
                 "分页查询工作流实例列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryTaskListByProcessInstanceIdError(data, _param) => AuroraErrorInfo::new(
                 10114,
                 "query task list by process instance id error".to_string(),
                 "查询任务实例列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UpdateProcessInstanceError(data, _param) => AuroraErrorInfo::new(
                 10115,
                 "update process instance error".to_string(),
                 "更新工作流实例错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryProcessInstanceByIdError(data, _param) => AuroraErrorInfo::new(
                 10116,
                 "query process instance by id error".to_string(),
                 "查询工作流实例错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteProcessInstanceByIdError(data, _param) => AuroraErrorInfo::new(
                 10117,
                 "delete process instance by id error".to_string(),
                 "删除工作流实例错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QuerySubProcessInstanceDetailInfoByTaskIdError(data, _param) => AuroraErrorInfo::new(
                 10118,
                 "query sub process instance detail info by task id error".to_string(),
                 "查询子流程任务实例错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryParentProcessInstanceDetailInfoBySubProcessInstanceIdError(data, _param) => {
                 AuroraErrorInfo::new(
                     10119,
@@ -3319,60 +3467,73 @@ impl From<Error> for AuroraErrorInfo {
                     "查询子流程该工作流实例错误".to_string(),
                 )
                 .new_with_data(data)
+                .parse(_param)
             }
             Error::QueryProcessInstanceAllVariablesError(data, _param) => AuroraErrorInfo::new(
                 10120,
                 "query process instance all variables error".to_string(),
                 "查询工作流自定义变量信息错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::EncapsulationProcessInstanceGanttStructureError(data, _param) => AuroraErrorInfo::new(
                 10121,
                 "encapsulation process instance gantt structure error".to_string(),
                 "查询工作流实例甘特图数据错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryProcessDefinitionListPagingError(data, _param) => AuroraErrorInfo::new(
                 10122,
                 "query process definition list paging error".to_string(),
                 "分页查询工作流定义列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::SignOutError(data, _param) => {
-                AuroraErrorInfo::new(10123, "sign out error".to_string(), "退出错误".to_string()).new_with_data(data)
+                AuroraErrorInfo::new(10123, "sign out error".to_string(), "退出错误".to_string())
+                    .new_with_data(data)
+                    .parse(_param)
             }
             Error::OsTenantCodeHasAlreadyExists(data, _param) => AuroraErrorInfo::new(
                 10124,
                 "os tenant code has already exists".to_string(),
                 "操作系统租户已存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::IpIsEmpty(data, _param) => {
-                AuroraErrorInfo::new(10125, "ip is empty".to_string(), "IP地址不能为空".to_string()).new_with_data(data)
+                AuroraErrorInfo::new(10125, "ip is empty".to_string(), "IP地址不能为空".to_string())
+                    .new_with_data(data)
+                    .parse(_param)
             }
             Error::ScheduleCronReleaseNeedNotChange(data, _param) => AuroraErrorInfo::new(
                 10126,
                 "schedule release is already {0}".to_string(),
                 "调度配置上线错误[{0}]".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::CreateQueueError(data, _param) => {
                 AuroraErrorInfo::new(10127, "create queue error".to_string(), "创建队列错误".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::QueueNotExist(data, _param) => AuroraErrorInfo::new(
                 10128,
                 "queue {0} not exists".to_string(),
                 "队列ID[{0}]不存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueueValueExist(data, _param) => AuroraErrorInfo::new(
                 10129,
                 "queue value {0} already exists".to_string(),
                 "队列值[{0}]已存在".to_string(),
             )
-            .new_with_data(data),
-            Error::QueueNameExist(data, error_param) => {
+            .new_with_data(data)
+            .parse(_param),
+            Error::QueueNameExist(data, _param) => {
                 error!("queue name {} already exists", data);
                 AuroraErrorInfo::new(
                     10130,
@@ -3380,132 +3541,155 @@ impl From<Error> for AuroraErrorInfo {
                     "队列名称[{0}]已存在".to_string(),
                 )
                 .new_with_data(data)
-                .parse(error_param)
+                .parse(_param)
             }
             Error::UpdateQueueError(data, _param) => {
                 AuroraErrorInfo::new(10131, "update queue error".to_string(), "更新队列信息错误".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::NeedNotUpdateQueue(data, _param) => AuroraErrorInfo::new(
                 10132,
                 "need not update queue".to_string(),
                 "无需更新队列信息".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::VerifyQueueError(data, _param) => {
                 AuroraErrorInfo::new(10133, "verify queue error".to_string(), "验证队列信息错误".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::NameNull(data, _param) => {
                 AuroraErrorInfo::new(10134, "name must be not null".to_string(), "名称不能为空".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::NameExist(data, _param) => AuroraErrorInfo::new(
                 10135,
                 "name {0} already exists".to_string(),
                 "名称[{0}]已存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::SaveError(data, _param) => {
-                AuroraErrorInfo::new(10136, "save error".to_string(), "保存错误".to_string()).new_with_data(data)
+                AuroraErrorInfo::new(10136, "save error".to_string(), "保存错误".to_string())
+                    .new_with_data(data)
+                    .parse(_param)
             }
             Error::DeleteProjectErrorDefinesNotNull(data, _param) => AuroraErrorInfo::new(
                 10117,
                 "please delete the process definitions in project first!".to_string(),
                 "请先删除全部工作流定义".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::BatchDeleteProcessInstanceByIdsError(data, _param) => AuroraErrorInfo::new(
                 10138,
                 "batch delete process instance by ids {0} error".to_string(),
                 "批量删除工作流实例错误: {0}".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::PreviewScheduleError(data, _param) => AuroraErrorInfo::new(
                 10139,
                 "preview schedule error".to_string(),
                 "预览调度配置错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ParseToCronExpressionError(data, _param) => AuroraErrorInfo::new(
                 10140,
                 "parse cron to cron expression error".to_string(),
                 "解析调度表达式错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ScheduleStartTimeEndTimeSame(data, _param) => AuroraErrorInfo::new(
                 10141,
                 "The start time must not be the same as the end".to_string(),
                 "开始时间不能和结束时间一样".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteTenantByIdFail(data, _param) => AuroraErrorInfo::new(
                 10142,
                 "delete tenant by id fail:for there are {0} process instances in executing using it".to_string(),
                 "删除租户失败，有[{0}]个运行中的工作流实例正在使用".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteTenantByIdFailDefines(data, _param) => AuroraErrorInfo::new(
                 10143,
                 "delete tenant by id fail:for there are {0} process definitions using it".to_string(),
                 "删除租户失败，有[{0}]个工作流定义正在使用".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteTenantByIdFailUsers(data, _param) => AuroraErrorInfo::new(
                 10144,
                 "delete tenant by id fail: for there are {0} users using it".to_string(),
                 "删除租户失败，有[{0}]个用户正在使用".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteWorkerGroupByIdFail(data, _param) => AuroraErrorInfo::new(
                 10145,
                 "delete worker group by id failfor there are {0} process instances in executing using it".to_string(),
                 "删除Worker分组失败，有[{0}]个运行中的工作流实例正在使用".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryWorkerGroupFail(data, _param) => AuroraErrorInfo::new(
                 10146,
                 "query worker group fail ".to_string(),
                 "查询worker分组失败".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteWorkerGroupFail(data, _param) => AuroraErrorInfo::new(
                 10147,
                 "delete worker group fail ".to_string(),
                 "删除worker分组失败".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UserDisabled(data, _param) => AuroraErrorInfo::new(
                 10148,
                 "The current user is disabled".to_string(),
                 "当前用户已停用".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::CopyProcessDefinitionError(data, _param) => AuroraErrorInfo::new(
                 10149,
                 "copy process definition from {0} to {1} error : {2}".to_string(),
                 "从{0}复制工作流到{1}错误 : {2}".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::MoveProcessDefinitionError(data, _param) => AuroraErrorInfo::new(
                 10150,
                 "move process definition from {0} to {1} error : {2}".to_string(),
                 "从{0}移动工作流到{1}错误 : {2}".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::SwitchProcessDefinitionVersionError(data, _param) => AuroraErrorInfo::new(
                 10151,
                 "Switch process definition version error".to_string(),
                 "切换工作流版本出错".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::SwitchProcessDefinitionVersionNotExistProcessDefinitionError(data, _param) => AuroraErrorInfo::new(
                 10152,
                 "Switch process definition version error: not exists process definition: [process definition id {0}]"
                     .to_string(),
                 "切换工作流版本出错：工作流不存在，[工作流id {0}]".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::SwitchProcessDefinitionVersionNotExistProcessDefinitionVersionError(data, _param) => {
                 AuroraErrorInfo::new(
                     10153,
@@ -3515,55 +3699,64 @@ impl From<Error> for AuroraErrorInfo {
                     "切换工作流版本出错：工作流版本信息不存在，[工作流id {0}] [版本号 {1}]".to_string(),
                 )
                 .new_with_data(data)
+                .parse(_param)
             }
             Error::QueryProcessDefinitionVersionsError(data, _param) => AuroraErrorInfo::new(
                 10154,
                 "query process definition versions error".to_string(),
                 "查询工作流历史版本信息出错".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteProcessDefinitionVersionError(data, _param) => AuroraErrorInfo::new(
                 10156,
                 "delete process definition version error".to_string(),
                 "删除工作流历史版本出错".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryUserCreatedProjectError(data, _param) => AuroraErrorInfo::new(
                 10157,
                 "query user created project error error".to_string(),
                 "查询用户创建的项目错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ProcessDefinitionCodesIsEmpty(data, _param) => AuroraErrorInfo::new(
                 10158,
                 "process definition codes is empty".to_string(),
                 "工作流CODES不能为空".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::BatchCopyProcessDefinitionError(data, _param) => AuroraErrorInfo::new(
                 10159,
                 "batch copy process definition error".to_string(),
                 "复制工作流错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::BatchMoveProcessDefinitionError(data, _param) => AuroraErrorInfo::new(
                 10160,
                 "batch move process definition error".to_string(),
                 "移动工作流错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryWorkflowLineageError(data, _param) => AuroraErrorInfo::new(
                 10161,
                 "query workflow lineage error".to_string(),
                 "查询血缘失败".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryAuthorizedAndUserCreatedProjectError(data, _param) => AuroraErrorInfo::new(
                 10162,
                 "query authorized and user created project error error".to_string(),
                 "查询授权的和用户创建的项目错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteProcessDefinitionByCodeFail(data, _param) => AuroraErrorInfo::new(
                 10163,
                 "delete process definition by code fail.to_string(), for there are {0} process instances in executing \
@@ -3571,712 +3764,834 @@ impl From<Error> for AuroraErrorInfo {
                     .to_string(),
                 "删除工作流定义失败，有[{0}]个运行中的工作流实例正在使用".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::CheckOsTenantCodeError(data, _param) => AuroraErrorInfo::new(
                 10164,
                 "Tenant code invalid.to_string(), should follow linux's users naming conventions".to_string(),
                 "非法的租户名，需要遵守 Linux 用户命名规范".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ForceTaskSuccessError(data, _param) => AuroraErrorInfo::new(
                 10165,
                 "force task success error".to_string(),
                 "强制成功任务实例错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::TaskInstanceStateOperationError(data, _param) => AuroraErrorInfo::new(
                 10166,
                 "the status of task instance {0} is {1}.to_string(),Cannot perform force success operation".to_string(),
                 "任务实例[{0}]的状态是[{1}]，无法执行强制成功操作".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DatasourceTypeNotExist(data, _param) => AuroraErrorInfo::new(
                 10167,
                 "data source type not exist".to_string(),
                 "数据源类型不存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ProcessDefinitionNameExist(data, _param) => AuroraErrorInfo::new(
                 10168,
                 "process definition name {0} already exists".to_string(),
                 "工作流定义名称[{0}]已存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DatasourceDbTypeIllegal(data, _param) => AuroraErrorInfo::new(
                 10169,
                 "datasource type illegal".to_string(),
                 "数据源类型参数不合法".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DatasourcePortIllegal(data, _param) => AuroraErrorInfo::new(
                 10170,
                 "datasource port illegal".to_string(),
                 "数据源端口参数不合法".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DatasourceOtherParamsIllegal(data, _param) => AuroraErrorInfo::new(
                 10171,
                 "datasource other params illegal".to_string(),
                 "数据源其他参数不合法".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DatasourceNameIllegal(data, _param) => AuroraErrorInfo::new(
                 10172,
                 "datasource name illegal".to_string(),
                 "数据源名称不合法".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DatasourceHostIllegal(data, _param) => AuroraErrorInfo::new(
                 10173,
                 "datasource host illegal".to_string(),
                 "数据源HOST不合法".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteWorkerGroupNotExist(data, _param) => AuroraErrorInfo::new(
                 10174,
                 "delete worker group not exist ".to_string(),
                 "删除worker分组不存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::CreateWorkerGroupForbiddenInDocker(data, _param) => AuroraErrorInfo::new(
                 10175,
                 "create worker group forbidden in docker ".to_string(),
                 "创建worker分组在docker中禁止".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteWorkerGroupForbiddenInDocker(data, _param) => AuroraErrorInfo::new(
                 10176,
                 "delete worker group forbidden in docker ".to_string(),
                 "删除worker分组在docker中禁止".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::WorkerAddressInvalid(data, _param) => AuroraErrorInfo::new(
                 10177,
                 "worker address {0} invalid".to_string(),
                 "worker地址[{0}]无效".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryWorkerAddressListFail(data, _param) => AuroraErrorInfo::new(
                 10178,
                 "query worker address list fail ".to_string(),
                 "查询worker地址列表失败".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::TransformProjectOwnership(data, _param) => AuroraErrorInfo::new(
                 10179,
                 "Please transform project ownership [{0}]".to_string(),
                 "请先转移项目所有权[{0}]".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryAlertGroupError(data, _param) => AuroraErrorInfo::new(
                 10180,
                 "query alert group error".to_string(),
                 "查询告警组错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::CurrentLoginUserTenantNotExist(data, _param) => AuroraErrorInfo::new(
                 10181,
                 "the tenant of the currently login user is not specified".to_string(),
                 "未指定当前登录用户的租户".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::RevokeProjectError(data, _param) => AuroraErrorInfo::new(
                 10182,
                 "revoke project error".to_string(),
                 "撤销项目授权错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryAuthorizedUser(data, _param) => AuroraErrorInfo::new(
                 10183,
                 "query authorized user error".to_string(),
                 "查询拥有项目权限的用户错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ProjectNotExist(data, _param) => AuroraErrorInfo::new(
                 10190,
                 "This project was not found. Please refresh page.".to_string(),
                 "该项目不存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
 
             Error::TaskInstanceHostIsNull(data, _param) => AuroraErrorInfo::new(
                 10191,
                 "task instance host is null ".to_string(),
                 "任务实例host为空".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryExecutingWorkflowError(data, _param) => AuroraErrorInfo::new(
                 10192,
                 "query executing workflow error".to_string(),
                 "查询运行的工作流实例错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UdfFunctionNotExist(data, _param) => {
                 AuroraErrorInfo::new(20001, "UDF function not found".to_string(), "UDF函数不存在".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::UdfFunctionExists(data, _param) => AuroraErrorInfo::new(
                 20002,
                 "UDF function already exists".to_string(),
                 "UDF函数已存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ResourceNotExist(data, _param) => {
                 AuroraErrorInfo::new(20004, "resource not exist".to_string(), "资源不存在".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::ResourceExist(data, _param) => {
                 AuroraErrorInfo::new(20005, "resource already exists".to_string(), "资源已存在".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::ResourceSuffixNotSupportView(data, _param) => AuroraErrorInfo::new(
                 20006,
                 "resource suffix do not support online viewing".to_string(),
                 "资源文件后缀不支持查看".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ResourceSizeExceedLimit(data, _param) => AuroraErrorInfo::new(
                 20007,
                 "upload resource file size exceeds limit".to_string(),
                 "上传资源文件大小超过限制".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ResourceSuffixForbidChange(data, _param) => AuroraErrorInfo::new(
                 20008,
                 "resource suffix not allowed to be modified".to_string(),
                 "资源文件后缀不支持修改".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UdfResourceSuffixNotJar(data, _param) => AuroraErrorInfo::new(
                 20009,
                 "UDF resource suffix name must be jar".to_string(),
                 "UDF资源文件后缀名只支持[jar]".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::HdfsCopyFail(data, _param) => AuroraErrorInfo::new(
                 20010,
                 "hdfs copy {0} -> {1} fail".to_string(),
                 "hdfs复制失败：[{0}] -> [{1}]".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ResourceFileExist(data, _param) => AuroraErrorInfo::new(
                 20011,
                 "resource file {0} already exists !".to_string(),
                 "资源文件[{0}]已存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ResourceFileNotExist(data, _param) => AuroraErrorInfo::new(
                 20012,
                 "resource file {0} not exists !".to_string(),
                 "资源文件[{0}]不存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UdfResourceIsBound(data, _param) => AuroraErrorInfo::new(
                 20013,
                 "udf resource file is bound by UDF functions:{0}".to_string(),
                 "udf函数绑定了资源文件[{0}]".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ResourceIsUsed(data, _param) => AuroraErrorInfo::new(
                 20014,
                 "resource file is used by process definition".to_string(),
                 "资源文件被上线的流程定义使用了".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ParentResourceNotExist(data, _param) => AuroraErrorInfo::new(
                 20015,
                 "parent resource not exist".to_string(),
                 "父资源文件不存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ResourceNotExistOrNoPermission(data, _param) => AuroraErrorInfo::new(
                 20016,
                 "resource not exist or no permission:please view the task node and remove error resource".to_string(),
                 "请检查任务节点并移除无权限或者已删除的资源".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ResourceIsAuthorized(data, _param) => AuroraErrorInfo::new(
                 20017,
                 "resource is authorized to user {0}:suffix not allowed to be modified".to_string(),
                 "资源文件已授权其他用户[{0}]".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UserNoOperationPerm(data, _param) => AuroraErrorInfo::new(
                 30001,
                 "user has no operation privilege".to_string(),
                 "当前用户没有操作权限".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UserNoOperationProjectPerm(data, _param) => AuroraErrorInfo::new(
                 30002,
                 "user {0} is not has project {1} permission".to_string(),
                 "当前用户[{0}]没有[{1}]项目的操作权限".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ProcessInstanceNotExist(data, _param) => AuroraErrorInfo::new(
                 50001,
                 "process instance {0} does not exist".to_string(),
                 "工作流实例[{0}]不存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ProcessInstanceExist(data, _param) => AuroraErrorInfo::new(
                 50002,
                 "process instance {0} already exists".to_string(),
                 "工作流实例[{0}]已存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ProcessDefineNotExist(data, _param) => AuroraErrorInfo::new(
                 50003,
                 "process definition {0} does not exist".to_string(),
                 "工作流定义[{0}]不存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ProcessDefineNotRelease(data, _param) => AuroraErrorInfo::new(
                 50004,
                 "process definition {0} process version {1} not online".to_string(),
                 "工作流定义[{0}] 工作流版本[{1}]不是上线状态".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::SubProcessDefineNotRelease(data, _param) => AuroraErrorInfo::new(
                 50004,
                 "exist sub process definition not online".to_string(),
                 "存在子工作流定义不是上线状态".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ProcessInstanceAlreadyChanged(data, _param) => AuroraErrorInfo::new(
                 50005,
                 "the status of process instance {0} is already {1}".to_string(),
                 "工作流实例[{0}]的状态已经是[{1}]".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ProcessInstanceStateOperationError(data, _param) => AuroraErrorInfo::new(
                 50006,
                 "the status of process instance {0} is {1}.to_string(),Cannot perform the operation".to_string(),
                 "工作流实例[{0}]的状态是[{1}]，无法执行该操作".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::SubProcessInstanceNotExist(data, _param) => AuroraErrorInfo::new(
                 50007,
                 "the task belong to process instance does not exist".to_string(),
                 "子工作流实例不存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ProcessDefineNotAllowedEdit(data, _param) => AuroraErrorInfo::new(
                 50008,
                 "process definition {0} does not allow edit".to_string(),
                 "工作流定义[{0}]不允许修改".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ProcessInstanceExecutingCommand(data, _param) => AuroraErrorInfo::new(
                 50009,
                 "process instance {0} is executing command".to_string(),
                 "工作流实例[{0}]正在执行命令".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ProcessInstanceNotSubProcessInstance(data, _param) => AuroraErrorInfo::new(
                 50010,
                 "process instance {0} is not sub process instance".to_string(),
                 "工作流实例[{0}]不是子工作流实例".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::TaskInstanceStateCountError(data, _param) => AuroraErrorInfo::new(
                 50011,
                 "task instance state count error".to_string(),
                 "查询各状态任务实例数错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::CountProcessInstanceStateError(data, _param) => AuroraErrorInfo::new(
                 50012,
                 "count process instance state error".to_string(),
                 "查询各状态流程实例数错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::CountProcessDefinitionUserError(data, _param) => AuroraErrorInfo::new(
                 50013,
                 "count process definition user error".to_string(),
                 "查询各用户流程定义数错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::StartProcessInstanceError(data, _param) => AuroraErrorInfo::new(
                 50014,
                 "start process instance error".to_string(),
                 "运行工作流实例错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::BatchStartProcessInstanceError(data, _param) => AuroraErrorInfo::new(
                 50014,
                 "batch start process instance error: {0}".to_string(),
                 "批量运行工作流实例错误: {0}".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ProcessInstanceError(data, _param) => AuroraErrorInfo::new(
                 50014,
                 "process instance delete error: {0}".to_string(),
                 "工作流实例删除[{0}]错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ExecuteProcessInstanceError(data, _param) => AuroraErrorInfo::new(
                 50015,
                 "execute process instance error".to_string(),
                 "操作工作流实例错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::CheckProcessDefinitionError(data, _param) => AuroraErrorInfo::new(
                 50016,
                 "check process definition error".to_string(),
                 "工作流定义错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryRecipientsAndCopyersByProcessDefinitionError(data, _param) => AuroraErrorInfo::new(
                 50017,
                 "query recipients and copyers by process definition error".to_string(),
                 "查询收件人和抄送人错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DataIsNotValid(data, _param) => {
                 AuroraErrorInfo::new(50017, "data {0} not valid".to_string(), "数据[{0}]无效".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::DataIsNull(data, _param) => {
                 AuroraErrorInfo::new(50018, "data {0} is null".to_string(), "数据[{0}]不能为空".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::ProcessNodeHasCycle(data, _param) => AuroraErrorInfo::new(
                 50019,
                 "process node has cycle".to_string(),
                 "流程节点间存在循环依赖".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ProcessNodeSParameterInvalid(data, _param) => AuroraErrorInfo::new(
                 50020,
                 "process node {0} parameter invalid".to_string(),
                 "流程节点[{0}]参数无效".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ProcessDefineStateOnline(data, _param) => AuroraErrorInfo::new(
                 50021,
                 "process definition [{0}] is already online".to_string(),
                 "工作流定义[{0}]已上线".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteProcessDefineByCodeError(data, _param) => AuroraErrorInfo::new(
                 50022,
                 "delete process definition by code error".to_string(),
                 "删除工作流定义错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ScheduleCronStateOnline(data, _param) => AuroraErrorInfo::new(
                 50023,
                 "the status of schedule {0} is already online".to_string(),
                 "调度配置[{0}]已上线".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteScheduleCronByIdError(data, _param) => AuroraErrorInfo::new(
                 50024,
                 "delete schedule by id error".to_string(),
                 "删除调度配置错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::BatchDeleteProcessDefineError(data, _param) => AuroraErrorInfo::new(
                 50025,
                 "batch delete process definition error".to_string(),
                 "批量删除工作流定义错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::BatchDeleteProcessDefineByCodesError(data, _param) => AuroraErrorInfo::new(
                 50026,
                 "batch delete process definition by codes {0} error".to_string(),
                 "批量删除工作流定义[{0}]错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteProcessDefineByCodesError(data, _param) => AuroraErrorInfo::new(
                 50026,
                 "delete process definition by codes {0} error".to_string(),
                 "删除工作流定义[{0}]错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::TenantNotSuitable(data, _param) => AuroraErrorInfo::new(
                 50027,
                 "there is not any tenant suitable: please choose a tenant available.".to_string(),
                 "没有合适的租户，请选择可用的租户".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ExportProcessDefineByIdError(data, _param) => AuroraErrorInfo::new(
                 50028,
                 "export process definition by id error".to_string(),
                 "导出工作流定义错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::BatchExportProcessDefineByIdsError(data, _param) => AuroraErrorInfo::new(
                 50028,
                 "batch export process definition by ids error".to_string(),
                 "批量导出工作流定义错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ImportProcessDefineError(data, _param) => AuroraErrorInfo::new(
                 50029,
                 "import process definition error".to_string(),
                 "导入工作流定义错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::TaskDefineNotExist(data, _param) => AuroraErrorInfo::new(
                 50030,
                 "task definition [{0}] does not exist".to_string(),
                 "任务定义[{0}]不存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::CreateProcessTaskRelationError(data, _param) => AuroraErrorInfo::new(
                 50032,
                 "create process task relation error".to_string(),
                 "创建工作流任务关系错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ProcessTaskRelationNotExist(data, _param) => AuroraErrorInfo::new(
                 50033,
                 "process task relation [{0}] does not exist".to_string(),
                 "工作流任务关系[{0}]不存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ProcessTaskRelationExist(data, _param) => AuroraErrorInfo::new(
                 50034,
                 "process task relation is already exist  processCode:[{0}]".to_string(),
                 "工作流任务关系已存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ProcessDagIsEmpty(data, _param) => {
                 AuroraErrorInfo::new(50035, "process dag is empty".to_string(), "工作流dag是空".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::CheckProcessTaskRelationError(data, _param) => AuroraErrorInfo::new(
                 50036,
                 "check process task relation error".to_string(),
                 "工作流任务关系参数错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::CreateTaskDefinitionError(data, _param) => AuroraErrorInfo::new(
                 50037,
                 "create task definition error".to_string(),
                 "创建任务错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UpdateTaskDefinitionError(data, _param) => AuroraErrorInfo::new(
                 50038,
                 "update task definition error".to_string(),
                 "更新任务定义错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryTaskDefinitionVersionsError(data, _param) => AuroraErrorInfo::new(
                 50039,
                 "query task definition versions error".to_string(),
                 "查询任务历史版本信息出错".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::SwitchTaskDefinitionVersionError(data, _param) => AuroraErrorInfo::new(
                 50040,
                 "Switch task definition version error".to_string(),
                 "切换任务版本出错".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteTaskDefinitionVersionError(data, _param) => AuroraErrorInfo::new(
                 50041,
                 "delete task definition version error".to_string(),
                 "删除任务历史版本出错".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteTaskDefineByCodeError(data, _param) => AuroraErrorInfo::new(
                 50042,
                 "delete task definition by code error".to_string(),
                 "删除任务定义错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryDetailOfTaskDefinitionError(data, _param) => AuroraErrorInfo::new(
                 50043,
                 "query detail of task definition error".to_string(),
                 "查询任务详细信息错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryTaskDefinitionListPagingError(data, _param) => AuroraErrorInfo::new(
                 50044,
                 "query task definition list paging error".to_string(),
                 "分页查询任务定义列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::TaskDefinitionNameExisted(data, _param) => AuroraErrorInfo::new(
                 50045,
                 "task definition name [{0}] already exists".to_string(),
                 "任务定义名称[{0}]已经存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ReleaseTaskDefinitionError(data, _param) => AuroraErrorInfo::new(
                 50046,
                 "release task definition error".to_string(),
                 "上线任务错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::MoveProcessTaskRelationError(data, _param) => AuroraErrorInfo::new(
                 50047,
                 "move process task relation error".to_string(),
                 "移动任务到其他工作流错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteTaskProcessRelationError(data, _param) => AuroraErrorInfo::new(
                 50048,
                 "delete process task relation error".to_string(),
                 "删除工作流任务关系错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryTaskProcessRelationError(data, _param) => AuroraErrorInfo::new(
                 50049,
                 "query process task relation error".to_string(),
                 "查询工作流任务关系错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::TaskDefineStateOnline(data, _param) => AuroraErrorInfo::new(
                 50050,
                 "task definition [{0}] is already online".to_string(),
                 "任务定义[{0}]已上线".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::TaskHasDownstream(data, _param) => AuroraErrorInfo::new(
                 50051,
                 "Task exists downstream [{0}] dependence".to_string(),
                 "任务存在下游[{0}]依赖".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::TaskHasUpstream(data, _param) => AuroraErrorInfo::new(
                 50052,
                 "Task [{0}] exists upstream dependence".to_string(),
                 "任务[{0}]存在上游依赖".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::MainTableUsingVersion(data, _param) => AuroraErrorInfo::new(
                 50053,
                 "the version that the master table is using".to_string(),
                 "主表正在使用该版本".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ProjectProcessNotMatch(data, _param) => AuroraErrorInfo::new(
                 50054,
                 "the project and the process is not match".to_string(),
                 "项目和工作流不匹配".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteEdgeError(data, _param) => AuroraErrorInfo::new(
                 50055,
                 "delete edge error".to_string(),
                 "删除工作流任务连接线错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::NotSupportUpdateTaskDefinition(data, _param) => AuroraErrorInfo::new(
                 50056,
                 "task state does not support modification".to_string(),
                 "当前任务不支持修改".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::NotSupportCopyTaskType(data, _param) => AuroraErrorInfo::new(
                 50057,
                 "task type [{0}] does not support copy".to_string(),
                 "不支持复制的任务类型[{0}]".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::HdfsNotStartup(data, _param) => {
                 AuroraErrorInfo::new(60001, "hdfs not startup".to_string(), "hdfs未启用".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::StorageNotStartup(data, _param) => {
                 AuroraErrorInfo::new(60002, "storage not startup".to_string(), "存储未启用".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::S3CannotRename(data, _param) => AuroraErrorInfo::new(
                 60003,
                 "directory cannot be renamed".to_string(),
                 "S3无法重命名文件夹".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryDatabaseStateError(data, _param) => AuroraErrorInfo::new(
                 70001,
                 "query database state error".to_string(),
                 "查询数据库状态错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::CreateAccessTokenError(data, _param) => AuroraErrorInfo::new(
                 70010,
                 "create access token error".to_string(),
                 "创建访问token错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::GenerateTokenError(data, _param) => {
                 AuroraErrorInfo::new(70011, "generate token error".to_string(), "生成token错误".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::QueryAccesstokenListPagingError(data, _param) => AuroraErrorInfo::new(
                 70012,
                 "query access token list paging error".to_string(),
                 "分页查询访问token列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UpdateAccessTokenError(data, _param) => AuroraErrorInfo::new(
                 70013,
                 "update access token error".to_string(),
                 "更新访问token错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteAccessTokenError(data, _param) => AuroraErrorInfo::new(
                 70014,
                 "delete access token error".to_string(),
                 "删除访问token错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::AccessTokenNotExist(data, _param) => AuroraErrorInfo::new(
                 70015,
                 "access token not exist".to_string(),
                 "访问token不存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryAccesstokenByUserError(data, _param) => AuroraErrorInfo::new(
                 70016,
                 "query access token by user error".to_string(),
                 "查询访问指定用户的token错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::CommandStateCountError(data, _param) => AuroraErrorInfo::new(
                 80001,
                 "task instance state count error".to_string(),
                 "查询各状态任务实例数错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::NegativeSizeNumberError(data, _param) => {
                 AuroraErrorInfo::new(80002, "query size number error".to_string(), "查询size错误".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::StartTimeBiggerThanEndTimeError(data, _param) => AuroraErrorInfo::new(
                 80003,
                 "start time bigger than end time error".to_string(),
                 "开始时间在结束时间之后错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueueCountError(data, _param) => {
                 AuroraErrorInfo::new(90001, "queue count error".to_string(), "查询队列数据错误".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::KerberosStartupState(data, _param) => AuroraErrorInfo::new(
                 100001,
                 "get kerberos startup state error".to_string(),
                 "获取kerberos启动状态错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryAuditLogListPaging(data, _param) => AuroraErrorInfo::new(
                 10057,
                 "query audit log list paging".to_string(),
                 "分页查询日志列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::PluginNotAUiComponent(data, _param) => AuroraErrorInfo::new(
                 110001,
                 "query plugin error: this plugin has no UI component".to_string(),
                 "查询插件错误，此插件无UI组件".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryPluginsResultIsNull(data, _param) => AuroraErrorInfo::new(
                 110002,
                 "query alarm plugins result is empty:please check the startup status of the alarm component and \
@@ -4284,410 +4599,479 @@ impl From<Error> for AuroraErrorInfo {
                     .to_string(),
                 "查询告警插件为空".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryPluginsError(data, _param) => {
                 AuroraErrorInfo::new(110003, "query plugins error".to_string(), "查询插件错误".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::QueryPluginDetailResultIsNull(data, _param) => AuroraErrorInfo::new(
                 110004,
                 "query plugin detail result is null".to_string(),
                 "查询插件详情结果为空".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UpdateAlertPluginInstanceError(data, _param) => AuroraErrorInfo::new(
                 110005,
                 "update alert plugin instance error".to_string(),
                 "更新告警组和告警组插件实例错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteAlertPluginInstanceError(data, _param) => AuroraErrorInfo::new(
                 110006,
                 "delete alert plugin instance error".to_string(),
                 "删除告警组和告警组插件实例错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::GetAlertPluginInstanceError(data, _param) => AuroraErrorInfo::new(
                 110007,
                 "get alert plugin instance error".to_string(),
                 "获取告警组和告警组插件实例错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::CreateAlertPluginInstanceError(data, _param) => AuroraErrorInfo::new(
                 110008,
                 "create alert plugin instance error".to_string(),
                 "创建告警组和告警组插件实例错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryAllAlertPluginInstanceError(data, _param) => AuroraErrorInfo::new(
                 110009,
                 "query all alert plugin instance error".to_string(),
                 "查询所有告警实例失败".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::PluginInstanceAlreadyExit(data, _param) => AuroraErrorInfo::new(
                 110010,
                 "plugin instance already exit".to_string(),
                 "该告警插件实例已存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ListPagingAlertPluginInstanceError(data, _param) => AuroraErrorInfo::new(
                 110011,
                 "query plugin instance page error".to_string(),
                 "分页查询告警实例失败".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteAlertPluginInstanceErrorHasAlertGroupAssociated(data, _param) => AuroraErrorInfo::new(
                 110012,
                 "failed to delete the alert instance there is an alarm group associated with this alert instance"
                     .to_string(),
                 "删除告警实例失败，存在与此告警实例关联的警报组".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ProcessDefinitionVersionIsUsed(data, _param) => AuroraErrorInfo::new(
                 110013,
                 "this process definition version is used".to_string(),
                 "此工作流定义版本被使用".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::CreateEnvironmentError(data, _param) => AuroraErrorInfo::new(
                 120001,
                 "create environment error".to_string(),
                 "创建环境失败".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::EnvironmentNameExists(data, _param) => AuroraErrorInfo::new(
                 120002,
                 "this environment name [{0}] already exists".to_string(),
                 "环境名称[{0}]已经存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::EnvironmentNameIsNull(data, _param) => AuroraErrorInfo::new(
                 120003,
                 "this environment name shouldn't be empty.".to_string(),
                 "环境名称不能为空".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::EnvironmentConfigIsNull(data, _param) => AuroraErrorInfo::new(
                 120004,
                 "this environment config shouldn't be empty.".to_string(),
                 "环境配置信息不能为空".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UpdateEnvironmentError(data, _param) => AuroraErrorInfo::new(
                 120005,
                 "update environment [{0}] info error".to_string(),
                 "更新环境[{0}]信息失败".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteEnvironmentError(data, _param) => AuroraErrorInfo::new(
                 120006,
                 "delete environment error".to_string(),
                 "删除环境信息失败".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteEnvironmentRelatedTaskExists(data, _param) => AuroraErrorInfo::new(
                 120007,
                 "delete environment error, related task exists".to_string(),
                 "删除环境信息失败，存在关联任务".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryEnvironmentByNameError(data, _param) => AuroraErrorInfo::new(
                 1200008,
                 "not found environment [{0}] ".to_string(),
                 "查询环境名称[{0}]信息不存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryEnvironmentByCodeError(data, _param) => AuroraErrorInfo::new(
                 1200009,
                 "not found environment [{0}] ".to_string(),
                 "查询环境编码[{0}]不存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryEnvironmentError(data, _param) => AuroraErrorInfo::new(
                 1200010,
                 "login user query environment error".to_string(),
                 "分页查询环境列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::VerifyEnvironmentError(data, _param) => AuroraErrorInfo::new(
                 1200011,
                 "verify environment error".to_string(),
                 "验证环境信息错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::GetRuleFormCreateJsonError(data, _param) => AuroraErrorInfo::new(
                 1200012,
                 "get rule form create json error".to_string(),
                 "获取规则 FROM-CREATE-JSON 错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryRuleListPagingError(data, _param) => AuroraErrorInfo::new(
                 1200013,
                 "query rule list paging error".to_string(),
                 "获取规则分页列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryRuleListError(data, _param) => AuroraErrorInfo::new(
                 1200014,
                 "query rule list error".to_string(),
                 "获取规则列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryRuleInputEntryListError(data, _param) => AuroraErrorInfo::new(
                 1200015,
                 "query rule list error".to_string(),
                 "获取规则列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryExecuteResultListPagingError(data, _param) => AuroraErrorInfo::new(
                 1200016,
                 "query execute result list paging error".to_string(),
                 "获取数据质量任务结果分页错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::GetDatasourceOptionsError(data, _param) => AuroraErrorInfo::new(
                 1200017,
                 "get datasource options error".to_string(),
                 "获取数据源Options错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::GetDatasourceTablesError(data, _param) => AuroraErrorInfo::new(
                 1200018,
                 "get datasource tables error".to_string(),
                 "获取数据源表列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::GetDatasourceTableColumnsError(data, _param) => AuroraErrorInfo::new(
                 1200019,
                 "get datasource table columns error".to_string(),
                 "获取数据源表列名错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::TaskGroupNameExist(data, _param) => AuroraErrorInfo::new(
                 130001,
                 "this task group name is repeated in a project".to_string(),
                 "该任务组名称在一个项目中已经使用".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::TaskGroupSizeError(data, _param) => AuroraErrorInfo::new(
                 130002,
                 "task group size error".to_string(),
                 "任务组大小应该为大于1的整数".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::TaskGroupStatusError(data, _param) => AuroraErrorInfo::new(
                 130003,
                 "task group status error".to_string(),
                 "任务组已经被关闭".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::TaskGroupFull(data, _param) => {
                 AuroraErrorInfo::new(130004, "task group is full".to_string(), "任务组已经满了".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::TaskGroupUsedSizeError(data, _param) => AuroraErrorInfo::new(
                 130005,
                 "the used size number of task group is dirty".to_string(),
                 "任务组使用的容量发生了变化".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::TaskGroupQueueReleaseError(data, _param) => AuroraErrorInfo::new(
                 130006,
                 "failed to release task group queue".to_string(),
                 "任务组资源释放时出现了错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::TaskGroupQueueAwakeError(data, _param) => AuroraErrorInfo::new(
                 130007,
                 "awake waiting task failed".to_string(),
                 "任务组使唤醒等待任务时发生了错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::CreateTaskGroupError(data, _param) => AuroraErrorInfo::new(
                 130008,
                 "create task group error".to_string(),
                 "创建任务组错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UpdateTaskGroupError(data, _param) => AuroraErrorInfo::new(
                 130009,
                 "update task group list error".to_string(),
                 "更新任务组错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryTaskGroupListError(data, _param) => AuroraErrorInfo::new(
                 130010,
                 "query task group list error".to_string(),
                 "查询任务组列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::CloseTaskGroupError(data, _param) => AuroraErrorInfo::new(
                 130011,
                 "close task group error".to_string(),
                 "关闭任务组错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::StartTaskGroupError(data, _param) => AuroraErrorInfo::new(
                 130012,
                 "start task group error".to_string(),
                 "启动任务组错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryTaskGroupQueueListError(data, _param) => AuroraErrorInfo::new(
                 130013,
                 "query task group queue list error".to_string(),
                 "查询任务组队列列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::TaskGroupCacheStartFailed(data, _param) => AuroraErrorInfo::new(
                 130014,
                 "cache start failed".to_string(),
                 "任务组相关的缓存启动失败".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::EnvironmentWorkerGroupsIsInvalid(data, _param) => AuroraErrorInfo::new(
                 130015,
                 "environment worker groups is invalid format".to_string(),
                 "环境关联的工作组参数解析错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UpdateEnvironmentWorkerGroupRelationError(data, _param) => AuroraErrorInfo::new(
                 130016,
                 "update environment worker group relation error".to_string(),
                 "更新环境关联的工作组错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::TaskGroupQueueAlreadyStart(data, _param) => AuroraErrorInfo::new(
                 130017,
                 "task group queue already start".to_string(),
                 "节点已经获取任务组资源".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::TaskGroupStatusClosed(data, _param) => AuroraErrorInfo::new(
                 130018,
                 "The task group has been closed.".to_string(),
                 "任务组已经被关闭".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::TaskGroupStatusOpened(data, _param) => AuroraErrorInfo::new(
                 130019,
                 "The task group has been opened.".to_string(),
                 "任务组已经被开启".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::NotAllowToDisableOwnAccount(data, _param) => AuroraErrorInfo::new(
                 130020,
                 "Not allow to disable your own account".to_string(),
                 "不能停用自己的账号".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::NotAllowToDeleteDefaultAlarmGroup(data, _param) => AuroraErrorInfo::new(
                 130030,
                 "Not allow to delete the default alarm group ".to_string(),
                 "不能删除默认告警组".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::TimeZoneIllegal(data, _param) => AuroraErrorInfo::new(
                 130031,
                 "time zone [{0}] is illegal".to_string(),
                 "时区参数 [{0}] 不合法".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryK8sNamespaceListPagingError(data, _param) => AuroraErrorInfo::new(
                 1300001,
                 "login user query k8s namespace list paging error".to_string(),
                 "分页查询k8s名称空间列表错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::K8sNamespaceExist(data, _param) => AuroraErrorInfo::new(
                 1300002,
                 "k8s namespace {0} already exists".to_string(),
                 "k8s命名空间[{0}]已存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::CreateK8sNamespaceError(data, _param) => AuroraErrorInfo::new(
                 1300003,
                 "create k8s namespace error".to_string(),
                 "创建k8s命名空间错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::UpdateK8sNamespaceError(data, _param) => AuroraErrorInfo::new(
                 1300004,
                 "update k8s namespace error".to_string(),
                 "更新k8s命名空间信息错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::K8sNamespaceNotExist(data, _param) => AuroraErrorInfo::new(
                 1300005,
                 "k8s namespace {0} not exists".to_string(),
                 "命名空间ID[{0}]不存在".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::K8sClientOpsError(data, _param) => AuroraErrorInfo::new(
                 1300006,
                 "k8s error with exception {0}".to_string(),
                 "k8s操作报错[{0}]".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::VerifyK8sNamespaceError(data, _param) => AuroraErrorInfo::new(
                 1300007,
                 "verify k8s and namespace error".to_string(),
                 "验证k8s命名空间信息错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::DeleteK8sNamespaceByIdError(data, _param) => AuroraErrorInfo::new(
                 1300008,
                 "delete k8s namespace by id error".to_string(),
                 "删除命名空间错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::VerifyParameterNameFailed(data, _param) => AuroraErrorInfo::new(
                 1300009,
                 "The file name verify failed".to_string(),
                 "文件命名校验失败".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::StoreOperateCreateError(data, _param) => AuroraErrorInfo::new(
                 1300010,
                 "create the resource failed".to_string(),
                 "存储操作失败".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::GrantK8sNamespaceError(data, _param) => {
                 AuroraErrorInfo::new(1300011, "grant namespace error".to_string(), "授权资源错误".to_string())
                     .new_with_data(data)
+                    .parse(_param)
             }
             Error::QueryUnauthorizedNamespaceError(data, _param) => AuroraErrorInfo::new(
                 1300012,
                 "query unauthorized namespace error".to_string(),
                 "查询未授权命名空间错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryAuthorizedNamespaceError(data, _param) => AuroraErrorInfo::new(
                 1300013,
                 "query authorized namespace error".to_string(),
                 "查询授权命名空间错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::QueryCanUseK8sClusterError(data, _param) => AuroraErrorInfo::new(
                 1300014,
                 "login user query can used k8s cluster list error".to_string(),
                 "查询可用k8s集群错误".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::ResourceFullNameTooLongError(data, _param) => AuroraErrorInfo::new(
                 1300015,
                 "resource's fullname is too long error".to_string(),
                 "资源文件名过长".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
             Error::TenantFullNameTooLongError(data, _param) => AuroraErrorInfo::new(
                 1300016,
                 "tenant's fullname is too long error".to_string(),
                 "租户名过长".to_string(),
             )
-            .new_with_data(data),
+            .new_with_data(data)
+            .parse(_param),
         }
     }
 }

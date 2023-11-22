@@ -11,6 +11,22 @@ use aurora_proto::ds_queue::{
 };
 use tracing::{error, info};
 
+pub async fn list_all_queue() -> Result<Vec<Queue>> {
+    let client = _ds_queue_service_client().await?;
+    let request = tonic::Request::new(());
+    let res = client
+        .clone()
+        .all_ds_queues(request)
+        .await
+        .map(|res| res.into_inner())
+        .map_err(|e| {
+            let err: Error = e.into();
+            error!("list queue error: {:?}", err);
+            err
+        })?;
+    Ok(res.data.into_iter().map(|v| v.into()).collect())
+}
+
 pub async fn create(queue: &str, queue_name: &str) -> Result<Queue> {
     let client = _ds_queue_service_client().await?;
     let request = tonic::Request::new(CreateDsQueueRequest {
