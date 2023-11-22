@@ -165,6 +165,7 @@ impl DsTenantService for AuroraRpcServer {
             let err = Error::OsTenantCodeExist(AuroraData::Null, Some(vec![tenant_code.clone()]));
             error!("err: {:?}", err);
             let status = tonic::Status::from_error(Box::<AuroraErrorInfo>::new(err.into()));
+            // let status = tonic::Status::from_error(err.into());
             error!("status: {:?}", status);
             Err(status)
         } else {

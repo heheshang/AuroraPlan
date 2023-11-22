@@ -16,7 +16,7 @@ fn main() -> Result<()> {
     let _ = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .thread_name("aurora-api")
-        .thread_stack_size(30 * 1024 * 1024)
+        .thread_stack_size(32 * 100 * 1024 * 1024)
         .build()
         .unwrap()
         .block_on(start(host, port));
@@ -24,6 +24,7 @@ fn main() -> Result<()> {
 }
 
 async fn start(host: String, port: u32) -> Result<()> {
+    // let backtrace = backtrace::Backtrace::new();
     let addr: SocketAddr = format!("{}:{}", host, port).parse()?;
 
     env::set_var("RUST_LOG", "debug");
@@ -46,6 +47,7 @@ async fn start(host: String, port: u32) -> Result<()> {
 
     info!("log init success!");
     info!("{:<12}->{}", "listen", addr);
+    // println!("log init success! {:#?}", backtrace);
     Ok(())
 }
 // fn using_serve_dir() -> Router {

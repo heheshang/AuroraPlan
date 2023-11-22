@@ -440,6 +440,7 @@ impl From<tonic::Status> for Error {
         }
         let code = value.code();
         if code == tonic::Code::Unknown {
+            error!("message {}", value.message());
             let message = value.message().split('~');
             let mut map = HashMap::new();
             for m in message {
@@ -453,7 +454,7 @@ impl From<tonic::Status> for Error {
             let cn_msg = String::from("未知错误");
             let en_msg = String::from("unknown error");
             let error_data = String::from("");
-            let error_param = String::from("");
+            let error_param = String::from(",");
 
             let error_code = map.get("code").unwrap_or(&error_code);
             let cn_msg = map.get("cn_msg").unwrap_or(&cn_msg);
@@ -480,7 +481,7 @@ impl From<tonic::Status> for Error {
                 // error_param: error_param.map(|s| s.to_string()),
             };
             error!("From<tonic::Status> for Error -->{}", info);
-            let error = info.into();
+            let error: Error = info.into();
             error!("From<tonic::Status> for Error -->{}", error);
             error
         } else {
@@ -499,7 +500,7 @@ fn test_error_into() {
         error_param: Some(vec!["sssss".to_string()]),
     };
     let error: Error = error.into();
-    println!("{}", error);
+    println!("{:?}", error);
 }
 
 impl core::fmt::Display for Error {
@@ -2182,13 +2183,13 @@ impl From<AuroraErrorInfo> for Error {
     fn from(value: AuroraErrorInfo) -> Self {
         error!("AuroraErrorInfo: {:?}", value);
         if value.code == 0 {
-            return Error::SUCCESS(value.error_data, None);
+            return Self::SUCCESS(value.error_data, None);
         }
         if value.code == 10000 {
-            return Error::InternalServerErrorArgs(value.error_data, value.error_param);
+            return Self::InternalServerErrorArgs(value.error_data, value.error_param);
         }
         if value.code == 10009 {
-            return Error::OsTenantCodeExist(value.error_data, value.error_param);
+            return Self::OsTenantCodeExist(value.error_data, value.error_param);
         }
 
         let res = match (value.code, value.en_msg.as_str(), value.cn_msg.as_str()) {

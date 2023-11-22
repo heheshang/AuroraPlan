@@ -31,6 +31,7 @@ error-chain = { workspace = true }
 tonic-health = { workspace = true }
 # axum_static = { workspace = true }
 axum-extra = { workspace = true }
+# backtrace = "0.3.69"
 
 [dev-dependencies]
 anyhow = { workspace = true }
