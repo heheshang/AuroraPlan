@@ -16,7 +16,7 @@ fn main() -> Result<()> {
     let _ = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .thread_name("aurora-api")
-        .thread_stack_size(32 * 100 * 1024 * 1024)
+        // .thread_stack_size(32 * 100 * 1024 * 1024)
         .build()
         .unwrap()
         .block_on(start(host, port));

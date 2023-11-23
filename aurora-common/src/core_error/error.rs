@@ -480,9 +480,9 @@ impl From<tonic::Status> for Error {
                 error_param: Some(error_param),
                 // error_param: error_param.map(|s| s.to_string()),
             };
-            error!("From<tonic::Status> for Error -->{}", info);
-            let error: Error = info.into();
-            error!("From<tonic::Status> for Error -->{}", error);
+            error!("AuroraErrorInfo error{:#?}", info);
+            let error = Error::from(info);
+            error!(" AuroraErrorInfo convert Error {:#?}", error);
             error
         } else {
             Error::InternalServerErrorArgs(AuroraData::Null, None)
@@ -2181,7 +2181,7 @@ fn test_aururo_display() {
 
 impl From<AuroraErrorInfo> for Error {
     fn from(value: AuroraErrorInfo) -> Self {
-        error!("AuroraErrorInfo: {:?}", value);
+        error!("Error from AuroraErrorInfo: {:#?}", value);
         if value.code == 0 {
             return Self::SUCCESS(value.error_data, None);
         }
@@ -2193,492 +2193,489 @@ impl From<AuroraErrorInfo> for Error {
         }
 
         let res = match (value.code, value.en_msg.as_str(), value.cn_msg.as_str()) {
-            (0, ..) => Error::SUCCESS(value.error_data, None),
-            (10000, ..) => Error::InternalServerErrorArgs(value.error_data, value.error_param),
-            (10001, ..) => Error::RequestParamsNotValidError(value.error_data, value.error_param),
-            (10002, ..) => Error::TaskTimeoutParamsError(value.error_data, value.error_param),
-            (10003, ..) => Error::UserNameExist(value.error_data, value.error_param),
-            (10004, ..) => Error::UserNameNull(value.error_data, value.error_param),
-            (10006, ..) => Error::HdfsOperationError(value.error_data, value.error_param),
-            (10009, ..) => return Error::OsTenantCodeExist(value.error_data, value.error_param),
-            (10018, ..) => Error::ProjectNotFound(value.error_data, value.error_param),
-            (10019, ..) => Error::ProjectAlreadyExists(value.error_data, value.error_param),
-            (10020, ..) => Error::TaskInstanceNotExists(value.error_data, value.error_param),
-            (10030, ..) => Error::UpdateAlertGroupError(value.error_data, value.error_param), //(10030, "update alert group error", "更新告警组错误"),
-            (10031, ..) => Error::DeleteAlertGroupError(value.error_data, value.error_param), //(10031, "delete alert group error", "删除告警组错误"),
-            (10032, ..) => Error::AlertGroupGrantUserError(value.error_data, value.error_param), //(10032, "alert group grant user error", "告警组授权用户错误"),
-            (10033, ..) => Error::CreateDatasourceError(value.error_data, value.error_param), //(10033, "create datasource error", "创建数据源错误"),
-            (10034, ..) => Error::UpdateDatasourceError(value.error_data, value.error_param), //(10034, "update datasource error", "更新数据源错误"),
-            (10035, ..) => Error::QueryDatasourceError(value.error_data, value.error_param), //(10035, "query datasource error", "查询数据源错误"),
-            (10036, ..) => Error::ConnectDatasourceFailure(value.error_data, value.error_param), //(10036, "connect datasource failure", "建立数据源连接失败"),
-            (10037, ..) => Error::ConnectionTestFailure(value.error_data, value.error_param), //(10037, "connection test failure", "测试数据源连接失败"),
-            (10038, ..) => Error::DeleteDataSourceFailure(value.error_data, value.error_param), //(10038, "delete data source failure", "删除数据源失败"),
-            (10039, ..) => Error::VerifyDatasourceNameFailure(value.error_data, value.error_param), //(10039, "verify datasource name failure", "验证数据源名称失败"),
-            (10040, ..) => Error::UnauthorizedDatasource(value.error_data, value.error_param), //(10040, "unauthorized datasource", "未经授权的数据源"),
-            (10041, ..) => Error::AuthorizedDataSource(value.error_data, value.error_param), //(10041, "authorized data source", "授权数据源失败"),
-            (10042, ..) => Error::LoginSuccess(value.error_data, value.error_param), //(10042, "login success", "登录成功"),
-            (10043, ..) => Error::UserLoginFailure(value.error_data, value.error_param), //(10043, "user login failure", "用户登录失败"),
-            (10044, ..) => Error::ListWorkersError(value.error_data, value.error_param), //(10044, "list workers error", "查询worker列表错误"),
-            (10045, ..) => Error::ListMastersError(value.error_data, value.error_param), //(10045, "list masters error", "查询master列表错误"),
-            (10046, ..) => Error::UpdateProjectError(value.error_data, value.error_param), //(10046, "update project error", "更新项目信息错误"),
-            (10047, ..) => Error::QueryProjectDetailsByCodeError(value.error_data, value.error_param), //(10047, "query project details by code error", "查询项目详细信息错误"),
-            (10048, ..) => Error::CreateProjectError(value.error_data, value.error_param), //(10048, "create project error", "创建项目错误"),
-            (10049, ..) => Error::LoginUserQueryProjectListPagingError(value.error_data, value.error_param), //(10049, "login user query project list paging error", "分页查询项目列表错误"),
-            (10050, ..) => Error::DeleteProjectError(value.error_data, value.error_param), //(10050, "delete project error", "删除项目错误"),
-            (10051, ..) => Error::QueryUnauthorizedProjectError(value.error_data, value.error_param), //(10051, "query unauthorized project error", "查询未授权项目错误"),
-            (10052, ..) => Error::QueryAuthorizedProject(value.error_data, value.error_param), //(10052, "query authorized project", "查询授权项目错误"),
-            (10053, ..) => Error::QueryQueueListError(value.error_data, value.error_param), //(10053, "query queue list error", "查询队列列表错误"),
-            (10054, ..) => Error::CreateResourceError(value.error_data, value.error_param), //(10054, "create resource error", "创建资源错误"),
-            (10055, ..) => Error::UpdateResourceError(value.error_data, value.error_param), //(10055, "update resource error", "更新资源错误"),
-            (10056, ..) => Error::QueryResourcesListError(value.error_data, value.error_param), //(10056, "query resources list error", "查询资源列表错误"),
-            (10057, "query resources list paging", "分页查询资源列表错误", ..) => {
+            (0, _, _) => Error::SUCCESS(value.error_data, None),
+            (10000, _, _) => Error::InternalServerErrorArgs(value.error_data, value.error_param),
+            (10001, _, _) => Error::RequestParamsNotValidError(value.error_data, value.error_param),
+            (10002, _, _) => Error::TaskTimeoutParamsError(value.error_data, value.error_param),
+            (10003, _, _) => Error::UserNameExist(value.error_data, value.error_param),
+            (10004, _, _) => Error::UserNameNull(value.error_data, value.error_param),
+            (10006, _, _) => Error::HdfsOperationError(value.error_data, value.error_param),
+            (10009, _, _) => return Error::OsTenantCodeExist(value.error_data, value.error_param),
+            (10018, _, _) => Error::ProjectNotFound(value.error_data, value.error_param),
+            (10019, _, _) => Error::ProjectAlreadyExists(value.error_data, value.error_param),
+            (10020, _, _) => Error::TaskInstanceNotExists(value.error_data, value.error_param),
+            (10030, _, _) => Error::UpdateAlertGroupError(value.error_data, value.error_param), //(10030, "update alert group error", "更新告警组错误"),
+            (10031, _, _) => Error::DeleteAlertGroupError(value.error_data, value.error_param), //(10031, "delete alert group error", "删除告警组错误"),
+            (10032, _, _) => Error::AlertGroupGrantUserError(value.error_data, value.error_param), //(10032, "alert group grant user error", "告警组授权用户错误"),
+            (10033, _, _) => Error::CreateDatasourceError(value.error_data, value.error_param), //(10033, "create datasource error", "创建数据源错误"),
+            (10034, _, _) => Error::UpdateDatasourceError(value.error_data, value.error_param), //(10034, "update datasource error", "更新数据源错误"),
+            (10035, _, _) => Error::QueryDatasourceError(value.error_data, value.error_param), //(10035, "query datasource error", "查询数据源错误"),
+            (10036, _, _) => Error::ConnectDatasourceFailure(value.error_data, value.error_param), //(10036, "connect datasource failure", "建立数据源连接失败"),
+            (10037, _, _) => Error::ConnectionTestFailure(value.error_data, value.error_param), //(10037, "connection test failure", "测试数据源连接失败"),
+            (10038, _, _) => Error::DeleteDataSourceFailure(value.error_data, value.error_param), //(10038, "delete data source failure", "删除数据源失败"),
+            (10039, _, _) => Error::VerifyDatasourceNameFailure(value.error_data, value.error_param), //(10039, "verify datasource name failure", "验证数据源名称失败"),
+            (10040, _, _) => Error::UnauthorizedDatasource(value.error_data, value.error_param), //(10040, "unauthorized datasource", "未经授权的数据源"),
+            (10041, _, _) => Error::AuthorizedDataSource(value.error_data, value.error_param), //(10041, "authorized data source", "授权数据源失败"),
+            (10042, _, _) => Error::LoginSuccess(value.error_data, value.error_param), //(10042, "login success", "登录成功"),
+            (10043, _, _) => Error::UserLoginFailure(value.error_data, value.error_param), //(10043, "user login failure", "用户登录失败"),
+            (10044, _, _) => Error::ListWorkersError(value.error_data, value.error_param), //(10044, "list workers error", "查询worker列表错误"),
+            (10045, _, _) => Error::ListMastersError(value.error_data, value.error_param), //(10045, "list masters error", "查询master列表错误"),
+            (10046, _, _) => Error::UpdateProjectError(value.error_data, value.error_param), //(10046, "update project error", "更新项目信息错误"),
+            (10047, _, _) => Error::QueryProjectDetailsByCodeError(value.error_data, value.error_param), //(10047, "query project details by code error", "查询项目详细信息错误"),
+            (10048, _, _) => Error::CreateProjectError(value.error_data, value.error_param), //(10048, "create project error", "创建项目错误"),
+            (10049, _, _) => Error::LoginUserQueryProjectListPagingError(value.error_data, value.error_param), //(10049, "login user query project list paging error", "分页查询项目列表错误"),
+            (10050, _, _) => Error::DeleteProjectError(value.error_data, value.error_param), //(10050, "delete project error", "删除项目错误"),
+            (10051, _, _) => Error::QueryUnauthorizedProjectError(value.error_data, value.error_param), //(10051, "query unauthorized project error", "查询未授权项目错误"),
+            (10052, _, _) => Error::QueryAuthorizedProject(value.error_data, value.error_param), //(10052, "query authorized project", "查询授权项目错误"),
+            (10053, _, _) => Error::QueryQueueListError(value.error_data, value.error_param), //(10053, "query queue list error", "查询队列列表错误"),
+            (10054, _, _) => Error::CreateResourceError(value.error_data, value.error_param), //(10054, "create resource error", "创建资源错误"),
+            (10055, _, _) => Error::UpdateResourceError(value.error_data, value.error_param), //(10055, "update resource error", "更新资源错误"),
+            (10056, _, _) => Error::QueryResourcesListError(value.error_data, value.error_param), //(10056, "query resources list error", "查询资源列表错误"),
+            (10057, "query resources list paging", "分页查询资源列表错误") => {
                 Error::QueryResourcesListPaging(value.error_data, value.error_param)
             }
             //(10057, "query resources list paging", "分页查询资源列表错误"),
-            (10058, ..) => Error::DeleteResourceError(value.error_data, value.error_param), //(10058, "delete resource error", "删除资源错误"),
-            (10059, ..) => Error::VerifyResourceByNameAndTypeError(value.error_data, value.error_param), //(10059, "verify resource by name and type error", "资源名称或类型验证错误"),
-            (10060, ..) => Error::ViewResourceFileOnLineError(value.error_data, value.error_param), //(10060, "view resource file online error", "查看资源文件错误"),
-            (10061, ..) => Error::CreateResourceFileOnLineError(value.error_data, value.error_param), //(10061, "create resource file online error", "创建资源文件错误"),
-            (10062, ..) => Error::ResourceFileIsEmpty(value.error_data, value.error_param), //(10062, "resource file is empty", "资源文件内容不能为空"),
-            (10063, ..) => Error::EditResourceFileOnLineError(value.error_data, value.error_param), //(10063, "edit resource file online error", "更新资源文件错误"),
-            (10064, ..) => Error::DownloadResourceFileError(value.error_data, value.error_param), //(10064, "download resource file error", "下载资源文件错误"),
-            (10065, ..) => Error::CreateUdfFunctionError(value.error_data, value.error_param), //(10065, "create udf function error", "创建UDF函数错误"),
-            (10066, ..) => Error::ViewUdfFunctionError(value.error_data, value.error_param), //(10066, "view udf function error", "查询UDF函数错误"),
-            (10067, ..) => Error::UpdateUdfFunctionError(value.error_data, value.error_param), //(10067, "update udf function error", "更新UDF函数错误"),
-            (10068, ..) => Error::QueryUdfFunctionListPagingError(value.error_data, value.error_param), //(10068, "query udf function list paging error", "分页查询UDF函数列表错误"),
-            (10069, ..) => Error::QueryDatasourceByTypeError(value.error_data, value.error_param), //(10069, "query datasource by type error", "查询数据源信息错误"),
-            (10070, ..) => Error::VerifyUdfFunctionNameError(value.error_data, value.error_param), //(10070, "verify udf function name error", "UDF函数名称验证错误"),
-            (10071, ..) => Error::DeleteUdfFunctionError(value.error_data, value.error_param), //(10071, "delete udf function error", "删除UDF函数错误"),
-            (10072, ..) => Error::AuthorizedFileResourceError(value.error_data, value.error_param), //(10072, "authorized file resource error", "授权资源文件错误"),
-            (10073, ..) => Error::AuthorizeResourceTree(value.error_data, value.error_param), //(10073, "authorize resource tree display error", "授权资源目录树错误"),
-            (10074, ..) => Error::UnauthorizedUdfFunctionError(value.error_data, value.error_param), //(10074, "unauthorized udf function error", "查询未授权UDF函数错误"),
-            (10075, ..) => Error::AuthorizedUdfFunctionError(value.error_data, value.error_param), //(10075, "authorized udf function error", "授权UDF函数错误"),
-            (10076, ..) => Error::CreateScheduleError(value.error_data, value.error_param), //(10076, "create schedule error", "创建调度配置错误"),
-            (10077, ..) => Error::UpdateScheduleError(value.error_data, value.error_param), //(10077, "update schedule error", "更新调度配置错误"),
-            (10078, ..) => Error::PublishScheduleOnlineError(value.error_data, value.error_param), //(10078, "publish schedule online error", "上线调度配置错误"),
-            (10079, ..) => Error::OfflineScheduleError(value.error_data, value.error_param), //(10079, "offline schedule error", "下线调度配置错误"),
-            (10080, ..) => Error::QueryScheduleListPagingError(value.error_data, value.error_param), //(10080, "query schedule list paging error", "分页查询调度配置列表错误"),
-            (10081, ..) => Error::QueryScheduleListError(value.error_data, value.error_param), //(10081, "query schedule list error", "查询调度配置列表错误"),
-            (10082, ..) => Error::QueryTaskListPagingError(value.error_data, value.error_param), //(10082, "query task list paging error", "分页查询任务列表错误"),
-            (10083, ..) => Error::QueryTaskRecordListPagingError(value.error_data, value.error_param), //(10083, "query task record list paging error", "分页查询任务记录错误"),
-            (10084, ..) => Error::CreateTenantError(value.error_data, value.error_param), //(10084, "create tenant error", "创建租户错误"),
-            (10085, ..) => Error::QueryTenantListPagingError(value.error_data, value.error_param), //(10085, "query tenant list paging error", "分页查询租户列表错误"),
-            (10086, ..) => Error::QueryTenantListError(value.error_data, value.error_param), //(10086, "query tenant list error", "查询租户列表错误"),
-            (10087, ..) => Error::UpdateTenantError(value.error_data, value.error_param), //(10087, "update tenant error", "更新租户错误"),
-            (10088, ..) => Error::DeleteTenantByIdError(value.error_data, value.error_param), //(10088, "delete tenant by id error", "删除租户错误"),
-            (10089, ..) => Error::VerifyOsTenantCodeError(value.error_data, value.error_param), //(10089, "verify os tenant code error", "操作系统租户验证错误"),
-            (10090, ..) => Error::CreateUserError(value.error_data, value.error_param), //(10090, "create user error", "创建用户错误"),
-            (10091, ..) => Error::QueryUserListPagingError(value.error_data, value.error_param), //(10091, "query user list paging error", "分页查询用户列表错误"),
-            (10092, ..) => Error::UpdateUserError(value.error_data, value.error_param), //(10092, "update user error", "更新用户错误"),
-            (10093, ..) => Error::DeleteUserByIdError(value.error_data, value.error_param), //(10093, "delete user by id error", "删除用户错误"),
-            (10094, ..) => Error::GrantProjectError(value.error_data, value.error_param), //(10094, "grant project error", "授权项目错误"),
-            (10095, ..) => Error::GrantResourceError(value.error_data, value.error_param), //(10095, "grant resource error", "授权资源错误"),
-            (10096, ..) => Error::GrantUdfFunctionError(value.error_data, value.error_param), //(10096, "grant udf function error", "授权UDF函数错误"),
-            (10097, ..) => Error::GrantDatasourceError(value.error_data, value.error_param), //(10097, "grant datasource error", "授权数据源错误"),
-            (10098, ..) => Error::GetUserInfoError(value.error_data, value.error_param), //(10098, "get user info error", "获取用户信息错误"),
-            (10099, ..) => Error::UserListError(value.error_data, value.error_param), //(10099, "user list error", "查询用户列表错误"),
-            (10100, ..) => Error::VerifyUsernameError(value.error_data, value.error_param), //(10100, "verify username error", "用户名验证错误"),
-            (10101, ..) => Error::UnauthorizedUserError(value.error_data, value.error_param), //(10101, "unauthorized user error", "查询未授权用户错误"),
-            (10102, ..) => Error::AuthorizedUserError(value.error_data, value.error_param), //(10102, "authorized user error", "查询授权用户错误"),
-            (10103, ..) => Error::QueryTaskInstanceLogError(value.error_data, value.error_param), //(10103, "view task instance log error", "查询任务实例日志错误"),
-            (10104, ..) => Error::DownloadTaskInstanceLogFileError(value.error_data, value.error_param), //(10104, "download task instance log file error", "下载任务日志文件错误"),
-            (10105, ..) => Error::CreateProcessDefinitionError(value.error_data, value.error_param), //(10105, "create process definition error", "创建工作流错误"),
-            (10106, ..) => Error::VerifyProcessDefinitionNameUniqueError(value.error_data, value.error_param), //(10106, "verify process definition name unique error", "工作流定义名称验证错误"),
-            (10107, ..) => Error::UpdateProcessDefinitionError(value.error_data, value.error_param), //(10107, "update process definition error", "更新工作流定义错误"),
-            (10108, ..) => Error::ReleaseProcessDefinitionError(value.error_data, value.error_param), //(10108, "release process definition error", "上线工作流错误"),
-            (10109, ..) => Error::QueryDetailOfProcessDefinitionError(value.error_data, value.error_param), //(10109, "query detail of process definition error", "查询工作流详细信息错误"),
-            (10110, ..) => Error::QueryProcessDefinitionList(value.error_data, value.error_param), //(10110, "query process definition list", "查询工作流列表错误"),
-            (10111, ..) => Error::EncapsulationTreeviewStructureError(value.error_data, value.error_param), //(10111, "encapsulation treeview structure error", "查询工作流树形图数据错误"),
-            (10112, ..) => Error::GetTasksListByProcessDefinitionIdError(value.error_data, value.error_param), //(10112, "get tasks list by process definition id error", "查询工作流定义节点信息错误"),
-            (10113, ..) => Error::QueryProcessInstanceListPagingError(value.error_data, value.error_param), //(10113, "query process instance list paging error", "分页查询工作流实例列表错误"),
-            (10114, ..) => Error::QueryTaskListByProcessInstanceIdError(value.error_data, value.error_param), //(10114, "query task list by process instance id error", "查询任务实例列表错误"),
-            (10115, ..) => Error::UpdateProcessInstanceError(value.error_data, value.error_param), //(10115, "update process instance error", "更新工作流实例错误"),
-            (10116, ..) => Error::QueryProcessInstanceByIdError(value.error_data, value.error_param), //(10116, "query process instance by id error", "查询工作流实例错误"),
-            (10117, "delete process instance by id error", "删除工作流实例错误", ..) => {
+            (10058, _, _) => Error::DeleteResourceError(value.error_data, value.error_param), //(10058, "delete resource error", "删除资源错误"),
+            (10059, _, _) => Error::VerifyResourceByNameAndTypeError(value.error_data, value.error_param), //(10059, "verify resource by name and type error", "资源名称或类型验证错误"),
+            (10060, _, _) => Error::ViewResourceFileOnLineError(value.error_data, value.error_param), //(10060, "view resource file online error", "查看资源文件错误"),
+            (10061, _, _) => Error::CreateResourceFileOnLineError(value.error_data, value.error_param), //(10061, "create resource file online error", "创建资源文件错误"),
+            (10062, _, _) => Error::ResourceFileIsEmpty(value.error_data, value.error_param), //(10062, "resource file is empty", "资源文件内容不能为空"),
+            (10063, _, _) => Error::EditResourceFileOnLineError(value.error_data, value.error_param), //(10063, "edit resource file online error", "更新资源文件错误"),
+            (10064, _, _) => Error::DownloadResourceFileError(value.error_data, value.error_param), //(10064, "download resource file error", "下载资源文件错误"),
+            (10065, _, _) => Error::CreateUdfFunctionError(value.error_data, value.error_param), //(10065, "create udf function error", "创建UDF函数错误"),
+            (10066, _, _) => Error::ViewUdfFunctionError(value.error_data, value.error_param), //(10066, "view udf function error", "查询UDF函数错误"),
+            (10067, _, _) => Error::UpdateUdfFunctionError(value.error_data, value.error_param), //(10067, "update udf function error", "更新UDF函数错误"),
+            (10068, _, _) => Error::QueryUdfFunctionListPagingError(value.error_data, value.error_param), //(10068, "query udf function list paging error", "分页查询UDF函数列表错误"),
+            (10069, _, _) => Error::QueryDatasourceByTypeError(value.error_data, value.error_param), //(10069, "query datasource by type error", "查询数据源信息错误"),
+            (10070, _, _) => Error::VerifyUdfFunctionNameError(value.error_data, value.error_param), //(10070, "verify udf function name error", "UDF函数名称验证错误"),
+            (10071, _, _) => Error::DeleteUdfFunctionError(value.error_data, value.error_param), //(10071, "delete udf function error", "删除UDF函数错误"),
+            (10072, _, _) => Error::AuthorizedFileResourceError(value.error_data, value.error_param), //(10072, "authorized file resource error", "授权资源文件错误"),
+            (10073, _, _) => Error::AuthorizeResourceTree(value.error_data, value.error_param), //(10073, "authorize resource tree display error", "授权资源目录树错误"),
+            (10074, _, _) => Error::UnauthorizedUdfFunctionError(value.error_data, value.error_param), //(10074, "unauthorized udf function error", "查询未授权UDF函数错误"),
+            (10075, _, _) => Error::AuthorizedUdfFunctionError(value.error_data, value.error_param), //(10075, "authorized udf function error", "授权UDF函数错误"),
+            (10076, _, _) => Error::CreateScheduleError(value.error_data, value.error_param), //(10076, "create schedule error", "创建调度配置错误"),
+            (10077, _, _) => Error::UpdateScheduleError(value.error_data, value.error_param), //(10077, "update schedule error", "更新调度配置错误"),
+            (10078, _, _) => Error::PublishScheduleOnlineError(value.error_data, value.error_param), //(10078, "publish schedule online error", "上线调度配置错误"),
+            (10079, _, _) => Error::OfflineScheduleError(value.error_data, value.error_param), //(10079, "offline schedule error", "下线调度配置错误"),
+            (10080, _, _) => Error::QueryScheduleListPagingError(value.error_data, value.error_param), //(10080, "query schedule list paging error", "分页查询调度配置列表错误"),
+            (10081, _, _) => Error::QueryScheduleListError(value.error_data, value.error_param), //(10081, "query schedule list error", "查询调度配置列表错误"),
+            (10082, _, _) => Error::QueryTaskListPagingError(value.error_data, value.error_param), //(10082, "query task list paging error", "分页查询任务列表错误"),
+            (10083, _, _) => Error::QueryTaskRecordListPagingError(value.error_data, value.error_param), //(10083, "query task record list paging error", "分页查询任务记录错误"),
+            (10084, _, _) => Error::CreateTenantError(value.error_data, value.error_param), //(10084, "create tenant error", "创建租户错误"),
+            (10085, _, _) => Error::QueryTenantListPagingError(value.error_data, value.error_param), //(10085, "query tenant list paging error", "分页查询租户列表错误"),
+            (10086, _, _) => Error::QueryTenantListError(value.error_data, value.error_param), //(10086, "query tenant list error", "查询租户列表错误"),
+            (10087, _, _) => Error::UpdateTenantError(value.error_data, value.error_param), //(10087, "update tenant error", "更新租户错误"),
+            (10088, _, _) => Error::DeleteTenantByIdError(value.error_data, value.error_param), //(10088, "delete tenant by id error", "删除租户错误"),
+            (10089, _, _) => Error::VerifyOsTenantCodeError(value.error_data, value.error_param), //(10089, "verify os tenant code error", "操作系统租户验证错误"),
+            (10090, _, _) => Error::CreateUserError(value.error_data, value.error_param), //(10090, "create user error", "创建用户错误"),
+            (10091, _, _) => Error::QueryUserListPagingError(value.error_data, value.error_param), //(10091, "query user list paging error", "分页查询用户列表错误"),
+            (10092, _, _) => Error::UpdateUserError(value.error_data, value.error_param), //(10092, "update user error", "更新用户错误"),
+            (10093, _, _) => Error::DeleteUserByIdError(value.error_data, value.error_param), //(10093, "delete user by id error", "删除用户错误"),
+            (10094, _, _) => Error::GrantProjectError(value.error_data, value.error_param), //(10094, "grant project error", "授权项目错误"),
+            (10095, _, _) => Error::GrantResourceError(value.error_data, value.error_param), //(10095, "grant resource error", "授权资源错误"),
+            (10096, _, _) => Error::GrantUdfFunctionError(value.error_data, value.error_param), //(10096, "grant udf function error", "授权UDF函数错误"),
+            (10097, _, _) => Error::GrantDatasourceError(value.error_data, value.error_param), //(10097, "grant datasource error", "授权数据源错误"),
+            (10098, _, _) => Error::GetUserInfoError(value.error_data, value.error_param), //(10098, "get user info error", "获取用户信息错误"),
+            (10099, _, _) => Error::UserListError(value.error_data, value.error_param), //(10099, "user list error", "查询用户列表错误"),
+            (10100, _, _) => Error::VerifyUsernameError(value.error_data, value.error_param), //(10100, "verify username error", "用户名验证错误"),
+            (10101, _, _) => Error::UnauthorizedUserError(value.error_data, value.error_param), //(10101, "unauthorized user error", "查询未授权用户错误"),
+            (10102, _, _) => Error::AuthorizedUserError(value.error_data, value.error_param), //(10102, "authorized user error", "查询授权用户错误"),
+            (10103, _, _) => Error::QueryTaskInstanceLogError(value.error_data, value.error_param), //(10103, "view task instance log error", "查询任务实例日志错误"),
+            (10104, _, _) => Error::DownloadTaskInstanceLogFileError(value.error_data, value.error_param), //(10104, "download task instance log file error", "下载任务日志文件错误"),
+            (10105, _, _) => Error::CreateProcessDefinitionError(value.error_data, value.error_param), //(10105, "create process definition error", "创建工作流错误"),
+            (10106, _, _) => Error::VerifyProcessDefinitionNameUniqueError(value.error_data, value.error_param), //(10106, "verify process definition name unique error", "工作流定义名称验证错误"),
+            (10107, _, _) => Error::UpdateProcessDefinitionError(value.error_data, value.error_param), //(10107, "update process definition error", "更新工作流定义错误"),
+            (10108, _, _) => Error::ReleaseProcessDefinitionError(value.error_data, value.error_param), //(10108, "release process definition error", "上线工作流错误"),
+            (10109, _, _) => Error::QueryDetailOfProcessDefinitionError(value.error_data, value.error_param), //(10109, "query detail of process definition error", "查询工作流详细信息错误"),
+            (10110, _, _) => Error::QueryProcessDefinitionList(value.error_data, value.error_param), //(10110, "query process definition list", "查询工作流列表错误"),
+            (10111, _, _) => Error::EncapsulationTreeviewStructureError(value.error_data, value.error_param), //(10111, "encapsulation treeview structure error", "查询工作流树形图数据错误"),
+            (10112, _, _) => Error::GetTasksListByProcessDefinitionIdError(value.error_data, value.error_param), //(10112, "get tasks list by process definition id error", "查询工作流定义节点信息错误"),
+            (10113, _, _) => Error::QueryProcessInstanceListPagingError(value.error_data, value.error_param), //(10113, "query process instance list paging error", "分页查询工作流实例列表错误"),
+            (10114, _, _) => Error::QueryTaskListByProcessInstanceIdError(value.error_data, value.error_param), //(10114, "query task list by process instance id error", "查询任务实例列表错误"),
+            (10115, _, _) => Error::UpdateProcessInstanceError(value.error_data, value.error_param), //(10115, "update process instance error", "更新工作流实例错误"),
+            (10116, _, _) => Error::QueryProcessInstanceByIdError(value.error_data, value.error_param), //(10116, "query process instance by id error", "查询工作流实例错误"),
+            (10117, "delete process instance by id error", "删除工作流实例错误") => {
                 Error::DeleteProcessInstanceByIdError(value.error_data, value.error_param)
             } //(10117, "delete process instance by id error", "删除工作流实例错误"),
-            (10118, ..) => Error::QuerySubProcessInstanceDetailInfoByTaskIdError(value.error_data, value.error_param), //(10118, "query sub process instance detail info by task id error", "查询子流程任务实例错误"),
-            (10119, ..) => Error::QueryParentProcessInstanceDetailInfoBySubProcessInstanceIdError(
+            (10118, _, _) => Error::QuerySubProcessInstanceDetailInfoByTaskIdError(value.error_data, value.error_param), //(10118, "query sub process instance detail info by task id error", "查询子流程任务实例错误"),
+            (10119, _, _) => Error::QueryParentProcessInstanceDetailInfoBySubProcessInstanceIdError(
                 value.error_data,
                 value.error_param,
             ), //(10119, "query parent process instance detail info by sub process instance id error", "查询子流程该工作流实例错误"),
-            (10120, ..) => Error::QueryProcessInstanceAllVariablesError(value.error_data, value.error_param), //(10120, "query process instance all variables error", "查询工作流自定义变量信息错误"),
-            (10121, ..) => Error::EncapsulationProcessInstanceGanttStructureError(value.error_data, value.error_param), //(10121, "encapsulation process instance gantt structure error", "查询工作流实例甘特图数据错误"),
-            (10122, ..) => Error::QueryProcessDefinitionListPagingError(value.error_data, value.error_param), //(10122, "query process definition list paging error", "分页查询工作流定义列表错误"),
-            (10123, ..) => Error::SignOutError(value.error_data, value.error_param), //(10123, "sign out error", "退出错误"),
-            (10124, ..) => Error::OsTenantCodeHasAlreadyExists(value.error_data, value.error_param), //(10124, "os tenant code has already exists", "操作系统租户已存在"),
-            (10125, ..) => Error::IpIsEmpty(value.error_data, value.error_param), //(10125, "ip is empty", "IP地址不能为空"),
-            (10126, ..) => Error::ScheduleCronReleaseNeedNotChange(value.error_data, value.error_param), //(10126, "schedule release is already {0}", "调度配置上线错误[{0}]"),
-            (10127, ..) => Error::CreateQueueError(value.error_data, value.error_param), //(10127, "create queue error", "创建队列错误"),
-            (10128, ..) => Error::QueueNotExist(value.error_data, value.error_param), //(10128, "queue {0} not exists", "队列ID[{0}]不存在"),
-            (10129, ..) => Error::QueueValueExist(value.error_data, value.error_param), //(10129, "queue value {0} already exists", "队列值[{0}]已存在"),
-            (10130, ..) => Error::QueueNameExist(value.error_data, value.error_param), //(10130, "queue name {0} already exists", "队列名称[{0}]已存在"),
-            (10131, ..) => Error::UpdateQueueError(value.error_data, value.error_param), //(10131, "update queue error", "更新队列信息错误"),
-            (10132, ..) => Error::NeedNotUpdateQueue(value.error_data, value.error_param), //(10132, "no content changes, no updates are required", "数据未变更，不需要更新队列信息"),
-            (10133, ..) => Error::VerifyQueueError(value.error_data, value.error_param), //(10133, "verify queue error", "验证队列信息错误"),
-            (10134, ..) => Error::NameNull(value.error_data, value.error_param), //(10134, "name must be not null", "名称不能为空"),
-            (10135, ..) => Error::NameExist(value.error_data, value.error_param), //(10135, "name {0} already exists", "名称[{0}]已存在"),
-            (10136, ..) => Error::SaveError(value.error_data, value.error_param), //(10136, "save error", "保存错误"),
-            (10117, "please delete the process definitions in project first!", "请先删除全部工作流定义", ..) => {
+            (10120, _, _) => Error::QueryProcessInstanceAllVariablesError(value.error_data, value.error_param), //(10120, "query process instance all variables error", "查询工作流自定义变量信息错误"),
+            (10121, _, _) => {
+                Error::EncapsulationProcessInstanceGanttStructureError(value.error_data, value.error_param)
+            } //(10121, "encapsulation process instance gantt structure error", "查询工作流实例甘特图数据错误"),
+            (10122, _, _) => Error::QueryProcessDefinitionListPagingError(value.error_data, value.error_param), //(10122, "query process definition list paging error", "分页查询工作流定义列表错误"),
+            (10123, _, _) => Error::SignOutError(value.error_data, value.error_param), //(10123, "sign out error", "退出错误"),
+            (10124, _, _) => Error::OsTenantCodeHasAlreadyExists(value.error_data, value.error_param), //(10124, "os tenant code has already exists", "操作系统租户已存在"),
+            (10125, _, _) => Error::IpIsEmpty(value.error_data, value.error_param), //(10125, "ip is empty", "IP地址不能为空"),
+            (10126, _, _) => Error::ScheduleCronReleaseNeedNotChange(value.error_data, value.error_param), //(10126, "schedule release is already {0}", "调度配置上线错误[{0}]"),
+            (10127, _, _) => Error::CreateQueueError(value.error_data, value.error_param), //(10127, "create queue error", "创建队列错误"),
+            (10128, _, _) => Error::QueueNotExist(value.error_data, value.error_param), //(10128, "queue {0} not exists", "队列ID[{0}]不存在"),
+            (10129, _, _) => Error::QueueValueExist(value.error_data, value.error_param), //(10129, "queue value {0} already exists", "队列值[{0}]已存在"),
+            (10130, _, _) => Error::QueueNameExist(value.error_data, value.error_param), //(10130, "queue name {0} already exists", "队列名称[{0}]已存在"),
+            (10131, _, _) => Error::UpdateQueueError(value.error_data, value.error_param), //(10131, "update queue error", "更新队列信息错误"),
+            (10132, _, _) => Error::NeedNotUpdateQueue(value.error_data, value.error_param), //(10132, "no content changes, no updates are required", "数据未变更，不需要更新队列信息"),
+            (10133, _, _) => Error::VerifyQueueError(value.error_data, value.error_param), //(10133, "verify queue error", "验证队列信息错误"),
+            (10134, _, _) => Error::NameNull(value.error_data, value.error_param), //(10134, "name must be not null", "名称不能为空"),
+            (10135, _, _) => Error::NameExist(value.error_data, value.error_param), //(10135, "name {0} already exists", "名称[{0}]已存在"),
+            (10136, _, _) => Error::SaveError(value.error_data, value.error_param), //(10136, "save error", "保存错误"),
+            (10117, "please delete the process definitions in project first!", "请先删除全部工作流定义") => {
                 Error::DeleteProjectErrorDefinesNotNull(value.error_data, value.error_param)
             } //(10137, "please delete the process definitions in project first!", "请先删除全部工作流定义"),
-            (10138, ..) => Error::BatchDeleteProcessInstanceByIdsError(value.error_data, value.error_param), //(10117, "batch delete process instance by ids {0} error", "批量删除工作流实例错误: {0}"),
-            (10139, ..) => Error::PreviewScheduleError(value.error_data, value.error_param), //(10139, "preview schedule error", "预览调度配置错误"),
-            (10140, ..) => Error::ParseToCronExpressionError(value.error_data, value.error_param), //(10140, "parse cron to cron expression error", "解析调度表达式错误"),
-            (10141, ..) => Error::ScheduleStartTimeEndTimeSame(value.error_data, value.error_param), //(10141, "The start time must not be the same as the end", "开始时间不能和结束时间一样"),
-            (10142, ..) => Error::DeleteTenantByIdFail(value.error_data, value.error_param), //(10142, "delete tenant by id fail, for there are {0} process instances in executing using it", "删除租户失败，有[{0}]个运行中的工作流实例正在使用"),
-            (10143, ..) => Error::DeleteTenantByIdFailDefines(value.error_data, value.error_param), //(10143, "delete tenant by id fail, for there are {0} process definitions using it", "删除租户失败，有[{0}]个工作流定义正在使用"),
-            (10144, ..) => Error::DeleteTenantByIdFailUsers(value.error_data, value.error_param), //(10144, "delete tenant by id fail, for there are {0} users using it", "删除租户失败，有[{0}]个用户正在使用"),
-            (10145, ..) => Error::DeleteWorkerGroupByIdFail(value.error_data, value.error_param), //(10145, "delete worker group by id fail, for there are {0} process instances in executing using it", "删除Worker分组失败，有[{0}]个运行中的工作流实例正在使用"),
-            (10146, ..) => Error::QueryWorkerGroupFail(value.error_data, value.error_param), //(10146, "query worker group fail ", "查询worker分组失败"),
-            (10147, ..) => Error::DeleteWorkerGroupFail(value.error_data, value.error_param), //(10147, "delete worker group fail ", "删除worker分组失败"),
-            (10148, ..) => Error::UserDisabled(value.error_data, value.error_param), //(10148, "The current user is disabled", "当前用户已停用"),
-            (10149, ..) => Error::CopyProcessDefinitionError(value.error_data, value.error_param), //(10149, "copy process definition from {0} to {1} error : {2}", "从{0}复制工作流到{1}错误 : {2}"),
-            (10150, ..) => Error::MoveProcessDefinitionError(value.error_data, value.error_param), //(10150, "move process definition from {0} to {1} error : {2}", "从{0}移动工作流到{1}错误 : {2}"),
-            (10151, ..) => Error::SwitchProcessDefinitionVersionError(value.error_data, value.error_param), //(10151, "Switch process definition version error", "切换工作流版本出错"),
-            (10152, ..) => {
+            (10138, _, _) => Error::BatchDeleteProcessInstanceByIdsError(value.error_data, value.error_param), //(10117, "batch delete process instance by ids {0} error", "批量删除工作流实例错误: {0}"),
+            (10139, _, _) => Error::PreviewScheduleError(value.error_data, value.error_param), //(10139, "preview schedule error", "预览调度配置错误"),
+            (10140, _, _) => Error::ParseToCronExpressionError(value.error_data, value.error_param), //(10140, "parse cron to cron expression error", "解析调度表达式错误"),
+            (10141, _, _) => Error::ScheduleStartTimeEndTimeSame(value.error_data, value.error_param), //(10141, "The start time must not be the same as the end", "开始时间不能和结束时间一样"),
+            (10142, _, _) => Error::DeleteTenantByIdFail(value.error_data, value.error_param), //(10142, "delete tenant by id fail, for there are {0} process instances in executing using it", "删除租户失败，有[{0}]个运行中的工作流实例正在使用"),
+            (10143, _, _) => Error::DeleteTenantByIdFailDefines(value.error_data, value.error_param), //(10143, "delete tenant by id fail, for there are {0} process definitions using it", "删除租户失败，有[{0}]个工作流定义正在使用"),
+            (10144, _, _) => Error::DeleteTenantByIdFailUsers(value.error_data, value.error_param), //(10144, "delete tenant by id fail, for there are {0} users using it", "删除租户失败，有[{0}]个用户正在使用"),
+            (10145, _, _) => Error::DeleteWorkerGroupByIdFail(value.error_data, value.error_param), //(10145, "delete worker group by id fail, for there are {0} process instances in executing using it", "删除Worker分组失败，有[{0}]个运行中的工作流实例正在使用"),
+            (10146, _, _) => Error::QueryWorkerGroupFail(value.error_data, value.error_param), //(10146, "query worker group fail ", "查询worker分组失败"),
+            (10147, _, _) => Error::DeleteWorkerGroupFail(value.error_data, value.error_param), //(10147, "delete worker group fail ", "删除worker分组失败"),
+            (10148, _, _) => Error::UserDisabled(value.error_data, value.error_param), //(10148, "The current user is disabled", "当前用户已停用"),
+            (10149, _, _) => Error::CopyProcessDefinitionError(value.error_data, value.error_param), //(10149, "copy process definition from {0} to {1} error : {2}", "从{0}复制工作流到{1}错误 : {2}"),
+            (10150, _, _) => Error::MoveProcessDefinitionError(value.error_data, value.error_param), //(10150, "move process definition from {0} to {1} error : {2}", "从{0}移动工作流到{1}错误 : {2}"),
+            (10151, _, _) => Error::SwitchProcessDefinitionVersionError(value.error_data, value.error_param), //(10151, "Switch process definition version error", "切换工作流版本出错"),
+            (10152, _, _) => {
                 Error::SwitchProcessDefinitionVersionNotExistProcessDefinitionError(value.error_data, value.error_param)
             } //(10152  , "Switch process definition version error: not exists process definition, [process definition id {0}]", "切换工作流版本出错：工作流不存在，[工作流id {0}]"),
-            (10153, ..) => Error::SwitchProcessDefinitionVersionNotExistProcessDefinitionVersionError(
+            (10153, _, _) => Error::SwitchProcessDefinitionVersionNotExistProcessDefinitionVersionError(
                 value.error_data,
                 value.error_param,
             ), //(10153 , "Switch process defi:nition version error: not exists process definition version, [process definition id {0}] [version number {1}]", "切换工作流版本出错：工作流版本信息不存在，[工作流id {0}] [版本号 {1}]"),
-            (10154, ..) => Error::QueryProcessDefinitionVersionsError(value.error_data, value.error_param), //(10154, "query process definition versions error", "查询工作流历史版本信息出错"),
-            (10156, ..) => Error::DeleteProcessDefinitionVersionError(value.error_data, value.error_param), //(10156, "delete process definition version error", "删除工作流历史版本出错"),
+            (10154, _, _) => Error::QueryProcessDefinitionVersionsError(value.error_data, value.error_param), //(10154, "query process definition versions error", "查询工作流历史版本信息出错"),
+            (10156, _, _) => Error::DeleteProcessDefinitionVersionError(value.error_data, value.error_param), //(10156, "delete process definition version error", "删除工作流历史版本出错"),
 
-            (10157, ..) => Error::QueryUserCreatedProjectError(value.error_data, value.error_param), //(10157, "query user created project error error", "查询用户创建的项目错误"),
-            (10158, ..) => Error::ProcessDefinitionCodesIsEmpty(value.error_data, value.error_param), //(10158, "process definition codes is empty", "工作流CODES不能为空"),
-            (10159, ..) => Error::BatchCopyProcessDefinitionError(value.error_data, value.error_param), //(10159, "batch copy process definition error", "复制工作流错误"),
-            (10160, ..) => Error::BatchMoveProcessDefinitionError(value.error_data, value.error_param), //(10160, "batch move process definition error", "移动工作流错误"),
-            (10161, ..) => Error::QueryWorkflowLineageError(value.error_data, value.error_param), //(10161, "query workflow lineage error", "查询血缘失败"),
-            (10162, ..) => Error::QueryAuthorizedAndUserCreatedProjectError(value.error_data, value.error_param), //(10162, "query authorized and user created project error error", "查询授权的和用户创建的项目错误"),
-            (10163, ..) => Error::DeleteProcessDefinitionByCodeFail(value.error_data, value.error_param), //(10163, "delete process definition by code fail, for there are {0} process instances in executing using it", "删除工作流定义失败，有[{0}]个运行中的工作流实例正在使用"),
-            (10164, ..) => Error::CheckOsTenantCodeError(value.error_data, value.error_param), //(10164, "Tenant code invalid, should follow linux's users naming conventions", "非法的租户名，需要遵守 Linux 用户命名规范"),
-            (10165, ..) => Error::ForceTaskSuccessError(value.error_data, value.error_param), //(10165, "force task success error", "强制成功任务实例错误"),
-            (10166, ..) => Error::TaskInstanceStateOperationError(value.error_data, value.error_param), //(10166, "the status of task instance {0} is {1},Cannot perform force success operation", "任务实例[{0}]的状态是[{1}]，无法执行强制成功操作"),
-            (10167, ..) => Error::DatasourceTypeNotExist(value.error_data, value.error_param), //(10167, "data source type not exist", "数据源类型不存在"),
-            (10168, ..) => Error::ProcessDefinitionNameExist(value.error_data, value.error_param), //(10168, "process definition name {0} already exists", "工作流定义名称[{0}]已存在"),
-            (10169, ..) => Error::DatasourceDbTypeIllegal(value.error_data, value.error_param), //(10169, "datasource type illegal", "数据源类型参数不合法"),
-            (10170, ..) => Error::DatasourcePortIllegal(value.error_data, value.error_param), //(10170, "datasource port illegal", "数据源端口参数不合法"),
-            (10171, ..) => Error::DatasourceOtherParamsIllegal(value.error_data, value.error_param), //(10171, "datasource other params illegal", "数据源其他参数不合法"),
-            (10172, ..) => Error::DatasourceNameIllegal(value.error_data, value.error_param), //(10172, "datasource name illegal", "数据源名称不合法"),
-            (10173, ..) => Error::DatasourceHostIllegal(value.error_data, value.error_param), //(10173, "datasource host illegal", "数据源HOST不合法"),
-            (10174, ..) => Error::DeleteWorkerGroupNotExist(value.error_data, value.error_param), //(10174, "delete worker group not exist ", "删除worker分组不存在"),
-            (10175, ..) => Error::CreateWorkerGroupForbiddenInDocker(value.error_data, value.error_param), //(10175, "create worker group forbidden in docker ", "创建worker分组在docker中禁止"),
-            (10176, ..) => Error::DeleteWorkerGroupForbiddenInDocker(value.error_data, value.error_param), //(10176, "delete worker group forbidden in docker ", "删除worker分组在docker中禁止"),
-            (10177, ..) => Error::WorkerAddressInvalid(value.error_data, value.error_param), //(10177, "worker address {0} invalid", "worker地址[{0}]无效"),
-            (10178, ..) => Error::QueryWorkerAddressListFail(value.error_data, value.error_param), //(10178, "query worker address list fail ", "查询worker地址列表失败"),
-            (10179, ..) => Error::TransformProjectOwnership(value.error_data, value.error_param), //(10179, "Please transform project ownership [{0}]", "请先转移项目所有权[{0}]"),
-            (10180, ..) => Error::QueryAlertGroupError(value.error_data, value.error_param), //(10180, "query alert group error", "查询告警组错误"),
-            (10181, ..) => Error::CurrentLoginUserTenantNotExist(value.error_data, value.error_param), //(10181, "the tenant of the currently login user is not specified", "未指定当前登录用户的租户"),
-            (10182, ..) => Error::RevokeProjectError(value.error_data, value.error_param), //(10182, "revoke project error", "撤销项目授权错误"),
-            (10183, ..) => Error::QueryAuthorizedUser(value.error_data, value.error_param), //(10183, "query authorized user error", "查询拥有项目权限的用户错误"),
-            (10184, ..) => Error::ProjectNotExist(value.error_data, value.error_param), //(10190, "This project was not found. Please refresh page.", "该项目不存在,请刷新页面"),
-            (10185, ..) => Error::TaskInstanceHostIsNull(value.error_data, value.error_param), //(10191, "task instance host is null", "任务实例host为空"),
-            (10186, ..) => Error::QueryExecutingWorkflowError(value.error_data, value.error_param), //(10192, "query executing workflow error", "查询运行的工作流实例错误"),
+            (10157, _, _) => Error::QueryUserCreatedProjectError(value.error_data, value.error_param), //(10157, "query user created project error error", "查询用户创建的项目错误"),
+            (10158, _, _) => Error::ProcessDefinitionCodesIsEmpty(value.error_data, value.error_param), //(10158, "process definition codes is empty", "工作流CODES不能为空"),
+            (10159, _, _) => Error::BatchCopyProcessDefinitionError(value.error_data, value.error_param), //(10159, "batch copy process definition error", "复制工作流错误"),
+            (10160, _, _) => Error::BatchMoveProcessDefinitionError(value.error_data, value.error_param), //(10160, "batch move process definition error", "移动工作流错误"),
+            (10161, _, _) => Error::QueryWorkflowLineageError(value.error_data, value.error_param), //(10161, "query workflow lineage error", "查询血缘失败"),
+            (10162, _, _) => Error::QueryAuthorizedAndUserCreatedProjectError(value.error_data, value.error_param), //(10162, "query authorized and user created project error error", "查询授权的和用户创建的项目错误"),
+            (10163, _, _) => Error::DeleteProcessDefinitionByCodeFail(value.error_data, value.error_param), //(10163, "delete process definition by code fail, for there are {0} process instances in executing using it", "删除工作流定义失败，有[{0}]个运行中的工作流实例正在使用"),
+            (10164, _, _) => Error::CheckOsTenantCodeError(value.error_data, value.error_param), //(10164, "Tenant code invalid, should follow linux's users naming conventions", "非法的租户名，需要遵守 Linux 用户命名规范"),
+            (10165, _, _) => Error::ForceTaskSuccessError(value.error_data, value.error_param), //(10165, "force task success error", "强制成功任务实例错误"),
+            (10166, _, _) => Error::TaskInstanceStateOperationError(value.error_data, value.error_param), //(10166, "the status of task instance {0} is {1},Cannot perform force success operation", "任务实例[{0}]的状态是[{1}]，无法执行强制成功操作"),
+            (10167, _, _) => Error::DatasourceTypeNotExist(value.error_data, value.error_param), //(10167, "data source type not exist", "数据源类型不存在"),
+            (10168, _, _) => Error::ProcessDefinitionNameExist(value.error_data, value.error_param), //(10168, "process definition name {0} already exists", "工作流定义名称[{0}]已存在"),
+            (10169, _, _) => Error::DatasourceDbTypeIllegal(value.error_data, value.error_param), //(10169, "datasource type illegal", "数据源类型参数不合法"),
+            (10170, _, _) => Error::DatasourcePortIllegal(value.error_data, value.error_param), //(10170, "datasource port illegal", "数据源端口参数不合法"),
+            (10171, _, _) => Error::DatasourceOtherParamsIllegal(value.error_data, value.error_param), //(10171, "datasource other params illegal", "数据源其他参数不合法"),
+            (10172, _, _) => Error::DatasourceNameIllegal(value.error_data, value.error_param), //(10172, "datasource name illegal", "数据源名称不合法"),
+            (10173, _, _) => Error::DatasourceHostIllegal(value.error_data, value.error_param), //(10173, "datasource host illegal", "数据源HOST不合法"),
+            (10174, _, _) => Error::DeleteWorkerGroupNotExist(value.error_data, value.error_param), //(10174, "delete worker group not exist ", "删除worker分组不存在"),
+            (10175, _, _) => Error::CreateWorkerGroupForbiddenInDocker(value.error_data, value.error_param), //(10175, "create worker group forbidden in docker ", "创建worker分组在docker中禁止"),
+            (10176, _, _) => Error::DeleteWorkerGroupForbiddenInDocker(value.error_data, value.error_param), //(10176, "delete worker group forbidden in docker ", "删除worker分组在docker中禁止"),
+            (10177, _, _) => Error::WorkerAddressInvalid(value.error_data, value.error_param), //(10177, "worker address {0} invalid", "worker地址[{0}]无效"),
+            (10178, _, _) => Error::QueryWorkerAddressListFail(value.error_data, value.error_param), //(10178, "query worker address list fail ", "查询worker地址列表失败"),
+            (10179, _, _) => Error::TransformProjectOwnership(value.error_data, value.error_param), //(10179, "Please transform project ownership [{0}]", "请先转移项目所有权[{0}]"),
+            (10180, _, _) => Error::QueryAlertGroupError(value.error_data, value.error_param), //(10180, "query alert group error", "查询告警组错误"),
+            (10181, _, _) => Error::CurrentLoginUserTenantNotExist(value.error_data, value.error_param), //(10181, "the tenant of the currently login user is not specified", "未指定当前登录用户的租户"),
+            (10182, _, _) => Error::RevokeProjectError(value.error_data, value.error_param), //(10182, "revoke project error", "撤销项目授权错误"),
+            (10183, _, _) => Error::QueryAuthorizedUser(value.error_data, value.error_param), //(10183, "query authorized user error", "查询拥有项目权限的用户错误"),
+            (10184, _, _) => Error::ProjectNotExist(value.error_data, value.error_param), //(10190, "This project was not found. Please refresh page.", "该项目不存在,请刷新页面"),
+            (10185, _, _) => Error::TaskInstanceHostIsNull(value.error_data, value.error_param), //(10191, "task instance host is null", "任务实例host为空"),
+            (10186, _, _) => Error::QueryExecutingWorkflowError(value.error_data, value.error_param), //(10192, "query executing workflow error", "查询运行的工作流实例错误"),
 
-            (20001, ..) => Error::UdfFunctionNotExist(value.error_data, value.error_param), //(20001, "UDF function not found", "UDF函数不存在"),
-            (20002, ..) => Error::UdfFunctionExists(value.error_data, value.error_param), //(20002, "UDF function already exists", "UDF函数已存在"),
-            (20004, ..) => Error::ResourceNotExist(value.error_data, value.error_param), //(20004, "resource not exist", "资源不存在"),
-            (20005, ..) => Error::ResourceExist(value.error_data, value.error_param), //(20005, "resource already exists", "资源已存在"),
-            (20006, ..) => Error::ResourceSuffixNotSupportView(value.error_data, value.error_param), //(20006, "resource suffix do not support online viewing", "资源文件后缀不支持查看"),
-            (20007, ..) => Error::ResourceSizeExceedLimit(value.error_data, value.error_param), //(20007, "upload resource file size exceeds limit", "上传资源文件大小超过限制"),
-            (20008, ..) => Error::ResourceSuffixForbidChange(value.error_data, value.error_param), //(20008, "resource suffix not allowed to be modified", "资源文件后缀不支持修改"),
-            (20009, ..) => Error::UdfResourceSuffixNotJar(value.error_data, value.error_param), //(20009, "UDF resource suffix name must be jar", "UDF资源文件后缀名只支持[jar]"),
-            (20010, ..) => Error::HdfsCopyFail(value.error_data, value.error_param), //(20010, "hdfs copy {0} -> {1} fail", "hdfs复制失败：[{0}] -> [{1}]"),
-            (20011, ..) => Error::ResourceFileExist(value.error_data, value.error_param), //(20011, "resource file {0} already exists in hdfs,please delete it or change name!", "资源文件[{0}]在hdfs中已存在，请删除或修改资源名"),
-            (20012, ..) => Error::ResourceFileNotExist(value.error_data, value.error_param), //(20012, "resource file {0} not exists !", "资源文件[{0}]不存在"),
-            (20013, ..) => Error::UdfResourceIsBound(value.error_data, value.error_param), //(20013, "udf resource file is bound by UDF functions:{0}", "udf函数绑定了资源文件[{0}]"),
-            (20014, ..) => Error::ResourceIsUsed(value.error_data, value.error_param), //(20014, "resource file is used by process definition", "资源文件被上线的流程定义使用了"),
-            (20015, ..) => Error::ParentResourceNotExist(value.error_data, value.error_param), //(20015, "parent resource not exist", "父资源文件不存在"),
-            (20016, ..) => Error::ResourceNotExistOrNoPermission(value.error_data, value.error_param), //(20016, "resource not exist or no permission,please view the task node and remove error resource", "请检查任务节点并移除无权限或者已删除的资源"),
-            (20017, ..) => Error::ResourceIsAuthorized(value.error_data, value.error_param), //(20017, "resource is authorized to user {0},suffix not allowed to be modified", "资源文件已授权其他用户[{0}],后缀不允许修改"),
+            (20001, _, _) => Error::UdfFunctionNotExist(value.error_data, value.error_param), //(20001, "UDF function not found", "UDF函数不存在"),
+            (20002, _, _) => Error::UdfFunctionExists(value.error_data, value.error_param), //(20002, "UDF function already exists", "UDF函数已存在"),
+            (20004, _, _) => Error::ResourceNotExist(value.error_data, value.error_param), //(20004, "resource not exist", "资源不存在"),
+            (20005, _, _) => Error::ResourceExist(value.error_data, value.error_param), //(20005, "resource already exists", "资源已存在"),
+            (20006, _, _) => Error::ResourceSuffixNotSupportView(value.error_data, value.error_param), //(20006, "resource suffix do not support online viewing", "资源文件后缀不支持查看"),
+            (20007, _, _) => Error::ResourceSizeExceedLimit(value.error_data, value.error_param), //(20007, "upload resource file size exceeds limit", "上传资源文件大小超过限制"),
+            (20008, _, _) => Error::ResourceSuffixForbidChange(value.error_data, value.error_param), //(20008, "resource suffix not allowed to be modified", "资源文件后缀不支持修改"),
+            (20009, _, _) => Error::UdfResourceSuffixNotJar(value.error_data, value.error_param), //(20009, "UDF resource suffix name must be jar", "UDF资源文件后缀名只支持[jar]"),
+            (20010, _, _) => Error::HdfsCopyFail(value.error_data, value.error_param), //(20010, "hdfs copy {0} -> {1} fail", "hdfs复制失败：[{0}] -> [{1}]"),
+            (20011, _, _) => Error::ResourceFileExist(value.error_data, value.error_param), //(20011, "resource file {0} already exists in hdfs,please delete it or change name!", "资源文件[{0}]在hdfs中已存在，请删除或修改资源名"),
+            (20012, _, _) => Error::ResourceFileNotExist(value.error_data, value.error_param), //(20012, "resource file {0} not exists !", "资源文件[{0}]不存在"),
+            (20013, _, _) => Error::UdfResourceIsBound(value.error_data, value.error_param), //(20013, "udf resource file is bound by UDF functions:{0}", "udf函数绑定了资源文件[{0}]"),
+            (20014, _, _) => Error::ResourceIsUsed(value.error_data, value.error_param), //(20014, "resource file is used by process definition", "资源文件被上线的流程定义使用了"),
+            (20015, _, _) => Error::ParentResourceNotExist(value.error_data, value.error_param), //(20015, "parent resource not exist", "父资源文件不存在"),
+            (20016, _, _) => Error::ResourceNotExistOrNoPermission(value.error_data, value.error_param), //(20016, "resource not exist or no permission,please view the task node and remove error resource", "请检查任务节点并移除无权限或者已删除的资源"),
+            (20017, _, _) => Error::ResourceIsAuthorized(value.error_data, value.error_param), //(20017, "resource is authorized to user {0},suffix not allowed to be modified", "资源文件已授权其他用户[{0}],后缀不允许修改"),
 
-            (30001, ..) => Error::UserNoOperationPerm(value.error_data, value.error_param), //(30001, "user has no operation privilege", "当前用户没有操作权限"),
-            (30002, ..) => Error::UserNoOperationProjectPerm(value.error_data, value.error_param), //(30002, "user {0} is not has project {1} permission", "当前用户[{0}]没有[{1}]项目的操作权限"),
+            (30001, _, _) => Error::UserNoOperationPerm(value.error_data, value.error_param), //(30001, "user has no operation privilege", "当前用户没有操作权限"),
+            (30002, _, _) => Error::UserNoOperationProjectPerm(value.error_data, value.error_param), //(30002, "user {0} is not has project {1} permission", "当前用户[{0}]没有[{1}]项目的操作权限"),
 
-            (50001, ..) => Error::ProcessInstanceNotExist(value.error_data, value.error_param), //(50001, "process instance {0} does not exist", "工作流实例[{0}]不存在"),
-            (50002, ..) => Error::ProcessInstanceExist(value.error_data, value.error_param), //(50002, "process instance {0} already exists", "工作流实例[{0}]已存在"),
-            (50003, ..) => Error::ProcessDefineNotExist(value.error_data, value.error_param), //(50003, "process definition {0} does not exist", "工作流定义[{0}]不存在"),
+            (50001, _, _) => Error::ProcessInstanceNotExist(value.error_data, value.error_param), //(50001, "process instance {0} does not exist", "工作流实例[{0}]不存在"),
+            (50002, _, _) => Error::ProcessInstanceExist(value.error_data, value.error_param), //(50002, "process instance {0} already exists", "工作流实例[{0}]已存在"),
+            (50003, _, _) => Error::ProcessDefineNotExist(value.error_data, value.error_param), //(50003, "process definition {0} does not exist", "工作流定义[{0}]不存在"),
             (
                 50004,
                 "process definition {0} process version {1} not online",
                 "工作流定义[{0}] 工作流版本[{1}]不是上线状态",
-                ..,
             ) => Error::ProcessDefineNotRelease(value.error_data, value.error_param), //(50004, "process definition {0} process version {1} not online", "工作流定义[{0}] 工作流版本[{1}]不是上线状态"),
-            (50004, "exist sub process definition not online", "存在子工作流定义不是上线状态", ..) => {
+            (50004, "exist sub process definition not online", "存在子工作流定义不是上线状态") => {
                 Error::SubProcessDefineNotRelease(value.error_data, value.error_param)
             } //(50004, "exist sub process definition not online", "存在子工作流定义不是上线状态"),
-            (50005, ..) => Error::ProcessInstanceAlreadyChanged(value.error_data, value.error_param), //(50005, "the status of process instance {0} is already {1}", "工作流实例[{0}]的状态已经是[{1}]"),
-            (50006, ..) => Error::ProcessInstanceStateOperationError(value.error_data, value.error_param), //(50006, "the status of process instance {0} is {1},Cannot perform {2} operation", "工作流实例[{0}]的状态是[{1}]，无法执行[{2}]操作"),
-            (50007, ..) => Error::SubProcessInstanceNotExist(value.error_data, value.error_param), //(50007, "the task belong to process instance does not exist", "子工作流实例不存在"),
-            (50008, ..) => Error::ProcessDefineNotAllowedEdit(value.error_data, value.error_param), //(50008, "process definition {0} does not allow edit", "工作流定义[{0}]不允许修改"),
-            (50009, ..) => Error::ProcessInstanceExecutingCommand(value.error_data, value.error_param), //(50009, "process instance {0} is executing the command, please wait ...", "工作流实例[{0}]正在执行命令，请稍等..."),
-            (50010, ..) => Error::ProcessInstanceNotSubProcessInstance(value.error_data, value.error_param), //(50010, "process instance {0} is not sub process instance", "工作流实例[{0}]不是子工作流实例"),
-            (50011, ..) => Error::TaskInstanceStateCountError(value.error_data, value.error_param), //(50011, "task instance state count error", "查询各状态任务实例数错误"),
-            (50012, ..) => Error::CountProcessInstanceStateError(value.error_data, value.error_param), //(50012, "count process instance state error", "查询各状态流程实例数错误"),
-            (50013, ..) => Error::CountProcessDefinitionUserError(value.error_data, value.error_param), //(50013, "count process definition user error", "查询各用户流程定义数错误"),
-            (50014, "start process instance error", "运行工作流实例错误", ..) => {
+            (50005, _, _) => Error::ProcessInstanceAlreadyChanged(value.error_data, value.error_param), //(50005, "the status of process instance {0} is already {1}", "工作流实例[{0}]的状态已经是[{1}]"),
+            (50006, _, _) => Error::ProcessInstanceStateOperationError(value.error_data, value.error_param), //(50006, "the status of process instance {0} is {1},Cannot perform {2} operation", "工作流实例[{0}]的状态是[{1}]，无法执行[{2}]操作"),
+            (50007, _, _) => Error::SubProcessInstanceNotExist(value.error_data, value.error_param), //(50007, "the task belong to process instance does not exist", "子工作流实例不存在"),
+            (50008, _, _) => Error::ProcessDefineNotAllowedEdit(value.error_data, value.error_param), //(50008, "process definition {0} does not allow edit", "工作流定义[{0}]不允许修改"),
+            (50009, _, _) => Error::ProcessInstanceExecutingCommand(value.error_data, value.error_param), //(50009, "process instance {0} is executing the command, please wait ...", "工作流实例[{0}]正在执行命令，请稍等..."),
+            (50010, _, _) => Error::ProcessInstanceNotSubProcessInstance(value.error_data, value.error_param), //(50010, "process instance {0} is not sub process instance", "工作流实例[{0}]不是子工作流实例"),
+            (50011, _, _) => Error::TaskInstanceStateCountError(value.error_data, value.error_param), //(50011, "task instance state count error", "查询各状态任务实例数错误"),
+            (50012, _, _) => Error::CountProcessInstanceStateError(value.error_data, value.error_param), //(50012, "count process instance state error", "查询各状态流程实例数错误"),
+            (50013, _, _) => Error::CountProcessDefinitionUserError(value.error_data, value.error_param), //(50013, "count process definition user error", "查询各用户流程定义数错误"),
+            (50014, "start process instance error", "运行工作流实例错误") => {
                 Error::StartProcessInstanceError(value.error_data, value.error_param)
             } //(50014, "start process instance error", "运行工作流实例错误"),
-            (50014, "batch start process instance error: {0}", "批量运行工作流实例错误: {0}", ..) => {
+            (50014, "batch start process instance error: {0}", "批量运行工作流实例错误: {0}") => {
                 Error::BatchStartProcessInstanceError(value.error_data, value.error_param)
             } //(50014, "batch start process instance error: {0}", "批量运行工作流实例错误: {0}"),
-            (50014, "process instance delete error: {0}", "工作流实例删除[{0}]错误", ..) => {
+            (50014, "process instance delete error: {0}", "工作流实例删除[{0}]错误") => {
                 Error::ProcessInstanceError(value.error_data, value.error_param)
             } //(50014, "process instance delete error: {0}", "工作流实例删除[{0}]错误"),
-            (50015, "execute process instance error", "操作工作流实例错误", ..) => {
+            (50015, "execute process instance error", "操作工作流实例错误") => {
                 Error::ExecuteProcessInstanceError(value.error_data, value.error_param)
             } //(50015, "execute process instance error", "操作工作流实例错误")
-            (50016, "check process definition error", "工作流定义错误", ..) => {
+            (50016, "check process definition error", "工作流定义错误") => {
                 Error::CheckProcessDefinitionError(value.error_data, value.error_param)
             } //(50016, "check process definition error", "工作流定义错误")
-            (50017, "query recipients and copyers by process definition error", "查询收件人和抄送人错误", ..) => {
+            (50017, "query recipients and copyers by process definition error", "查询收件人和抄送人错误") => {
                 Error::QueryRecipientsAndCopyersByProcessDefinitionError(value.error_data, value.error_param)
             } //(50017, "query recipients and copyers by process definition error", "查询收件人和抄送人错误")
-            (50017, "data {0} not valid", "数据[{0}]无效", ..) => {
+            (50017, "data {0} not valid", "数据[{0}]无效") => {
                 Error::DataIsNotValid(value.error_data, value.error_param)
             } //(50017, "data {0} not valid", "数据[{0}]无效")
-            (50018, "data {0} is null", "数据[{0}]不能为空", ..) => {
+            (50018, "data {0} is null", "数据[{0}]不能为空") => {
                 Error::DataIsNull(value.error_data, value.error_param)
             } //(50018, "data {0} is null", "数据[{0}]不能为空")
-            (50019, "process node has cycle", "流程节点间存在循环依赖", ..) => {
+            (50019, "process node has cycle", "流程节点间存在循环依赖") => {
                 Error::ProcessNodeHasCycle(value.error_data, value.error_param)
             } //(50019, "process node has cycle", "流程节点间存在循环依赖")
-            (50020, "process node {0} parameter invalid", "流程节点[{0}]参数无效", ..) => {
+            (50020, "process node {0} parameter invalid", "流程节点[{0}]参数无效") => {
                 Error::ProcessNodeSParameterInvalid(value.error_data, value.error_param)
             } //(50020, "process node {0} parameter invalid", "流程节点[{0}]参数无效")
-            (50021, "process definition [{0}] is already online", "工作流定义[{0}]已上线", ..) => {
+            (50021, "process definition [{0}] is already online", "工作流定义[{0}]已上线") => {
                 Error::ProcessDefineStateOnline(value.error_data, value.error_param)
             } //(50021, "process definition [{0}] is already online", "工作流定义[{0}]已上线")
-            (50022, "delete process definition by code error", "删除工作流定义错误", ..) => {
+            (50022, "delete process definition by code error", "删除工作流定义错误") => {
                 Error::DeleteProcessDefineByCodeError(value.error_data, value.error_param)
             } //(50022, "delete process definition by code error", "删除工作流定义错误")
-            (50023, "the status of schedule {0} is already online", "调度配置[{0}]已上线", ..) => {
+            (50023, "the status of schedule {0} is already online", "调度配置[{0}]已上线") => {
                 Error::ScheduleCronStateOnline(value.error_data, value.error_param)
             } //(50023, "the status of schedule {0} is already online", "调度配置[{0}]已上线")
-            (50024, "delete schedule by id error", "删除调度配置错误", ..) => {
+            (50024, "delete schedule by id error", "删除调度配置错误") => {
                 Error::DeleteScheduleCronByIdError(value.error_data, value.error_param)
             } //(50024, "delete schedule by id error", "删除调度配置错误")
-            (50025, "batch delete process definition error", "批量删除工作流定义错误", ..) => {
+            (50025, "batch delete process definition error", "批量删除工作流定义错误") => {
                 Error::BatchDeleteProcessDefineError(value.error_data, value.error_param)
             } //(50025, "batch delete process definition error", "批量删除工作流定义错误")
-            (50026, "batch delete process definition by codes {0} error", "批量删除工作流定义[{0}]错误", ..) => {
+            (50026, "batch delete process definition by codes {0} error", "批量删除工作流定义[{0}]错误") => {
                 Error::BatchDeleteProcessDefineByCodesError(value.error_data, value.error_param)
             } //(50026, "batch delete process definition by codes {0} error", "批量删除工作流定义[{0}]错误")
-            (50026, "delete process definition by codes {0} error", "删除工作流定义[{0}]错误", ..) => {
+            (50026, "delete process definition by codes {0} error", "删除工作流定义[{0}]错误") => {
                 Error::DeleteProcessDefineByCodesError(value.error_data, value.error_param)
             } //(50026, "delete process definition by codes {0} error", "删除工作流定义[{0}]错误")
             (
                 50027,
                 "there is not any tenant suitable, please choose a tenant available.",
                 "没有合适的租户，请选择可用的租户",
-                ..,
             ) => Error::TenantNotSuitable(value.error_data, value.error_param), //(50027, "there is not any tenant suitable, please choose a tenant available.", "没有合适的租户，请选择可用的租户")
-            (50028, "export process definition by id error", "导出工作流定义错误", ..) => {
+            (50028, "export process definition by id error", "导出工作流定义错误") => {
                 Error::ExportProcessDefineByIdError(value.error_data, value.error_param)
             } //(50028, "export process definition by id error", "导出工作流定义错误")
-            (50028, "batch export process definition by ids error", "批量导出工作流定义错误", ..) => {
+            (50028, "batch export process definition by ids error", "批量导出工作流定义错误") => {
                 Error::BatchExportProcessDefineByIdsError(value.error_data, value.error_param)
             } //(50028, "batch export process definition by ids error", "批量导出工作流定义错误")
-            (50029, "import process definition error", "导入工作流定义错误", ..) => {
+            (50029, "import process definition error", "导入工作流定义错误") => {
                 Error::ImportProcessDefineError(value.error_data, value.error_param)
             } //(50029, "import process definition error", "导入工作流定义错误")
-            (50030, "task definition [{0}] does not exist", "任务定义[{0}]不存在", ..) => {
+            (50030, "task definition [{0}] does not exist", "任务定义[{0}]不存在") => {
                 Error::TaskDefineNotExist(value.error_data, value.error_param)
             } //(50030, "task definition [{0}] does not exist", "任务定义[{0}]不存在")
-            (50032, "create process task relation error", "创建工作流任务关系错误", ..) => {
+            (50032, "create process task relation error", "创建工作流任务关系错误") => {
                 Error::CreateProcessTaskRelationError(value.error_data, value.error_param)
             } //(50032, "create process task relation error", "创建工作流任务关系错误")
-            (50033, "process task relation [{0}] does not exist", "工作流任务关系[{0}]不存在", ..) => {
+            (50033, "process task relation [{0}] does not exist", "工作流任务关系[{0}]不存在") => {
                 Error::ProcessTaskRelationNotExist(value.error_data, value.error_param)
             } //(50033, "process task relation [{0}] does not exist", "工作流任务关系[{0}]不存在")
             (
                 50034,
                 "process task relation is already exist, processCode:[{0}]",
                 "工作流任务关系已存在, processCode:[{0}]",
-                ..,
             ) => Error::ProcessTaskRelationExist(value.error_data, value.error_param), //(50034, "process task relation is already exist, processCode:[{0}]", "工作流任务关系已存在, processCode:[{0}]")
-            (50035, "process dag is empty", "工作流dag是空", ..) => {
+            (50035, "process dag is empty", "工作流dag是空") => {
                 Error::ProcessDagIsEmpty(value.error_data, value.error_param)
             } //(50035, "process dag is empty", "工作流dag是空")
-            (50036, "check process task relation error", "工作流任务关系参数错误", ..) => {
+            (50036, "check process task relation error", "工作流任务关系参数错误") => {
                 Error::CheckProcessTaskRelationError(value.error_data, value.error_param)
             } //(50036, "check process task relation error", "工作流任务关系参数错误")
-            (50037, "create task definition error", "创建任务错误", ..) => {
+            (50037, "create task definition error", "创建任务错误") => {
                 Error::CreateTaskDefinitionError(value.error_data, value.error_param)
             } //(50037, "create task definition error", "创建任务错误")
-            (50038, "update task definition error", "更新任务定义错误", ..) => {
+            (50038, "update task definition error", "更新任务定义错误") => {
                 Error::UpdateTaskDefinitionError(value.error_data, value.error_param)
             } //(50038, "update task definition error", "更新任务定义错误")
-            (50039, "query task definition versions error", "查询任务历史版本信息出错", ..) => {
+            (50039, "query task definition versions error", "查询任务历史版本信息出错") => {
                 Error::QueryTaskDefinitionVersionsError(value.error_data, value.error_param)
             } //(50039, "query task definition versions error", "查询任务历史版本信息出错")
-            (50040, "Switch task definition version error", "切换任务版本出错", ..) => {
+            (50040, "Switch task definition version error", "切换任务版本出错") => {
                 Error::SwitchTaskDefinitionVersionError(value.error_data, value.error_param)
             } //(50040, "Switch task definition version error", "切换任务版本出错")
-            (50041, "delete task definition version error", "删除任务历史版本出错", ..) => {
+            (50041, "delete task definition version error", "删除任务历史版本出错") => {
                 Error::DeleteTaskDefinitionVersionError(value.error_data, value.error_param)
             } //(50041, "delete task definition version error", "删除任务历史版本出错")
-            (50042, "delete task definition by code error", "删除任务定义错误", ..) => {
+            (50042, "delete task definition by code error", "删除任务定义错误") => {
                 Error::DeleteTaskDefineByCodeError(value.error_data, value.error_param)
             } //(50042, "delete task definition by code error", "删除任务定义错误")
-            (50043, "query detail of task definition error", "查询任务详细信息错误", ..) => {
+            (50043, "query detail of task definition error", "查询任务详细信息错误") => {
                 Error::QueryDetailOfTaskDefinitionError(value.error_data, value.error_param)
             } //(50043, "query detail of task definition error", "查询任务详细信息错误")
-            (50044, "query task definition list paging error", "分页查询任务定义列表错误", ..) => {
+            (50044, "query task definition list paging error", "分页查询任务定义列表错误") => {
                 Error::QueryTaskDefinitionListPagingError(value.error_data, value.error_param)
             } //(50044, "query task definition list paging error", "分页查询任务定义列表错误")
-            (50045, "task definition name [{0}] already exists", "任务定义名称[{0}]已经存在", ..) => {
+            (50045, "task definition name [{0}] already exists", "任务定义名称[{0}]已经存在") => {
                 Error::TaskDefinitionNameExisted(value.error_data, value.error_param)
             } //(50045, "task definition name [{0}] already exists", "任务定义名称[{0}]已经存在")
-            (50046, "release task definition error", "上线任务错误", ..) => {
+            (50046, "release task definition error", "上线任务错误") => {
                 Error::ReleaseTaskDefinitionError(value.error_data, value.error_param)
             } //(50046, "release task definition error", "上线任务错误")
-            (50047, "move process task relation error", "移动任务到其他工作流错误", ..) => {
+            (50047, "move process task relation error", "移动任务到其他工作流错误") => {
                 Error::MoveProcessTaskRelationError(value.error_data, value.error_param)
             } //(50047, "move process task relation error", "移动任务到其他工作流错误")
-            (50048, "delete process task relation error", "删除工作流任务关系错误", ..) => {
+            (50048, "delete process task relation error", "删除工作流任务关系错误") => {
                 Error::DeleteTaskProcessRelationError(value.error_data, value.error_param)
             } //(50048, "delete process task relation error", "删除工作流任务关系错误")
-            (50049, "query process task relation error", "查询工作流任务关系错误", ..) => {
+            (50049, "query process task relation error", "查询工作流任务关系错误") => {
                 Error::QueryTaskProcessRelationError(value.error_data, value.error_param)
             } //(50049, "query process task relation error", "查询工作流任务关系错误")
-            (50050, "task definition [{0}] is already online", "任务定义[{0}]已上线", ..) => {
+            (50050, "task definition [{0}] is already online", "任务定义[{0}]已上线") => {
                 Error::TaskDefineStateOnline(value.error_data, value.error_param)
             } //(50050, "task definition [{0}] is already online", "任务定义[{0}]已上线")
-            (50051, "Task exists downstream [{0}] dependence", "任务存在下游[{0}]依赖", ..) => {
+            (50051, "Task exists downstream [{0}] dependence", "任务存在下游[{0}]依赖") => {
                 Error::TaskHasDownstream(value.error_data, value.error_param)
             } //(50051, "Task exists downstream [{0}] dependence", "任务存在下游[{0}]依赖")
-            (50052, "Task [{0}] exists upstream dependence", "任务[{0}]存在上游依赖", ..) => {
+            (50052, "Task [{0}] exists upstream dependence", "任务[{0}]存在上游依赖") => {
                 Error::TaskHasUpstream(value.error_data, value.error_param)
             } //(50052, "Task [{0}] exists upstream dependence", "任务[{0}]存在上游依赖")
-            (50053, "the version that the master table is using", "主表正在使用该版本", ..) => {
+            (50053, "the version that the master table is using", "主表正在使用该版本") => {
                 Error::MainTableUsingVersion(value.error_data, value.error_param)
             } //(50053, "the version that the master table is using", "主表正在使用该版本")
-            (50054, "the project and the process is not match", "项目和工作流不匹配", ..) => {
+            (50054, "the project and the process is not match", "项目和工作流不匹配") => {
                 Error::ProjectProcessNotMatch(value.error_data, value.error_param)
             } //(50054, "the project and the process is not match", "项目和工作流不匹配")
-            (50055, "delete edge error", "删除工作流任务连接线错误", ..) => {
+            (50055, "delete edge error", "删除工作流任务连接线错误") => {
                 Error::DeleteEdgeError(value.error_data, value.error_param)
             } //(50055, "delete edge error", "删除工作流任务连接线错误")
-            (50056, "task state does not support modification", "当前任务不支持修改", ..) => {
+            (50056, "task state does not support modification", "当前任务不支持修改") => {
                 Error::NotSupportUpdateTaskDefinition(value.error_data, value.error_param)
             } //(50056, "task state does not support modification", "当前任务不支持修改")
-            (50057, "task type [{0}] does not support copy", "不支持复制的任务类型[{0}]", ..) => {
+            (50057, "task type [{0}] does not support copy", "不支持复制的任务类型[{0}]") => {
                 Error::NotSupportCopyTaskType(value.error_data, value.error_param)
             } //(50057, "task type [{0}] does not support copy", "不支持复制的任务类型[{0}]")
-            (60001, "hdfs not startup", "hdfs未启用", ..) => {
-                Error::HdfsNotStartup(value.error_data, value.error_param)
-            } //(60001, "hdfs not startup", "hdfs未启用")
-            (60002, "storage not startup", "存储未启用", ..) => {
+            (60001, "hdfs not startup", "hdfs未启用") => Error::HdfsNotStartup(value.error_data, value.error_param), //(60001, "hdfs not startup", "hdfs未启用")
+            (60002, "storage not startup", "存储未启用") => {
                 Error::StorageNotStartup(value.error_data, value.error_param)
             } //(60002, "storage not startup", "存储未启用")
-            (60003, "directory cannot be renamed", "S3无法重命名文件夹", ..) => {
+            (60003, "directory cannot be renamed", "S3无法重命名文件夹") => {
                 Error::S3CannotRename(value.error_data, value.error_param)
             } //(60003, "directory cannot be renamed", "S3无法重命名文件夹")
             // for monitor
-            (70001, "query database state error", "查询数据库状态错误", ..) => {
+            (70001, "query database state error", "查询数据库状态错误") => {
                 Error::QueryDatabaseStateError(value.error_data, value.error_param)
             } //(70001, "query database state error", "查询数据库状态错误")
 
-            (70010, ..) => Error::CreateAccessTokenError(value.error_data, value.error_param), //(70010, "create access token error", "创建访问token错误")
-            (70011, ..) => Error::GenerateTokenError(value.error_data, value.error_param), //(70011, "generate token error", "生成token错误")
-            (70012, ..) => Error::QueryAccesstokenListPagingError(value.error_data, value.error_param), //(70012, "query access token list paging error", "分页查询访问token列表错误")
-            (70013, ..) => Error::UpdateAccessTokenError(value.error_data, value.error_param), //(70013, "update access token error", "更新访问token错误")
-            (70014, ..) => Error::DeleteAccessTokenError(value.error_data, value.error_param), //(70014, "delete access token error", "删除访问token错误")
-            (70015, ..) => Error::AccessTokenNotExist(value.error_data, value.error_param), //(70015, "access token not exist", "访问token不存在")
-            (70016, ..) => Error::QueryAccesstokenByUserError(value.error_data, value.error_param), //(70016, "query access token by user error", "查询访问指定用户的token错误")
+            (70010, _, _) => Error::CreateAccessTokenError(value.error_data, value.error_param), //(70010, "create access token error", "创建访问token错误")
+            (70011, _, _) => Error::GenerateTokenError(value.error_data, value.error_param), //(70011, "generate token error", "生成token错误")
+            (70012, _, _) => Error::QueryAccesstokenListPagingError(value.error_data, value.error_param), //(70012, "query access token list paging error", "分页查询访问token列表错误")
+            (70013, _, _) => Error::UpdateAccessTokenError(value.error_data, value.error_param), //(70013, "update access token error", "更新访问token错误")
+            (70014, _, _) => Error::DeleteAccessTokenError(value.error_data, value.error_param), //(70014, "delete access token error", "删除访问token错误")
+            (70015, _, _) => Error::AccessTokenNotExist(value.error_data, value.error_param), //(70015, "access token not exist", "访问token不存在")
+            (70016, _, _) => Error::QueryAccesstokenByUserError(value.error_data, value.error_param), //(70016, "query access token by user error", "查询访问指定用户的token错误")
 
-            (80001, ..) => Error::CommandStateCountError(value.error_data, value.error_param), //(80001, "task instance state count error", "查询各状态任务实例数错误")
-            (80002, ..) => Error::NegativeSizeNumberError(value.error_data, value.error_param), //(80002, "query size number error", "查询size错误")
-            (80003, ..) => Error::StartTimeBiggerThanEndTimeError(value.error_data, value.error_param), //(80003, "start time bigger than end time error", "开始时间在结束时间之后错误")
-            (90001, ..) => Error::QueueCountError(value.error_data, value.error_param), //(90001, "queue count error", "查询队列数据错误")
+            (80001, _, _) => Error::CommandStateCountError(value.error_data, value.error_param), //(80001, "task instance state count error", "查询各状态任务实例数错误")
+            (80002, _, _) => Error::NegativeSizeNumberError(value.error_data, value.error_param), //(80002, "query size number error", "查询size错误")
+            (80003, _, _) => Error::StartTimeBiggerThanEndTimeError(value.error_data, value.error_param), //(80003, "start time bigger than end time error", "开始时间在结束时间之后错误")
+            (90001, _, _) => Error::QueueCountError(value.error_data, value.error_param), //(90001, "queue count error", "查询队列数据错误")
 
-            (100001, ..) => Error::KerberosStartupState(value.error_data, value.error_param), //(100001, "get kerberos startup state error", "获取kerberos启动状态错误")
+            (100001, _, _) => Error::KerberosStartupState(value.error_data, value.error_param), //(100001, "get kerberos startup state error", "获取kerberos启动状态错误")
 
             // audit log
-            (10057, "query audit log list paging", "分页查询日志列表错误", ..) => {
+            (10057, "query audit log list paging", "分页查询日志列表错误") => {
                 Error::QueryAuditLogListPaging(value.error_data, value.error_param)
             } //(10057, "query audit log list paging", "分页查询日志列表错误")
 
             //plugin
-            (110001, ..) => Error::PluginNotAUiComponent(value.error_data, value.error_param), //(110001, "query plugin error, this plugin has no UI component", "查询插件错误，此插件无UI组件")
-            (110002, ..) => Error::QueryPluginsResultIsNull(value.error_data, value.error_param), //(110002, "query alarm plugins result is empty, please check the startup status of the alarm component and confirm that the relevant alarm plugin is successfully registered", "查询告警插件为空, 请检查告警组件启动状态并确认相关告警插件已注册成功")
-            (110003, ..) => Error::QueryPluginsError(value.error_data, value.error_param), //(110003, "query plugins error", "查询插件错误")
-            (110004, ..) => Error::QueryPluginDetailResultIsNull(value.error_data, value.error_param), //(110004, "query plugin detail result is null", "查询插件详情结果为空")
+            (110001, _, _) => Error::PluginNotAUiComponent(value.error_data, value.error_param), //(110001, "query plugin error, this plugin has no UI component", "查询插件错误，此插件无UI组件")
+            (110002, _, _) => Error::QueryPluginsResultIsNull(value.error_data, value.error_param), //(110002, "query alarm plugins result is empty, please check the startup status of the alarm component and confirm that the relevant alarm plugin is successfully registered", "查询告警插件为空, 请检查告警组件启动状态并确认相关告警插件已注册成功")
+            (110003, _, _) => Error::QueryPluginsError(value.error_data, value.error_param), //(110003, "query plugins error", "查询插件错误")
+            (110004, _, _) => Error::QueryPluginDetailResultIsNull(value.error_data, value.error_param), //(110004, "query plugin detail result is null", "查询插件详情结果为空")
 
-            (110005, ..) => Error::UpdateAlertPluginInstanceError(value.error_data, value.error_param), //(110005, "update alert plugin instance error", "更新告警组和告警组插件实例错误")
-            (110006, ..) => Error::DeleteAlertPluginInstanceError(value.error_data, value.error_param), //(110006, "delete alert plugin instance error", "删除告警组和告警组插件实例错误")
-            (110007, ..) => Error::GetAlertPluginInstanceError(value.error_data, value.error_param), //(110007, "get alert plugin instance error", "获取告警组和告警组插件实例错误")
-            (110008, ..) => Error::CreateAlertPluginInstanceError(value.error_data, value.error_param), //(110008, "create alert plugin instance error", "创建告警组和告警组插件实例错误")
-            (110009, ..) => Error::QueryAllAlertPluginInstanceError(value.error_data, value.error_param), //(110009, "query all alert plugin instance error", "查询所有告警实例失败")
-            (110010, ..) => Error::PluginInstanceAlreadyExit(value.error_data, value.error_param), //(110010, "plugin instance already exit", "该告警插件实例已存在")
-            (110011, ..) => Error::ListPagingAlertPluginInstanceError(value.error_data, value.error_param), //(110011, "query plugin instance page error", "分页查询告警实例失败")
-            (110012, ..) => {
+            (110005, _, _) => Error::UpdateAlertPluginInstanceError(value.error_data, value.error_param), //(110005, "update alert plugin instance error", "更新告警组和告警组插件实例错误")
+            (110006, _, _) => Error::DeleteAlertPluginInstanceError(value.error_data, value.error_param), //(110006, "delete alert plugin instance error", "删除告警组和告警组插件实例错误")
+            (110007, _, _) => Error::GetAlertPluginInstanceError(value.error_data, value.error_param), //(110007, "get alert plugin instance error", "获取告警组和告警组插件实例错误")
+            (110008, _, _) => Error::CreateAlertPluginInstanceError(value.error_data, value.error_param), //(110008, "create alert plugin instance error", "创建告警组和告警组插件实例错误")
+            (110009, _, _) => Error::QueryAllAlertPluginInstanceError(value.error_data, value.error_param), //(110009, "query all alert plugin instance error", "查询所有告警实例失败")
+            (110010, _, _) => Error::PluginInstanceAlreadyExit(value.error_data, value.error_param), //(110010, "plugin instance already exit", "该告警插件实例已存在")
+            (110011, _, _) => Error::ListPagingAlertPluginInstanceError(value.error_data, value.error_param), //(110011, "query plugin instance page error", "分页查询告警实例失败")
+            (110012, _, _) => {
                 Error::DeleteAlertPluginInstanceErrorHasAlertGroupAssociated(value.error_data, value.error_param)
             } //(110012, "failed to delete the alert instance, there is an alarm group associated with this alert instance", "删除告警实例失败，存在与此告警实例关联的警报组")
-            (110013, ..) => Error::ProcessDefinitionVersionIsUsed(value.error_data, value.error_param), //(110013, "this process definition version is used", "此工作流定义版本被使用")
+            (110013, _, _) => Error::ProcessDefinitionVersionIsUsed(value.error_data, value.error_param), //(110013, "this process definition version is used", "此工作流定义版本被使用")
 
-            (120001, ..) => Error::CreateEnvironmentError(value.error_data, value.error_param), //(120001, "create environment error", "创建环境失败")
-            (120002, ..) => Error::EnvironmentNameExists(value.error_data, value.error_param), //(120002, "this environment name [{0}] already exists", "环境名称[{0}]已经存在")
-            (120003, ..) => Error::EnvironmentNameIsNull(value.error_data, value.error_param), //(120003, "this environment name shouldn't be empty.", "环境名称不能为空")
-            (120004, ..) => Error::EnvironmentConfigIsNull(value.error_data, value.error_param), //(120004, "this environment config shouldn't be empty.", "环境配置信息不能为空")
-            (120005, ..) => Error::UpdateEnvironmentError(value.error_data, value.error_param), //(120005, "update environment [{0}] info error", "更新环境[{0}]信息失败")
-            (120006, ..) => Error::DeleteEnvironmentError(value.error_data, value.error_param), //(120006, "delete environment error", "删除环境信息失败")
-            (120007, ..) => Error::DeleteEnvironmentRelatedTaskExists(value.error_data, value.error_param), //(120007, "this environment has been used in tasks,so you can't delete it.", "该环境已经被任务使用，所以不能删除该环境信息")
-            (1200008, ..) => Error::QueryEnvironmentByNameError(value.error_data, value.error_param), //(1200008, "not found environment [{0}] ", "查询环境名称[{0}]信息不存在")
-            (1200009, ..) => Error::QueryEnvironmentByCodeError(value.error_data, value.error_param), //(1200009, "not found environment [{0}] ", "查询环境编码[{0}]不存在")
-            (1200010, ..) => Error::QueryEnvironmentError(value.error_data, value.error_param), //(1200010, "login user query environment error", "分页查询环境列表错误")
-            (1200011, ..) => Error::VerifyEnvironmentError(value.error_data, value.error_param), //(1200011, "verify environment error", "验证环境信息错误")
-            (1200012, ..) => Error::GetRuleFormCreateJsonError(value.error_data, value.error_param), //(1200012, "get rule form create json error", "获取规则 FROM-CREATE-JSON 错误")
-            (1200013, ..) => Error::QueryRuleListPagingError(value.error_data, value.error_param), //(1200013, "query rule list paging error", "获取规则分页列表错误")
-            (1200014, ..) => Error::QueryRuleListError(value.error_data, value.error_param), //(1200014, "query rule list error", "获取规则列表错误")
-            (1200015, ..) => Error::QueryRuleInputEntryListError(value.error_data, value.error_param), //(1200015, "query rule list error", "获取规则列表错误")
-            (1200016, ..) => Error::QueryExecuteResultListPagingError(value.error_data, value.error_param), //(1200016, "query execute result list paging error", "获取数据质量任务结果分页错误")
-            (1200017, ..) => Error::GetDatasourceOptionsError(value.error_data, value.error_param), //(1200017, "get datasource options error", "获取数据源Options错误")
-            (1200018, ..) => Error::GetDatasourceTablesError(value.error_data, value.error_param), //(1200018, "get datasource tables error", "获取数据源表列表错误")
-            (1200019, ..) => Error::GetDatasourceTableColumnsError(value.error_data, value.error_param), //(1200019, "get datasource table columns error", "获取数据源表列名错误")
-            (130001, ..) => Error::TaskGroupNameExist(value.error_data, value.error_param), //(130001, "this task group name is repeated in a project", "该任务组名称在一个项目中已经使用")
-            (130002, ..) => Error::TaskGroupSizeError(value.error_data, value.error_param), //(130002, "task group size error", "任务组大小应该为大于1的整数")
-            (130003, ..) => Error::TaskGroupStatusError(value.error_data, value.error_param), //(130003, "task group status error", "任务组已经被关闭")
-            (130004, ..) => Error::TaskGroupFull(value.error_data, value.error_param), //(130004, "task group is full", "任务组已经满了")
-            (130005, ..) => Error::TaskGroupUsedSizeError(value.error_data, value.error_param), //(130005, "the used size number of task group is dirty", "任务组使用的容量发生了变化")
-            (130006, ..) => Error::TaskGroupQueueReleaseError(value.error_data, value.error_param), //(130006, "failed to release task group queue", "任务组资源释放时出现了错误")
-            (130007, ..) => Error::TaskGroupQueueAwakeError(value.error_data, value.error_param), //(130007, "awake waiting task failed", "任务组使唤醒等待任务时发生了错误")
-            (130008, ..) => Error::CreateTaskGroupError(value.error_data, value.error_param), //(130008, "create task group error", "创建任务组错误")
-            (130009, ..) => Error::UpdateTaskGroupError(value.error_data, value.error_param), //(130009, "update task group list error", "更新任务组错误")
-            (130010, ..) => Error::QueryTaskGroupListError(value.error_data, value.error_param), //(130010, "query task group list error", "查询任务组列表错误")
-            (130011, ..) => Error::CloseTaskGroupError(value.error_data, value.error_param), //(130011, "close task group error", "关闭任务组错误")
-            (130012, ..) => Error::StartTaskGroupError(value.error_data, value.error_param), //(130012, "start task group error", "启动任务组错误")
-            (130013, ..) => Error::QueryTaskGroupQueueListError(value.error_data, value.error_param), //(130013, "query task group queue list error", "查询任务组队列列表错误")
-            (130014, ..) => Error::TaskGroupCacheStartFailed(value.error_data, value.error_param), //(130014, "cache start failed", "任务组相关的缓存启动失败")
-            (130015, ..) => Error::EnvironmentWorkerGroupsIsInvalid(value.error_data, value.error_param), //(130015, "environment worker groups is invalid format", "环境关联的工作组参数解析错误")
-            (130016, ..) => Error::UpdateEnvironmentWorkerGroupRelationError(value.error_data, value.error_param), //(130016, "You can't modify the worker group, because the worker group [{0}] and this environment [{1}] already be used in the task [{2}]", "您不能修改工作组选项，因为该工作组 [{0}] 和 该环境 [{1}] 已经被用在任务 [{2}] 中")
-            (130017, ..) => Error::TaskGroupQueueAlreadyStart(value.error_data, value.error_param), //(130017, "task group queue already start", "节点已经获取任务组资源")
-            (130018, ..) => Error::TaskGroupStatusClosed(value.error_data, value.error_param), //(130018, "The task group has been closed.", "任务组已经被关闭")
-            (130019, ..) => Error::TaskGroupStatusOpened(value.error_data, value.error_param), //(130019, "The task group has been opened.", "任务组已经被开启")
-            (130020, ..) => Error::NotAllowToDisableOwnAccount(value.error_data, value.error_param), //(130020, "Not allow to disable your own account", "不能停用自己的账号")
-            (130030, ..) => Error::NotAllowToDeleteDefaultAlarmGroup(value.error_data, value.error_param), //(130030, "Not allow to delete the default alarm group ", "不能删除默认告警组")
-            (130031, ..) => Error::TimeZoneIllegal(value.error_data, value.error_param), //(130031, "time zone [{0}] is illegal", "时区参数 [{0}] 不合法")
+            (120001, _, _) => Error::CreateEnvironmentError(value.error_data, value.error_param), //(120001, "create environment error", "创建环境失败")
+            (120002, _, _) => Error::EnvironmentNameExists(value.error_data, value.error_param), //(120002, "this environment name [{0}] already exists", "环境名称[{0}]已经存在")
+            (120003, _, _) => Error::EnvironmentNameIsNull(value.error_data, value.error_param), //(120003, "this environment name shouldn't be empty.", "环境名称不能为空")
+            (120004, _, _) => Error::EnvironmentConfigIsNull(value.error_data, value.error_param), //(120004, "this environment config shouldn't be empty.", "环境配置信息不能为空")
+            (120005, _, _) => Error::UpdateEnvironmentError(value.error_data, value.error_param), //(120005, "update environment [{0}] info error", "更新环境[{0}]信息失败")
+            (120006, _, _) => Error::DeleteEnvironmentError(value.error_data, value.error_param), //(120006, "delete environment error", "删除环境信息失败")
+            (120007, _, _) => Error::DeleteEnvironmentRelatedTaskExists(value.error_data, value.error_param), //(120007, "this environment has been used in tasks,so you can't delete it.", "该环境已经被任务使用，所以不能删除该环境信息")
+            (1200008, _, _) => Error::QueryEnvironmentByNameError(value.error_data, value.error_param), //(1200008, "not found environment [{0}] ", "查询环境名称[{0}]信息不存在")
+            (1200009, _, _) => Error::QueryEnvironmentByCodeError(value.error_data, value.error_param), //(1200009, "not found environment [{0}] ", "查询环境编码[{0}]不存在")
+            (1200010, _, _) => Error::QueryEnvironmentError(value.error_data, value.error_param), //(1200010, "login user query environment error", "分页查询环境列表错误")
+            (1200011, _, _) => Error::VerifyEnvironmentError(value.error_data, value.error_param), //(1200011, "verify environment error", "验证环境信息错误")
+            (1200012, _, _) => Error::GetRuleFormCreateJsonError(value.error_data, value.error_param), //(1200012, "get rule form create json error", "获取规则 FROM-CREATE-JSON 错误")
+            (1200013, _, _) => Error::QueryRuleListPagingError(value.error_data, value.error_param), //(1200013, "query rule list paging error", "获取规则分页列表错误")
+            (1200014, _, _) => Error::QueryRuleListError(value.error_data, value.error_param), //(1200014, "query rule list error", "获取规则列表错误")
+            (1200015, _, _) => Error::QueryRuleInputEntryListError(value.error_data, value.error_param), //(1200015, "query rule list error", "获取规则列表错误")
+            (1200016, _, _) => Error::QueryExecuteResultListPagingError(value.error_data, value.error_param), //(1200016, "query execute result list paging error", "获取数据质量任务结果分页错误")
+            (1200017, _, _) => Error::GetDatasourceOptionsError(value.error_data, value.error_param), //(1200017, "get datasource options error", "获取数据源Options错误")
+            (1200018, _, _) => Error::GetDatasourceTablesError(value.error_data, value.error_param), //(1200018, "get datasource tables error", "获取数据源表列表错误")
+            (1200019, _, _) => Error::GetDatasourceTableColumnsError(value.error_data, value.error_param), //(1200019, "get datasource table columns error", "获取数据源表列名错误")
+            (130001, _, _) => Error::TaskGroupNameExist(value.error_data, value.error_param), //(130001, "this task group name is repeated in a project", "该任务组名称在一个项目中已经使用")
+            (130002, _, _) => Error::TaskGroupSizeError(value.error_data, value.error_param), //(130002, "task group size error", "任务组大小应该为大于1的整数")
+            (130003, _, _) => Error::TaskGroupStatusError(value.error_data, value.error_param), //(130003, "task group status error", "任务组已经被关闭")
+            (130004, _, _) => Error::TaskGroupFull(value.error_data, value.error_param), //(130004, "task group is full", "任务组已经满了")
+            (130005, _, _) => Error::TaskGroupUsedSizeError(value.error_data, value.error_param), //(130005, "the used size number of task group is dirty", "任务组使用的容量发生了变化")
+            (130006, _, _) => Error::TaskGroupQueueReleaseError(value.error_data, value.error_param), //(130006, "failed to release task group queue", "任务组资源释放时出现了错误")
+            (130007, _, _) => Error::TaskGroupQueueAwakeError(value.error_data, value.error_param), //(130007, "awake waiting task failed", "任务组使唤醒等待任务时发生了错误")
+            (130008, _, _) => Error::CreateTaskGroupError(value.error_data, value.error_param), //(130008, "create task group error", "创建任务组错误")
+            (130009, _, _) => Error::UpdateTaskGroupError(value.error_data, value.error_param), //(130009, "update task group list error", "更新任务组错误")
+            (130010, _, _) => Error::QueryTaskGroupListError(value.error_data, value.error_param), //(130010, "query task group list error", "查询任务组列表错误")
+            (130011, _, _) => Error::CloseTaskGroupError(value.error_data, value.error_param), //(130011, "close task group error", "关闭任务组错误")
+            (130012, _, _) => Error::StartTaskGroupError(value.error_data, value.error_param), //(130012, "start task group error", "启动任务组错误")
+            (130013, _, _) => Error::QueryTaskGroupQueueListError(value.error_data, value.error_param), //(130013, "query task group queue list error", "查询任务组队列列表错误")
+            (130014, _, _) => Error::TaskGroupCacheStartFailed(value.error_data, value.error_param), //(130014, "cache start failed", "任务组相关的缓存启动失败")
+            (130015, _, _) => Error::EnvironmentWorkerGroupsIsInvalid(value.error_data, value.error_param), //(130015, "environment worker groups is invalid format", "环境关联的工作组参数解析错误")
+            (130016, _, _) => Error::UpdateEnvironmentWorkerGroupRelationError(value.error_data, value.error_param), //(130016, "You can't modify the worker group, because the worker group [{0}] and this environment [{1}] already be used in the task [{2}]", "您不能修改工作组选项，因为该工作组 [{0}] 和 该环境 [{1}] 已经被用在任务 [{2}] 中")
+            (130017, _, _) => Error::TaskGroupQueueAlreadyStart(value.error_data, value.error_param), //(130017, "task group queue already start", "节点已经获取任务组资源")
+            (130018, _, _) => Error::TaskGroupStatusClosed(value.error_data, value.error_param), //(130018, "The task group has been closed.", "任务组已经被关闭")
+            (130019, _, _) => Error::TaskGroupStatusOpened(value.error_data, value.error_param), //(130019, "The task group has been opened.", "任务组已经被开启")
+            (130020, _, _) => Error::NotAllowToDisableOwnAccount(value.error_data, value.error_param), //(130020, "Not allow to disable your own account", "不能停用自己的账号")
+            (130030, _, _) => Error::NotAllowToDeleteDefaultAlarmGroup(value.error_data, value.error_param), //(130030, "Not allow to delete the default alarm group ", "不能删除默认告警组")
+            (130031, _, _) => Error::TimeZoneIllegal(value.error_data, value.error_param), //(130031, "time zone [{0}] is illegal", "时区参数 [{0}] 不合法")
 
-            (1300001, ..) => Error::QueryK8sNamespaceListPagingError(value.error_data, value.error_param), //(1300001, "login user query k8s namespace list paging error", "分页查询k8s名称空间列表错误")
-            (1300002, ..) => Error::K8sNamespaceExist(value.error_data, value.error_param), //(1300002, "k8s namespace {0} already exists", "k8s命名空间[{0}]已存在")
-            (1300003, ..) => Error::CreateK8sNamespaceError(value.error_data, value.error_param), //(1300003, "create k8s namespace error", "创建k8s命名空间错误")
-            (1300004, ..) => Error::UpdateK8sNamespaceError(value.error_data, value.error_param), //(1300004, "update k8s namespace error", "更新k8s命名空间信息错误")
-            (1300005, ..) => Error::K8sNamespaceNotExist(value.error_data, value.error_param), //(1300005, "k8s namespace {0} not exists", "命名空间ID[{0}]不存在")
-            (1300006, ..) => Error::K8sClientOpsError(value.error_data, value.error_param), //(1300006, "k8s error with exception {0}", "k8s操作报错[{0}]")
-            (1300007, ..) => Error::VerifyK8sNamespaceError(value.error_data, value.error_param), //(1300007, "verify k8s and namespace error", "验证k8s命名空间信息错误")
-            (1300008, ..) => Error::DeleteK8sNamespaceByIdError(value.error_data, value.error_param), //(1300008, "delete k8s namespace by id error", "删除命名空间错误")
-            (1300009, ..) => Error::VerifyParameterNameFailed(value.error_data, value.error_param), //(1300009, "The file name verify failed", "文件命名校验失败")
-            (1300010, ..) => Error::StoreOperateCreateError(value.error_data, value.error_param), //(1300010, "create the resource failed", "存储操作失败")
-            (1300011, ..) => Error::GrantK8sNamespaceError(value.error_data, value.error_param), //(1300011, "grant namespace error", "授权资源错误")
-            (1300012, ..) => Error::QueryUnauthorizedNamespaceError(value.error_data, value.error_param), //(1300012, "query unauthorized namespace error", "查询未授权命名空间错误")
-            (1300013, ..) => Error::QueryAuthorizedNamespaceError(value.error_data, value.error_param), //(1300013, "query authorized namespace error", "查询授权命名空间错误")
-            (1300014, ..) => Error::QueryCanUseK8sClusterError(value.error_data, value.error_param), //(1300014, "login user query can used k8s cluster list error", "查询可用k8s集群错误")
-            (1300015, ..) => Error::ResourceFullNameTooLongError(value.error_data, value.error_param), //(1300015, "resource's fullname is too long error", "资源文件名过长")
-            (1300016, ..) => Error::TenantFullNameTooLongError(value.error_data, value.error_param), //(1300016, "tenant's fullname is too long error", "租户名过长");
-            _ => Error::InternalServerErrorArgs(value.error_data, value.error_param),
+            (1300001, _, _) => Error::QueryK8sNamespaceListPagingError(value.error_data, value.error_param), //(1300001, "login user query k8s namespace list paging error", "分页查询k8s名称空间列表错误")
+            (1300002, _, _) => Error::K8sNamespaceExist(value.error_data, value.error_param), //(1300002, "k8s namespace {0} already exists", "k8s命名空间[{0}]已存在")
+            (1300003, _, _) => Error::CreateK8sNamespaceError(value.error_data, value.error_param), //(1300003, "create k8s namespace error", "创建k8s命名空间错误")
+            (1300004, _, _) => Error::UpdateK8sNamespaceError(value.error_data, value.error_param), //(1300004, "update k8s namespace error", "更新k8s命名空间信息错误")
+            (1300005, _, _) => Error::K8sNamespaceNotExist(value.error_data, value.error_param), //(1300005, "k8s namespace {0} not exists", "命名空间ID[{0}]不存在")
+            (1300006, _, _) => Error::K8sClientOpsError(value.error_data, value.error_param), //(1300006, "k8s error with exception {0}", "k8s操作报错[{0}]")
+            (1300007, _, _) => Error::VerifyK8sNamespaceError(value.error_data, value.error_param), //(1300007, "verify k8s and namespace error", "验证k8s命名空间信息错误")
+            (1300008, _, _) => Error::DeleteK8sNamespaceByIdError(value.error_data, value.error_param), //(1300008, "delete k8s namespace by id error", "删除命名空间错误")
+            (1300009, _, _) => Error::VerifyParameterNameFailed(value.error_data, value.error_param), //(1300009, "The file name verify failed", "文件命名校验失败")
+            (1300010, _, _) => Error::StoreOperateCreateError(value.error_data, value.error_param), //(1300010, "create the resource failed", "存储操作失败")
+            (1300011, _, _) => Error::GrantK8sNamespaceError(value.error_data, value.error_param), //(1300011, "grant namespace error", "授权资源错误")
+            (1300012, _, _) => Error::QueryUnauthorizedNamespaceError(value.error_data, value.error_param), //(1300012, "query unauthorized namespace error", "查询未授权命名空间错误")
+            (1300013, _, _) => Error::QueryAuthorizedNamespaceError(value.error_data, value.error_param), //(1300013, "query authorized namespace error", "查询授权命名空间错误")
+            (1300014, _, _) => Error::QueryCanUseK8sClusterError(value.error_data, value.error_param), //(1300014, "login user query can used k8s cluster list error", "查询可用k8s集群错误")
+            (1300015, _, _) => Error::ResourceFullNameTooLongError(value.error_data, value.error_param), //(1300015, "resource's fullname is too long error", "资源文件名过长")
+            (1300016, _, _) => Error::TenantFullNameTooLongError(value.error_data, value.error_param), //(1300016, "tenant's fullname is too long error", "租户名过长");
+            (_, _, _) => Error::InternalServerErrorArgs(value.error_data, value.error_param),
         };
         res
     }

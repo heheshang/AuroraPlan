@@ -117,8 +117,7 @@ pub async fn update(id: i32, queue: &str, queue_name: &str) -> Result<Queue> {
         .map(|res| res.into_inner())
         .map_err(|e| {
             error!("update queue error: {:?}", e);
-            let err: Error = e.into();
-            err
+            Error::from(e)
         })?
         .into())
 }
