@@ -8,7 +8,7 @@ members = [
     "aurora-service",
     "aurora-tests",
     "migration",
-    "aurora-base",
+    # "aurora-base",
 ]
 
 resolver = "2"

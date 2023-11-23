@@ -1,4 +1,5 @@
 pub mod client;
+pub(crate) mod environment;
 mod error;
 pub(crate) mod projects;
 pub(crate) mod queues;

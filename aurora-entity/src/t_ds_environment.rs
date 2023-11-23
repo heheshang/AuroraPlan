@@ -22,6 +22,29 @@ pub struct Model {
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
+pub enum Relation {
+    #[sea_orm(
+        belongs_to = "super::t_ds_environment_worker_group_relation::Entity",
+        from = "Column::Code",
+        to = "super::t_ds_environment_worker_group_relation::Column::EnvironmentCode",
+        has_many = "super::t_ds_environment_worker_group_relation::Entity"
+    )]
+    DsEnvironmentWorkerGroupRelation,
+}
+// impl RelationTrait for Relation{
 
+// }
 impl ActiveModelBehavior for ActiveModel {}
+
+#[derive(Debug)]
+pub struct EnvironmentToGroupLink;
+
+impl Linked for EnvironmentToGroupLink {
+    type FromEntity = Entity;
+
+    type ToEntity = super::t_ds_environment_worker_group_relation::Entity;
+
+    fn link(&self) -> Vec<RelationDef> {
+        vec![Relation::DsEnvironmentWorkerGroupRelation.def()]
+    }
+}

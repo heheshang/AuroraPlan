@@ -14,8 +14,9 @@ message DsEnvironment {
      optional string config=4 ;
      optional string  description= 5;
      optional int32  operator= 6;
-     optional string  create_time=7 ;
-     optional string  update_time= 8;
+     optional string  worker_groups= 7;
+     optional string  create_time=8 ;
+     optional string  update_time= 9;
 }
 
 
@@ -52,6 +53,12 @@ service DsEnvironmentService {
       delete: "/v1alpha1/{name=DsEnvironments/*}"
     };
   }
+
+  rpc VerifyDsEnvironment(VerifyDsEnvironmentRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsEnvironments:verify"
+    };
+  }
 }
 
 // message DsEnvironment {
@@ -62,18 +69,19 @@ message ListDsEnvironmentsRequest {
 
 
   // The maximum number of items to return.
-  int32 page_size = 1;
+  uint64 page_size = 1;
 
- int32 page_num = 2;
+  uint64 page_num = 2;
+  optional string search_val=3 ;
 }
 
 message ListDsEnvironmentsResponse {
-  // The field name should match the noun "DsEnvironment" in the method name.
-  // There will be a maximum number of items returned based on the page_size field in the request.
-  repeated DsEnvironment DsEnvironments = 1;
-
-  // Token to retrieve the next page of results, or empty if there are no more results in the list.
-  string next_page_token = 2;
+  repeated DsEnvironment total_list = 1;
+  uint64 current_page = 2;
+  uint64 page_size = 3;
+  uint64 start = 4;
+  uint64 total = 5;
+  uint64 total_page = 6;
 }
 
 message GetDsEnvironmentRequest {
@@ -82,27 +90,25 @@ message GetDsEnvironmentRequest {
 }
 
 message CreateDsEnvironmentRequest {
-  // The parent resource name where the DsEnvironment is to be created.
-  string parent = 1;
-
-  // The DsEnvironment id to use for this DsEnvironment.
-  string DsEnvironment_id = 2;
-
-  // The DsEnvironment resource to create.
-  // The field name should match the Noun in the method name.
-  DsEnvironment DsEnvironment = 3;
+  string name = 1;
+  string config = 2;
+  optional string description = 3;
+  int32 operator = 4;
+  string worker_groups = 5;
 }
 
 message UpdateDsEnvironmentRequest {
-  // The DsEnvironment resource which replaces the resource on the server.
-  DsEnvironment DsEnvironment = 1;
-
-  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
-  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
-  google.protobuf.FieldMask update_mask = 2;
+  int64  code= 2;
+  optional string name= 3;
+  optional string config=4 ;
+  optional string  description= 5;
+  optional string  worker_groups= 7;
 }
 
 message DeleteDsEnvironmentRequest {
   // The resource name of the DsEnvironment to be deleted.
-  string name = 1;
+  int32 id = 1;
+}
+message VerifyDsEnvironmentRequest {
+  string environment_name=1 ;
 }

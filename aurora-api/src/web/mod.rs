@@ -1,11 +1,13 @@
 #![allow(unused)]
 pub(crate) mod bean;
 pub(crate) mod mw;
+pub(crate) mod routes_environment;
 pub(crate) mod routes_projects;
 pub(crate) mod routes_queues;
 pub(crate) mod routes_resources;
 pub(crate) mod routes_tenants;
 pub(crate) mod routes_user;
+
 // region:    --- Modules
 
 use aurora_common::core_results::results::Result;
@@ -49,6 +51,7 @@ pub async fn route_all() -> Router {
             .merge(routes_resources::routes())
             .merge(routes_queues::routes())
             .merge(routes_tenants::routes())
+            .merge(routes_environment::routes())
             // .route("/aurora/ui/home", get(hello))
             .layer(middleware::map_request(log_path_params))
             .layer(middleware::map_response(mw_response_map))

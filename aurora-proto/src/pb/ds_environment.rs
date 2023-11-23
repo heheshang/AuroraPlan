@@ -16,29 +16,38 @@ pub struct DsEnvironment {
     #[prost(int32, optional, tag = "6")]
     pub operator: ::core::option::Option<i32>,
     #[prost(string, optional, tag = "7")]
-    pub create_time: ::core::option::Option<::prost::alloc::string::String>,
+    pub worker_groups: ::core::option::Option<::prost::alloc::string::String>,
     #[prost(string, optional, tag = "8")]
+    pub create_time: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "9")]
     pub update_time: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ListDsEnvironmentsRequest {
     /// The maximum number of items to return.
-    #[prost(int32, tag = "1")]
-    pub page_size: i32,
-    #[prost(int32, tag = "2")]
-    pub page_num: i32,
+    #[prost(uint64, tag = "1")]
+    pub page_size: u64,
+    #[prost(uint64, tag = "2")]
+    pub page_num: u64,
+    #[prost(string, optional, tag = "3")]
+    pub search_val: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ListDsEnvironmentsResponse {
-    /// The field name should match the noun "DsEnvironment" in the method name.
-    /// There will be a maximum number of items returned based on the page_size field in the request.
     #[prost(message, repeated, tag = "1")]
-    pub ds_environments: ::prost::alloc::vec::Vec<DsEnvironment>,
-    /// Token to retrieve the next page of results, or empty if there are no more results in the list.
-    #[prost(string, tag = "2")]
-    pub next_page_token: ::prost::alloc::string::String,
+    pub total_list: ::prost::alloc::vec::Vec<DsEnvironment>,
+    #[prost(uint64, tag = "2")]
+    pub current_page: u64,
+    #[prost(uint64, tag = "3")]
+    pub page_size: u64,
+    #[prost(uint64, tag = "4")]
+    pub start: u64,
+    #[prost(uint64, tag = "5")]
+    pub total: u64,
+    #[prost(uint64, tag = "6")]
+    pub total_page: u64,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -50,34 +59,43 @@ pub struct GetDsEnvironmentRequest {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct CreateDsEnvironmentRequest {
-    /// The parent resource name where the DsEnvironment is to be created.
     #[prost(string, tag = "1")]
-    pub parent: ::prost::alloc::string::String,
-    /// The DsEnvironment id to use for this DsEnvironment.
+    pub name: ::prost::alloc::string::String,
     #[prost(string, tag = "2")]
-    pub ds_environment_id: ::prost::alloc::string::String,
-    /// The DsEnvironment resource to create.
-    /// The field name should match the Noun in the method name.
-    #[prost(message, optional, tag = "3")]
-    pub ds_environment: ::core::option::Option<DsEnvironment>,
+    pub config: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "3")]
+    pub description: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(int32, tag = "4")]
+    pub operator: i32,
+    #[prost(string, tag = "5")]
+    pub worker_groups: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct UpdateDsEnvironmentRequest {
-    /// The DsEnvironment resource which replaces the resource on the server.
-    #[prost(message, optional, tag = "1")]
-    pub ds_environment: ::core::option::Option<DsEnvironment>,
-    /// The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
-    /// see <https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask>
-    #[prost(message, optional, tag = "2")]
-    pub update_mask: ::core::option::Option<::prost_types::FieldMask>,
+    #[prost(int64, tag = "2")]
+    pub code: i64,
+    #[prost(string, optional, tag = "3")]
+    pub name: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "4")]
+    pub config: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "5")]
+    pub description: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "7")]
+    pub worker_groups: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct DeleteDsEnvironmentRequest {
     /// The resource name of the DsEnvironment to be deleted.
+    #[prost(int32, tag = "1")]
+    pub id: i32,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct VerifyDsEnvironmentRequest {
     #[prost(string, tag = "1")]
-    pub name: ::prost::alloc::string::String,
+    pub environment_name: ::prost::alloc::string::String,
 }
 /// Generated client implementations.
 pub mod ds_environment_service_client {
@@ -238,6 +256,22 @@ pub mod ds_environment_service_client {
             ));
             self.inner.unary(req, path, codec).await
         }
+        pub async fn verify_ds_environment(
+            &mut self,
+            request: impl tonic::IntoRequest<super::VerifyDsEnvironmentRequest>,
+        ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static("/ds_environment.DsEnvironmentService/VerifyDsEnvironment");
+            let mut req = request.into_request();
+            req.extensions_mut().insert(GrpcMethod::new(
+                "ds_environment.DsEnvironmentService",
+                "VerifyDsEnvironment",
+            ));
+            self.inner.unary(req, path, codec).await
+        }
     }
 }
 /// Generated server implementations.
@@ -266,6 +300,10 @@ pub mod ds_environment_service_server {
         async fn delete_ds_environment(
             &self,
             request: tonic::Request<super::DeleteDsEnvironmentRequest>,
+        ) -> std::result::Result<tonic::Response<()>, tonic::Status>;
+        async fn verify_ds_environment(
+            &self,
+            request: tonic::Request<super::VerifyDsEnvironmentRequest>,
         ) -> std::result::Result<tonic::Response<()>, tonic::Status>;
     }
     /// Generated according to https://cloud.google.com/apis/design/standard_methods
@@ -486,6 +524,37 @@ pub mod ds_environment_service_server {
                     let fut = async move {
                         let inner = inner.0;
                         let method = DeleteDsEnvironmentSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/ds_environment.DsEnvironmentService/VerifyDsEnvironment" => {
+                    #[allow(non_camel_case_types)]
+                    struct VerifyDsEnvironmentSvc<T: DsEnvironmentService>(pub Arc<T>);
+                    impl<T: DsEnvironmentService> tonic::server::UnaryService<super::VerifyDsEnvironmentRequest>
+                        for VerifyDsEnvironmentSvc<T>
+                    {
+                        type Response = ();
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        fn call(&mut self, request: tonic::Request<super::VerifyDsEnvironmentRequest>) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move { (*inner).verify_ds_environment(request).await };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let inner = inner.0;
+                        let method = VerifyDsEnvironmentSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(accept_compression_encodings, send_compression_encodings)
