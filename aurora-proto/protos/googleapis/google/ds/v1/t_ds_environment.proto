@@ -34,10 +34,10 @@ service DsEnvironmentService {
     };
   }
 
-  rpc CreateDsEnvironment(CreateDsEnvironmentRequest) returns (DsEnvironment) {
+  rpc CreateDsEnvironment(CreateDsEnvironmentRequest) returns (DsEnvironmentPage) {
     option (google.api.http) = {
       post: "/v1alpha1/DsEnvironments"
-      body: "DsEnvironment"
+      body: "DsEnvironmentPage"
     };
   }
 

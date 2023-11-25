@@ -18,6 +18,7 @@ use tracing::info;
 use crate::{ctx::Ctx, model};
 
 use super::bean::request::environment::VerifyEnvironment;
+use super::bean::response::environment::EnvironmentPage;
 use super::{
     bean::request::environment::{CreateEnvironment, EnvironmentListParams},
     mw::mw_auth::mw_ctx_require,
@@ -64,7 +65,7 @@ pub async fn update(cookies: Cookies, ctx: Ctx, param: Form<UpdateEnvironment>) 
     Ok(ApiResult::build(Some(())))
 }
 
-pub async fn create(cookies: Cookies, ctx: Ctx, param: Form<CreateEnvironment>) -> Result<ApiResult<Environment>> {
+pub async fn create(cookies: Cookies, ctx: Ctx, param: Form<CreateEnvironment>) -> Result<ApiResult<EnvironmentPage>> {
     let name = param.name.clone();
     let description = param.description.clone();
     let config = param.config.clone();

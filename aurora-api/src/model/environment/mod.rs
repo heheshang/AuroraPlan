@@ -5,7 +5,7 @@ use aurora_proto::ds_environment::{
 };
 use tracing::{error, info};
 
-use crate::web::bean::response::environment::Environment;
+use crate::web::bean::response::environment::EnvironmentPage;
 
 use super::client::service::_ds_environment_service_client;
 
@@ -31,7 +31,7 @@ pub async fn create(
     description: Option<String>,
     worker_groups: Vec<String>,
     operator: i32,
-) -> Result<Environment> {
+) -> Result<EnvironmentPage> {
     let client = _ds_environment_service_client().await?;
     let request = tonic::Request::new(CreateDsEnvironmentRequest {
         name,

@@ -235,7 +235,7 @@ pub mod ds_environment_service_client {
         pub async fn create_ds_environment(
             &mut self,
             request: impl tonic::IntoRequest<super::CreateDsEnvironmentRequest>,
-        ) -> std::result::Result<tonic::Response<super::DsEnvironment>, tonic::Status> {
+        ) -> std::result::Result<tonic::Response<super::DsEnvironmentPage>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
                 tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
             })?;
@@ -316,7 +316,7 @@ pub mod ds_environment_service_server {
         async fn create_ds_environment(
             &self,
             request: tonic::Request<super::CreateDsEnvironmentRequest>,
-        ) -> std::result::Result<tonic::Response<super::DsEnvironment>, tonic::Status>;
+        ) -> std::result::Result<tonic::Response<super::DsEnvironmentPage>, tonic::Status>;
         async fn update_ds_environment(
             &self,
             request: tonic::Request<super::UpdateDsEnvironmentRequest>,
@@ -470,7 +470,7 @@ pub mod ds_environment_service_server {
                     impl<T: DsEnvironmentService> tonic::server::UnaryService<super::CreateDsEnvironmentRequest>
                         for CreateDsEnvironmentSvc<T>
                     {
-                        type Response = super::DsEnvironment;
+                        type Response = super::DsEnvironmentPage;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
                         fn call(&mut self, request: tonic::Request<super::CreateDsEnvironmentRequest>) -> Self::Future {
                             let inner = Arc::clone(&self.0);

@@ -4,11 +4,11 @@ use aurora_common::{
     core_results::results::Result,
 };
 use entity::{
-    t_ds_environment::{ActiveModel, Column, Entity, EnvironmentToGroupLink},
+    t_ds_environment::{ActiveModel, Column, Entity},
     t_ds_environment_worker_group_relation,
     v_ds_environment::Entity as VEntity,
 };
-use proto::ds_environment::{ds_environment_service_server::DsEnvironmentService, DsEnvironment, DsEnvironmentPage};
+use proto::ds_environment::{ds_environment_service_server::DsEnvironmentService, DsEnvironmentPage};
 use sea_orm::{
     debug_print, ActiveModelTrait, ActiveValue::NotSet, ColumnTrait, DbErr, EntityTrait, PaginatorTrait, QueryFilter,
     Set, TransactionTrait,
@@ -102,7 +102,7 @@ impl DsEnvironmentService for AuroraRpcServer {
     async fn create_ds_environment(
         &self,
         _req: tonic::Request<proto::ds_environment::CreateDsEnvironmentRequest>,
-    ) -> std::result::Result<tonic::Response<proto::ds_environment::DsEnvironment>, tonic::Status> {
+    ) -> std::result::Result<tonic::Response<proto::ds_environment::DsEnvironmentPage>, tonic::Status> {
         let db = &self.db;
         let env_name = _req.get_ref().clone().name;
         let config = _req.get_ref().clone().config;
@@ -112,7 +112,7 @@ impl DsEnvironmentService for AuroraRpcServer {
 
         info!("request: {:?}", _req);
         let res = db
-            .transaction::<_, DsEnvironment, DbErr>(|tx| {
+            .transaction::<_, DsEnvironmentPage, DbErr>(|tx| {
                 Box::pin(async move {
                     let code = aurora_common::utils::code_generate_utils::gen_code().unwrap_or_default();
                     let _ = ActiveModel {
@@ -142,25 +142,20 @@ impl DsEnvironmentService for AuroraRpcServer {
                     )
                     .exec(tx)
                     .await;
-                    Entity::find()
-                        .find_also_linked(EnvironmentToGroupLink)
-                        .filter(Column::Code.eq(code))
-                        .one(tx)
-                        .await
-                        .map(|res| {
-                            res.map(|(l, r)| DsEnvironment {
-                                id: l.id,
-                                code: l.code,
-                                name: l.name,
-                                config: l.config,
-                                description: l.description,
-                                operator: l.operator,
-                                create_time: Some(l.create_time.unwrap_or_default().to_string()),
-                                update_time: Some(l.update_time.unwrap_or_default().to_string()),
-                                worker_groups: r.into_iter().map(|r| r.worker_group).collect::<Vec<String>>(),
-                            })
-                            .unwrap_or_default()
+                    VEntity::find().filter(Column::Code.eq(code)).one(tx).await.map(|res| {
+                        res.map(|l| DsEnvironmentPage {
+                            id: l.id,
+                            code: l.code,
+                            name: l.name,
+                            config: l.config,
+                            description: l.description,
+                            operator: l.operator,
+                            create_time: Some(l.create_time.unwrap_or_default().to_string()),
+                            update_time: Some(l.update_time.unwrap_or_default().to_string()),
+                            worker_groups: l.worker_groups,
                         })
+                        .unwrap_or_default()
+                    })
                 })
             })
             .await
