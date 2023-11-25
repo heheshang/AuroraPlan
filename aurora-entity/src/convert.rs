@@ -37,7 +37,7 @@ use crate::{
     t_ds_task_group::Model as DsTaskGroupModel, t_ds_task_group_queue::Model as DsTaskGroupQueueModel,
     t_ds_task_instance::Model as DsTaskInstanceModel, t_ds_tenant::Model as DsTenantModel,
     t_ds_udfs::Model as DsUdfsModel, t_ds_user::Model as DsUserModel, t_ds_version::Model as DsVersionModel,
-    t_ds_worker_group::Model as DsWorkerGroupModel,
+    t_ds_worker_group::Model as DsWorkerGroupModel, v_ds_environment::Model as VDsEnvironmentModel,
 };
 
 use proto::{
@@ -46,22 +46,23 @@ use proto::{
     ds_command::DsCommand, ds_datasource::DsDatasource, ds_dq_comparison_type::DsDqComparisonType,
     ds_dq_execute_result::DsDqExecuteResult, ds_dq_rule::DsDqRule, ds_dq_rule_execute_sql::DsDqRuleExecuteSql,
     ds_dq_rule_input_entry::DsDqRuleInputEntry, ds_dq_task_statistics_value::DsDqTaskStatisticsValue,
-    ds_environment::DsEnvironment, ds_environment_worker_group_relation::DsEnvironmentWorkerGroupRelation,
-    ds_error_command::DsErrorCommand, ds_k8s::DsK8s, ds_k8s_namespace::DsK8sNamespace,
-    ds_plugin_define::DsPluginDefine, ds_process_definition::DsProcessDefinition,
-    ds_process_definition_log::DsProcessDefinitionLog, ds_process_instance::DsProcessInstance,
-    ds_process_task_relation::DsProcessTaskRelation, ds_process_task_relation_log::DsProcessTaskRelationLog,
-    ds_project::DsProject, ds_project_parameter::ProjectParameter, ds_queue::DsQueue,
-    ds_relation_datasource_user::DsRelationDatasourceUser, ds_relation_namespace_user::DsRelationNamespaceUser,
-    ds_relation_process_instance::DsRelationProcessInstance, ds_relation_project_user::DsRelationProjectUser,
-    ds_relation_resources_user::DsRelationResourcesUser, ds_relation_rule_execute_sql::DsRelationRuleExecuteSql,
-    ds_relation_rule_input::DsRelationRuleInput, ds_relation_udfs_user::DsRelationUdfsUser, ds_resources::DsResource,
-    ds_schedules::DsSchedules, ds_session::DsSession, ds_task_definition::DsTaskDefinition,
-    ds_task_definition_log::DsTaskDefinitionLog, ds_task_group::DsTaskGroup, ds_task_group_queue::DsTaskGroupQueue,
-    ds_task_instance::DsTaskInstance, ds_tenant::DsTenant, ds_udfs::DsUdfs, ds_user::DsUser, ds_version::DsVersion,
-    ds_worker_group::DsWorkerGroup, qrtz_blob_triggers::QrtzBlobTrigger, qrtz_calendars::QrtzCalendar,
-    qrtz_cron_triggers::QrtzCronTriggers, qrtz_fired_triggers::QrtzFiredTriggers, qrtz_job_details::QrtzJobDetails,
-    qrtz_locks::QrtzLocks, qrtz_paused_trigger_grps::QrtzPausedTriggerGrps, qrtz_scheduler_state::QrtzSchedulerState,
+    ds_environment::DsEnvironment, ds_environment::DsEnvironmentPage,
+    ds_environment_worker_group_relation::DsEnvironmentWorkerGroupRelation, ds_error_command::DsErrorCommand,
+    ds_k8s::DsK8s, ds_k8s_namespace::DsK8sNamespace, ds_plugin_define::DsPluginDefine,
+    ds_process_definition::DsProcessDefinition, ds_process_definition_log::DsProcessDefinitionLog,
+    ds_process_instance::DsProcessInstance, ds_process_task_relation::DsProcessTaskRelation,
+    ds_process_task_relation_log::DsProcessTaskRelationLog, ds_project::DsProject,
+    ds_project_parameter::ProjectParameter, ds_queue::DsQueue, ds_relation_datasource_user::DsRelationDatasourceUser,
+    ds_relation_namespace_user::DsRelationNamespaceUser, ds_relation_process_instance::DsRelationProcessInstance,
+    ds_relation_project_user::DsRelationProjectUser, ds_relation_resources_user::DsRelationResourcesUser,
+    ds_relation_rule_execute_sql::DsRelationRuleExecuteSql, ds_relation_rule_input::DsRelationRuleInput,
+    ds_relation_udfs_user::DsRelationUdfsUser, ds_resources::DsResource, ds_schedules::DsSchedules,
+    ds_session::DsSession, ds_task_definition::DsTaskDefinition, ds_task_definition_log::DsTaskDefinitionLog,
+    ds_task_group::DsTaskGroup, ds_task_group_queue::DsTaskGroupQueue, ds_task_instance::DsTaskInstance,
+    ds_tenant::DsTenant, ds_udfs::DsUdfs, ds_user::DsUser, ds_version::DsVersion, ds_worker_group::DsWorkerGroup,
+    qrtz_blob_triggers::QrtzBlobTrigger, qrtz_calendars::QrtzCalendar, qrtz_cron_triggers::QrtzCronTriggers,
+    qrtz_fired_triggers::QrtzFiredTriggers, qrtz_job_details::QrtzJobDetails, qrtz_locks::QrtzLocks,
+    qrtz_paused_trigger_grps::QrtzPausedTriggerGrps, qrtz_scheduler_state::QrtzSchedulerState,
     qrtz_simple_triggers::QrtzSimpleTrigger, qrtz_simprop_triggers::QrtzSimpropTrigger, qrtz_triggers::QrtzTrigger,
 };
 
@@ -90,6 +91,8 @@ impl_from!(DsDqRuleExecuteSqlModel, DsDqRuleExecuteSql);
 impl_from!(DsDqRuleInputEntryModel, DsDqRuleInputEntry);
 impl_from!(DsDqTaskStatisticsValueModel, DsDqTaskStatisticsValue);
 impl_from!(DsEnvironmentModel, DsEnvironment);
+
+impl_from!(VDsEnvironmentModel, DsEnvironmentPage);
 impl_from!(DsEnvironmentWorkerGroupRelationModel, DsEnvironmentWorkerGroupRelation);
 impl_from!(DsErrorCommandModel, DsErrorCommand);
 impl_from!(DsK8sModel, DsK8s);

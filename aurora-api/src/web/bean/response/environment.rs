@@ -1,4 +1,5 @@
 use aurora_proto::ds_environment::DsEnvironment;
+use aurora_proto::ds_environment::DsEnvironmentPage;
 use aurora_proto::ds_environment::ListDsEnvironmentsResponse;
 use serde::{Deserialize, Serialize};
 use struct_convert::Convert;
@@ -24,5 +25,19 @@ pub struct EnvironmentList {
     pub page_size: u64,
     pub current_page: u64,
     pub start: u64,
-    pub total_list: Vec<Environment>,
+    pub total_list: Vec<EnvironmentPage>,
+}
+#[derive(Serialize, Deserialize, Debug, Convert)]
+#[serde(rename_all = "camelCase")]
+#[convert(from = "DsEnvironmentPage")]
+pub struct EnvironmentPage {
+    pub id: i32,
+    pub code: i64,
+    pub name: Option<String>,
+    pub config: Option<String>,
+    pub description: Option<String>,
+    pub operator: Option<i32>,
+    pub create_time: Option<String>,
+    pub update_time: Option<String>,
+    pub worker_groups: Vec<String>,
 }

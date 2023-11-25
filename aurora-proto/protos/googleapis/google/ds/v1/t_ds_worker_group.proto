@@ -49,6 +49,11 @@ service DsWorkerGroupService {
       delete: "/v1alpha1/{name=DsWorkerGroups/*}"
     };
   }
+  rpc AllDsWorkerGroups(google.protobuf.Empty) returns (AllDsWorkerGroupsResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsWorkerGroups/all"
+    };
+  }
 }
 
 // message DsWorkerGroup {
@@ -59,18 +64,22 @@ message ListDsWorkerGroupsRequest {
 
 
   // The maximum number of items to return.
-  int32 page_size = 1;
+  uint64 page_size = 1;
 
- int32 page_num = 2;
+  uint64 page_num = 2;
+  optional string search_val=3 ;
 }
 
 message ListDsWorkerGroupsResponse {
-  // The field name should match the noun "DsWorkerGroup" in the method name.
-  // There will be a maximum number of items returned based on the page_size field in the request.
-  repeated DsWorkerGroup DsWorkerGroups = 1;
-
-  // Token to retrieve the next page of results, or empty if there are no more results in the list.
-  string next_page_token = 2;
+  repeated DsWorkerGroup total_list = 1;
+  uint64 current_page = 2;
+  uint64 page_size = 3;
+  uint64 start = 4;
+  uint64 total = 5;
+  uint64 total_page = 6;
+}
+message AllDsWorkerGroupsResponse {
+  repeated string data = 1;
 }
 
 message GetDsWorkerGroupRequest {
@@ -79,27 +88,20 @@ message GetDsWorkerGroupRequest {
 }
 
 message CreateDsWorkerGroupRequest {
-  // The parent resource name where the DsWorkerGroup is to be created.
-  string parent = 1;
 
-  // The DsWorkerGroup id to use for this DsWorkerGroup.
-  string DsWorkerGroup_id = 2;
+    string name=1 ;
+    optional string addr_list=2 ;
 
-  // The DsWorkerGroup resource to create.
-  // The field name should match the Noun in the method name.
-  DsWorkerGroup DsWorkerGroup = 3;
 }
 
 message UpdateDsWorkerGroupRequest {
-  // The DsWorkerGroup resource which replaces the resource on the server.
-  DsWorkerGroup DsWorkerGroup = 1;
 
-  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
-  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
-  google.protobuf.FieldMask update_mask = 2;
+    int64 id=1 ;
+    string name=2 ;
+    optional string addr_list=3 ;
 }
 
 message DeleteDsWorkerGroupRequest {
   // The resource name of the DsWorkerGroup to be deleted.
-  string name = 1;
+  int32 id = 1;
 }

@@ -65,3 +65,4 @@ pub use super::t_ds_udfs::Entity as TDsUdfs;
 pub use super::t_ds_user::Entity as TDsUser;
 pub use super::t_ds_version::Entity as TDsVersion;
 pub use super::t_ds_worker_group::Entity as TDsWorkerGroup;
+pub use super::v_ds_environment::Entity as VTDsEnvironment;

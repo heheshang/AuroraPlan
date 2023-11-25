@@ -27,10 +27,10 @@ async fn start(host: String, port: u32) -> Result<()> {
     // let backtrace = backtrace::Backtrace::new();
     let addr: SocketAddr = format!("{}:{}", host, port).parse()?;
 
-    env::set_var("RUST_LOG", "debug");
+    env::set_var("RUST_LOG", "info");
     env::set_var("RUST_BACKTRACE", "full");
     tracing_subscriber::fmt()
-        .with_max_level(Level::DEBUG)
+        .with_max_level(Level::INFO)
         .with_target(true)
         .with_thread_names(true)
         .with_thread_ids(true)

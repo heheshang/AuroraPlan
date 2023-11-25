@@ -14,7 +14,7 @@ message DsEnvironment {
      optional string config=4 ;
      optional string  description= 5;
      optional int32  operator= 6;
-     optional string  worker_groups= 7;
+     repeated string  worker_groups= 7;
      optional string  create_time=8 ;
      optional string  update_time= 9;
 }
@@ -76,13 +76,27 @@ message ListDsEnvironmentsRequest {
 }
 
 message ListDsEnvironmentsResponse {
-  repeated DsEnvironment total_list = 1;
+  repeated DsEnvironmentPage total_list = 1;
   uint64 current_page = 2;
   uint64 page_size = 3;
   uint64 start = 4;
   uint64 total = 5;
   uint64 total_page = 6;
 }
+message DsEnvironmentPage {
+
+     int32  id= 1;
+     int64  code= 2;
+     optional string name= 3;
+     optional string config=4 ;
+     optional string  description= 5;
+     optional int32  operator= 6;
+     repeated string  worker_groups= 7;
+     optional string  create_time=8 ;
+     optional string  update_time= 9;
+}
+
+
 
 message GetDsEnvironmentRequest {
   // The field will contain name of the resource requested.
@@ -94,7 +108,7 @@ message CreateDsEnvironmentRequest {
   string config = 2;
   optional string description = 3;
   int32 operator = 4;
-  string worker_groups = 5;
+  repeated string worker_groups = 5;
 }
 
 message UpdateDsEnvironmentRequest {
@@ -102,12 +116,12 @@ message UpdateDsEnvironmentRequest {
   optional string name= 3;
   optional string config=4 ;
   optional string  description= 5;
-  optional string  worker_groups= 7;
+  repeated string  worker_groups= 7;
 }
 
 message DeleteDsEnvironmentRequest {
   // The resource name of the DsEnvironment to be deleted.
-  int32 id = 1;
+  int64 code = 1;
 }
 message VerifyDsEnvironmentRequest {
   string environment_name=1 ;

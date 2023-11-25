@@ -6,10 +6,12 @@ use aurora_common::{
 use entity::{
     t_ds_environment::{ActiveModel, Column, Entity, EnvironmentToGroupLink},
     t_ds_environment_worker_group_relation,
+    v_ds_environment::Entity as VEntity,
 };
-use proto::ds_environment::{ds_environment_service_server::DsEnvironmentService, DsEnvironment};
+use proto::ds_environment::{ds_environment_service_server::DsEnvironmentService, DsEnvironment, DsEnvironmentPage};
 use sea_orm::{
-    ActiveModelTrait, ActiveValue::NotSet, ColumnTrait, DbErr, EntityTrait, QueryFilter, Set, TransactionTrait,
+    debug_print, ActiveModelTrait, ActiveValue::NotSet, ColumnTrait, DbErr, EntityTrait, PaginatorTrait, QueryFilter,
+    Set, TransactionTrait,
 };
 use tracing::{error, info};
 pub struct DsEnvironmentServiceServer(AuroraRpcServer);
@@ -31,7 +33,63 @@ impl DsEnvironmentService for AuroraRpcServer {
         &self,
         _req: tonic::Request<proto::ds_environment::ListDsEnvironmentsRequest>,
     ) -> std::result::Result<tonic::Response<proto::ds_environment::ListDsEnvironmentsResponse>, tonic::Status> {
-        todo!()
+        let page_num = _req.get_ref().clone().page_num;
+        let page_size = _req.get_ref().clone().page_size;
+        let search_val = _req.get_ref().clone().search_val.unwrap_or_default();
+        let _db = &self.db;
+        let pages = VEntity::find()
+            .filter(Column::Name.like(format!("%{}%", search_val)))
+            .paginate(&self.db, page_size);
+        debug_print!("query sql:{:#?}", pages);
+        let page_num = match page_num {
+            0 => 0,
+            _ => page_num - 1,
+        };
+        let items = match pages.fetch_page(page_num).await {
+            Ok(items) => items,
+            Err(_) => {
+                error!("fetch_page ds_envrionment error");
+                vec![]
+            }
+        };
+        let current_page = pages.cur_page();
+        info!("current_page: {}", current_page);
+        let (total, total_page) = match pages.num_items_and_pages().await {
+            Ok(v) => (v.number_of_items, v.number_of_pages),
+            Err(_) => {
+                error!("num_items_and_pages ds_envrionment error");
+                (0, 0)
+            }
+        };
+        info!("total: {}, total_page: {}", total, total_page);
+        let start = (page_num) * page_size;
+        info!("start: {}", start);
+        let res = proto::ds_environment::ListDsEnvironmentsResponse {
+            total,
+            page_size,
+            total_list: items
+                .into_iter()
+                .map(|v| {
+                    info!("v: {:#?} ", v);
+
+                    DsEnvironmentPage {
+                        id: v.id,
+                        name: v.name,
+                        code: v.code,
+                        operator: v.operator,
+                        description: v.description,
+                        worker_groups: v.worker_groups,
+                        config: v.config,
+                        create_time: Some(v.create_time.unwrap().to_string()),
+                        update_time: Some(v.update_time.unwrap().to_string()),
+                    }
+                })
+                .collect(),
+            current_page: current_page + 1,
+            start,
+            total_page,
+        };
+        Ok(tonic::Response::new(res))
     }
 
     async fn get_ds_environment(
@@ -71,8 +129,6 @@ impl DsEnvironmentService for AuroraRpcServer {
                     .await;
                     let _ = t_ds_environment_worker_group_relation::Entity::insert_many(
                         worker_groups
-                            .split(',')
-                            .collect::<Vec<&str>>()
                             .iter()
                             .map(|worker_group| t_ds_environment_worker_group_relation::ActiveModel {
                                 id: NotSet,
@@ -101,9 +157,7 @@ impl DsEnvironmentService for AuroraRpcServer {
                                 operator: l.operator,
                                 create_time: Some(l.create_time.unwrap_or_default().to_string()),
                                 update_time: Some(l.update_time.unwrap_or_default().to_string()),
-                                worker_groups: Some(
-                                    r.into_iter().map(|r| r.worker_group).collect::<Vec<String>>().join(","),
-                                ),
+                                worker_groups: r.into_iter().map(|r| r.worker_group).collect::<Vec<String>>(),
                             })
                             .unwrap_or_default()
                         })
@@ -131,7 +185,32 @@ impl DsEnvironmentService for AuroraRpcServer {
         &self,
         _req: tonic::Request<proto::ds_environment::DeleteDsEnvironmentRequest>,
     ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
-        todo!()
+        let db = &self.db;
+        let code = _req.get_ref().clone().code;
+
+        db.transaction::<_, (), DbErr>(|tx| {
+            Box::pin(async move {
+                let _res = Entity::delete_many().filter(Column::Code.eq(code)).exec(tx).await.map_err(|_| {
+                    tonic::Status::from_error(Error::InternalServerErrorArgs(AuroraData::Null, None).into())
+                });
+                let _res = t_ds_environment_worker_group_relation::Entity::delete_many()
+                    .filter(t_ds_environment_worker_group_relation::Column::EnvironmentCode.eq(code))
+                    .exec(tx)
+                    .await
+                    .map_err(|_| {
+                        tonic::Status::from_error(Error::InternalServerErrorArgs(AuroraData::Null, None).into())
+                    });
+                Ok(())
+            })
+        })
+        .await
+        .map_err(|_e| {
+            error!("delete environment error: {:?}", _e);
+            tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
+                Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
+            ))
+        })?;
+        Ok(tonic::Response::new(()))
     }
 
     async fn verify_ds_environment(

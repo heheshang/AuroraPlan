@@ -92,6 +92,7 @@ fn main() {
             "ds_dq_task_statistics_value.DsDqTaskStatisticsValue",
             "ds_environment_worker_group_relation.DsEnvironmentWorkerGroupRelation",
             "ds_environment.DsEnvironment",
+            "ds_environment.DsEnvironmentPage",
             "ds_error_command.DsErrorCommand",
             "ds_k8s_namespace.DsK8sNamespace",
             "ds_k8s.DsK8s",

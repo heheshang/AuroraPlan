@@ -3,6 +3,9 @@ use crate::web::bean::response::environment::Environment;
 use crate::web::bean::response::environment::EnvironmentList;
 use aurora_common::core_results::results::ApiResult;
 use aurora_common::core_results::results::Result;
+use axum::routing::delete;
+use axum::routing::post;
+use axum::Json;
 use axum::{
     extract::{Path, Query},
     middleware,
@@ -10,6 +13,7 @@ use axum::{
     Form, Router,
 };
 use tower_cookies::Cookies;
+use tracing::info;
 
 use crate::{ctx::Ctx, model};
 
@@ -21,30 +25,41 @@ use super::{
 
 pub fn routes() -> Router {
     let routes = Router::new()
-        .route("/environment", get(list).post(create))
-        .route("/environment/:id", put(update).delete(delete_environment))
-        .route("/environment/verify-environment", get(verify_environment));
+        .route("/environment/create", post(create))
+        .route("/environment/list-paging", get(list))
+        .route("/environment/update", post(update))
+        .route("/environment/delete", delete(delete_environment))
+        .route("/environment/verify-environment", post(verify_environment));
 
     Router::new()
         .nest("/aurora", routes)
         .route_layer(middleware::from_fn(mw_ctx_require))
 }
 
-pub async fn delete_environment(cookies: Cookies, ctx: Ctx, Path(id): Path<i32>) -> Result<ApiResult<()>> {
-    model::environment::delete(id).await?;
-    Ok(ApiResult::build(Some(())))
-}
-pub async fn update(
+pub async fn delete_environment(
     cookies: Cookies,
     ctx: Ctx,
-    Path(id): Path<i32>,
-    param: Form<UpdateEnvironment>,
+    #[allow(non_snake_case)] environmentCode: Form<i64>,
 ) -> Result<ApiResult<()>> {
+    model::environment::delete(environmentCode.0).await?;
+    Ok(ApiResult::build(Some(())))
+}
+pub async fn update(cookies: Cookies, ctx: Ctx, param: Form<UpdateEnvironment>) -> Result<ApiResult<()>> {
     let code = param.code;
     let description = param.description.clone();
     let name = &param.name;
     let config = &param.config;
-    let worker_groups = param.worker_groups.clone();
+    let mut origin = param.worker_groups.clone();
+    let worker_groups = origin
+        .replace(['[', ']', '\"'], "")
+        .split(',')
+        .filter(|s| !s.is_empty())
+        .map(|s| s.trim().to_string())
+        .collect::<Vec<String>>();
+    info!(
+        "name: {},description: {:?} config: {},worker_groups: {:?}  ",
+        name, description, config, worker_groups
+    );
     model::environment::update(code, name, config, description, worker_groups).await?;
     Ok(ApiResult::build(Some(())))
 }
@@ -53,9 +68,25 @@ pub async fn create(cookies: Cookies, ctx: Ctx, param: Form<CreateEnvironment>) 
     let name = param.name.clone();
     let description = param.description.clone();
     let config = param.config.clone();
-    let worker_groups = param.worker_groups.clone();
+    //"[\"222\"]"; convert to vec
+    // let mut worker_groups = param.worker_groups.clone();
+    // worker_groups.remove_matches('[');
+    // worker_groups.remove_matches(']');
+    // worker_groups.replace("\"", "");
+    // worker_groups.replace(" ", "");
+    let mut origin = param.worker_groups.clone();
+    let worker_groups = origin
+        .replace(['[', ']', '\"'], "")
+        .split(',')
+        .filter(|s| !s.is_empty())
+        .map(|s| s.trim().to_string())
+        .collect::<Vec<String>>();
     let operator = ctx.user_id;
-    let res = model::environment::create(name, config, description, worker_groups, operator).await?;
+    info!(
+        "name: {},description: {:?} config: {},worker_groups: {:?},operator: {} ",
+        name, description, config, worker_groups, operator
+    );
+    let res = model::environment::create(name, config, description, worker_groups.to_vec(), operator).await?;
     Ok(ApiResult::build(Some(res)))
 }
 
@@ -71,7 +102,7 @@ pub async fn list(
     Ok(ApiResult::build(Some(res.into())))
 }
 
-pub async fn verify_environment(cookies: Cookies, ctx: Ctx, param: Query<VerifyEnvironment>) -> Result<ApiResult<()>> {
+pub async fn verify_environment(cookies: Cookies, ctx: Ctx, param: Form<VerifyEnvironment>) -> Result<ApiResult<()>> {
     let environment_name = &param.environment_name;
     model::environment::verify_environment(environment_name).await?;
     Ok(ApiResult::build(Some(())))

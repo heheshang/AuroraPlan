@@ -15,8 +15,8 @@ pub struct DsEnvironment {
     pub description: ::core::option::Option<::prost::alloc::string::String>,
     #[prost(int32, optional, tag = "6")]
     pub operator: ::core::option::Option<i32>,
-    #[prost(string, optional, tag = "7")]
-    pub worker_groups: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, repeated, tag = "7")]
+    pub worker_groups: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
     #[prost(string, optional, tag = "8")]
     pub create_time: ::core::option::Option<::prost::alloc::string::String>,
     #[prost(string, optional, tag = "9")]
@@ -37,7 +37,7 @@ pub struct ListDsEnvironmentsRequest {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ListDsEnvironmentsResponse {
     #[prost(message, repeated, tag = "1")]
-    pub total_list: ::prost::alloc::vec::Vec<DsEnvironment>,
+    pub total_list: ::prost::alloc::vec::Vec<DsEnvironmentPage>,
     #[prost(uint64, tag = "2")]
     pub current_page: u64,
     #[prost(uint64, tag = "3")]
@@ -48,6 +48,30 @@ pub struct ListDsEnvironmentsResponse {
     pub total: u64,
     #[prost(uint64, tag = "6")]
     pub total_page: u64,
+}
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct DsEnvironmentPage {
+    #[prost(int32, tag = "1")]
+    pub id: i32,
+    #[prost(int64, tag = "2")]
+    pub code: i64,
+    #[prost(string, optional, tag = "3")]
+    pub name: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "4")]
+    pub config: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "5")]
+    pub description: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(int32, optional, tag = "6")]
+    pub operator: ::core::option::Option<i32>,
+    #[prost(string, repeated, tag = "7")]
+    pub worker_groups: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "8")]
+    pub create_time: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "9")]
+    pub update_time: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -67,8 +91,8 @@ pub struct CreateDsEnvironmentRequest {
     pub description: ::core::option::Option<::prost::alloc::string::String>,
     #[prost(int32, tag = "4")]
     pub operator: i32,
-    #[prost(string, tag = "5")]
-    pub worker_groups: ::prost::alloc::string::String,
+    #[prost(string, repeated, tag = "5")]
+    pub worker_groups: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -81,15 +105,15 @@ pub struct UpdateDsEnvironmentRequest {
     pub config: ::core::option::Option<::prost::alloc::string::String>,
     #[prost(string, optional, tag = "5")]
     pub description: ::core::option::Option<::prost::alloc::string::String>,
-    #[prost(string, optional, tag = "7")]
-    pub worker_groups: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, repeated, tag = "7")]
+    pub worker_groups: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct DeleteDsEnvironmentRequest {
     /// The resource name of the DsEnvironment to be deleted.
-    #[prost(int32, tag = "1")]
-    pub id: i32,
+    #[prost(int64, tag = "1")]
+    pub code: i64,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]

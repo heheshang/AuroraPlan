@@ -4,8 +4,9 @@ mod error;
 pub(crate) mod projects;
 pub(crate) mod queues;
 pub(crate) mod session;
-pub(crate) mod tentans;
+pub(crate) mod tenants;
 pub(crate) mod user;
+pub(crate) mod worker_groups;
 use async_trait::async_trait;
 use aurora_common::core_results::results::Result;
 #[async_trait]

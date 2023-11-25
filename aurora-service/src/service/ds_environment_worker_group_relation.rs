@@ -1,5 +1,21 @@
 use super::dao_service::AuroraRpcServer;
+
+use entity::t_ds_environment_worker_group_relation::{Column, Entity};
 use proto::ds_environment_worker_group_relation::ds_environment_worker_group_relation_service_server::DsEnvironmentWorkerGroupRelationService;
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
+
+pub struct DsEnvironmentWorkerGroupServiceServer(pub AuroraRpcServer);
+impl DsEnvironmentWorkerGroupServiceServer {
+    pub async fn find_worker_groups_code(&self, code: i64) -> Vec<String> {
+        let db = &self.0.db;
+        Entity::find()
+            .filter(Column::EnvironmentCode.eq(code))
+            .all(db)
+            .await
+            .map(|v| v.into_iter().map(|m| m.worker_group).collect::<Vec<String>>())
+            .unwrap_or_default()
+    }
+}
 
 #[tonic::async_trait]
 impl DsEnvironmentWorkerGroupRelationService for AuroraRpcServer {

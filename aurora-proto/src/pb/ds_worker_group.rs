@@ -18,21 +18,34 @@ pub struct DsWorkerGroup {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ListDsWorkerGroupsRequest {
     /// The maximum number of items to return.
-    #[prost(int32, tag = "1")]
-    pub page_size: i32,
-    #[prost(int32, tag = "2")]
-    pub page_num: i32,
+    #[prost(uint64, tag = "1")]
+    pub page_size: u64,
+    #[prost(uint64, tag = "2")]
+    pub page_num: u64,
+    #[prost(string, optional, tag = "3")]
+    pub search_val: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ListDsWorkerGroupsResponse {
-    /// The field name should match the noun "DsWorkerGroup" in the method name.
-    /// There will be a maximum number of items returned based on the page_size field in the request.
     #[prost(message, repeated, tag = "1")]
-    pub ds_worker_groups: ::prost::alloc::vec::Vec<DsWorkerGroup>,
-    /// Token to retrieve the next page of results, or empty if there are no more results in the list.
-    #[prost(string, tag = "2")]
-    pub next_page_token: ::prost::alloc::string::String,
+    pub total_list: ::prost::alloc::vec::Vec<DsWorkerGroup>,
+    #[prost(uint64, tag = "2")]
+    pub current_page: u64,
+    #[prost(uint64, tag = "3")]
+    pub page_size: u64,
+    #[prost(uint64, tag = "4")]
+    pub start: u64,
+    #[prost(uint64, tag = "5")]
+    pub total: u64,
+    #[prost(uint64, tag = "6")]
+    pub total_page: u64,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct AllDsWorkerGroupsResponse {
+    #[prost(string, repeated, tag = "1")]
+    pub data: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -44,34 +57,27 @@ pub struct GetDsWorkerGroupRequest {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct CreateDsWorkerGroupRequest {
-    /// The parent resource name where the DsWorkerGroup is to be created.
     #[prost(string, tag = "1")]
-    pub parent: ::prost::alloc::string::String,
-    /// The DsWorkerGroup id to use for this DsWorkerGroup.
-    #[prost(string, tag = "2")]
-    pub ds_worker_group_id: ::prost::alloc::string::String,
-    /// The DsWorkerGroup resource to create.
-    /// The field name should match the Noun in the method name.
-    #[prost(message, optional, tag = "3")]
-    pub ds_worker_group: ::core::option::Option<DsWorkerGroup>,
+    pub name: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "2")]
+    pub addr_list: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct UpdateDsWorkerGroupRequest {
-    /// The DsWorkerGroup resource which replaces the resource on the server.
-    #[prost(message, optional, tag = "1")]
-    pub ds_worker_group: ::core::option::Option<DsWorkerGroup>,
-    /// The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
-    /// see <https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask>
-    #[prost(message, optional, tag = "2")]
-    pub update_mask: ::core::option::Option<::prost_types::FieldMask>,
+    #[prost(int64, tag = "1")]
+    pub id: i64,
+    #[prost(string, tag = "2")]
+    pub name: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "3")]
+    pub addr_list: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct DeleteDsWorkerGroupRequest {
     /// The resource name of the DsWorkerGroup to be deleted.
-    #[prost(string, tag = "1")]
-    pub name: ::prost::alloc::string::String,
+    #[prost(int32, tag = "1")]
+    pub id: i32,
 }
 /// Generated client implementations.
 pub mod ds_worker_group_service_client {
@@ -235,6 +241,22 @@ pub mod ds_worker_group_service_client {
             ));
             self.inner.unary(req, path, codec).await
         }
+        pub async fn all_ds_worker_groups(
+            &mut self,
+            request: impl tonic::IntoRequest<()>,
+        ) -> std::result::Result<tonic::Response<super::AllDsWorkerGroupsResponse>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static("/ds_worker_group.DsWorkerGroupService/AllDsWorkerGroups");
+            let mut req = request.into_request();
+            req.extensions_mut().insert(GrpcMethod::new(
+                "ds_worker_group.DsWorkerGroupService",
+                "AllDsWorkerGroups",
+            ));
+            self.inner.unary(req, path, codec).await
+        }
     }
 }
 /// Generated server implementations.
@@ -264,6 +286,10 @@ pub mod ds_worker_group_service_server {
             &self,
             request: tonic::Request<super::DeleteDsWorkerGroupRequest>,
         ) -> std::result::Result<tonic::Response<()>, tonic::Status>;
+        async fn all_ds_worker_groups(
+            &self,
+            request: tonic::Request<()>,
+        ) -> std::result::Result<tonic::Response<super::AllDsWorkerGroupsResponse>, tonic::Status>;
     }
     /// Generated according to https://cloud.google.com/apis/design/standard_methods
     #[derive(Debug)]
@@ -483,6 +509,35 @@ pub mod ds_worker_group_service_server {
                     let fut = async move {
                         let inner = inner.0;
                         let method = DeleteDsWorkerGroupSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/ds_worker_group.DsWorkerGroupService/AllDsWorkerGroups" => {
+                    #[allow(non_camel_case_types)]
+                    struct AllDsWorkerGroupsSvc<T: DsWorkerGroupService>(pub Arc<T>);
+                    impl<T: DsWorkerGroupService> tonic::server::UnaryService<()> for AllDsWorkerGroupsSvc<T> {
+                        type Response = super::AllDsWorkerGroupsResponse;
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        fn call(&mut self, request: tonic::Request<()>) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move { (*inner).all_ds_worker_groups(request).await };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let inner = inner.0;
+                        let method = AllDsWorkerGroupsSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(accept_compression_encodings, send_compression_encodings)

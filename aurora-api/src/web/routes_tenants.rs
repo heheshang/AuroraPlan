@@ -29,7 +29,7 @@ pub fn routes() -> Router {
 }
 
 pub async fn delete_tenant(cookies: Cookies, ctx: Ctx, Path(id): Path<i32>) -> Result<ApiResult<()>> {
-    model::tentans::delete(id).await?;
+    model::tenants::delete(id).await?;
     Ok(ApiResult::build(Some(())))
 }
 pub async fn update(
@@ -40,13 +40,13 @@ pub async fn update(
 ) -> Result<ApiResult<()>> {
     let description = &param.description;
     let queue_id = &param.queue_id;
-    model::tentans::update(id, description, queue_id).await?;
+    model::tenants::update(id, description, queue_id).await?;
     Ok(ApiResult::build(Some(())))
 }
 pub async fn create(cookies: Cookies, ctx: Ctx, param: Form<CreateTenant>) -> Result<ApiResult<Tenant>> {
     let tenant_code = param.tenant_code.clone();
     let description = param.description.clone();
-    let res = model::tentans::create(tenant_code, description, param.queue_id).await?;
+    let res = model::tenants::create(tenant_code, description, param.queue_id).await?;
     Ok(ApiResult::build(Some(res)))
 }
 
@@ -54,12 +54,12 @@ pub async fn list(cookies: Cookies, ctx: Ctx, param: Query<TenantListParams>) ->
     let page_num = param.pageNo;
     let page_size = param.pageSize;
     let search_val = &param.searchVal;
-    let res = model::tentans::list(&page_num, &page_size, search_val).await?;
+    let res = model::tenants::list(&page_num, &page_size, search_val).await?;
     Ok(ApiResult::build(Some(res.into())))
 }
 
 pub async fn verify_code(cookies: Cookies, ctx: Ctx, param: Query<CreateTenant>) -> Result<ApiResult<()>> {
     let tenant_code = &param.tenant_code;
-    model::tentans::verify_code(tenant_code).await?;
+    model::tenants::verify_code(tenant_code).await?;
     Ok(ApiResult::build(Some(())))
 }

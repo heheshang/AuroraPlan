@@ -9,9 +9,9 @@ use crate::web::bean::response::environment::Environment;
 
 use super::client::service::_ds_environment_service_client;
 
-pub async fn delete(id: i32) -> Result<()> {
+pub async fn delete(code: i64) -> Result<()> {
     let client = _ds_environment_service_client().await?;
-    let request = tonic::Request::new(DeleteDsEnvironmentRequest { id });
+    let request = tonic::Request::new(DeleteDsEnvironmentRequest { code });
     client
         .clone()
         .delete_ds_environment(request)
@@ -37,7 +37,7 @@ pub async fn create(
         name,
         config,
         description,
-        worker_groups: worker_groups.join(","),
+        worker_groups,
         operator,
     });
     let res = client
@@ -98,7 +98,7 @@ pub async fn update(
         name: Some(name.to_string()),
         config: Some(config.to_string()),
         description,
-        worker_groups: Some(worker_groups.join(",")),
+        worker_groups,
     });
     client
         .clone()
