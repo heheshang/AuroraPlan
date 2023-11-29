@@ -1,0 +1,15 @@
+[package]
+name = "aurora-dao"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+license.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+diesel = { workspace = true, features = ["postgres",  "64-column-tables"] }
+dotenvy.workspace = true
