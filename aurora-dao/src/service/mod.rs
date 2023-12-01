@@ -79,9 +79,9 @@ pub mod qrtz_simprop_triggers;
 pub mod qrtz_triggers;
 pub type DbPool = Pool<ConnectionManager<PgConnection>>;
 
-pub(crate) async fn build_router(conn: DbPool) -> Router {
+pub(crate) async fn build_router(pool: DbPool) -> Router {
     info!("build_router");
-    let grpc_server = AuroraRpcServer::new(conn);
+    let grpc_server = AuroraRpcServer::new(pool);
     let (mut health_reporter, health_service) = tonic_health::server::health_reporter();
     health_reporter.set_serving::<GreeterServer<MyGreeter>>().await;
     // tokio::spawn(twiddle_service_status(health_reporter));

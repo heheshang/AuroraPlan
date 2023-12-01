@@ -2,6 +2,7 @@ use anyhow::Result;
 use aurora_config::dao_config::Settings;
 
 pub mod service;
+use aurora_dao::models::t_ds_environment_relation::EnvironmentRelation;
 use diesel::{
     r2d2::{ConnectionManager, Pool},
     PgConnection,
@@ -22,9 +23,11 @@ async fn main() -> Result<()> {
     let port = settings.server.port;
     let addr: SocketAddr = format!("{}:{}", host, port).parse()?;
 
-    let connection = get_connection_pool(&url);
-    info!("aurora-service: connection: {:?}", connection);
-    let router = build_router(connection).await;
+    let pool = get_connection_pool(&url);
+    info!("aurora-service: connection: {:?}", pool);
+    let ss = EnvironmentRelation::find_by_code(1, pool.clone()).await?;
+    info!("{:?}", ss);
+    let router = build_router(pool).await;
 
     match listenfd::ListenFd::from_env().take_tcp_listener(0)? {
         Some(listener) => {
