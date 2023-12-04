@@ -16,7 +16,7 @@ use proto::ds_user::{
 #[tonic::async_trait]
 impl DsUserService for AuroraRpcServer {
     async fn get_ds_user(&self, req: GrpcRequest<GetDsUserRequest>) -> GrpcResponse<DsUser> {
-        // let conn = &self.db;
+        let conn = &self.db;
         // let name = req.into_inner().name;
         // let db_user: Option<t_ds_user::Model> = t_ds_user::Entity::find()
         //     .filter(t_ds_user::Column::UserName.eq(name))

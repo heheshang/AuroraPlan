@@ -144,8 +144,8 @@ diesel::table! {
         int_prop_2 -> Nullable<Int4>,
         long_prop_1 -> Nullable<Int8>,
         long_prop_2 -> Nullable<Int8>,
-        dec_prop_1 -> Nullable<Numeric>,
-        dec_prop_2 -> Nullable<Numeric>,
+        dec_prop_1 -> Numeric,
+        dec_prop_2 -> Numeric,
         bool_prop_1 -> Nullable<Bool>,
         bool_prop_2 -> Nullable<Bool>,
     }

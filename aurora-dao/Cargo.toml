@@ -14,10 +14,9 @@ license.workspace = true
 diesel = { workspace = true, features = [
     "postgres",
     "64-column-tables",
-    "r2d2",
-    "chrono",
-    "serde_json",
     "postgres_backend",
+    "bigdecimal",
+    "extras",
 ] }
 dotenvy.workspace = true
 fern = { version = "0.6.2", features = ["chrono", "colored"] }
@@ -36,3 +35,5 @@ anyhow = { workspace = true }
 tonic-health = { workspace = true }
 diesel-derive-enum = { version = "2.1.0", features = ["postgres"] }
 serde_json.workspace = true
+# diesel-async = { version = "0.4.1", features = ["r2d2", "postgres"] }
+bigdecimal = { version = "0.4.2", features = ["serde", "string-only"] }

@@ -7,7 +7,6 @@ use super::DPool;
 #[diesel(table_name = crate::schema::t_ds_environment_relation)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct EnvironmentRelation {
-    #[diesel(column_name = "id")]
     pub id: i32,
     pub code: i64,
     pub name: Option<String>,

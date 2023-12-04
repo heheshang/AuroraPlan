@@ -32,6 +32,6 @@ registry = "https://mirrors.tuna.tsinghua.edu.cn/git/crates.io-index.git"
 registry = "https://code.aliyun.com/rustcc/crates.io-index.git"
 
 [build]
-rustc-wrapper = "sccache"
+# rustc-wrapper = "sccache"
 # incremental = true
 # rustflags=["-Z","threads=4"]

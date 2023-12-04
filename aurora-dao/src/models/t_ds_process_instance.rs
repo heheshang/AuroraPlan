@@ -1,0 +1,48 @@
+use chrono::NaiveDateTime;
+use diesel::prelude::*;
+
+#[derive(Clone, Debug, PartialEq, Queryable, Selectable, Identifiable, Default)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+#[diesel(table_name = crate::schema::t_ds_process_instance)]
+pub struct Model {
+    pub id: i32,
+    pub name: Option<String>,
+    pub process_definition_code: Option<i64>,
+    pub process_definition_version: Option<i32>,
+    pub project_code: Option<i64>,
+    pub state: Option<i32>,
+    pub state_history: Option<String>,
+    pub recovery: Option<i32>,
+    pub start_time: Option<NaiveDateTime>,
+    pub end_time: Option<NaiveDateTime>,
+    pub run_times: Option<i32>,
+    pub host: Option<String>,
+    pub command_type: Option<i32>,
+    pub command_param: Option<String>,
+    pub task_depend_type: Option<i32>,
+    pub max_try_times: Option<i32>,
+    pub failure_strategy: Option<i32>,
+    pub warning_type: Option<i32>,
+    pub warning_group_id: Option<i32>,
+    pub schedule_time: Option<NaiveDateTime>,
+    pub command_start_time: Option<NaiveDateTime>,
+    pub global_params: Option<String>,
+    pub process_instance_json: Option<String>,
+    pub flag: Option<i32>,
+    pub update_time: Option<NaiveDateTime>,
+    pub is_sub_process: Option<i32>,
+    pub executor_id: i32,
+    pub executor_name: Option<String>,
+    pub history_cmd: Option<String>,
+    pub dependence_schedule_times: Option<String>,
+    pub process_instance_priority: Option<i32>,
+    pub worker_group: Option<String>,
+    pub environment_code: Option<i64>,
+    pub timeout: Option<i32>,
+    pub tenant_code: Option<String>,
+    pub var_pool: Option<String>,
+    pub dry_run: Option<i32>,
+    pub next_process_instance_id: Option<i32>,
+    pub restart_time: Option<NaiveDateTime>,
+    pub test_flag: Option<i32>,
+}
