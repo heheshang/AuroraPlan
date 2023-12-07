@@ -72,7 +72,7 @@ pub mod qrtz_simprop_triggers;
 pub mod qrtz_triggers;
 
 pub(crate) async fn build_router(conn: DatabaseConnection) -> Router {
-    tracing::info!("build_router");
+    log::info!("build_router");
     let grpc_server = AuroraRpcServer::new(conn);
     let (mut health_reporter, health_service) = tonic_health::server::health_reporter();
     health_reporter.set_serving::<GreeterServer<MyGreeter>>().await;

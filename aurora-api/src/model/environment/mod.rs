@@ -3,7 +3,7 @@ use aurora_proto::ds_environment::{
     CreateDsEnvironmentRequest, DeleteDsEnvironmentRequest, ListDsEnvironmentsRequest, ListDsEnvironmentsResponse,
     UpdateDsEnvironmentRequest, VerifyDsEnvironmentRequest,
 };
-use tracing::{error, info};
+use log::{error, info};
 
 use crate::web::bean::response::environment::EnvironmentPage;
 

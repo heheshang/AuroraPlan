@@ -4,12 +4,12 @@ use entity::{
     t_ds_queue::ActiveModel,
     t_ds_queue::{Column, Entity},
 };
+use log::{error, info};
 use proto::ds_queue::{ds_queue_service_server::DsQueueService, DsQueue, ListDsQueuesResponse};
 use sea_orm::{
     ActiveModelTrait, ActiveValue::NotSet, ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set,
 };
 use serde_json::json;
-use tracing::{error, info};
 type Result<T> = std::result::Result<T, tonic::Status>;
 
 impl AuroraRpcServer {

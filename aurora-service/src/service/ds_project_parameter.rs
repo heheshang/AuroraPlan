@@ -1,10 +1,10 @@
 use super::dao_service::AuroraRpcServer;
 use aurora_common::core_error::error::{AuroraData, AuroraErrorInfo, Error};
 use entity::t_ds_project_parameter::{self, ActiveModel, Column, Entity, Model};
+use log::{error, info};
 use proto::ds_project_parameter::project_parameter_service_server::ProjectParameterService;
 use sea_orm::{entity::prelude::*, ActiveValue::NotSet, QueryOrder, Set};
 use sea_orm::{DeleteResult, TransactionTrait};
-use tracing::{error, info};
 type Result<T> = std::result::Result<T, tonic::Status>;
 impl AuroraRpcServer {
     async fn find_by_code_projectcode(&self, code: i64, project_code: i64) -> Result<Option<Model>> {

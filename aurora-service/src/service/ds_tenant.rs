@@ -4,13 +4,13 @@ use aurora_common::core_error::error::AuroraData;
 use aurora_common::core_error::error::AuroraErrorInfo;
 use aurora_common::core_error::error::Error;
 use entity::t_ds_tenant::{ActiveModel, Column, Entity, Model};
+use log::{error, info};
 use proto::ds_tenant::ds_tenant_service_server::DsTenantService;
 use sea_orm::ActiveModelTrait;
 use sea_orm::PaginatorTrait;
 use sea_orm::QueryOrder;
 use sea_orm::Set;
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
-use tracing::{error, info};
 
 type Result<T> = std::result::Result<T, tonic::Status>;
 

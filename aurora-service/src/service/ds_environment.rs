@@ -8,12 +8,12 @@ use entity::{
     t_ds_environment_worker_group_relation,
     v_ds_environment::Entity as VEntity,
 };
+use log::{error, info};
 use proto::ds_environment::{ds_environment_service_server::DsEnvironmentService, DsEnvironmentPage};
 use sea_orm::{
     debug_print, ActiveModelTrait, ActiveValue::NotSet, ColumnTrait, DbErr, EntityTrait, PaginatorTrait, QueryFilter,
     Set, TransactionTrait,
 };
-use tracing::{error, info};
 pub struct DsEnvironmentServiceServer(AuroraRpcServer);
 impl DsEnvironmentServiceServer {
     async fn env_name_exist(&self, _env_name: &str) -> Result<bool> {

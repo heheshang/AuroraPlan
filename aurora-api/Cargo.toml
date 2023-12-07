@@ -13,8 +13,9 @@ serde_json = { workspace = true }
 serde_with = { workspace = true }
 strum_macros = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
-tracing = { workspace = true }
-tracing-subscriber = { workspace = true, features = ["env-filter"] }
+fern = { version = "0.6.2", features = ["chrono", "colored"] }
+humantime = "2.1.0"
+log = "0.4.20"
 uuid = { workspace = true, features = ["v4", "fast-rng"] }
 aurora_common = { path = "../aurora-common", package = "aurora-common" }
 aurora_proto = { path = "../aurora-proto", package = "aurora-proto" }

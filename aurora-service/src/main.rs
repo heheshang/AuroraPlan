@@ -13,8 +13,8 @@ async fn main() -> Result<()> {
 
     // let database_url = env::var("postgres://root:root@tx:16432/Aurorascheduler").expect("DATABASE_URL must be set");
 
-    tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::DEBUG)
+    log_subscriber::fmt()
+        .with_max_level(log::Level::DEBUG)
         .with_file(true)
         .with_line_number(true)
         // .compact()
@@ -30,7 +30,7 @@ async fn main() -> Result<()> {
 
     let connection: sea_orm::DatabaseConnection = SeaDatabase::connect(url).await?;
 
-    tracing::info!("aurora-service: connection: {:?}", connection);
+    log::info!("aurora-service: connection: {:?}", connection);
     let router = build_router(connection).await;
 
     match listenfd::ListenFd::from_env().take_tcp_listener(0)? {

@@ -60,10 +60,10 @@ use aurora_proto::{
     qrtz_simprop_triggers::qrtz_simprop_trigger_service_client::QrtzSimpropTriggerServiceClient,
     qrtz_triggers::qrtz_trigger_service_client::QrtzTriggerServiceClient,
 };
+use log::{debug, error, warn};
 use std::cell::RefCell;
 use tonic::Request;
 use tonic_health::pb::{health_client::HealthClient, HealthCheckRequest};
-use tracing::{debug, error, warn};
 
 use aurora_common::core_error::error::AuroraData;
 use aurora_common::{core_error::error::Error, core_results::results::Result};

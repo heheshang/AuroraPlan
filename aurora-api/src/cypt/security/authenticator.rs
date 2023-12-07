@@ -5,8 +5,8 @@ use crate::model::{
 use async_trait::async_trait;
 use aurora_common::core_results::results::Result;
 use aurora_proto::pb::ds_user::DsUser;
+use log::info;
 use std::{collections::HashMap, str::FromStr};
-use tracing::info;
 pub enum AuthenticatorType {
     Password,
     Ladp,

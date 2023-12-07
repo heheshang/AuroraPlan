@@ -15,9 +15,9 @@ use axum::{
     middleware::Next,
     response::Response,
 };
+use log::info;
 use serde::Serialize;
 use tower_cookies::{Cookie, Cookies};
-use tracing::info;
 
 #[allow(dead_code)] // For now, until we have the rpc.
 pub async fn mw_ctx_require<B>(ctx: Result<Ctx>, req: Request<B>, next: Next<B>) -> Result<Response> {

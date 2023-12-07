@@ -2,12 +2,12 @@ use super::dao_service::AuroraRpcServer;
 use aurora_common::core_error::error::{AuroraData, AuroraErrorInfo, Error};
 use aurora_common::utils::code_generate_utils::gen_code;
 use entity::t_ds_project::{self, ActiveModel, Column, Entity, ProjectToUserLink};
+use log::{error, info};
 use proto::ds_project::ds_project_service_server::DsProjectService;
 use proto::ds_project::DsProjectListRes;
 use sea_orm::sea_query::Expr;
 use sea_orm::{debug_print, Set};
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder};
-use tracing::{error, info};
 
 #[tonic::async_trait]
 impl DsProjectService for AuroraRpcServer {

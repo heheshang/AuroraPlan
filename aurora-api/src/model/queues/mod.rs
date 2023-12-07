@@ -9,7 +9,7 @@ use aurora_proto::ds_queue::{
     CreateDsQueueRequest, DeleteDsQueueRequest, ListDsQueuesRequest, ListDsQueuesResponse, UpdateDsQueueRequest,
     VerifyQueueRequest,
 };
-use tracing::{error, info};
+use log::{error, info};
 
 pub async fn list_all_queue() -> Result<Vec<Queue>> {
     let client = _ds_queue_service_client().await?;

@@ -1,9 +1,9 @@
 use anyhow::Result;
+use log::debug;
 use std::{
     env,
     path::{Path, PathBuf},
 };
-use tracing::debug;
 pub mod api_config;
 pub mod dao_config;
 

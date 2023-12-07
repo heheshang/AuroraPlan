@@ -1,6 +1,6 @@
 use std::{collections::HashMap, net::SocketAddr};
 
-use crate::{ctx::Ctx, cypt::security::get_authenticator, log, model, web, web::bean::request::user::UserLoginInfoReq};
+use crate::{ctx::Ctx, cypt::security::get_authenticator, model, web, web::bean::request::user::UserLoginInfoReq};
 use aurora_common::{
     core_error::error::{AuroraData, Error},
     core_results::results::{ApiResult, Result},
@@ -11,8 +11,8 @@ use axum::{
     routing::{get, post},
     Form, Json, Router,
 };
+use log::error;
 use tower_cookies::Cookies;
-use tracing::error;
 
 use super::{
     bean::{request::user::UserInfoReq, response::user::UserInfoRes},

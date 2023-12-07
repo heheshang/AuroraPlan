@@ -4,10 +4,10 @@ use entity::{
     t_ds_worker_group::ActiveModel,
     t_ds_worker_group::{Column, Entity},
 };
+use log::{error, info};
 use proto::ds_worker_group::ds_worker_group_service_server::DsWorkerGroupService;
 use sea_orm::Order::Desc;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set};
-use tracing::{error, info};
 #[tonic::async_trait]
 impl DsWorkerGroupService for AuroraRpcServer {
     async fn list_ds_worker_groups(

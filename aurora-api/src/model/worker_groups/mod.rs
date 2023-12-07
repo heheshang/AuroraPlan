@@ -6,7 +6,7 @@ use aurora_proto::ds_worker_group::{
     CreateDsWorkerGroupRequest, DeleteDsWorkerGroupRequest, ListDsWorkerGroupsRequest, ListDsWorkerGroupsResponse,
     UpdateDsWorkerGroupRequest,
 };
-use tracing::{error, info};
+use log::{error, info};
 
 pub async fn delete(id: i32) -> Result<()> {
     let client = _ds_worker_group_service_client().await?;

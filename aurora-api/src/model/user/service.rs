@@ -4,7 +4,7 @@ use aurora_common::{
     core_results::results::Result,
 };
 use aurora_proto::ds_user::{DsUser, GetDsUserByIdRequest, QueryUserByNamePasswordRequest};
-use tracing::{error, info};
+use log::{error, info};
 
 pub async fn query_user_by_name_password(user_name: String, user_password: String, extra: String) -> Result<DsUser> {
     info!(

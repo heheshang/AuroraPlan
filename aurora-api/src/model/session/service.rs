@@ -9,7 +9,7 @@ use aurora_proto::{
     },
     pb::{ds_session::DsSession, ds_user::DsUser},
 };
-use tracing::{error, info};
+use log::{error, info};
 
 use crate::model::client::service::_ds_session_service_client;
 

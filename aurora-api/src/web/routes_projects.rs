@@ -7,10 +7,10 @@ use axum::{
     routing::{delete, get, patch, post, put},
     Form, Router,
 };
+use log::info;
 use serde::Deserialize;
 use serde_json::json;
 use tower_cookies::Cookies;
-use tracing::info;
 
 use crate::{
     ctx::Ctx,

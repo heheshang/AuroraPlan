@@ -6,8 +6,8 @@ use axum::{
     routing::{delete, get, post, put},
     Form, Router,
 };
+use log::info;
 use tower_cookies::Cookies;
-use tracing::info;
 
 use super::{
     bean::{

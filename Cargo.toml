@@ -43,8 +43,8 @@ serde_json = "1.0.105"
 serde_with = "3.3.0"
 tokio = { version = "1.33.0" }
 tonic = "0.10.2"
-tracing = "0.1.40"
-tracing-subscriber = "0.3.17"
+# tracing = "0.1.40"
+# tracing-subscriber = "0.3.17"
 tower-http = "0.4.4"
 prost = "0.12.1"
 prost-types = "0.12.1"
@@ -56,13 +56,13 @@ tokio-stream = { version = "0.1" }
 proto-builder-trait = "0.5.1"
 # prost = "0.11.9"
 # prost-types = "0.11.9"
-sea-orm = { version = "0.12.4", features = [
-    "sqlx-postgres",
-    "runtime-tokio-native-tls",
-    "debug-print",
-    "serde_json",
-] }
-sea-orm-migration = { version = "0.12.4" }
+# sea-orm = { version = "0.12.4", features = [
+#     "sqlx-postgres",
+#     "runtime-tokio-native-tls",
+#     "debug-print",
+#     "serde_json",
+# ] }
+# sea-orm-migration = { version = "0.12.4" }
 strum_macros = "0.25.2"
 uuid = { version = "1.4.1", features = ["v4", "fast-rng"] }
 tower = { version = "0.4.13", features = ["full"] }
@@ -77,7 +77,9 @@ url = "2.4.1"
 axum-extra = "0.8.0"
 rs-snowflake = "0.6.0"
 diesel = { version = "2.1.4", features = ["postgres"] }
-
+fern = { version = "0.6.2", features = ["chrono", "colored"] }
+humantime = "2.1.0"
+log = "0.4.20"
 [profile.release-with-debug]
 inherits = "release"
 debug = true
