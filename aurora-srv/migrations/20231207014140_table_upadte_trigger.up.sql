@@ -22,7 +22,7 @@ CREATE OR REPLACE FUNCTION sqlx_set_update_time() RETURNS trigger AS $$
 BEGIN
     IF (
         NEW IS DISTINCT FROM OLD AND
-        NEW.update_time IS NOT DISTINCT FROM OLD.updated_at
+        NEW.update_time IS NOT DISTINCT FROM OLD.update_time
     ) THEN
         NEW.update_time := current_timestamp;
     END IF;
