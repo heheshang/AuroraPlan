@@ -21,7 +21,7 @@ impl DsTenantService for AuroraRpcServer {
             "search_val: {},page_size: {} ,page_num:{}",
             search_val, page_size, page_num
         );
-        let (items, total_page, total, start, cur_page) = Model::page(&search_val, page_size, page_num, pool)
+        let (items, total_page, total, start, cur_page) = Model::page(&search_val, page_num, page_size, pool)
             .await
             .map_err(|_| tonic::Status::from_error(Error::InternalServerErrorArgs(AuroraData::Null, None).into()))?;
 

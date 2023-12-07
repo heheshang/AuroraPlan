@@ -3,8 +3,8 @@ use chrono::NaiveDateTime;
 use sqlx::PgPool;
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct EnvironmentRelation {
-    pub id: i32,
-    pub code: i64,
+    pub id: Option<i32>,
+    pub code: Option<i64>,
     pub name: Option<String>,
     pub config: Option<String>,
     pub description: Option<String>,
@@ -16,8 +16,8 @@ pub struct EnvironmentRelation {
 
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct EnvironmentRelationPage {
-    pub id: i32,
-    pub code: i64,
+    pub id: Option<i32>,
+    pub code: Option<i64>,
     pub name: Option<String>,
     pub config: Option<String>,
     pub description: Option<String>,
@@ -51,7 +51,7 @@ impl EnvironmentRelation {
             r#"
             select
               *
-            from t_ds_environment_relation t1
+            from  v_ds_environment t1
             where t1.code = $1
             "#,
             _code
@@ -76,9 +76,9 @@ impl EnvironmentRelation {
             r#"
             select * ,
             coalesce (
-                 (select count(*) from  t_ds_environment_relation where name like $1), 0 ) 
+                 (select count(*) from  v_ds_environment where name like $1), 0 ) 
             "count" 
-                 from t_ds_environment_relation where name like $1 order by create_time desc 
+                 from v_ds_environment where name like $1 order by create_time desc 
                  limit $2 
                  offset $3
                 "#,

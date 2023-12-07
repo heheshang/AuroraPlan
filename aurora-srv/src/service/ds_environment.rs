@@ -33,9 +33,9 @@ impl DsEnvironmentService for AuroraRpcServer {
                     info!("v: {:#?} ", v);
 
                     DsEnvironmentPage {
-                        id: v.id,
+                        id: v.id.unwrap_or_default(),
                         name: v.name,
-                        code: v.code,
+                        code: v.code.unwrap_or_default(),
                         operator: v.operator,
                         description: v.description,
                         worker_groups: v.worker_groups.unwrap_or_default().into_iter().collect(),
@@ -104,7 +104,7 @@ impl DsEnvironmentService for AuroraRpcServer {
         &self,
         _req: tonic::Request<proto::ds_environment::UpdateDsEnvironmentRequest>,
     ) -> std::result::Result<tonic::Response<proto::ds_environment::DsEnvironment>, tonic::Status> {
-        todo!()
+        Err(tonic::Status::unimplemented("not implemented"))
     }
 
     async fn delete_ds_environment(

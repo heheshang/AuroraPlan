@@ -44,13 +44,13 @@ impl From<ModelPage> for Model {
 impl Model {
     pub(crate) async fn page(
         search_val: &str,
-        page_no: i64,
+        page_num: i64,
         page_size: i64,
         pool: &PgPool,
     ) -> Result<(Vec<Self>, i64, i64, i64, i64)> {
         let search = format!("%{}%", search_val);
         let limit = page_size;
-        let offset = (page_no - 1) * page_size;
+        let offset = (page_num - 1) * page_size;
 
         let items = sqlx::query_as!(
             ModelPage,
@@ -71,8 +71,8 @@ impl Model {
         let total = items.first().map(|x| x.count).unwrap_or(Some(0)).unwrap_or(0);
         let total_page = (total as f64 / page_size as f64).ceil() as i64;
         let items = items.into_iter().map(Self::from).collect::<Vec<Self>>();
-        let start = (page_no - 1) * page_size;
-        let cur_page = page_no;
+        let start = (page_num - 1) * page_size;
+        let cur_page = page_num;
         Ok((items, total_page, total, start, cur_page))
     }
 
