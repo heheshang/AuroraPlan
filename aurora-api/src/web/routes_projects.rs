@@ -62,7 +62,7 @@ pub fn routes() -> Router {
 pub async fn project_parameter_list(
     cookies: Cookies,
     ctx: Ctx,
-    Path(project_code): Path<u64>,
+    Path(project_code): Path<i64>,
     param: Query<ProjectParameterListParams>,
 ) -> Result<ApiResult<ProjectParameterList>> {
     let res = _project_parameter_list(&param.pageNo, &param.pageSize, &param.searchVal, &project_code).await?;

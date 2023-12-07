@@ -20,10 +20,10 @@ pub struct DsAccessToken {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ListDsAccessTokensRequest {
     /// The maximum number of items to return.
-    #[prost(uint64, tag = "1")]
-    pub page_size: u64,
-    #[prost(uint64, tag = "2")]
-    pub page_num: u64,
+    #[prost(int64, tag = "1")]
+    pub page_size: i64,
+    #[prost(int64, tag = "2")]
+    pub page_num: i64,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]

@@ -65,19 +65,19 @@ message ListDsTenantsRequest {
 
 
   // The maximum number of items to return.
-  uint64 page_size = 1;
+  int64 page_size = 1;
 
-  uint64 page_num = 2;
+  int64 page_num = 2;
   optional string search_val=3 ;
 }
 
 message ListDsTenantsResponse {
   repeated DsTenant total_list = 1;
-  uint64 current_page = 2;
-  uint64 page_size = 3;
-  uint64 start = 4;
-  uint64 total = 5;
-  uint64 total_page = 6;
+  int64 current_page = 2;
+  int64 page_size = 3;
+  int64 start = 4;
+  int64 total = 5;
+  int64 total_page = 6;
 
 
 }

@@ -62,11 +62,11 @@ message ListProjectParametersRequest {
 
 
   // The maximum number of items to return.
-  uint64 page_size = 1;
+  int64 page_size = 1;
 
-  uint64 page_num = 2;
+  int64 page_num = 2;
   optional string search_val=3 ;
-  uint64 project_code=4;
+  int64 project_code=4;
 }
 
 message ListProjectParametersResponse {
@@ -75,11 +75,11 @@ message ListProjectParametersResponse {
   repeated ProjectParameter total_list = 1;
 
   // Token to retrieve the next page of results, or empty if there are no more results in the list.
-  uint64 current_page = 2;
-  uint64 page_size = 3;
-  uint64 start = 4;
-  uint64 total = 5;
-  uint64 total_page = 6;
+  int64 current_page = 2;
+  int64 page_size = 3;
+  int64 start = 4;
+  int64 total = 5;
+  int64 total_page = 6;
 }
 
 message GetProjectParameterRequest {

@@ -43,7 +43,7 @@ pub async fn create(name: String, addr_list: String) -> Result<WorkerGroups> {
     Ok(res.into())
 }
 
-pub async fn list(page_num: &u64, page_size: &u64, search_val: &Option<String>) -> Result<ListDsWorkerGroupsResponse> {
+pub async fn list(page_num: &i64, page_size: &i64, search_val: &Option<String>) -> Result<ListDsWorkerGroupsResponse> {
     info!(
         "list worker_groups page_num: {:?} ,page_size: {:?},search_val: {:?}",
         page_num, page_size, search_val

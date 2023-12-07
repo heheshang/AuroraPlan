@@ -60,7 +60,7 @@ pub async fn _delete_project(project_code: i32) -> Result<()> {
     })?;
     Ok(())
 }
-pub async fn list(page_num: &u64, page_size: &u64, search_val: &Option<String>) -> Result<DsProjectList> {
+pub async fn list(page_num: &i64, page_size: &i64, search_val: &Option<String>) -> Result<DsProjectList> {
     let client = _ds_project_service_client().await?;
     let request = tonic::Request::new(ListDsProjectsRequest {
         page_num: *page_num,
@@ -149,10 +149,10 @@ pub async fn _update_project_parameter(
         })
 }
 pub async fn _project_parameter_list(
-    page_num: &u64,
-    page_size: &u64,
+    page_num: &i64,
+    page_size: &i64,
     search_val: &Option<String>,
-    project_code: &u64,
+    project_code: &i64,
 ) -> Result<ListProjectParametersResponse> {
     let client = _ds_project_parameter_service_client().await?;
     let request = tonic::Request::new(ListProjectParametersRequest {

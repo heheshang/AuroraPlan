@@ -16,10 +16,10 @@ pub struct WorkerGroups {
 #[serde(rename_all = "camelCase")]
 #[convert(from = "ListDsWorkerGroupsResponse")]
 pub struct WorkerGroupsList {
-    pub total: u64,
-    pub total_page: u64,
-    pub page_size: u64,
-    pub current_page: u64,
-    pub start: u64,
+    pub total: i64,
+    pub total_page: i64,
+    pub page_size: i64,
+    pub current_page: i64,
+    pub start: i64,
     pub total_list: Vec<WorkerGroups>,
 }

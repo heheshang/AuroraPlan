@@ -20,10 +20,10 @@ pub struct DsTenant {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ListDsTenantsRequest {
     /// The maximum number of items to return.
-    #[prost(uint64, tag = "1")]
-    pub page_size: u64,
-    #[prost(uint64, tag = "2")]
-    pub page_num: u64,
+    #[prost(int64, tag = "1")]
+    pub page_size: i64,
+    #[prost(int64, tag = "2")]
+    pub page_num: i64,
     #[prost(string, optional, tag = "3")]
     pub search_val: ::core::option::Option<::prost::alloc::string::String>,
 }
@@ -32,16 +32,16 @@ pub struct ListDsTenantsRequest {
 pub struct ListDsTenantsResponse {
     #[prost(message, repeated, tag = "1")]
     pub total_list: ::prost::alloc::vec::Vec<DsTenant>,
-    #[prost(uint64, tag = "2")]
-    pub current_page: u64,
-    #[prost(uint64, tag = "3")]
-    pub page_size: u64,
-    #[prost(uint64, tag = "4")]
-    pub start: u64,
-    #[prost(uint64, tag = "5")]
-    pub total: u64,
-    #[prost(uint64, tag = "6")]
-    pub total_page: u64,
+    #[prost(int64, tag = "2")]
+    pub current_page: i64,
+    #[prost(int64, tag = "3")]
+    pub page_size: i64,
+    #[prost(int64, tag = "4")]
+    pub start: i64,
+    #[prost(int64, tag = "5")]
+    pub total: i64,
+    #[prost(int64, tag = "6")]
+    pub total_page: i64,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]

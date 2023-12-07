@@ -39,7 +39,7 @@ impl DsEnvironmentService for AuroraRpcServer {
         let _db = &self.db;
         let pages = VEntity::find()
             .filter(Column::Name.like(format!("%{}%", search_val)))
-            .paginate(&self.db, page_size);
+            .paginate(&self.db, page_size.try_into().unwrap());
         debug_print!("query sql:{:#?}", pages);
         let page_num = match page_num {
             0 => 0,
@@ -65,7 +65,7 @@ impl DsEnvironmentService for AuroraRpcServer {
         let start = (page_num) * page_size;
         info!("start: {}", start);
         let res = proto::ds_environment::ListDsEnvironmentsResponse {
-            total,
+            total: total.try_into().unwrap(),
             page_size,
             total_list: items
                 .into_iter()
@@ -87,7 +87,7 @@ impl DsEnvironmentService for AuroraRpcServer {
                 .collect(),
             current_page: current_page + 1,
             start,
-            total_page,
+            total_page: total_page.try_into().unwrap(),
         };
         Ok(tonic::Response::new(res))
     }

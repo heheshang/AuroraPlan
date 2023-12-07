@@ -20,8 +20,8 @@ impl Default for CreateQueueRequest {
 #[allow(non_snake_case)]
 #[derive(Deserialize, Clone, Debug)]
 pub struct QueueListParams {
-    pub pageSize: u64,
-    pub pageNo: u64,
+    pub pageSize: i64,
+    pub pageNo: i64,
     pub searchVal: Option<String>,
 }
 

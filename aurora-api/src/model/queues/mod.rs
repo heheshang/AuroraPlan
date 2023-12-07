@@ -65,7 +65,7 @@ pub async fn verify(queue: &str, queue_name: &str) -> Result<VerifyQueue> {
     Ok(res.ds_queue.unwrap().into())
 }
 
-pub async fn list(page_num: &u64, page_size: &u64, search_val: &Option<String>) -> Result<ListDsQueuesResponse> {
+pub async fn list(page_num: &i64, page_size: &i64, search_val: &Option<String>) -> Result<ListDsQueuesResponse> {
     let client = _ds_queue_service_client().await?;
     let request = tonic::Request::new(ListDsQueuesRequest {
         page_num: *page_num,

@@ -22,11 +22,11 @@ pub struct DsProjectRes {
 #[serde(rename_all = "camelCase")]
 #[convert(from = "ListDsProjectsResponse")]
 pub struct DsProjectList {
-    pub total: u64,
-    pub total_page: u64,
-    pub page_size: u64,
-    pub current_page: u64,
-    pub start: u64,
+    pub total: i64,
+    pub total_page: i64,
+    pub page_size: i64,
+    pub current_page: i64,
+    pub start: i64,
     pub total_list: Vec<DsProjectListInfo>,
 }
 #[derive(Debug, Serialize, Deserialize, Convert)]
@@ -61,10 +61,10 @@ pub struct DsProjectParamterRes {
 #[serde(rename_all = "camelCase")]
 #[convert(from = "ListProjectParametersResponse")]
 pub struct ProjectParameterList {
-    pub total: u64,
-    pub total_page: u64,
-    pub page_size: u64,
-    pub current_page: u64,
-    pub start: u64,
+    pub total: i64,
+    pub total_page: i64,
+    pub page_size: i64,
+    pub current_page: i64,
+    pub start: i64,
     pub total_list: Vec<DsProjectParamterRes>,
 }

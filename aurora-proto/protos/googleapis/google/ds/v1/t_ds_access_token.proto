@@ -61,9 +61,9 @@ message ListDsAccessTokensRequest {
 
 
   // The maximum number of items to return.
-  uint64 page_size = 1;
+  int64 page_size = 1;
 
-  uint64 page_num = 2;
+  int64 page_num = 2;
 }
 
 message ListDsAccessTokensResponse {

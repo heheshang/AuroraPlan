@@ -61,7 +61,7 @@ pub async fn verify_environment(environment_name: &str) -> Result<()> {
     client.clone().verify_ds_environment(request).await?;
     Ok(())
 }
-pub async fn list(page_num: &u64, page_size: &u64, search_val: &Option<String>) -> Result<ListDsEnvironmentsResponse> {
+pub async fn list(page_num: &i64, page_size: &i64, search_val: &Option<String>) -> Result<ListDsEnvironmentsResponse> {
     info!(
         "list environments page_num: {:?} ,page_size: {:?},search_val: {:?}",
         page_num, page_size, search_val

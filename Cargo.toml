@@ -3,12 +3,13 @@ members = [
     "aurora-api",
     "aurora-proto",
     "aurora-config",
-    "aurora-entity",
+    # "aurora-entity",
     "aurora-common",
-    "aurora-service",
+    # "aurora-service",
     "aurora-tests",
-    "migration",
-    "aurora-dao",
+    # "migration",
+    # "aurora-dao", 
+    "aurora-srv",
     # "aurora-base",
 ]
 

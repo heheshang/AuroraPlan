@@ -16,11 +16,11 @@ pub struct Queue {
 #[serde(rename_all = "camelCase")]
 #[convert(from = "ListDsQueuesResponse")]
 pub struct QueueList {
-    pub total: u64,
-    pub total_page: u64,
-    pub page_size: u64,
-    pub current_page: u64,
-    pub start: u64,
+    pub total: i64,
+    pub total_page: i64,
+    pub page_size: i64,
+    pub current_page: i64,
+    pub start: i64,
     pub total_list: Vec<Queue>,
 }
 #[derive(Serialize, Deserialize, Debug, Convert)]

@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 #[allow(non_snake_case)]
 #[derive(Deserialize)]
 pub struct DefineUserCountParams {
-    projectCode: u64,
+    projectCode: i64,
 }
 
 #[allow(non_snake_case)]
@@ -11,7 +11,7 @@ pub struct DefineUserCountParams {
 pub struct TaskStateCountParams {
     startDate: String,
     endDate: String,
-    projectCode: u64,
+    projectCode: i64,
 }
 
 #[allow(non_snake_case)]
@@ -19,14 +19,14 @@ pub struct TaskStateCountParams {
 pub struct ProcessStateCountParams {
     startDate: String,
     endDate: String,
-    projectCode: u64,
+    projectCode: i64,
 }
 
 #[allow(non_snake_case)]
 #[derive(Deserialize, Clone, Debug)]
 pub struct ProjectListParams {
-    pub pageSize: u64,
-    pub pageNo: u64,
+    pub pageSize: i64,
+    pub pageNo: i64,
     pub searchVal: Option<String>,
 }
 #[allow(non_snake_case)]
@@ -47,8 +47,8 @@ pub struct ProjectParamCreate {
 #[allow(non_snake_case)]
 #[derive(Deserialize, Clone, Debug)]
 pub struct ProjectParameterListParams {
-    pub pageSize: u64,
-    pub pageNo: u64,
+    pub pageSize: i64,
+    pub pageNo: i64,
     pub searchVal: Option<String>,
 }
 
