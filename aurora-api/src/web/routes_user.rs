@@ -42,7 +42,7 @@ pub fn routes() -> Router {
 }
 
 pub async fn verify_user_name(_ctx: Ctx, payload: Query<UserInfoReq>) -> Result<ApiResult<()>> {
-    let res = model::user::service::verify_user_name(payload.user_name.clone()).await?;
+    model::user::service::verify_user_name(payload.user_name.clone()).await?;
     Ok(ApiResult::build(Some(())))
 }
 pub async fn update_user(_ctx: Ctx, Form(payload): Form<UserInfo>) -> Result<ApiResult<()>> {

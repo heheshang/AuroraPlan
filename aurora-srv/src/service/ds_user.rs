@@ -124,4 +124,20 @@ impl DsUserService for AuroraRpcServer {
     async fn delete_ds_user(&self, _request: GrpcRequest<DeleteDsUserRequest>) -> GrpcResponse<()> {
         todo!()
     }
+
+    async fn query_user_by_name(
+        &self,
+        request: tonic::Request<proto::ds_user::QueryUserByNameRequest>,
+    ) -> std::result::Result<tonic::Response<proto::ds_user::QueryUserByNameResponse>, tonic::Status> {
+        let name = request.into_inner().user_name;
+        let pool = &self.pool;
+        User::query_user_by_name(&name, pool)
+            .await
+            .map(|v| {
+                tonic::Response::new(proto::ds_user::QueryUserByNameResponse {
+                    user: v.map(|v| v.into()),
+                })
+            })
+            .map_err(|_| Error::InternalServerErrorArgs(AuroraData::Null, None).into())
+    }
 }

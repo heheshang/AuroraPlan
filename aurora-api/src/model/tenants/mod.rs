@@ -1,8 +1,8 @@
 use crate::{model::client::service::_ds_tenant_service_client, web::bean::response::tenants::Tenant};
 use aurora_common::{core_error::error::Error, core_results::results::Result};
 use aurora_proto::ds_tenant::{
-    CreateDsTenantRequest, DeleteDsTenantRequest, ListDsTenantsRequest, ListDsTenantsResponse, UpdateDsTenantRequest,
-    VerifyDsTenantRequest,
+    CreateDsTenantRequest, DeleteDsTenantRequest, DsTenant, ListDsTenantsRequest, ListDsTenantsResponse,
+    UpdateDsTenantRequest, VerifyDsTenantRequest,
 };
 use log::{error, info};
 
@@ -74,7 +74,7 @@ pub async fn list(page_num: &i64, page_size: &i64, search_val: &Option<String>) 
     Ok(res)
 }
 
-pub async fn all() -> Result<Vec<String>> {
+pub async fn all() -> Result<Vec<Tenant>> {
     let client = _ds_tenant_service_client().await?;
     let request = tonic::Request::new(());
     let res = client
@@ -85,8 +85,8 @@ pub async fn all() -> Result<Vec<String>> {
             res.into_inner()
                 .total_list
                 .into_iter()
-                .map(|item| item.tenant_code.unwrap_or_default())
-                .collect::<Vec<String>>()
+                .map(|tenant: DsTenant| tenant.into())
+                .collect()
         })
         .map_err(|e| {
             let err: Error = e.into();

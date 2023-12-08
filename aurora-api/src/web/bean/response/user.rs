@@ -1,4 +1,5 @@
 use aurora_proto::ds_user::DsUser;
+use aurora_proto::ds_user::DsUserPage;
 use aurora_proto::ds_user::ListDsUsersResponse;
 use serde::{Deserialize, Serialize};
 use struct_convert::Convert;
@@ -33,9 +34,31 @@ pub struct UserList {
     pub page_size: i64,
     pub current_page: i64,
     pub start: i64,
-    pub total_list: Vec<UserInfoRes>,
+    pub total_list: Vec<UserInfoPage>,
 }
+#[derive(Debug, Serialize, Deserialize, Convert)]
+#[convert(from = "DsUserPage")]
+#[serde(rename_all = "camelCase")]
+pub struct UserInfoPage {
+    pub id: i32,
+    pub user_name: Option<String>,
+    #[serde(skip_serializing)]
+    pub user_password: Option<String>,
+    #[serde(with = "convert_user_type")]
+    pub user_type: Option<i32>,
+    pub email: Option<String>,
+    pub phone: Option<String>,
+    pub tenant_id: Option<i32>,
+    /// google.protobuf.Timestamp create_time=8
+    pub create_time: Option<String>,
+    /// optional google.protobuf.Timestamp update_time=9;
+    pub update_time: Option<String>,
 
+    pub queue: Option<String>,
+    pub state: Option<i32>,
+    pub time_zone: Option<String>,
+    pub tenant_code: Option<String>,
+}
 mod convert_user_type {
     use std::str::FromStr;
 

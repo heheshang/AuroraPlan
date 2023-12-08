@@ -1,6 +1,6 @@
 use anyhow::Result;
 use chrono::NaiveDateTime;
-use proto::ds_user::DsUser;
+use proto::ds_user::{DsUser, DsUserPage};
 use sqlx::{query_as, PgPool};
 
 #[derive(Debug, Clone, Default)]
@@ -28,6 +28,7 @@ pub struct UserPage {
     pub email: Option<String>,
     pub phone: Option<String>,
     pub tenant_id: Option<i32>,
+    pub tenant_code: Option<String>,
     pub create_time: Option<NaiveDateTime>,
     pub update_time: Option<NaiveDateTime>,
     pub queue: Option<String>,
@@ -55,13 +56,33 @@ impl From<UserPage> for User {
     }
 }
 
+impl From<UserPage> for DsUserPage {
+    fn from(item: UserPage) -> Self {
+        Self {
+            id: item.id,
+            user_name: item.user_name,
+            user_password: item.user_password,
+            user_type: item.user_type,
+            email: item.email,
+            phone: item.phone,
+            tenant_id: item.tenant_id,
+            tenant_code: item.tenant_code,
+            create_time: item.create_time.map(|v| v.to_string()),
+            update_time: item.update_time.map(|v| v.to_string()),
+            queue: item.queue,
+            state: item.state,
+            time_zone: item.time_zone,
+        }
+    }
+}
+
 impl User {
     pub(crate) async fn page(
         search_val: &str,
         page_num: i64,
         page_size: i64,
         pool: &PgPool,
-    ) -> Result<(Vec<Self>, i64, i64, i64, i64)> {
+    ) -> Result<(Vec<UserPage>, i64, i64, i64, i64)> {
         let search = format!("%{}%", search_val);
         let limit = page_size;
         let offset = (page_num - 1) * page_size;
@@ -69,12 +90,13 @@ impl User {
         let items = sqlx::query_as!(
             UserPage,
             r#"
-            select * ,
+            select t_ds_user.* ,
             coalesce (
-                 (select count(*) from  t_ds_user where user_name like $1), 0 ) "count" 
-            from  t_ds_user
+                 (select count(*) from  t_ds_user where user_name like $1), 0 ) "count" ,
+            t_ds_tenant.tenant_code
+            from  t_ds_user left join t_ds_tenant on t_ds_user.tenant_id = t_ds_tenant.id
             where user_name like $1
-            order by id desc
+            order by t_ds_tenant.create_time desc
             limit $2 offset $3
             "#,
             search,
@@ -85,7 +107,7 @@ impl User {
         .await?;
 
         let total = items.first().map(|v| v.count.unwrap_or(0)).unwrap_or(0);
-        let items = items.into_iter().map(|v| v.into()).collect::<Vec<_>>();
+        // let items = items.into_iter().map(|v| v.into()).collect::<Vec<_>>();
         let total_page = (total as f64 / page_size as f64).ceil() as i64;
         let start = (page_num - 1) * page_size;
         let cur_page = page_num;
@@ -179,6 +201,12 @@ impl User {
         .fetch_one(pool)
         .await?;
         Ok(Some(user))
+    }
+    pub(crate) async fn query_user_by_name(_name: &str, pool: &PgPool) -> Result<Option<Self>> {
+        let user = query_as!(Self, r#"select * from t_ds_user where user_name = $1"#, _name)
+            .fetch_optional(pool)
+            .await?;
+        Ok(user)
     }
 }
 impl From<User> for DsUser {

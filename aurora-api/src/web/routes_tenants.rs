@@ -65,7 +65,7 @@ pub async fn verify_code(cookies: Cookies, ctx: Ctx, param: Query<CreateTenant>)
     Ok(ApiResult::build(Some(())))
 }
 
-pub async fn all(cookies: Cookies, ctx: Ctx) -> Result<ApiResult<Vec<String>>> {
+pub async fn all(cookies: Cookies, ctx: Ctx) -> Result<ApiResult<Vec<Tenant>>> {
     let res = model::tenants::all().await?;
     Ok(ApiResult::build(Some(res)))
 }

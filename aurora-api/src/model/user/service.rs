@@ -8,7 +8,7 @@ use aurora_common::{
 };
 use aurora_proto::ds_user::{
     CreateDsUserRequest, DsUser, GetDsUserByIdRequest, ListDsUsersRequest, ListDsUsersResponse,
-    QueryUserByNamePasswordRequest, UpdateDsUserRequest,
+    QueryUserByNamePasswordRequest, QueryUserByNameRequest, UpdateDsUserRequest,
 };
 use log::{error, info};
 
@@ -34,23 +34,26 @@ pub async fn query_user_by_name_password(user_name: String, user_password: Strin
             Error::UserNamePasswdError(AuroraData::Null, None)
         })
 }
-pub async fn verify_user_name(user_name: String) -> Result<bool> {
+pub async fn verify_user_name(user_name: String) -> Result<()> {
     info!("verify_user_name user_name: {:?}", user_name);
     let client = _ds_user_service_client().await?;
-    let request = tonic::Request::new(QueryUserByNamePasswordRequest {
+    let request = tonic::Request::new(QueryUserByNameRequest {
         user_name: user_name.clone(),
-        user_password: "".to_string(),
     });
-    client
+    let res = client
         .clone()
-        .query_user_by_name_password(request)
+        .query_user_by_name(request)
         .await
         .map(|res| res.into_inner())
-        .map(|res| res.user_name == Some(user_name))
+        .map(|res| res.user.is_some_and(|v| v.user_name == Some(user_name.clone())))
         .map_err(|e| {
             error!("verify_user_name error: {:?}", e);
-            Error::UserNameExist(AuroraData::Null, None)
-        })
+            Error::InternalServerErrorArgs(AuroraData::Null, None)
+        })?;
+    if res {
+        return Err(Error::UserNameExist(AuroraData::Null, Some(vec![user_name])));
+    }
+    Ok(())
 }
 pub async fn _get_user(id: i32) -> Result<DsUser> {
     let client = _ds_user_service_client().await?;

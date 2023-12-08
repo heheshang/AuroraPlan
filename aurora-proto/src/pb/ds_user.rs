@@ -39,11 +39,55 @@ pub struct DsUser {
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
+pub struct DsUserPage {
+    #[prost(int32, tag = "1")]
+    pub id: i32,
+    #[prost(string, optional, tag = "2")]
+    pub user_name: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "3")]
+    pub user_password: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(enumeration = "UserType", optional, tag = "4")]
+    pub user_type: ::core::option::Option<i32>,
+    #[prost(string, optional, tag = "5")]
+    pub email: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "6")]
+    pub phone: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(int32, optional, tag = "7")]
+    pub tenant_id: ::core::option::Option<i32>,
+    /// google.protobuf.Timestamp create_time=8;
+    #[prost(string, optional, tag = "8")]
+    pub create_time: ::core::option::Option<::prost::alloc::string::String>,
+    /// optional google.protobuf.Timestamp update_time=9;
+    #[prost(string, optional, tag = "9")]
+    pub update_time: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "10")]
+    pub queue: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(enumeration = "Flag", optional, tag = "11")]
+    pub state: ::core::option::Option<i32>,
+    #[prost(string, optional, tag = "12")]
+    pub time_zone: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "13")]
+    pub tenant_code: ::core::option::Option<::prost::alloc::string::String>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryUserByNamePasswordRequest {
     #[prost(string, tag = "1")]
     pub user_name: ::prost::alloc::string::String,
     #[prost(string, tag = "2")]
     pub user_password: ::prost::alloc::string::String,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct QueryUserByNameRequest {
+    #[prost(string, tag = "1")]
+    pub user_name: ::prost::alloc::string::String,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct QueryUserByNameResponse {
+    #[prost(message, optional, tag = "1")]
+    pub user: ::core::option::Option<DsUser>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -62,7 +106,7 @@ pub struct ListDsUsersResponse {
     /// The field name should match the noun "DsUser" in the method name.
     /// There will be a maximum number of items returned based on the page_size field in the request.
     #[prost(message, repeated, tag = "1")]
-    pub total_list: ::prost::alloc::vec::Vec<DsUser>,
+    pub total_list: ::prost::alloc::vec::Vec<DsUserPage>,
     #[prost(int64, tag = "2")]
     pub current_page: i64,
     #[prost(int64, tag = "3")]
@@ -309,6 +353,20 @@ pub mod ds_user_service_client {
                 .insert(GrpcMethod::new("ds_user.DsUserService", "QueryUserByNamePassword"));
             self.inner.unary(req, path, codec).await
         }
+        pub async fn query_user_by_name(
+            &mut self,
+            request: impl tonic::IntoRequest<super::QueryUserByNameRequest>,
+        ) -> std::result::Result<tonic::Response<super::QueryUserByNameResponse>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static("/ds_user.DsUserService/QueryUserByName");
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("ds_user.DsUserService", "QueryUserByName"));
+            self.inner.unary(req, path, codec).await
+        }
         pub async fn create_ds_user(
             &mut self,
             request: impl tonic::IntoRequest<super::CreateDsUserRequest>,
@@ -376,6 +434,10 @@ pub mod ds_user_service_server {
             &self,
             request: tonic::Request<super::QueryUserByNamePasswordRequest>,
         ) -> std::result::Result<tonic::Response<super::DsUser>, tonic::Status>;
+        async fn query_user_by_name(
+            &self,
+            request: tonic::Request<super::QueryUserByNameRequest>,
+        ) -> std::result::Result<tonic::Response<super::QueryUserByNameResponse>, tonic::Status>;
         async fn create_ds_user(
             &self,
             request: tonic::Request<super::CreateDsUserRequest>,
@@ -575,6 +637,35 @@ pub mod ds_user_service_server {
                     let fut = async move {
                         let inner = inner.0;
                         let method = QueryUserByNamePasswordSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/ds_user.DsUserService/QueryUserByName" => {
+                    #[allow(non_camel_case_types)]
+                    struct QueryUserByNameSvc<T: DsUserService>(pub Arc<T>);
+                    impl<T: DsUserService> tonic::server::UnaryService<super::QueryUserByNameRequest> for QueryUserByNameSvc<T> {
+                        type Response = super::QueryUserByNameResponse;
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        fn call(&mut self, request: tonic::Request<super::QueryUserByNameRequest>) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move { (*inner).query_user_by_name(request).await };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let inner = inner.0;
+                        let method = QueryUserByNameSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(accept_compression_encodings, send_compression_encodings)

@@ -34,6 +34,25 @@ message DsUser{
     optional string time_zone = 12;
 
 }
+message DsUserPage{
+    int32 id=1;
+    optional string user_name=2;
+    optional string user_password=3;
+    optional UserType user_type=4;
+    optional string email=5;
+    optional string phone=6;
+    optional int32 tenant_id=7;
+    // google.protobuf.Timestamp create_time=8;
+    optional string create_time=8;
+    // optional google.protobuf.Timestamp update_time=9;
+    optional string update_time=9;
+
+    optional string queue = 10;
+    optional Flag state = 11;
+    optional string time_zone = 12;
+
+    optional string tenant_code=13;
+}
 enum UserType{
     ADMIN_USER = 0;
     GENERAL_USER=1;
@@ -48,7 +67,13 @@ message QueryUserByNamePasswordRequest{
      string user_password=2;
 }
 
+message QueryUserByNameRequest{
+     string user_name=1;
+}
 
+message QueryUserByNameResponse{
+     optional DsUser user=1;
+}
 // Generated according to https://cloud.google.com/apis/design/standard_methods
 service DsUserService {
   rpc ListDsUsers(ListDsUsersRequest) returns (ListDsUsersResponse) {
@@ -72,6 +97,12 @@ service DsUserService {
     option (google.api.http) = {
       post: "/v1alpha1/QueryUserByNamePassword"
       body: "QueryUserByNamePassword"
+    };
+  }
+  rpc QueryUserByName(QueryUserByNameRequest) returns (QueryUserByNameResponse) {
+    option (google.api.http) = {
+      post: "/v1alpha1/QueryUserByName"
+      body: "QueryUserByName"
     };
   }
 
@@ -114,7 +145,7 @@ message ListDsUsersRequest {
 message ListDsUsersResponse {
   // The field name should match the noun "DsUser" in the method name.
   // There will be a maximum number of items returned based on the page_size field in the request.
-  repeated DsUser total_list = 1;
+  repeated DsUserPage total_list = 1;
   int64 current_page = 2;
   int64 page_size = 3;
   int64 start = 4;

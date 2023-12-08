@@ -24,8 +24,8 @@ pub async fn mw_ctx_require(ctx: Result<Ctx>, req: Request, next: Next) -> Resul
     info!("{:<12} - mw_ctx_require - {ctx:?}", "MIDDLEWARE");
 
     let _ctx = ctx?;
-    info!("{:<12} - mw_ctx_require - {_ctx:?}", "MIDDLEWARE");
-    info!("{:<12} - mw_ctx_require - {req:?}", "MIDDLEWARE");
+    info!("{:<12} - ctx - {_ctx:?}", "MIDDLEWARE");
+    info!("{:<12} - req - {req:?}", "MIDDLEWARE");
     Ok(next.run(req).await)
 }
 
