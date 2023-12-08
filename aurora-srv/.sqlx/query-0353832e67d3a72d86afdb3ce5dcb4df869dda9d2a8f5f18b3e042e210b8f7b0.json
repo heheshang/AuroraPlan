@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            delete from t_ds_environment_worker_group_relation where environment_code = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0353832e67d3a72d86afdb3ce5dcb4df869dda9d2a8f5f18b3e042e210b8f7b0"
+}

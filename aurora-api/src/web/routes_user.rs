@@ -6,7 +6,7 @@ use aurora_common::{
     core_results::results::{ApiResult, Result},
 };
 use axum::{
-    extract::ConnectInfo,
+    extract::{ConnectInfo, Query},
     middleware,
     routing::{get, post},
     Form, Json, Router,
@@ -15,13 +15,23 @@ use log::error;
 use tower_cookies::Cookies;
 
 use super::{
-    bean::{request::user::UserInfoReq, response::user::UserInfoRes},
+    bean::{
+        request::{
+            user::{UserInfo, UserInfoReq},
+            PageParams,
+        },
+        response::user::{UserInfoRes, UserList},
+    },
     mw::mw_auth::mw_ctx_require,
 };
 
 pub fn routes() -> Router {
     let routes = Router::new()
         .route("/logout", post(logout))
+        .route("/users/list-paging", get(list_paging))
+        .route("/users/verify-user-name", get(verify_user_name))
+        .route("/users/update", post(update_user))
+        .route("/users/create", post(create_user))
         .route("/users/get-user-info", get(user_info));
     let login = Router::new().route("/login", post(login));
 
@@ -29,6 +39,24 @@ pub fn routes() -> Router {
         .nest("/aurora", routes)
         .route_layer(middleware::from_fn(mw_ctx_require));
     Router::new().nest("/aurora", login).merge(other)
+}
+
+pub async fn verify_user_name(_ctx: Ctx, payload: Query<UserInfoReq>) -> Result<ApiResult<()>> {
+    let res = model::user::service::verify_user_name(payload.user_name.clone()).await?;
+    Ok(ApiResult::build(Some(())))
+}
+pub async fn update_user(_ctx: Ctx, Form(payload): Form<UserInfo>) -> Result<ApiResult<()>> {
+    model::user::service::update(payload).await?;
+    Ok(ApiResult::build(Some(())))
+}
+
+pub async fn create_user(_ctx: Ctx, Form(payload): Form<UserInfo>) -> Result<ApiResult<UserInfoRes>> {
+    let res = model::user::service::create(payload).await?;
+    Ok(ApiResult::build(Some(res)))
+}
+pub async fn list_paging(_ctx: Ctx, payload: Query<PageParams>) -> Result<ApiResult<UserList>> {
+    let res = model::user::service::list(&payload.pageNo, &payload.pageSize, payload.searchVal.clone()).await?;
+    Ok(ApiResult::build(Some(UserList::from(res))))
 }
 
 pub async fn login(

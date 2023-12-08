@@ -1,0 +1,47 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n         insert into t_ds_queue(queue_name,queue) values($1,$2) returning *\n         ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "queue_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "queue",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "create_time",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 4,
+        "name": "update_time",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "3b75918e83cd1817643cffe2488ab93bf7d0cb16d9266e8327b69eb254310163"
+}

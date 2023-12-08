@@ -20,6 +20,7 @@ use super::{
 pub fn routes() -> Router {
     let routes = Router::new()
         .route("/tenants", get(list).post(create))
+        .route("/tenants/list", get(all))
         .route("/tenants/:id", put(update).delete(delete_tenant))
         .route("/tenants/verify-code", get(verify_code));
 
@@ -62,4 +63,9 @@ pub async fn verify_code(cookies: Cookies, ctx: Ctx, param: Query<CreateTenant>)
     let tenant_code = &param.tenant_code;
     model::tenants::verify_code(tenant_code).await?;
     Ok(ApiResult::build(Some(())))
+}
+
+pub async fn all(cookies: Cookies, ctx: Ctx) -> Result<ApiResult<Vec<String>>> {
+    let res = model::tenants::all().await?;
+    Ok(ApiResult::build(Some(res)))
 }

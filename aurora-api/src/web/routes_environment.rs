@@ -28,6 +28,7 @@ pub fn routes() -> Router {
     let routes = Router::new()
         .route("/environment/create", post(create))
         .route("/environment/list-paging", get(list))
+        .route("/environment/query-environment-list", get(query_environment_list))
         .route("/environment/update", post(update))
         .route("/environment/delete", delete(delete_environment))
         .route("/environment/verify-environment", post(verify_environment));
@@ -102,7 +103,10 @@ pub async fn list(
     let res = model::environment::list(&page_num, &page_size, search_val).await?;
     Ok(ApiResult::build(Some(res.into())))
 }
-
+pub async fn query_environment_list(cookies: Cookies, ctx: Ctx) -> Result<ApiResult<Vec<EnvironmentPage>>> {
+    let res = model::environment::all().await?;
+    Ok(ApiResult::build(Some(res)))
+}
 pub async fn verify_environment(cookies: Cookies, ctx: Ctx, param: Form<VerifyEnvironment>) -> Result<ApiResult<()>> {
     let environment_name = &param.environment_name;
     model::environment::verify_environment(environment_name).await?;

@@ -13,14 +13,13 @@ license.workspace = true
 [dependencies]
 derive_builder = { workspace = true }
 prost = { workspace = true }
+prost-build = { workspace = true, optional = true }
 prost-types = { workspace = true }
+proto-builder-trait = { workspace = true, optional = true }
 serde = { workspace = true, features = ['derive'] }
 serde_with = { workspace = true }
 tonic = { workspace = true }
-
-prost-build = { workspace = true, optional = true }
 tonic-build = { workspace = true, optional = true }
-proto-builder-trait = { workspace = true, optional = true }
 # [dev-dependencies]
 # prost-build = { workspace = true }
 # tonic-build = { workspace = true }

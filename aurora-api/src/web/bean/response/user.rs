@@ -1,4 +1,5 @@
 use aurora_proto::ds_user::DsUser;
+use aurora_proto::ds_user::ListDsUsersResponse;
 use serde::{Deserialize, Serialize};
 use struct_convert::Convert;
 #[derive(Debug, Serialize, Deserialize, Convert)]
@@ -21,6 +22,18 @@ pub struct UserInfoRes {
     pub queue: Option<String>,
     pub state: Option<i32>,
     pub time_zone: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Convert)]
+#[serde(rename_all = "camelCase")]
+#[convert(from = "ListDsUsersResponse")]
+pub struct UserList {
+    pub total: i64,
+    pub total_page: i64,
+    pub page_size: i64,
+    pub current_page: i64,
+    pub start: i64,
+    pub total_list: Vec<UserInfoRes>,
 }
 
 mod convert_user_type {

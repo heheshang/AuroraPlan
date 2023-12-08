@@ -124,4 +124,14 @@ impl Model {
             }
         }
     }
+    pub(crate) async fn _all(pool: &PgPool) -> Result<Vec<Self>> {
+        Ok(sqlx::query_as!(
+            Self,
+            r#"
+            select * from t_ds_environment
+            "#
+        )
+        .fetch_all(pool)
+        .await?)
+    }
 }

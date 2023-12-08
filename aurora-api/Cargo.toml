@@ -6,35 +6,30 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = { workspace = true }
 async-trait = { workspace = true }
+aurora_common = { path = "../aurora-common", package = "aurora-common" }
+aurora_config = { path = "../aurora-config", package = "aurora-config" }
+aurora_proto = { path = "../aurora-proto", package = "aurora-proto" }
 axum = { workspace = true }
+axum-extra = { workspace = true }
+fern = { workspace = true, features = ["chrono", "colored"] }
+humantime.workspace = true
+log.workspace = true
+md5 = { workspace = true }
+once_cell = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 serde_with = { workspace = true }
+struct-convert = { workspace = true }
 strum_macros = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
-fern = { version = "0.6.2", features = ["chrono", "colored"] }
-humantime = "2.1.0"
-log = "0.4.20"
-uuid = { workspace = true, features = ["v4", "fast-rng"] }
-aurora_common = { path = "../aurora-common", package = "aurora-common" }
-aurora_proto = { path = "../aurora-proto", package = "aurora-proto" }
-aurora_config = { path = "../aurora-config", package = "aurora-config" }
 tonic = { workspace = true }
-tower = { workspace = true, features = ["full"] }
-tower-http = { workspace = true, features = ["fs", "trace"] }
-anyhow = { workspace = true }
-once_cell = { workspace = true }
-md5 = { workspace = true }
-struct-convert = { workspace = true }
-tower-cookies = { workspace = true }
-# error-chain = { workspace = true }
 tonic-health = { workspace = true }
-# axum_static = { workspace = true }
-axum-extra = { workspace = true }
-# regex.workspace = true
-# hyper = { version = "1.0.1", features = ["full"] }
-# backtrace = "0.3.69"
+tower = { workspace = true, features = ["full"] }
+tower-cookies = { workspace = true }
+tower-http = { workspace = true, features = ["fs", "trace"] }
+uuid = { workspace = true, features = ["v4", "fast-rng"] }
 [dev-dependencies]
 anyhow = { workspace = true }
 httpc-test = { workspace = true }

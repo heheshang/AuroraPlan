@@ -149,4 +149,38 @@ impl DsEnvironmentService for AuroraRpcServer {
             Ok(tonic::Response::new(()))
         }
     }
+
+    async fn all_ds_environments(
+        &self,
+        _request: tonic::Request<()>,
+    ) -> std::result::Result<tonic::Response<proto::ds_environment::AllDsEnvironmentsResponse>, tonic::Status> {
+        let pool = &self.pool;
+        let res = t_ds_environment_relation::EnvironmentRelation::all(pool)
+            .await
+            .map_err(|_e| {
+                error!("all environment error: {:?}", _e);
+                tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
+                    Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
+                ))
+            })?
+            .into_iter()
+            .map(|v| {
+                let worker_groups = v.worker_groups.unwrap_or_default().into_iter().collect();
+                proto::ds_environment::DsEnvironmentPage {
+                    id: v.id.unwrap_or_default(),
+                    name: v.name,
+                    code: v.code.unwrap_or_default(),
+                    operator: v.operator,
+                    description: v.description,
+                    worker_groups,
+                    config: v.config,
+                    create_time: Some(v.create_time.unwrap().to_string()),
+                    update_time: Some(v.update_time.unwrap().to_string()),
+                }
+            })
+            .collect();
+        Ok(tonic::Response::new(proto::ds_environment::AllDsEnvironmentsResponse {
+            total_list: res,
+        }))
+    }
 }

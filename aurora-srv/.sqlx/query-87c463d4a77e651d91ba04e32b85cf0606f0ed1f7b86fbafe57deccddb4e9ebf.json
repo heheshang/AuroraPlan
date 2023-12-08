@@ -1,0 +1,43 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            update t_ds_session set user_id=$1,ip=$2,last_login_time=$3\n            where id=$4 returning *\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "ip",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "last_login_time",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Varchar",
+        "Timestamp",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "87c463d4a77e651d91ba04e32b85cf0606f0ed1f7b86fbafe57deccddb4e9ebf"
+}

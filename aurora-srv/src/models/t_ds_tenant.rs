@@ -128,6 +128,10 @@ impl Model {
             .await?
             .rows_affected() as usize)
     }
+    pub(crate) async fn all(pool: &PgPool) -> Result<Vec<Self>> {
+        let res = sqlx::query_as!(Self, r#"select * from t_ds_tenant"#).fetch_all(pool).await?;
+        Ok(res)
+    }
 }
 
 impl From<Model> for DsTenant {

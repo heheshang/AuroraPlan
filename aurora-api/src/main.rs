@@ -34,9 +34,9 @@ async fn start(host: String, port: u32) -> Result<()> {
     setup_logger()?;
 
     let route_all = web::route_all().await;
-    axum::Server::bind(&addr)
-        .serve(route_all.into_make_service_with_connect_info::<SocketAddr>())
-        .await?;
+    let tcp_listener = tokio::net::TcpListener::bind(addr).await?;
+    let make_service = route_all.into_make_service_with_connect_info::<SocketAddr>();
+    axum::serve(tcp_listener, make_service).await?;
 
     info!("log init success!");
     info!("{:<12}->{}", "listen", addr);

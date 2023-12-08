@@ -74,6 +74,28 @@ pub async fn list(page_num: &i64, page_size: &i64, search_val: &Option<String>) 
     Ok(res)
 }
 
+pub async fn all() -> Result<Vec<String>> {
+    let client = _ds_tenant_service_client().await?;
+    let request = tonic::Request::new(());
+    let res = client
+        .clone()
+        .all_ds_tenants(request)
+        .await
+        .map(|res| {
+            res.into_inner()
+                .total_list
+                .into_iter()
+                .map(|item| item.tenant_code.unwrap_or_default())
+                .collect::<Vec<String>>()
+        })
+        .map_err(|e| {
+            let err: Error = e.into();
+            error!("list tenants error: {:?}", err);
+
+            err
+        })?;
+    Ok(res)
+}
 pub async fn update(id: i32, description: &str, queue_id: &i32) -> Result<()> {
     let client = _ds_tenant_service_client().await?;
     let request = tonic::Request::new(UpdateDsTenantRequest {

@@ -19,7 +19,79 @@ pub struct User {
     pub time_zone: Option<String>,
 }
 
+#[derive(Debug, Clone, Default)]
+pub struct UserPage {
+    pub id: i32,
+    pub user_name: Option<String>,
+    pub user_password: Option<String>,
+    pub user_type: Option<i32>,
+    pub email: Option<String>,
+    pub phone: Option<String>,
+    pub tenant_id: Option<i32>,
+    pub create_time: Option<NaiveDateTime>,
+    pub update_time: Option<NaiveDateTime>,
+    pub queue: Option<String>,
+    pub state: Option<i32>,
+    pub time_zone: Option<String>,
+    pub count: Option<i64>,
+}
+
+impl From<UserPage> for User {
+    fn from(item: UserPage) -> Self {
+        Self {
+            id: item.id,
+            user_name: item.user_name,
+            user_password: item.user_password,
+            user_type: item.user_type,
+            email: item.email,
+            phone: item.phone,
+            tenant_id: item.tenant_id,
+            create_time: item.create_time,
+            update_time: item.update_time,
+            queue: item.queue,
+            state: item.state,
+            time_zone: item.time_zone,
+        }
+    }
+}
+
 impl User {
+    pub(crate) async fn page(
+        search_val: &str,
+        page_num: i64,
+        page_size: i64,
+        pool: &PgPool,
+    ) -> Result<(Vec<Self>, i64, i64, i64, i64)> {
+        let search = format!("%{}%", search_val);
+        let limit = page_size;
+        let offset = (page_num - 1) * page_size;
+
+        let items = sqlx::query_as!(
+            UserPage,
+            r#"
+            select * ,
+            coalesce (
+                 (select count(*) from  t_ds_user where user_name like $1), 0 ) "count" 
+            from  t_ds_user
+            where user_name like $1
+            order by id desc
+            limit $2 offset $3
+            "#,
+            search,
+            limit,
+            offset
+        )
+        .fetch_all(pool)
+        .await?;
+
+        let total = items.first().map(|v| v.count.unwrap_or(0)).unwrap_or(0);
+        let items = items.into_iter().map(|v| v.into()).collect::<Vec<_>>();
+        let total_page = (total as f64 / page_size as f64).ceil() as i64;
+        let start = (page_num - 1) * page_size;
+        let cur_page = page_num;
+        Ok((items, total_page, total, start, cur_page))
+    }
+
     pub async fn find_by_id(_id: i32, pool: &PgPool) -> Result<Self> {
         let user = sqlx::query_as!(User, "select * from t_ds_user where id = $1", _id)
             .fetch_one(pool)
@@ -33,19 +105,65 @@ impl User {
             .await?;
         Ok(Some(user))
     }
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) async fn create(
+        user_name: Option<String>,
+        user_password: Option<String>,
+        email: Option<String>,
+        phone: Option<String>,
+        tenant_id: Option<i32>,
+        queue: Option<String>,
+        state: Option<i32>,
+        pool: &PgPool,
+    ) -> Result<Self> {
+        Ok(sqlx::query_as!(
+            User,
+            r#"
+            insert into t_ds_user (user_name,user_password,email,phone,tenant_id,queue,state)
+            values ($1,$2,$3,$4,$5,$6,$7)
+            returning *
+            "#,
+            user_name,
+            user_password,
+            email,
+            phone,
+            tenant_id,
+            queue,
+            state,
+        )
+        .fetch_one(pool)
+        .await?)
+    }
+    #[allow(clippy::too_many_arguments)]
     pub async fn update(
-        _id: i32,
-        _mail: Option<String>,
-        _phone: Option<String>,
-        _user_type: Option<i32>,
+        id: i32,
+        user_name: Option<String>,
+        tenant_id: Option<i32>,
+        email: Option<String>,
+        queue: Option<String>,
+        phone: Option<String>,
+        state: Option<i32>,
+
         pool: &PgPool,
     ) -> Result<usize> {
         let row = sqlx::query!(
-            r#"update t_ds_user set email = $1, phone = $2, user_type = $3 where id = $4"#,
-            _mail,
-            _phone,
-            _user_type,
-            _id
+            r#"
+            update t_ds_user set
+            user_name = $1,
+            tenant_id = $2,
+            email = $3,
+            queue = $4,
+            phone = $5,
+            state = $6
+            where id = $7
+            "#,
+            user_name,
+            tenant_id,
+            email,
+            queue,
+            phone,
+            state,
+            id
         )
         .execute(pool)
         .await?;

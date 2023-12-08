@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n         delete from t_ds_worker_group where id=$1\n         ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7bb46fa2070879fd59d005d3c422b10f047ad7b1a83802f92619deec9f398a3d"
+}

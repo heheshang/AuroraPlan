@@ -105,18 +105,21 @@ message ListDsUsersRequest {
 
 
   // The maximum number of items to return.
-  int32 page_size = 1;
+  int64 page_size = 1;
 
- int32 page_num = 2;
+  int64 page_num = 2;
+  optional string search_val = 3;
 }
 
 message ListDsUsersResponse {
   // The field name should match the noun "DsUser" in the method name.
   // There will be a maximum number of items returned based on the page_size field in the request.
-  repeated DsUser DsUsers = 1;
-
-  // Token to retrieve the next page of results, or empty if there are no more results in the list.
-  string next_page_token = 2;
+  repeated DsUser total_list = 1;
+  int64 current_page = 2;
+  int64 page_size = 3;
+  int64 start = 4;
+  int64 total = 5;
+  int64 total_page = 6;
 }
 message GetDsUserByIdResponse{
   optional DsUser DsUser=1;
@@ -133,15 +136,8 @@ message GetDsUserRequest {
 }
 
 message CreateDsUserRequest {
-  // The parent resource name where the DsUser is to be created.
-  string parent = 1;
 
-  // The DsUser id to use for this DsUser.
-  string DsUser_id = 2;
-
-  // The DsUser resource to create.
-  // The field name should match the Noun in the method name.
-  DsUser DsUser = 3;
+  DsUser DsUser = 1;
 }
 
 message UpdateDsUserRequest {

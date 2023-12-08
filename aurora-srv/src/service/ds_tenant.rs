@@ -36,6 +36,21 @@ impl DsTenantService for AuroraRpcServer {
         Ok(tonic::Response::new(res))
     }
 
+    async fn all_ds_tenants(
+        &self,
+        _request: tonic::Request<()>,
+    ) -> std::result::Result<tonic::Response<proto::ds_tenant::AllDsTenantsResponse>, tonic::Status> {
+        let pool = &self.pool;
+        Model::all(pool)
+            .await
+            .map(|v| {
+                tonic::Response::new(proto::ds_tenant::AllDsTenantsResponse {
+                    total_list: v.into_iter().map(|v| v.into()).collect(),
+                })
+            })
+            .map_err(|_| tonic::Status::from_error(Error::InternalServerErrorArgs(AuroraData::Null, None).into()))
+    }
+
     async fn get_ds_tenant(
         &self,
         _req: tonic::Request<proto::ds_tenant::GetDsTenantRequest>,

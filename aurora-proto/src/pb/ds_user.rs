@@ -49,10 +49,12 @@ pub struct QueryUserByNamePasswordRequest {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ListDsUsersRequest {
     /// The maximum number of items to return.
-    #[prost(int32, tag = "1")]
-    pub page_size: i32,
-    #[prost(int32, tag = "2")]
-    pub page_num: i32,
+    #[prost(int64, tag = "1")]
+    pub page_size: i64,
+    #[prost(int64, tag = "2")]
+    pub page_num: i64,
+    #[prost(string, optional, tag = "3")]
+    pub search_val: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -60,10 +62,17 @@ pub struct ListDsUsersResponse {
     /// The field name should match the noun "DsUser" in the method name.
     /// There will be a maximum number of items returned based on the page_size field in the request.
     #[prost(message, repeated, tag = "1")]
-    pub ds_users: ::prost::alloc::vec::Vec<DsUser>,
-    /// Token to retrieve the next page of results, or empty if there are no more results in the list.
-    #[prost(string, tag = "2")]
-    pub next_page_token: ::prost::alloc::string::String,
+    pub total_list: ::prost::alloc::vec::Vec<DsUser>,
+    #[prost(int64, tag = "2")]
+    pub current_page: i64,
+    #[prost(int64, tag = "3")]
+    pub page_size: i64,
+    #[prost(int64, tag = "4")]
+    pub start: i64,
+    #[prost(int64, tag = "5")]
+    pub total: i64,
+    #[prost(int64, tag = "6")]
+    pub total_page: i64,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -88,15 +97,7 @@ pub struct GetDsUserRequest {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct CreateDsUserRequest {
-    /// The parent resource name where the DsUser is to be created.
-    #[prost(string, tag = "1")]
-    pub parent: ::prost::alloc::string::String,
-    /// The DsUser id to use for this DsUser.
-    #[prost(string, tag = "2")]
-    pub ds_user_id: ::prost::alloc::string::String,
-    /// The DsUser resource to create.
-    /// The field name should match the Noun in the method name.
-    #[prost(message, optional, tag = "3")]
+    #[prost(message, optional, tag = "1")]
     pub ds_user: ::core::option::Option<DsUser>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]

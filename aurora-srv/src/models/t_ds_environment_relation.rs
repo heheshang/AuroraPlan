@@ -60,6 +60,20 @@ impl EnvironmentRelation {
         .await?;
         todo!()
     }
+    pub async fn all(pool: &PgPool) -> Result<Vec<Self>> {
+        let res = sqlx::query_as!(
+            Self,
+            r#"
+            select
+              *
+            from  v_ds_environment t1
+            order by t1.create_time desc
+            "#,
+        )
+        .fetch_all(pool)
+        .await?;
+        Ok(res)
+    }
 
     pub async fn page(
         search_val: &str,

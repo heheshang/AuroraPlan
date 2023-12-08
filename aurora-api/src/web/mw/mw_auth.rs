@@ -10,8 +10,8 @@ use aurora_common::{
 // use crate::web::{Error, Result};
 use async_trait::async_trait;
 use axum::{
-    extract::{FromRequestParts, State},
-    http::{request::Parts, Request},
+    extract::{FromRequestParts, Request, State},
+    http::request::Parts,
     middleware::Next,
     response::Response,
 };
@@ -20,27 +20,27 @@ use serde::Serialize;
 use tower_cookies::{Cookie, Cookies};
 
 #[allow(dead_code)] // For now, until we have the rpc.
-pub async fn mw_ctx_require<B>(ctx: Result<Ctx>, req: Request<B>, next: Next<B>) -> Result<Response> {
+pub async fn mw_ctx_require(ctx: Result<Ctx>, req: Request, next: Next) -> Result<Response> {
     info!("{:<12} - mw_ctx_require - {ctx:?}", "MIDDLEWARE");
 
     let _ctx = ctx?;
     info!("{:<12} - mw_ctx_require - {_ctx:?}", "MIDDLEWARE");
-
+    info!("{:<12} - mw_ctx_require - {req:?}", "MIDDLEWARE");
     Ok(next.run(req).await)
 }
 
-pub async fn mw_ctx_resolve<B>(
+pub async fn mw_ctx_resolve(
     // mm: State<ModelManager>,
     cookies: Cookies,
-    mut req: Request<B>,
-    next: Next<B>,
+    mut req: Request,
+    next: Next,
 ) -> Result<Response> {
     info!("{:<12} - mw_ctx_resolve", "MIDDLEWARE");
 
     let ctx_ext_result = _ctx_resolve(&cookies).await;
 
     if ctx_ext_result.is_err() && !matches!(ctx_ext_result, Err(Error::LoginSessionFailed(AuroraData::Null, None))) {
-        cookies.remove(Cookie::named(AUTH_TOKEN))
+        cookies.remove(Cookie::build(AUTH_TOKEN).into())
     }
 
     // Store the ctx_ext_result in the request extension

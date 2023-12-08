@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n         select count(*) as count from t_ds_queue where queue=$1\n         ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "f3dd71d0d7ea7ad4c5582779fe7dade775494c76cf0737e4ab4ce4fc933badc2"
+}

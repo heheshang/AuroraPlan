@@ -24,6 +24,11 @@ service DsTenantService {
     };
   }
 
+  rpc AllDsTenants(google.protobuf.Empty) returns ( AllDsTenantsResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/AllDsTenants"
+    };
+  }
   rpc GetDsTenant(GetDsTenantRequest) returns (DsTenant) {
     option (google.api.http) = {
       get: "/v1alpha1/{name=DsTenants/*}"
@@ -71,6 +76,11 @@ message ListDsTenantsRequest {
   optional string search_val=3 ;
 }
 
+message AllDsTenantsResponse {
+  repeated DsTenant total_list = 1;
+
+
+}
 message ListDsTenantsResponse {
   repeated DsTenant total_list = 1;
   int64 current_page = 2;

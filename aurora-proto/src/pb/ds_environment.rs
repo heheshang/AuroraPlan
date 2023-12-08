@@ -35,6 +35,12 @@ pub struct ListDsEnvironmentsRequest {
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
+pub struct AllDsEnvironmentsResponse {
+    #[prost(message, repeated, tag = "1")]
+    pub total_list: ::prost::alloc::vec::Vec<DsEnvironmentPage>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ListDsEnvironmentsResponse {
     #[prost(message, repeated, tag = "1")]
     pub total_list: ::prost::alloc::vec::Vec<DsEnvironmentPage>,
@@ -216,6 +222,22 @@ pub mod ds_environment_service_client {
             ));
             self.inner.unary(req, path, codec).await
         }
+        pub async fn all_ds_environments(
+            &mut self,
+            request: impl tonic::IntoRequest<()>,
+        ) -> std::result::Result<tonic::Response<super::AllDsEnvironmentsResponse>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static("/ds_environment.DsEnvironmentService/AllDsEnvironments");
+            let mut req = request.into_request();
+            req.extensions_mut().insert(GrpcMethod::new(
+                "ds_environment.DsEnvironmentService",
+                "AllDsEnvironments",
+            ));
+            self.inner.unary(req, path, codec).await
+        }
         pub async fn get_ds_environment(
             &mut self,
             request: impl tonic::IntoRequest<super::GetDsEnvironmentRequest>,
@@ -309,6 +331,10 @@ pub mod ds_environment_service_server {
             &self,
             request: tonic::Request<super::ListDsEnvironmentsRequest>,
         ) -> std::result::Result<tonic::Response<super::ListDsEnvironmentsResponse>, tonic::Status>;
+        async fn all_ds_environments(
+            &self,
+            request: tonic::Request<()>,
+        ) -> std::result::Result<tonic::Response<super::AllDsEnvironmentsResponse>, tonic::Status>;
         async fn get_ds_environment(
             &self,
             request: tonic::Request<super::GetDsEnvironmentRequest>,
@@ -426,6 +452,35 @@ pub mod ds_environment_service_server {
                     let fut = async move {
                         let inner = inner.0;
                         let method = ListDsEnvironmentsSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/ds_environment.DsEnvironmentService/AllDsEnvironments" => {
+                    #[allow(non_camel_case_types)]
+                    struct AllDsEnvironmentsSvc<T: DsEnvironmentService>(pub Arc<T>);
+                    impl<T: DsEnvironmentService> tonic::server::UnaryService<()> for AllDsEnvironmentsSvc<T> {
+                        type Response = super::AllDsEnvironmentsResponse;
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        fn call(&mut self, request: tonic::Request<()>) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move { (*inner).all_ds_environments(request).await };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let inner = inner.0;
+                        let method = AllDsEnvironmentsSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(accept_compression_encodings, send_compression_encodings)

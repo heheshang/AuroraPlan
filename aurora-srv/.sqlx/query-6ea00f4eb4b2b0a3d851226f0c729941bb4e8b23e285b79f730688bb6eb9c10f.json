@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                insert into t_ds_environment_worker_group_relation (environment_code,worker_group,operator)\n                values ($1,$2,$3)\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Varchar",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6ea00f4eb4b2b0a3d851226f0c729941bb4e8b23e285b79f730688bb6eb9c10f"
+}

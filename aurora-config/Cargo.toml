@@ -12,9 +12,7 @@ license.workspace = true
 
 [dependencies]
 anyhow = { workspace = true, optional = false }
-dotenvy = { workspace = true, optional = false }
 config = { workspace = true, optional = false, features = ["toml"] }
-serde = { workspace = true, optional = false, features = ["derive"] }
-
-
+dotenvy = { workspace = true, optional = false }
 log = "0.4.20"
+serde = { workspace = true, optional = false, features = ["derive"] }

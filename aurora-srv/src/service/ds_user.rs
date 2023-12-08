@@ -12,6 +12,25 @@ use proto::ds_user::{
 
 #[tonic::async_trait]
 impl DsUserService for AuroraRpcServer {
+    async fn list_ds_users(&self, _req: GrpcRequest<ListDsUsersRequest>) -> GrpcResponse<ListDsUsersResponse> {
+        let pool = &self.pool;
+        let search_val = _req.get_ref().clone().search_val.unwrap_or_default();
+        let page_size = _req.get_ref().clone().page_size;
+        let page_num = _req.get_ref().clone().page_num;
+        let (items, total_page, total, start, cur_page) = User::page(&search_val, page_num, page_size, pool)
+            .await
+            .map_err(|_| Error::InternalServerErrorArgs(AuroraData::Null, None))?;
+        let res = ListDsUsersResponse {
+            total,
+            page_size,
+            total_list: items.into_iter().map(|v| v.into()).collect(),
+            current_page: cur_page,
+            start,
+            total_page,
+        };
+        Ok(tonic::Response::new(res))
+    }
+
     async fn get_ds_user(&self, req: GrpcRequest<GetDsUserRequest>) -> GrpcResponse<DsUser> {
         let conn = &self.pool;
         let name = req.into_inner().name;
@@ -25,33 +44,6 @@ impl DsUserService for AuroraRpcServer {
                 Err(res)
             }
         }
-    }
-
-    async fn update_ds_user(&self, req: GrpcRequest<UpdateDsUserRequest>) -> GrpcResponse<DsUser> {
-        let conn = &self.pool;
-        if let Some(user) = req.into_inner().ds_user {
-            User::update(user.id, user.email, user.phone, user.user_type, conn)
-                .await
-                .map_err(|_| Error::UserNotExist(AuroraData::Null, Some(vec![user.id.to_string()])))?;
-            let db_user = User::find_by_id(user.id, conn)
-                .await
-                .map_err(|_| Error::UserNotExist(AuroraData::Null, Some(vec![user.id.to_string()])))?;
-            Ok(tonic::Response::new(db_user.into()))
-        } else {
-            Err(Error::InternalServerErrorArgs(AuroraData::Null, None).into())
-        }
-    }
-
-    async fn list_ds_users(&self, _req: GrpcRequest<ListDsUsersRequest>) -> GrpcResponse<ListDsUsersResponse> {
-        todo!()
-    }
-
-    async fn create_ds_user(&self, _request: GrpcRequest<CreateDsUserRequest>) -> GrpcResponse<DsUser> {
-        todo!()
-    }
-
-    async fn delete_ds_user(&self, _request: GrpcRequest<DeleteDsUserRequest>) -> GrpcResponse<()> {
-        todo!()
     }
 
     async fn get_ds_user_by_id(&self, req: GrpcRequest<GetDsUserByIdRequest>) -> GrpcResponse<GetDsUserByIdResponse> {
@@ -85,5 +77,51 @@ impl DsUserService for AuroraRpcServer {
                 )
             })
             .map_err(|_| Error::UserNotExist(AuroraData::Null, Some(vec![user_name.to_string()])).into())
+    }
+
+    async fn create_ds_user(&self, _request: GrpcRequest<CreateDsUserRequest>) -> GrpcResponse<DsUser> {
+        let pool = &self.pool;
+        let user = _request.into_inner().ds_user.unwrap_or_default();
+        User::create(
+            user.user_name,
+            user.user_password,
+            user.email,
+            user.phone,
+            user.tenant_id,
+            user.queue,
+            user.state,
+            pool,
+        )
+        .await
+        .map(|v| tonic::Response::new(v.into()))
+        .map_err(|_| tonic::Status::from_error(Error::InternalServerErrorArgs(AuroraData::Null, None).into()))
+    }
+
+    async fn update_ds_user(&self, req: GrpcRequest<UpdateDsUserRequest>) -> GrpcResponse<DsUser> {
+        let pool = &self.pool;
+        if let Some(user) = req.into_inner().ds_user {
+            User::update(
+                user.id,
+                user.user_name,
+                user.tenant_id,
+                user.email,
+                user.queue,
+                user.phone,
+                user.state,
+                pool,
+            )
+            .await
+            .map_err(|_| Error::UserNotExist(AuroraData::Null, Some(vec![user.id.to_string()])))?;
+            let db_user = User::find_by_id(user.id, pool)
+                .await
+                .map_err(|_| Error::UserNotExist(AuroraData::Null, Some(vec![user.id.to_string()])))?;
+            Ok(tonic::Response::new(db_user.into()))
+        } else {
+            Err(Error::InternalServerErrorArgs(AuroraData::Null, None).into())
+        }
+    }
+
+    async fn delete_ds_user(&self, _request: GrpcRequest<DeleteDsUserRequest>) -> GrpcResponse<()> {
+        todo!()
     }
 }

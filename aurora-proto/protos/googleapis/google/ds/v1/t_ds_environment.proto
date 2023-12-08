@@ -28,6 +28,11 @@ service DsEnvironmentService {
     };
   }
 
+  rpc AllDsEnvironments(google.protobuf.Empty) returns (AllDsEnvironmentsResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/AllDsEnvironments"
+    };
+  }
   rpc GetDsEnvironment(GetDsEnvironmentRequest) returns (DsEnvironment) {
     option (google.api.http) = {
       get: "/v1alpha1/{name=DsEnvironments/*}"
@@ -75,6 +80,10 @@ message ListDsEnvironmentsRequest {
   optional string search_val=3 ;
 }
 
+message AllDsEnvironmentsResponse {
+  repeated DsEnvironmentPage total_list = 1;
+
+}
 message ListDsEnvironmentsResponse {
   repeated DsEnvironmentPage total_list = 1;
   int64 current_page = 2;

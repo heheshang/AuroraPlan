@@ -85,6 +85,21 @@ pub async fn list(page_num: &i64, page_size: &i64, search_val: &Option<String>) 
     Ok(res)
 }
 
+pub async fn all() -> Result<Vec<EnvironmentPage>> {
+    let client = _ds_environment_service_client().await?;
+    let request = tonic::Request::new(());
+    let res = client
+        .clone()
+        .all_ds_environments(request)
+        .await
+        .map(|res| res.into_inner().total_list.into_iter().map(|e| e.into()).collect::<Vec<_>>())
+        .map_err(|e| {
+            let err: Error = e.into();
+            error!("list environments error: {:?}", err);
+            err
+        })?;
+    Ok(res)
+}
 pub async fn update(
     code: i64,
     name: &str,

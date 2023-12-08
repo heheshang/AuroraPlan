@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            delete from t_ds_project_parameter where code = $1 and project_code = $2\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c9e27c845dc0c1b40a297ae61747a25d1580fb3e6d87771f28753696edf23594"
+}

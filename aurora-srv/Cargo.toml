@@ -12,12 +12,19 @@ license.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+aurora_common = { path = "../aurora-common", package = "aurora-common" }
+aurora_config = { path = "../aurora-config", package = "aurora-config" }
+bigdecimal = { workspace = true, features = ["serde"] }
 chrono = { workspace = true, features = ["serde"] }
-fern = { version = "0.6.2", features = ["chrono", "colored"] }
-humantime = "2.1.0"
-log = "0.4.20"
+dotenvy.workspace = true
+fern = { workspace = true, features = ["chrono", "colored"] }
+humantime.workspace = true
+listenfd.workspace = true
+log.workspace = true
+proto = { path = "../aurora-proto", package = "aurora-proto" }
 serde = { workspace = true, features = ["derive"] }
-sqlx = { version = "0.7.3", features = [
+serde_json.workspace = true
+sqlx = { workspace = true, features = [
     "postgres",
     "time",
     "uuid",
@@ -27,14 +34,6 @@ sqlx = { version = "0.7.3", features = [
     "bigdecimal",
 ] }
 tokio = { workspace = true, features = ["full"] }
-tokio-stream = { version = "0.1.14", features = ["net"] }
-tonic-health.workspace = true
-
-aurora_common = { path = "../aurora-common", package = "aurora-common" }
-aurora_config = { path = "../aurora-config", package = "aurora-config" }
-proto = { path = "../aurora-proto", package = "aurora-proto" }
-listenfd.workspace = true
+tokio-stream = { workspace = true, features = ["net"] }
 tonic.workspace = true
-bigdecimal = "0.4.2"
-dotenvy.workspace = true
-serde_json.workspace = true
+tonic-health.workspace = true
