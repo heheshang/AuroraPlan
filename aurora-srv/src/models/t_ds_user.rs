@@ -118,7 +118,6 @@ impl User {
         let user = sqlx::query_as!(User, "select * from t_ds_user where id = $1", _id)
             .fetch_one(pool)
             .await?;
-
         Ok(user)
     }
     pub async fn find_by_name(name: &str, pool: &PgPool) -> Result<Option<Self>> {
