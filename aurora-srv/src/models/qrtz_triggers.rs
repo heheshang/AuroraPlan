@@ -16,3 +16,8 @@ pub struct Model {
     pub misfire_instr: Option<i16>,
     pub job_data: Option<Vec<u8>>,
 }
+impl Model {
+    pub fn create() -> Self {
+        todo!()
+    }
+}
