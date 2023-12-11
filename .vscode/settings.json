@@ -6,7 +6,6 @@
     "extensions.experimental.affinity": {
         "asvetliakov.vscode-neovim": 1
     },
-
     "vscode-neovim.ctrlKeysForInsertMode": [
         "a",
         "c",
@@ -22,15 +21,12 @@
     "nvim-ui.nvimColorCustomizationKeys": [
         "statusBar.border",
         "statusBar.background",
-        
     ],
     "editor.defaultFormatter": null,
     "remote.extensionKind": {
-        "Github.copilot":[
+        "Github.copilot": [
             "ui"
         ],
-        "github.copilot-chat":"ui"
-
+        "github.copilot-chat": "ui"
     }
-    
 }
