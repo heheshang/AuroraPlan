@@ -1,32 +1,11 @@
 {
-    "nvim-ui.nvimColorNormal": "#ffc600",
-    "nvim-ui.nvimColorInsert": "#D32F2F",
-    "nvim-ui.nvimColorVisual": "#673AB7",
-    "nvim-ui.nvimColorReplace": "#000",
     "extensions.experimental.affinity": {
         "asvetliakov.vscode-neovim": 1
     },
-    "vscode-neovim.ctrlKeysForInsertMode": [
-        "a",
-        "c",
-        "d",
-        "h",
-        "j",
-        "o",
-        "r",
-        "t",
-        "u",
-        "w"
-    ],
-    "nvim-ui.nvimColorCustomizationKeys": [
-        "statusBar.border",
-        "statusBar.background",
-    ],
-    "editor.defaultFormatter": null,
     "remote.extensionKind": {
         "Github.copilot": [
             "ui"
         ],
         "github.copilot-chat": "ui"
-    }
+    },
 }
