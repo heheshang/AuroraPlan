@@ -6,6 +6,7 @@ pub(crate) mod routes_projects;
 pub(crate) mod routes_queues;
 pub(crate) mod routes_resources;
 pub(crate) mod routes_tenants;
+pub(crate) mod routes_ui_plugins;
 pub(crate) mod routes_user;
 pub(crate) mod routes_worker_groups;
 
@@ -54,6 +55,7 @@ pub async fn route_all() -> Router {
             .merge(routes_tenants::routes())
             .merge(routes_environment::routes())
             .merge(routes_worker_groups::routes())
+            .merge(routes_ui_plugins::routes())
             // .route("/aurora/ui/home", get(hello))
             .layer(middleware::map_request(log_path_params))
             .layer(middleware::map_response(mw_response_map))

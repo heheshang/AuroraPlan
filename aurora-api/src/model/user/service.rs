@@ -97,7 +97,7 @@ pub async fn update(user: UserInfo) -> Result<()> {
     let client = _ds_user_service_client().await?;
     let request = tonic::Request::new(UpdateDsUserRequest {
         ds_user: Some(DsUser {
-            id: user.id,
+            id: user.id.unwrap_or_default(),
             user_name: user.user_name,
             queue: user.queue,
             tenant_id: user.tenant_id,
@@ -123,7 +123,6 @@ pub async fn create(user: UserInfo) -> Result<UserInfoRes> {
     let user_password = format!("{:x}", digest);
     let request = tonic::Request::new(CreateDsUserRequest {
         ds_user: Some(DsUser {
-            id: user.id,
             user_name: user.user_name,
             queue: user.queue,
             tenant_id: user.tenant_id,

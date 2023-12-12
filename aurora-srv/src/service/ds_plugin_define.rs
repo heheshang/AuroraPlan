@@ -1,5 +1,9 @@
 use super::dao_service::AuroraRpcServer;
-use proto::ds_plugin_define::ds_plugin_define_service_server::DsPluginDefineService;
+use crate::models::t_ds_plugin_define::Model;
+use aurora_common::core_error::error::{AuroraData, Error};
+use proto::ds_plugin_define::{
+    ds_plugin_define_service_server::DsPluginDefineService, GetDsPluginDefineByTypeResponse,
+};
 
 #[tonic::async_trait]
 impl DsPluginDefineService for AuroraRpcServer {
@@ -14,7 +18,12 @@ impl DsPluginDefineService for AuroraRpcServer {
         &self,
         _req: tonic::Request<proto::ds_plugin_define::GetDsPluginDefineRequest>,
     ) -> std::result::Result<tonic::Response<proto::ds_plugin_define::DsPluginDefine>, tonic::Status> {
-        todo!()
+        let id = _req.into_inner().id;
+        let pool = &self.pool;
+        let res = Model::query_by_id(id, pool).await.map_err(|_e| {
+            tonic::Status::from_error(Box::new(Error::InternalServerErrorArgs(AuroraData::Null, None)))
+        })?;
+        Ok(tonic::Response::new(res.into()))
     }
 
     async fn create_ds_plugin_define(
@@ -36,5 +45,25 @@ impl DsPluginDefineService for AuroraRpcServer {
         _req: tonic::Request<proto::ds_plugin_define::DeleteDsPluginDefineRequest>,
     ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
         todo!()
+    }
+
+    async fn get_ds_plugin_define_by_type(
+        &self,
+        request: tonic::Request<proto::ds_plugin_define::GetDsPluginDefineByTypeRequest>,
+    ) -> std::result::Result<tonic::Response<proto::ds_plugin_define::GetDsPluginDefineByTypeResponse>, tonic::Status>
+    {
+        let pool = &self.pool;
+        let ui_type = request.into_inner().ui_type.to_lowercase();
+        Model::query_by_type(&ui_type, pool)
+            .await
+            .map(|res| {
+                tonic::Response::new(GetDsPluginDefineByTypeResponse {
+                    ds_plugin_defines: res
+                        .into_iter()
+                        .map(|item| item.into())
+                        .collect::<Vec<proto::ds_plugin_define::DsPluginDefine>>(),
+                })
+            })
+            .map_err(|_e| tonic::Status::from_error(Box::new(Error::InternalServerErrorArgs(AuroraData::Null, None))))
     }
 }

@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 pub type Result<T> = core::result::Result<T, Error>;
 pub type GrpcResponse<T> = std::result::Result<tonic::Response<T>, tonic::Status>;
 pub type GrpcRequest<T> = tonic::Request<T>;
+use typed_builder::TypedBuilder;
 
 // #[derive(Debug, Serialize, Deserialize, Clone)]
 // pub struct RespResult<T>(pub Result<T>);
@@ -20,12 +21,17 @@ pub type GrpcRequest<T> = tonic::Request<T>;
 //     }
 // }
 #[serde_with::serde_as]
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(TypedBuilder, Debug, Serialize, Deserialize, Clone)]
 pub struct ApiResult<T> {
+    #[builder(default, setter(strip_option))]
     pub data: Option<T>,
+    #[builder(default = 0)]
     pub code: i32,
+    #[builder(default="success".to_string())]
     pub msg: String,
+    #[builder(default = false)]
     pub failed: bool,
+    #[builder(default = true)]
     pub success: bool,
 }
 

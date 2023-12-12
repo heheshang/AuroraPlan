@@ -14,7 +14,7 @@ pub struct UserLoginInfoReq {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UserInfo {
-    pub id: i32,
+    pub id: Option<i32>,
     pub user_name: Option<String>,
     pub user_password: Option<String>,
     pub user_type: Option<i32>,

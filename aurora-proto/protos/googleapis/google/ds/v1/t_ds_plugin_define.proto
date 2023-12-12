@@ -52,6 +52,11 @@ service DsPluginDefineService {
       delete: "/v1alpha1/{name=DsPluginDefines/*}"
     };
   }
+  rpc GetDsPluginDefineByType(GetDsPluginDefineByTypeRequest) returns (GetDsPluginDefineByTypeResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsPluginDefinesByType"
+    };
+  }
 }
 
 // message DsPluginDefine {
@@ -78,7 +83,16 @@ message ListDsPluginDefinesResponse {
 
 message GetDsPluginDefineRequest {
   // The field will contain name of the resource requested.
-  string name = 1;
+  int32 id = 1;
+}
+
+message GetDsPluginDefineByTypeRequest {
+  // The field will contain name of the resource requested.
+  string ui_type = 1;
+}
+message GetDsPluginDefineByTypeResponse {
+  // The field will contain name of the resource requested.
+  repeated DsPluginDefine DsPluginDefines = 1;
 }
 
 message CreateDsPluginDefineRequest {

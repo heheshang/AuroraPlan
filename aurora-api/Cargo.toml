@@ -29,6 +29,7 @@ tonic-health = { workspace = true }
 tower = { workspace = true, features = ["full"] }
 tower-cookies = { workspace = true }
 tower-http = { workspace = true, features = ["fs", "trace"] }
+typed-builder = "0.18.0"
 uuid = { workspace = true, features = ["v4", "fast-rng"] }
 [dev-dependencies]
 anyhow = { workspace = true }

@@ -5,6 +5,7 @@ pub(crate) mod projects;
 pub(crate) mod queues;
 pub(crate) mod session;
 pub(crate) mod tenants;
+pub(crate) mod ui_plugins;
 pub(crate) mod user;
 pub(crate) mod worker_groups;
 use async_trait::async_trait;
