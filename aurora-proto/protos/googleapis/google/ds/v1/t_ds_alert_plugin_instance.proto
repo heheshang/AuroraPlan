@@ -17,6 +17,10 @@ message DsAlertPluginInstance {
     optional string update_time=5;
     optional string instance_name=6;
 }
+message VerifyAlertPluginInstanceRequest {
+  string instance_name=1 ;
+}
+
 
 // Generated according to https://cloud.google.com/apis/design/standard_methods
 service DsAlertPluginInstanceService {
@@ -51,6 +55,12 @@ service DsAlertPluginInstanceService {
       delete: "/v1alpha1/{name=DsAlertPluginInstances/*}"
     };
   }
+  rpc VerifyAlertPluginInstance(VerifyAlertPluginInstanceRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsAlertPluginInstances/verify"
+      body: "VerifyAlertPluginInstanceRequest"
+    };
+  }
 }
 
 // message DsAlertPluginInstance {
@@ -58,21 +68,19 @@ service DsAlertPluginInstanceService {
 // }
 
 message ListDsAlertPluginInstancesRequest {
-
-
-  // The maximum number of items to return.
-  int32 page_size = 1;
-
- int32 page_num = 2;
+    // The maximum number of items to return.
+    int64 page_size = 1;
+    int64 page_num = 2;
+    optional string search_val=3 ;
 }
 
 message ListDsAlertPluginInstancesResponse {
-  // The field name should match the noun "DsAlertPluginInstance" in the method name.
-  // There will be a maximum number of items returned based on the page_size field in the request.
-  repeated DsAlertPluginInstance DsAlertPluginInstances = 1;
-
-  // Token to retrieve the next page of results, or empty if there are no more results in the list.
-  string next_page_token = 2;
+  repeated DsAlertPluginInstance total_list = 1;
+  int64 current_page = 2;
+  int64 page_size = 3;
+  int64 start = 4;
+  int64 total = 5;
+  int64 total_page = 6;
 }
 
 message GetDsAlertPluginInstanceRequest {
@@ -81,27 +89,19 @@ message GetDsAlertPluginInstanceRequest {
 }
 
 message CreateDsAlertPluginInstanceRequest {
-  // The parent resource name where the DsAlertPluginInstance is to be created.
-  string parent = 1;
-
-  // The DsAlertPluginInstance id to use for this DsAlertPluginInstance.
-  string DsAlertPluginInstance_id = 2;
-
-  // The DsAlertPluginInstance resource to create.
-  // The field name should match the Noun in the method name.
-  DsAlertPluginInstance DsAlertPluginInstance = 3;
+    int32 plugin_define_id=1;
+    optional string plugin_instance_params=2;
+    optional string instance_name=3;
 }
 
 message UpdateDsAlertPluginInstanceRequest {
-  // The DsAlertPluginInstance resource which replaces the resource on the server.
-  DsAlertPluginInstance DsAlertPluginInstance = 1;
-
-  // The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
-  // see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
-  google.protobuf.FieldMask update_mask = 2;
+    int32 id=1;
+    int32 plugin_define_id=2;
+    optional string plugin_instance_params=3;
+    optional string instance_name=4;
 }
 
 message DeleteDsAlertPluginInstanceRequest {
   // The resource name of the DsAlertPluginInstance to be deleted.
-  string name = 1;
+  int32 id = 1;
 }

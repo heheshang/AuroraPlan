@@ -206,7 +206,11 @@
             "before": ["L"],
             "after": ["$"]
         }
-    ]
+    ],
+    "rust-analyzer.linkedProjects": [
+        "./aurora-api/Cargo.toml"
+    ],
+    "rust-analyzer.showUnlinkedFileNotification": false
     // "vim.digraphs": {}
     // "vim.statusBarColorControl": true,
     // "vim.statusBarColors.commandlineinprogress": "#007acc",

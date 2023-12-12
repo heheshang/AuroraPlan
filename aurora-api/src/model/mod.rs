@@ -1,3 +1,4 @@
+pub(crate) mod alert_plugin_instances;
 pub mod client;
 pub(crate) mod environment;
 mod error;

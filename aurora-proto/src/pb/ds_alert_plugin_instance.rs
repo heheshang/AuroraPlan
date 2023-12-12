@@ -18,23 +18,36 @@ pub struct DsAlertPluginInstance {
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
+pub struct VerifyAlertPluginInstanceRequest {
+    #[prost(string, tag = "1")]
+    pub instance_name: ::prost::alloc::string::String,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ListDsAlertPluginInstancesRequest {
     /// The maximum number of items to return.
-    #[prost(int32, tag = "1")]
-    pub page_size: i32,
-    #[prost(int32, tag = "2")]
-    pub page_num: i32,
+    #[prost(int64, tag = "1")]
+    pub page_size: i64,
+    #[prost(int64, tag = "2")]
+    pub page_num: i64,
+    #[prost(string, optional, tag = "3")]
+    pub search_val: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ListDsAlertPluginInstancesResponse {
-    /// The field name should match the noun "DsAlertPluginInstance" in the method name.
-    /// There will be a maximum number of items returned based on the page_size field in the request.
     #[prost(message, repeated, tag = "1")]
-    pub ds_alert_plugin_instances: ::prost::alloc::vec::Vec<DsAlertPluginInstance>,
-    /// Token to retrieve the next page of results, or empty if there are no more results in the list.
-    #[prost(string, tag = "2")]
-    pub next_page_token: ::prost::alloc::string::String,
+    pub total_list: ::prost::alloc::vec::Vec<DsAlertPluginInstance>,
+    #[prost(int64, tag = "2")]
+    pub current_page: i64,
+    #[prost(int64, tag = "3")]
+    pub page_size: i64,
+    #[prost(int64, tag = "4")]
+    pub start: i64,
+    #[prost(int64, tag = "5")]
+    pub total: i64,
+    #[prost(int64, tag = "6")]
+    pub total_page: i64,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -46,34 +59,31 @@ pub struct GetDsAlertPluginInstanceRequest {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct CreateDsAlertPluginInstanceRequest {
-    /// The parent resource name where the DsAlertPluginInstance is to be created.
-    #[prost(string, tag = "1")]
-    pub parent: ::prost::alloc::string::String,
-    /// The DsAlertPluginInstance id to use for this DsAlertPluginInstance.
-    #[prost(string, tag = "2")]
-    pub ds_alert_plugin_instance_id: ::prost::alloc::string::String,
-    /// The DsAlertPluginInstance resource to create.
-    /// The field name should match the Noun in the method name.
-    #[prost(message, optional, tag = "3")]
-    pub ds_alert_plugin_instance: ::core::option::Option<DsAlertPluginInstance>,
+    #[prost(int32, tag = "1")]
+    pub plugin_define_id: i32,
+    #[prost(string, optional, tag = "2")]
+    pub plugin_instance_params: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "3")]
+    pub instance_name: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct UpdateDsAlertPluginInstanceRequest {
-    /// The DsAlertPluginInstance resource which replaces the resource on the server.
-    #[prost(message, optional, tag = "1")]
-    pub ds_alert_plugin_instance: ::core::option::Option<DsAlertPluginInstance>,
-    /// The update mask applies to the resource. For the `google.protobuf.FieldMask` definition,
-    /// see <https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask>
-    #[prost(message, optional, tag = "2")]
-    pub update_mask: ::core::option::Option<::prost_types::FieldMask>,
+    #[prost(int32, tag = "1")]
+    pub id: i32,
+    #[prost(int32, tag = "2")]
+    pub plugin_define_id: i32,
+    #[prost(string, optional, tag = "3")]
+    pub plugin_instance_params: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "4")]
+    pub instance_name: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct DeleteDsAlertPluginInstanceRequest {
     /// The resource name of the DsAlertPluginInstance to be deleted.
-    #[prost(string, tag = "1")]
-    pub name: ::prost::alloc::string::String,
+    #[prost(int32, tag = "1")]
+    pub id: i32,
 }
 /// Generated client implementations.
 pub mod ds_alert_plugin_instance_service_client {
@@ -247,6 +257,24 @@ pub mod ds_alert_plugin_instance_service_client {
             ));
             self.inner.unary(req, path, codec).await
         }
+        pub async fn verify_alert_plugin_instance(
+            &mut self,
+            request: impl tonic::IntoRequest<super::VerifyAlertPluginInstanceRequest>,
+        ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(tonic::Code::Unknown, format!("Service was not ready: {}", e.into()))
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/ds_alert_plugin_instance.DsAlertPluginInstanceService/VerifyAlertPluginInstance",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut().insert(GrpcMethod::new(
+                "ds_alert_plugin_instance.DsAlertPluginInstanceService",
+                "VerifyAlertPluginInstance",
+            ));
+            self.inner.unary(req, path, codec).await
+        }
     }
 }
 /// Generated server implementations.
@@ -275,6 +303,10 @@ pub mod ds_alert_plugin_instance_service_server {
         async fn delete_ds_alert_plugin_instance(
             &self,
             request: tonic::Request<super::DeleteDsAlertPluginInstanceRequest>,
+        ) -> std::result::Result<tonic::Response<()>, tonic::Status>;
+        async fn verify_alert_plugin_instance(
+            &self,
+            request: tonic::Request<super::VerifyAlertPluginInstanceRequest>,
         ) -> std::result::Result<tonic::Response<()>, tonic::Status>;
     }
     /// Generated according to https://cloud.google.com/apis/design/standard_methods
@@ -517,6 +549,41 @@ pub mod ds_alert_plugin_instance_service_server {
                     let fut = async move {
                         let inner = inner.0;
                         let method = DeleteDsAlertPluginInstanceSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
+                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/ds_alert_plugin_instance.DsAlertPluginInstanceService/VerifyAlertPluginInstance" => {
+                    #[allow(non_camel_case_types)]
+                    struct VerifyAlertPluginInstanceSvc<T: DsAlertPluginInstanceService>(pub Arc<T>);
+                    impl<T: DsAlertPluginInstanceService>
+                        tonic::server::UnaryService<super::VerifyAlertPluginInstanceRequest>
+                        for VerifyAlertPluginInstanceSvc<T>
+                    {
+                        type Response = ();
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::VerifyAlertPluginInstanceRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move { (*inner).verify_alert_plugin_instance(request).await };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let inner = inner.0;
+                        let method = VerifyAlertPluginInstanceSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(accept_compression_encodings, send_compression_encodings)

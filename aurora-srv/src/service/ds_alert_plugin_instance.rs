@@ -5,6 +5,13 @@ use super::dao_service::AuroraRpcServer;
 
 #[tonic::async_trait]
 impl DsAlertPluginInstanceService for AuroraRpcServer {
+    async fn verify_alert_plugin_instance(
+        &self,
+        _req: tonic::Request<proto::ds_alert_plugin_instance::VerifyAlertPluginInstanceRequest>,
+    ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
+        todo!()
+    }
+
     async fn list_ds_alert_plugin_instances(
         &self,
         _request: tonic::Request<proto::ds_alert_plugin_instance::ListDsAlertPluginInstancesRequest>,
