@@ -16,6 +16,18 @@
         "github.copilot-chat": "ui"
     },
     // vscode 的vim配置
+    "vim.statusBarColorControl": true,
+    "vim.statusBarColors.normal": ["#8FBCBB", "#434C5E"],
+    "vim.statusBarColors.insert": "#BF616A",
+    "vim.statusBarColors.visual": "#B48EAD",
+    "vim.statusBarColors.visualline": "#B48EAD",
+    "vim.statusBarColors.visualblock": "#A3BE8C",
+    "vim.statusBarColors.replace": "#D08770",
+    // "vim.statusBarColors.commandlineinprogress": "#007ACC",
+    // "vim.statusBarColors.searchinprogressmode": "#007ACC",
+    // "vim.statusBarColors.easymotionmode": "#007ACC",
+    // "vim.statusBarColors.easymotioninputmode": "#007ACC",
+    // "vim.statusBarColors.surroundinputmode": "#007ACC",
     "vim.easymotion": true,
     "vim.incsearch": true,
     "vim.leader": "<space>",
@@ -162,6 +174,18 @@
                 // "autojspro.run"
                 "code-runner.run"
             ]
+        },
+        {
+            "before": [">"],
+            "commands": ["editor.action.indentLines"]
+        },
+        {
+            "before": ["<"],
+            "commands": ["editor.action.outdentLines"]
+        },
+        {
+            "before": ["p"],
+            "after": ["p", "g", "v", "y"]
         }
     ],
     "vim.insertModeKeyBindings": [
