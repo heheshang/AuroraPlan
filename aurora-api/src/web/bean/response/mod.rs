@@ -1,4 +1,6 @@
+pub mod alert_groups;
 pub mod alert_plugin_instances;
+pub mod cluster;
 pub mod environment;
 pub mod projects;
 pub mod queue;

@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+package ds_cluster;
+
+message  DsCluster {
+    int32 id = 1;
+    int64 code= 2;
+    optional string   name=3;
+    optional string   config=4;
+    optional string   description=5;
+    optional int32   operator=6;
+    optional string   create_time=7;
+    optional string   update_time=8;
+}
+
+// Generated according to https://cloud.google.com/apis/design/standard_methods
+service DsClusterService {
+  rpc ListDsClusters(ListDsClustersRequest) returns (ListDsClustersResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/DsClusters"
+    };
+  }
+
+  rpc GetDsCluster(GetDsClusterRequest) returns (DsCluster) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=DsClusters/*}"
+    };
+  }
+
+  rpc CreateDsCluster(CreateDsClusterRequest) returns (DsCluster) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsClusters"
+      body: "DsCluster"
+    };
+  }
+
+  rpc UpdateDsCluster(UpdateDsClusterRequest) returns (DsCluster) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{DsCluster.name=DsClusters/*}"
+      body: "DsCluster"
+    };
+  }
+
+  rpc DeleteDsCluster(DeleteDsClusterRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=DsClusters/*}"
+    };
+  }
+  rpc VerifyDsCluster(VerifyClusterRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/v1alpha1/DsClusters/verify"
+      body: "DsCluster"
+    };
+  }
+}
+
+message VerifyClusterRequest {
+  string name=1 ;
+}
+
+
+// message DsCluster {
+// ! This should be defined elsewhere
+// }
+
+message ListDsClustersRequest {
+    int64 page_size = 1;
+    int64 page_num = 2;
+    optional string search_val=3 ;
+}
+
+message ListDsClustersResponse {
+  repeated DsCluster total_list = 1;
+  int64 current_page = 2;
+  int64 page_size = 3;
+  int64 start = 4;
+  int64 total = 5;
+  int64 total_page = 6;
+}
+
+message GetDsClusterRequest {
+  // The field will contain name of the resource requested.
+  int32 id = 1;
+}
+
+message CreateDsClusterRequest {
+   optional string   name=2;
+    optional string   config=3;
+    optional string   description=4;
+    optional int32   operator=5;
+}
+
+message UpdateDsClusterRequest {
+    int64 code= 1;
+    optional string   name=2;
+    optional string   config=3;
+    optional string   description=4;
+    optional int32   operator=5;
+}
+
+message DeleteDsClusterRequest {
+  // The resource name of the DsCluster to be deleted.
+  int64 code = 1;
+}

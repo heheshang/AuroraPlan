@@ -27,7 +27,8 @@ pub fn routes() -> Router {
             "/alert-plugin-instances/:id",
             put(update).delete(delete_alert_plugin_instance),
         )
-        .route("/alert-plugin-instances/verify-code", get(verify_code));
+        .route("/alert-plugin-instances/verify-name", get(verify_name))
+        .route("/alert-plugin-instances/list", get(all));
 
     Router::new()
         .nest("/aurora", routes)
@@ -47,13 +48,7 @@ pub async fn update(
     let instance_name = &param.instance_name;
     let plugin_instance_params = &param.plugin_instance_params;
     let alert_plugin_instance_id = param.alert_plugin_instance_id;
-    model::alert_plugin_instances::update(
-        id,
-        instance_name.to_string(),
-        alert_plugin_instance_id,
-        plugin_instance_params.to_string(),
-    )
-    .await?;
+    model::alert_plugin_instances::update(id, instance_name.to_string(), plugin_instance_params.to_string()).await?;
     Ok(ApiResult::build(Some(())))
 }
 pub async fn create(
@@ -63,7 +58,7 @@ pub async fn create(
 ) -> Result<ApiResult<AlertPluginInstance>> {
     let instance_name = &param.instance_name;
     let plugin_instance_params = &param.plugin_instance_params;
-    let alert_plugin_instance_id = param.alert_plugin_instance_id;
+    let alert_plugin_instance_id = param.plugin_define_id;
     let res = model::alert_plugin_instances::create(
         instance_name.to_string(),
         alert_plugin_instance_id,
@@ -81,8 +76,14 @@ pub async fn list(cookies: Cookies, ctx: Ctx, param: Query<PageParams>) -> Resul
     Ok(ApiResult::build(Some(res.into())))
 }
 
-pub async fn verify_code(cookies: Cookies, ctx: Ctx, param: Query<VerifyAlertPluginInstance>) -> Result<ApiResult<()>> {
-    let instance_name = &param.instance_name;
+pub async fn verify_name(cookies: Cookies, ctx: Ctx, param: Query<VerifyAlertPluginInstance>) -> Result<ApiResult<()>> {
+    let instance_name = &param.alert_instance_name;
     model::alert_plugin_instances::verify_alert_instance(instance_name).await?;
     Ok(ApiResult::build(Some(())))
+}
+type ALLList = Vec<AlertPluginInstance>;
+
+pub async fn all(cookies: Cookies, ctx: Ctx) -> Result<ApiResult<ALLList>> {
+    let data = model::alert_plugin_instances::all().await?;
+    Ok(ApiResult::builder().data(data).build())
 }

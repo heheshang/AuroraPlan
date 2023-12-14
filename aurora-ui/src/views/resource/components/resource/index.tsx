@@ -19,7 +19,6 @@ import { useRouter } from 'vue-router'
 import {
   defineComponent,
   onMounted,
-  onUnmounted,
   ref,
   getCurrentInstance,
   PropType,
@@ -38,8 +37,7 @@ import {
 } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
 import { SearchOutlined } from '@vicons/antd'
-import { useTable, useDetailPageStore } from './table/use-table'
-import { useIsDetailPageStore, isEmpty } from './edit/use-edit'
+import { useTable } from './table/use-table'
 import { useFileStore } from '@/store/file/file'
 import Card from '@/components/card'
 import ResourceFolderModal from './folder'
@@ -106,33 +104,8 @@ export default defineComponent({
     const handleRenameFile = () => {
       variables.renameShowRef = true
     }
-    const detailPageStore = useDetailPageStore()   
-    const isDetailPageStore = useIsDetailPageStore()
-    
-    const handleDetailBackList = () => {
-      if(isDetailPageStore.getIsDetailPage){
-        variables.resourceType = detailPageStore.getResourceType  
-        variables.fullName = detailPageStore.getFullName 
-        variables.tenantCode = detailPageStore.getTenantCode 
-        variables.searchRef = detailPageStore.getSearchValue 
-        variables.pagination.page = detailPageStore.getPage 
-        variables.pagination.pageSize = detailPageStore.getPageSize 
-        if(!isEmpty(variables.searchRef)){
-          handleConditions()
-        }
-	detailPageStore.$reset()
-	isDetailPageStore.$reset()
-      } else {
-	  detailPageStore.$reset()
-	  isDetailPageStore.$reset()
-      }
-    }
 
-    onUnmounted(() => {
-      isDetailPageStore.$reset()
-    })
     onMounted(() => {
-      handleDetailBackList()
       createColumns(variables)
       fileStore.setCurrentDir(variables.fullName)
       breadListRef.value = fileStore.getCurrentDir

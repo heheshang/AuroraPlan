@@ -23,6 +23,7 @@ import {
   DownloadOutlined,
   FormOutlined,
   EditOutlined,
+  InfoCircleFilled,
   UploadOutlined
 } from '@vicons/antd'
 import _ from 'lodash'
@@ -221,27 +222,32 @@ export default defineComponent({
           {{
             default: () => t('resource.file.delete'),
             trigger: () => (
-              <NPopconfirm
-                positive-text={t('resource.file.confirm')}
-                negative-text={t('resource.file.cancel')}
-                onPositiveClick={() => {
-                  this.handleDeleteFile({
-                    fullName: this.row.fullName,
-                    tenantCode: this.row.user_name
-                  })
-                }}
-              >
-                {{
-                  default: () => t('resource.file.delete_confirm'),
-                  trigger: () => (
-                    <NButton size='tiny' type='error' circle class='btn-delete'>
+              <NButton size='tiny' type='error' circle class='btn-delete'>
+                <NPopconfirm
+                  positive-text={t('resource.file.confirm')}
+                  negative-text={t('resource.file.cancel')}
+                  onPositiveClick={() => {
+                    this.handleDeleteFile({
+                      fullName: this.row.fullName,
+                      tenantCode: this.row.user_name
+                    })
+                  }}
+                >
+                  {{
+                    default: () => t('resource.file.delete_confirm'),
+                    icon: () => (
+                      <NIcon>
+                        <InfoCircleFilled />
+                      </NIcon>
+                    ),
+                    trigger: () => (
                       <NIcon>
                         <DeleteOutlined />
                       </NIcon>
-                    </NButton>
-                  )
-                }}
-              </NPopconfirm>
+                    )
+                  }}
+                </NPopconfirm>
+              </NButton>
             )
           }}
         </NTooltip>

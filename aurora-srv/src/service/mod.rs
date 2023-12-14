@@ -15,6 +15,7 @@ pub mod ds_alert_plugin_instance;
 pub mod ds_alert_send_status;
 pub mod ds_alertgroup;
 pub mod ds_audit_log;
+pub mod ds_cluster;
 pub mod ds_command;
 pub mod ds_datasource;
 pub mod ds_dq_comparison_type;

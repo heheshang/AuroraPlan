@@ -9,6 +9,21 @@ use aurora_proto::ds_alert_plugin_instance::{
 };
 use log::{error, info};
 
+pub async fn all() -> Result<Vec<AlertPluginInstance>> {
+    let client = _ds_alert_plugin_instance_service_client().await?;
+    let request = tonic::Request::new(());
+    let res = client
+        .clone()
+        .all_alert_plugin_instance(request)
+        .await
+        .map(|res| res.into_inner().total_list.into_iter().map(|x| x.into()).collect::<Vec<_>>())
+        .map_err(|e| {
+            let err: Error = e.into();
+            error!("list tenants error: {:?}", err);
+            err
+        })?;
+    Ok(res)
+}
 pub async fn delete(id: i32) -> Result<()> {
     let client = _ds_alert_plugin_instance_service_client().await?;
     let request = tonic::Request::new(DeleteDsAlertPluginInstanceRequest { id });
@@ -27,14 +42,14 @@ pub async fn delete(id: i32) -> Result<()> {
 
 pub async fn create(
     instance_name: String,
-    alert_plugin_instance_id: i32,
+    plugin_define_id: i32,
     plugin_instance_params: String,
 ) -> Result<AlertPluginInstance> {
     let client = _ds_alert_plugin_instance_service_client().await?;
     let request = tonic::Request::new(CreateDsAlertPluginInstanceRequest {
         instance_name: Some(instance_name),
         plugin_instance_params: Some(plugin_instance_params),
-        plugin_define_id: alert_plugin_instance_id,
+        plugin_define_id,
     });
     let res = client
         .clone()
@@ -84,18 +99,12 @@ pub async fn list(
         })?;
     Ok(res)
 }
-pub async fn update(
-    id: i32,
-    instance_name: String,
-    alert_plugin_instance_id: i32,
-    plugin_instance_params: String,
-) -> Result<()> {
+pub async fn update(id: i32, instance_name: String, plugin_instance_params: String) -> Result<()> {
     let client = _ds_alert_plugin_instance_service_client().await?;
     let request = tonic::Request::new(UpdateDsAlertPluginInstanceRequest {
         id,
         instance_name: Some(instance_name),
         plugin_instance_params: Some(plugin_instance_params),
-        plugin_define_id: alert_plugin_instance_id,
     });
     client
         .clone()

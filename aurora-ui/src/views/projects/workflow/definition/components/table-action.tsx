@@ -184,20 +184,20 @@ export default defineComponent({
                 ? t('project.workflow.down_line')
                 : t('project.workflow.up_line'),
             trigger: () => (
-              <NPopconfirm onPositiveClick={this.handleReleaseWorkflow}>
-                {{
-                  default: () =>
-                    releaseState === 'ONLINE'
-                      ? t('project.workflow.confirm_to_offline')
-                      : t('project.workflow.confirm_to_online'),
-                  trigger: () => (
-                    <NButton
-                      size='small'
-                      type={releaseState === 'ONLINE' ? 'warning' : 'error'}
-                      tag='div'
-                      circle
-                      class='btn-publish'
-                    >
+              <NButton
+                size='small'
+                type={releaseState === 'ONLINE' ? 'warning' : 'error'}
+                tag='div'
+                circle
+                class='btn-publish'
+              >
+                <NPopconfirm onPositiveClick={this.handleReleaseWorkflow}>
+                  {{
+                    default: () =>
+                      releaseState === 'ONLINE'
+                        ? t('project.workflow.confirm_to_offline')
+                        : t('project.workflow.confirm_to_online'),
+                    trigger: () => (
                       <NIcon>
                         {releaseState === 'ONLINE' ? (
                           <DownloadOutlined />
@@ -205,10 +205,10 @@ export default defineComponent({
                           <UploadOutlined />
                         )}
                       </NIcon>
-                    </NButton>
-                  )
-                }}
-              </NPopconfirm>
+                    )
+                  }}
+                </NPopconfirm>
+              </NButton>
             )
           }}
         </NTooltip>
@@ -253,28 +253,33 @@ export default defineComponent({
           {{
             default: () => t('project.workflow.delete'),
             trigger: () => (
-              <NPopconfirm
+              <NButton
+                size='small'
+                type='error'
+                tag='div'
+                circle
                 disabled={releaseState === 'ONLINE'}
-                onPositiveClick={this.handleDeleteWorkflow}
+                class='btn-delete'
               >
-                {{
-                  default: () => t('project.workflow.delete_confirm'),
-                  trigger: () => (
-                    <NButton
-                      size='small'
-                      type='error'
-                      tag='div'
-                      circle
-                      disabled={releaseState === 'ONLINE'}
-                      class='btn-delete'
-                    >
+                <NPopconfirm
+                  disabled={releaseState === 'ONLINE'}
+                  onPositiveClick={this.handleDeleteWorkflow}
+                >
+                  {{
+                    default: () => t('project.workflow.delete_confirm'),
+                    icon: () => (
+                      <NIcon>
+                        <InfoCircleFilled />
+                      </NIcon>
+                    ),
+                    trigger: () => (
                       <NIcon>
                         <DeleteOutlined />
                       </NIcon>
-                    </NButton>
-                  )
-                }}
-              </NPopconfirm>
+                    )
+                  }}
+                </NPopconfirm>
+              </NButton>
             )
           }}
         </NTooltip>

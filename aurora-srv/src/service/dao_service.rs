@@ -5,6 +5,7 @@ use proto::{
     ds_alert_send_status::ds_alert_send_status_service_server::DsAlertSendStatusServiceServer,
     ds_alertgroup::ds_alert_group_service_server::DsAlertGroupServiceServer,
     ds_audit_log::ds_audit_log_service_server::DsAuditLogServiceServer,
+    ds_cluster::ds_cluster_service_server::DsClusterServiceServer,
     ds_command::ds_command_service_server::DsCommandServiceServer,
     ds_datasource::ds_datasource_service_server::DsDatasourceServiceServer,
     ds_dq_comparison_type::ds_dq_comparison_type_service_server::DsDqComparisonTypeServiceServer,
@@ -83,6 +84,8 @@ impl AuroraRpcServer {
     create_service!(ds_alert_send_status, DsAlertSendStatusServiceServer);
 
     create_service!(ds_alertgroup, DsAlertGroupServiceServer);
+
+    create_service!(ds_cluster, DsClusterServiceServer);
 
     create_service!(ds_audit_log, DsAuditLogServiceServer);
 

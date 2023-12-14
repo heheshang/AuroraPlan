@@ -1,5 +1,5 @@
 [registries.crates-io]
-protocol = "sparse"
+# protocol = "sparse"
 
 #.cargo目录下创建文件config，文件内容如下
 # 放到 `$HOME/.cargo/config` 文件中
@@ -32,6 +32,6 @@ registry = "https://mirrors.tuna.tsinghua.edu.cn/git/crates.io-index.git"
 registry = "https://code.aliyun.com/rustcc/crates.io-index.git"
 
 [build]
-# rustc-wrapper = "sccache"
-# incremental = true
-# rustflags=["-Z","threads=4"]
+rustc-wrapper = "sccache"
+incremental = true
+rustflags=["-Z","threads=4"]

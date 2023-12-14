@@ -633,7 +633,6 @@ export default {
     hour: '时',
     add_dependency: '添加依赖',
     waiting_dependent_start: '等待依赖启动',
-    dependent_task_parameter_passing: '参数传递',
     check_interval: '检查间隔',
     check_interval_tips: '检查间隔必须为正整数',
     waiting_dependent_complete: '等待依赖完成',
@@ -854,9 +853,6 @@ export default {
     child_node_instance: '子节点实例',
     yarn_queue: 'Yarn队列',
     yarn_queue_tips: '请输入Yarn队列(选填)',
-    dependent_type: '依赖类型',
-    dependent_on_workflow: '依赖于工作流',
-    dependent_on_task: '依赖于任务',
   },
   menu: {
     fav: '收藏组件',

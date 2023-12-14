@@ -20,6 +20,7 @@ import { NSpace, NTooltip, NButton, NIcon, NPopconfirm } from 'naive-ui'
 import {
   DeleteOutlined,
   FormOutlined,
+  InfoCircleFilled,
   SyncOutlined,
   CloseOutlined,
   CloseCircleOutlined,
@@ -249,30 +250,35 @@ export default defineComponent({
           {{
             default: () => t('project.workflow.delete'),
             trigger: () => (
-              <NPopconfirm onPositiveClick={this.handleDeleteInstance}>
-                {{
-                  default: () => t('project.workflow.delete_confirm'),
-                  trigger: () => (
-                    <NButton
-                      tag='div'
-                      size='small'
-                      type='error'
-                      circle
-                      disabled={
-                        (state !== 'SUCCESS' &&
-                          state !== 'FAILURE' &&
-                          state !== 'STOP' &&
-                          state !== 'PAUSE') ||
-                        this.row?.disabled
-                      }
-                    >
+              <NButton
+                tag='div'
+                size='small'
+                type='error'
+                circle
+                disabled={
+                  (state !== 'SUCCESS' &&
+                    state !== 'FAILURE' &&
+                    state !== 'STOP' &&
+                    state !== 'PAUSE') ||
+                  this.row?.disabled
+                }
+              >
+                <NPopconfirm onPositiveClick={this.handleDeleteInstance}>
+                  {{
+                    default: () => t('project.workflow.delete_confirm'),
+                    icon: () => (
+                      <NIcon>
+                        <InfoCircleFilled />
+                      </NIcon>
+                    ),
+                    trigger: () => (
                       <NIcon>
                         <DeleteOutlined />
                       </NIcon>
-                    </NButton>
-                  )
-                }}
-              </NPopconfirm>
+                    )
+                  }}
+                </NPopconfirm>
+              </NButton>
             )
           }}
         </NTooltip>

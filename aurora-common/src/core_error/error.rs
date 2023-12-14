@@ -2201,6 +2201,7 @@ impl From<AuroraErrorInfo> for Error {
             (10004, _, _) => Error::UserNameNull(value.error_data, value.error_param),
             (10006, _, _) => Error::HdfsOperationError(value.error_data, value.error_param),
             (10009, _, _) => return Error::OsTenantCodeExist(value.error_data, value.error_param),
+            (10012, _, _) => Error::AlertGroupExist(value.error_data, value.error_param),
             (10018, _, _) => Error::ProjectNotFound(value.error_data, value.error_param),
             (10019, _, _) => Error::ProjectAlreadyExists(value.error_data, value.error_param),
             (10020, _, _) => Error::TaskInstanceNotExists(value.error_data, value.error_param),

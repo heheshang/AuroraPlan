@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub struct CreateAlertPluginInstance {
     pub(crate) instance_name: String,
-    pub(crate) alert_plugin_instance_id: i32,
+    pub(crate) plugin_define_id: i32,
     pub(crate) plugin_instance_params: String,
 }
 
@@ -19,5 +19,5 @@ pub struct UpdateAlertPluginInstance {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct VerifyAlertPluginInstance {
-    pub(crate) instance_name: String,
+    pub(crate) alert_instance_name: String,
 }

@@ -1,5 +1,7 @@
+pub(crate) mod alert_groups;
 pub(crate) mod alert_plugin_instances;
 pub mod client;
+pub(crate) mod cluster;
 pub(crate) mod environment;
 mod error;
 pub(crate) mod projects;

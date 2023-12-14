@@ -644,7 +644,6 @@ export default {
     hour: 'hour',
     add_dependency: 'Add dependency',
     waiting_dependent_start: 'Waiting Dependent start',
-    dependent_task_parameter_passing: 'Parameter Passing',
     check_interval: 'Check interval',
     check_interval_tips: 'Check interval must be a positive integer',
     waiting_dependent_complete: 'Waiting Dependent complete',
@@ -880,10 +879,6 @@ export default {
     child_node_instance: 'child node instance',
     yarn_queue: 'Yarn Queue',
     yarn_queue_tips: 'Please input yarn queue(optional)',
-    dependent_type: 'Dependency Type',
-    dependent_on_workflow: 'Dependent on workflow',
-    dependent_on_task: 'Dependent on task',
-
   },
   menu: {
     fav: 'Favorites',

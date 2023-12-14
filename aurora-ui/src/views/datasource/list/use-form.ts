@@ -61,7 +61,6 @@ export function useForm(id?: number) {
     showHost: true,
     showPort: true,
     showAwsRegion: false,
-    showRestEndpoint: false,
     showCompatibleMode: false,
     showConnectType: false,
     showPrincipal: false,
@@ -182,8 +181,7 @@ export function useForm(id?: number) {
           if (
             !state.detailForm.dbUser &&
             state.showMode &&
-            state.detailForm.mode === 'IAM-accessKey' &&
-            state.detailForm.type != 'SAGEMAKER'
+            state.detailForm.mode === 'IAM-accessKey'
           ) {
             return new Error(t('datasource.IAM-accessKey'))
           }
@@ -229,12 +227,6 @@ export function useForm(id?: number) {
         label: 'IAM-accessKey',
         value: 'IAM-accessKey'
       }
-    ],
-    sagemakerModeOption: [
-      {
-        label: 'IAM-accessKey',
-        value: 'IAM-accessKey'
-      }
     ]
   })
 
@@ -246,8 +238,8 @@ export function useForm(id?: number) {
 
     state.showHost = type !== 'ATHENA'
     state.showPort = type !== 'ATHENA'
-    state.showAwsRegion = type === 'ATHENA' || type === 'SAGEMAKER'
-    state.showMode = ['AZURESQL', 'REDSHIFT', 'SAGEMAKER'].includes(type)
+    state.showAwsRegion = type === 'ATHENA'
+    state.showMode = ['AZURESQL', 'REDSHIFT'].includes(type)
 
     if (type === 'ORACLE' && !id) {
       state.detailForm.connectType = 'ORACLE_SERVICE_NAME'
@@ -261,23 +253,11 @@ export function useForm(id?: number) {
     } else {
       state.showPrincipal = false
     }
-    if (type === 'SSH' || type === 'ZEPPELIN' || type === 'SAGEMAKER') {
+    if (type === 'SSH') {
       state.showDataBaseName = false
       state.requiredDataBase = false
       state.showJDBCConnectParameters = false
-      state.showPublicKey = false
-      if (type === 'SSH') {
-        state.showPublicKey = true
-      }
-      if (type === 'ZEPPELIN') {
-        state.showHost = false
-        state.showPort = false
-        state.showRestEndpoint = true
-      }
-      if (type === 'SAGEMAKER') {
-        state.showHost = false
-        state.showPort = false
-      }
+      state.showPublicKey = true
     } else {
       state.showDataBaseName = true
       state.requiredDataBase = true
@@ -330,11 +310,6 @@ export const datasourceType: IDataBaseOptionKeys = {
   HIVE: {
     value: 'HIVE',
     label: 'HIVE/IMPALA',
-    defaultPort: 10000
-  },
-  KYUUBI: {
-    value: 'KYUUBI',
-    label: 'KYUUBI',
     defaultPort: 10000
   },
   SPARK: {
@@ -427,20 +402,10 @@ export const datasourceType: IDataBaseOptionKeys = {
     label: 'HANA',
     defaultPort: 30015
   },
-  ZEPPELIN: {
-    value: 'ZEPPELIN',
-    label: 'ZEPPELIN',
-    defaultPort: 8080
-  },
   DORIS: {
     value: 'DORIS',
     label: 'DORIS',
     defaultPort: 9030
-  },
-  SAGEMAKER: {
-    value: 'SAGEMAKER',
-    label: 'SAGEMAKER',
-    defaultPort: 0
   }
 }
 

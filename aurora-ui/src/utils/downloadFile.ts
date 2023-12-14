@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-const apiPrefix = '/dolphinscheduler'
+const apiPrefix = '/aurora'
 const reSlashPrefix = /^\/+/
 
 const resolveURL = (url: string) => {

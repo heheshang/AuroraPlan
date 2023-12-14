@@ -20,7 +20,8 @@ import {
   ListReq,
   ListIdReq,
   ProjectsReq,
-  UserIdReq
+  UserIdReq,
+  UpdateProjectsReq
 } from './types'
 
 export function queryProjectListPaging(params: ListReq): any {
@@ -94,7 +95,7 @@ export function queryProjectByCode(code: number): any {
   })
 }
 
-export function updateProject(data: ProjectsReq, code: number): any {
+export function updateProject(data: UpdateProjectsReq, code: number): any {
   return axios({
     url: `/projects/${code}`,
     method: 'put',

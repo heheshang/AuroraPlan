@@ -30,7 +30,6 @@ import {
 } from '@/common/column-width-config'
 import type { Router } from 'vue-router'
 import { useFileState } from '@/views/resource/components/resource/use-file'
-import { defineStore } from 'pinia'
 
 const goSubFolder = (router: Router, item: any) => {
   if (item.directory) {
@@ -212,8 +211,7 @@ export function useTable() {
   }
 
   const { getResourceListState } = useFileState(setPagination)
-  const detailPageStore = useDetailPageStore()
-  
+
   const requestData = () => {
     variables.resourceList = getResourceListState(
       variables.resourceType!,
@@ -223,12 +221,6 @@ export function useTable() {
       variables.pagination.page,
       variables.pagination.pageSize
     )
-    detailPageStore.setResourceType(variables.resourceType!)
-    detailPageStore.setFullName(variables.fullName)
-    detailPageStore.setTenantCode(variables.tenantCode)
-    detailPageStore.setSearchValue(variables.searchRef)
-    detailPageStore.setPage(variables.pagination.page)
-    detailPageStore.setPageSize(variables.pagination.pageSize)
   }
 
   const updateList = () => {
@@ -245,56 +237,3 @@ export function useTable() {
     handleCreateFile: createFile
   }
 }
-export const useDetailPageStore = defineStore("detailPage", { 
-  state:() => {
-	var resourceTypeInitValue:ResourceType
-    return {
-      resourceType:resourceTypeInitValue!,
-	  fullName:'',
-	  tenantCode:'',
-	  searchValue:'',
-	  page:1,
-	  pageSize:10
-    }
-  },
-  getters: {
-    getResourceType(): ResourceType {
-      return this.resourceType
-    },
-	getFullName(): string {
-	  return this.fullName
-	},
-	getTenantCode(): string {
-	  return this.tenantCode
-	},
-	getSearchValue(): string {
-	  return this.searchValue
-	},
-	getPage(): number {
-	  return this.page
-	},
-	getPageSize(): number {
-	  return this.pageSize
-	}
-  },
-  actions: {
-    setResourceType(resourceTypeValue: ResourceType) {
-      this.resourceType = resourceTypeValue
-    },
-	setFullName(fullName: string) {
-	  this.fullName = fullName
-	},
-	setTenantCode(fullName: string) {
-	  this.fullName = fullName
-	},
-	setSearchValue(searchValue: string) {
-	  this.searchValue = searchValue
-	},
-	setPage(page: number) {
-	  this.page = page
-	},
-	setPageSize(pageSize: number) {
-	  this.pageSize = pageSize
-	}
-  }
-})

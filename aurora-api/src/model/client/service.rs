@@ -6,6 +6,7 @@ use aurora_proto::{
     ds_alert_send_status::ds_alert_send_status_service_client::DsAlertSendStatusServiceClient,
     ds_alertgroup::ds_alert_group_service_client::DsAlertGroupServiceClient,
     ds_audit_log::ds_audit_log_service_client::DsAuditLogServiceClient,
+    ds_cluster::ds_cluster_service_client::DsClusterServiceClient,
     ds_command::ds_command_service_client::DsCommandServiceClient,
     ds_datasource::ds_datasource_service_client::DsDatasourceServiceClient,
     ds_dq_comparison_type::ds_dq_comparison_type_service_client::DsDqComparisonTypeServiceClient,
@@ -178,6 +179,7 @@ build_client!(
     _ds_alert_group_service_client,
     DsAlertGroupServiceClient
 );
+build_client!(_DS_CLUSTER, _ds_cluster_service_client, DsClusterServiceClient);
 build_client!(_DS_AUDIT_LOG, _ds_audit_log_service_client, DsAuditLogServiceClient);
 build_client!(_DS_COMMAND, _ds_command_service_client, DsCommandServiceClient);
 build_client!(_DS_DATASOURCE, _ds_datasource_service_client, DsDatasourceServiceClient);

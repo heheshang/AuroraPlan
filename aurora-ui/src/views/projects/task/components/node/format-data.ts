@@ -347,8 +347,6 @@ export function formatParams(data: INodeData): {
     taskParams.password = data.password
     taskParams.productionNoteDirectory = data.productionNoteDirectory
     taskParams.parameters = data.parameters
-    taskParams.datasource = data.datasource
-    taskParams.type = data.type
   }
 
   if (data.taskType === 'K8S') {
@@ -407,11 +405,6 @@ export function formatParams(data: INodeData): {
 
   if (data.taskType === 'SAGEMAKER') {
     taskParams.sagemakerRequestJson = data.sagemakerRequestJson
-    taskParams.username = data.username
-    taskParams.password = data.password
-    taskParams.datasource = data.datasource
-    taskParams.type = data.type
-    taskParams.awsRegion = data.awsRegion
   }
   if (data.taskType === 'PYTORCH') {
     taskParams.script = data.script

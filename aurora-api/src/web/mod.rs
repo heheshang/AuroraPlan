@@ -1,7 +1,9 @@
 #![allow(unused)]
 pub(crate) mod bean;
 pub(crate) mod mw;
+pub(crate) mod routes_alert_groups;
 pub(crate) mod routes_alert_plugins;
+pub(crate) mod routes_cluster;
 pub(crate) mod routes_environment;
 pub(crate) mod routes_projects;
 pub(crate) mod routes_queues;
@@ -58,6 +60,8 @@ pub async fn route_all() -> Router {
             .merge(routes_worker_groups::routes())
             .merge(routes_ui_plugins::routes())
             .merge(routes_alert_plugins::routes())
+            .merge(routes_alert_groups::routes())
+            .merge(routes_cluster::routes())
             // .route("/aurora/ui/home", get(hello))
             .layer(middleware::map_request(log_path_params))
             .layer(middleware::map_response(mw_response_map))

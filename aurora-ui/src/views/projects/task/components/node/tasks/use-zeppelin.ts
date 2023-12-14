@@ -43,12 +43,7 @@ export function useZeppelin({
     workerGroup: 'default',
     delayTime: 0,
     timeout: 30,
-    type: 'ZEPPELIN',
-    displayRows: 10,
-    timeoutNotifyStrategy: ['WARN'],
-    restEndpoint: '',
-    username: '',
-    password: ''
+    timeoutNotifyStrategy: ['WARN']
   } as INodeData)
 
   return {
@@ -65,7 +60,6 @@ export function useZeppelin({
       ...Fields.useFailed(),
       Fields.useDelayTime(model),
       ...Fields.useTimeoutAlarm(model),
-      ...Fields.useDatasource(model),
       ...Fields.useZeppelin(model),
       Fields.usePreTasks()
     ] as IJsonItem[],
