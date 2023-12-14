@@ -87,6 +87,7 @@ pub(crate) async fn build_router(pool: PgPool) -> Router {
         .add_optional_service(Some(grpc_server.clone().ds_alert_plugin_instance()))
         .add_optional_service(Some(grpc_server.clone().ds_alert_send_status()))
         .add_optional_service(Some(grpc_server.clone().ds_alertgroup()))
+        .add_optional_service(Some(grpc_server.clone().ds_cluster()))
         .add_optional_service(Some(grpc_server.clone().ds_audit_log()))
         .add_optional_service(Some(grpc_server.clone().ds_command()))
         .add_optional_service(Some(grpc_server.clone().ds_datasource()))

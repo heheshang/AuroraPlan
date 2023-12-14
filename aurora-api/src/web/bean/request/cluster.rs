@@ -27,5 +27,5 @@ pub struct VerifyCluster {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct DeleteCluster {
-    pub(crate) code: i64,
+    pub(crate) cluster_code: i64,
 }

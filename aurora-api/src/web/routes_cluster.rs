@@ -22,10 +22,11 @@ use super::{
 
 pub fn routes() -> Router {
     let routes = Router::new()
-        .route("/cluster", get(list).post(create).post(delete_cluster)
-        .post(update)
-    )
-        .route("/cluster/verify-cluster", get(verify_name))
+        .route("/cluster/list-paging", get(list))
+        .route("/cluster/create", post(create))
+        .route("/cluster/delete", post(delete_cluster))
+        .route("/cluster/update", post(update))
+        .route("/cluster/verify-cluster", post(verify_name))
         // .route("/cluster/list", get(all))
         ;
     Router::new()
@@ -34,7 +35,7 @@ pub fn routes() -> Router {
 }
 
 pub async fn delete_cluster(cookies: Cookies, ctx: Ctx, param: Form<DeleteCluster>) -> Result<ApiResult<()>> {
-    let code = param.code;
+    let code = param.cluster_code;
     model::cluster::delete(code).await?;
     Ok(ApiResult::build(Some(())))
 }
@@ -65,7 +66,7 @@ pub async fn list(cookies: Cookies, ctx: Ctx, param: Query<PageParams>) -> Resul
     Ok(ApiResult::build(Some(res.into())))
 }
 
-pub async fn verify_name(cookies: Cookies, ctx: Ctx, param: Query<VerifyCluster>) -> Result<ApiResult<()>> {
+pub async fn verify_name(cookies: Cookies, ctx: Ctx, param: Form<VerifyCluster>) -> Result<ApiResult<()>> {
     let name = &param.cluster_name;
     model::cluster::verify(name).await?;
     Ok(ApiResult::build(Some(())))
