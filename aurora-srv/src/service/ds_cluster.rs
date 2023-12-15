@@ -105,7 +105,7 @@ impl DsClusterService for AuroraRpcServer {
     ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
         let pool = &self.pool;
         let name = _request.get_ref().name.clone();
-        let res = Model::_find_by_name(name, pool).await.map_err(|e| {
+        let res = Model::_find_by_name(name.clone(), pool).await.map_err(|e| {
             error!("verify_cluster error: {:?}", e);
             tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
                 Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
@@ -115,7 +115,7 @@ impl DsClusterService for AuroraRpcServer {
         match res {
             None => Ok(tonic::Response::new(())),
             Some(_) => Err(tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
-                Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
+                Error::ClusterNameExists(AuroraData::Null, Some(vec![name])).into(),
             ))),
         }
     }

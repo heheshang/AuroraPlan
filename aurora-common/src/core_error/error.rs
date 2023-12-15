@@ -341,6 +341,22 @@ pub enum Error {
     GetDatasourceOptionsError(AuroraData, Option<Vec<String>>), //(1200017, "get datasource options error", "获取数据源Options错误"),
     GetDatasourceTablesError(AuroraData, Option<Vec<String>>), //(1200018, "get datasource tables error", "获取数据源表列表错误"),
     GetDatasourceTableColumnsError(AuroraData, Option<Vec<String>>), //(1200019, "get datasource table columns error", "获取数据源表列名错误"),
+    CreateClusterError(AuroraData, Option<Vec<String>>),             //(120020, "create cluster error", "创建集群失败"),
+    ClusterNameExists(AuroraData, Option<Vec<String>>), //(120021, "this cluster name [{0}] already exists", "集群名称[{0}]已经存在"),
+    ClusterNameIsNull(AuroraData, Option<Vec<String>>), //(120022, "this cluster name shouldn't be empty.", "集群名称不能为空"),
+    ClusterConfigIsNull(AuroraData, Option<Vec<String>>), //(120023, "this cluster config shouldn't be empty.", "集群配置信息不能为空"),
+    UpdateClusterError(AuroraData, Option<Vec<String>>), //(120024, "update cluster [{0}] info error", "更新集群[{0}]信息失败"),
+    DeleteClusterError(AuroraData, Option<Vec<String>>), //(120025, "delete cluster error", "删除集群信息失败"),
+    DeleteClusterRelatedTaskExists(AuroraData, Option<Vec<String>>), //(120026, "this cluster has been used in tasks,so you can't delete it.", "该集群已经被任务使用，所以不能删除该集群信息"),
+    QueryClusterByNameError(AuroraData, Option<Vec<String>>), //(1200027, "not found cluster [{0}] ", "查询集群名称[{0}]信息不存在"),
+    QueryClusterByCodeError(AuroraData, Option<Vec<String>>), //(1200028, "not found cluster [{0}] ", "查询集群编码[{0}]不存在"),
+    QueryClusterError(AuroraData, Option<Vec<String>>), //(1200029, "login user query cluster error", "分页查询集群列表错误"),
+    VerifyClusterError(AuroraData, Option<Vec<String>>), //(1200030, "verify cluster error", "验证集群信息错误"),
+    ClusterProcessDefinitionsIsInvalid(AuroraData, Option<Vec<String>>), //(1200031, "cluster worker groups is invalid format", "集群关联的工作组参数解析错误"),
+    UpdateClusterProcessDefinitionRelationError(AuroraData, Option<Vec<String>>), //(1200032,"You can't modify the process definition, because the process definition [{0}] and this cluster [{1}] already be used in the task [{2}]","您不能修改集群选项，因为该工作流组 [{0}] 和 该集群 [{1}] 已经被用在任务 [{2}] 中"),
+    ClusterNotExists(AuroraData, Option<Vec<String>>), //(120033, "this cluster can not found in db.", "集群配置数据库里查询不到为空"),
+    DeleteClusterRelatedNamespaceExists(AuroraData, Option<Vec<String>>), //(120034, "this cluster has been used in namespace,so you can't delete it.","该集群已经被命名空间使用，所以不能删除该集群信息"),
+
     TaskGroupNameExist(AuroraData, Option<Vec<String>>), //(130001, "this task group name is repeated in a project", "该任务组名称在一个项目中已经使用"),
     TaskGroupSizeError(AuroraData, Option<Vec<String>>), //(130002, "task group size error", "任务组大小应该为大于1的整数"),
     TaskGroupStatusError(AuroraData, Option<Vec<String>>), //(130003, "task group status error", "任务组已经被关闭"),
@@ -1955,6 +1971,70 @@ impl core::fmt::Display for Error {
                 let ss: AuroraErrorInfo = Error::TenantFullNameTooLongError(data.clone(), _param.clone()).into();
                 write!(f, "{}", ss)
             }
+            Error::CreateClusterError(_data, _param) => {
+                let ss: AuroraErrorInfo = Error::CreateClusterError(_data.clone(), _param.clone()).into();
+                write!(f, "{}", ss)
+            }
+            Error::ClusterNameExists(_data, _parma) => {
+                let ss: AuroraErrorInfo = Error::ClusterNameExists(_data.clone(), _parma.clone()).into();
+                write!(f, "{}", ss)
+            }
+
+            Error::ClusterNameIsNull(_data, _param) => {
+                let ss: AuroraErrorInfo = Error::ClusterNameIsNull(_data.clone(), _param.clone()).into();
+                write!(f, "{}", ss)
+            }
+            Error::ClusterConfigIsNull(_data, _param) => {
+                let ss: AuroraErrorInfo = Error::ClusterConfigIsNull(_data.clone(), _param.clone()).into();
+                write!(f, "{}", ss)
+            }
+            Error::UpdateClusterError(_data, _param) => {
+                let ss: AuroraErrorInfo = Error::UpdateClusterError(_data.clone(), _param.clone()).into();
+                write!(f, "{}", ss)
+            }
+            Error::DeleteClusterError(_data, _param) => {
+                let ss: AuroraErrorInfo = Error::DeleteClusterError(_data.clone(), _param.clone()).into();
+                write!(f, "{}", ss)
+            }
+            Error::DeleteClusterRelatedTaskExists(_data, _param) => {
+                let ss: AuroraErrorInfo = Error::DeleteClusterRelatedTaskExists(_data.clone(), _param.clone()).into();
+                write!(f, "{}", ss)
+            }
+            Error::QueryClusterByNameError(_data, _param) => {
+                let ss: AuroraErrorInfo = Error::QueryClusterByNameError(_data.clone(), _param.clone()).into();
+                write!(f, "{}", ss)
+            }
+            Error::QueryClusterByCodeError(_data, _param) => {
+                let ss: AuroraErrorInfo = Error::QueryClusterByCodeError(_data.clone(), _param.clone()).into();
+                write!(f, "{}", ss)
+            }
+            Error::QueryClusterError(_data, _param) => {
+                let ss: AuroraErrorInfo = Error::QueryClusterError(_data.clone(), _param.clone()).into();
+                write!(f, "{}", ss)
+            }
+            Error::VerifyClusterError(_data, _param) => {
+                let ss: AuroraErrorInfo = Error::VerifyClusterError(_data.clone(), _param.clone()).into();
+                write!(f, "{}", ss)
+            }
+            Error::ClusterProcessDefinitionsIsInvalid(_data, _param) => {
+                let ss: AuroraErrorInfo =
+                    Error::ClusterProcessDefinitionsIsInvalid(_data.clone(), _param.clone()).into();
+                write!(f, "{}", ss)
+            }
+            Error::UpdateClusterProcessDefinitionRelationError(_data, _param) => {
+                let ss: AuroraErrorInfo =
+                    Error::UpdateClusterProcessDefinitionRelationError(_data.clone(), _param.clone()).into();
+                write!(f, "{}", ss)
+            }
+            Error::ClusterNotExists(_data, _param) => {
+                let ss: AuroraErrorInfo = Error::ClusterNotExists(_data.clone(), _param.clone()).into();
+                write!(f, "{}", ss)
+            }
+            Error::DeleteClusterRelatedNamespaceExists(_data, _param) => {
+                let ss: AuroraErrorInfo =
+                    Error::DeleteClusterRelatedNamespaceExists(_data.clone(), _param.clone()).into();
+                write!(f, "{}", ss)
+            }
         }
     }
 }
@@ -2637,6 +2717,37 @@ impl From<AuroraErrorInfo> for Error {
             (1200017, _, _) => Error::GetDatasourceOptionsError(value.error_data, value.error_param), //(1200017, "get datasource options error", "获取数据源Options错误")
             (1200018, _, _) => Error::GetDatasourceTablesError(value.error_data, value.error_param), //(1200018, "get datasource tables error", "获取数据源表列表错误")
             (1200019, _, _) => Error::GetDatasourceTableColumnsError(value.error_data, value.error_param), //(1200019, "get datasource table columns error", "获取数据源表列名错误")
+            //           CreateClusterError(AuroraData, Option<Vec<String>>),             //(120020, "create cluster error", "创建集群失败"),
+            // ClusterNameExists(AuroraData, Option<Vec<String>>), //(120021, "this cluster name [{0}] already exists", "集群名称[{0}]已经存在"),
+            // ClusterNameIsNull(AuroraData, Option<Vec<String>>), //(120022, "this cluster name shouldn't be empty.", "集群名称不能为空"),
+            // ClusterConfigIsNull(AuroraData, Option<Vec<String>>), //(120023, "this cluster config shouldn't be empty.", "集群配置信息不能为空"),
+            // UpdateClusterError(AuroraData, Option<Vec<String>>), //(120024, "update cluster [{0}] info error", "更新集群[{0}]信息失败"),
+            // DeleteClusterError(AuroraData, Option<Vec<String>>), //(120025, "delete cluster error", "删除集群信息失败"),
+            // DeleteClusterRelatedTaskExists(AuroraData, Option<Vec<String>>), //(120026, "this cluster has been used in tasks,so you can't delete it.", "该集群已经被任务使用，所以不能删除该集群信息"),
+            // QueryClusterByNameError(AuroraData, Option<Vec<String>>), //(1200027, "not found cluster [{0}] ", "查询集群名称[{0}]信息不存在"),
+            // QueryClusterByCodeError(AuroraData, Option<Vec<String>>), //(1200028, "not found cluster [{0}] ", "查询集群编码[{0}]不存在"),
+            // QueryClusterError(AuroraData, Option<Vec<String>>), //(1200029, "login user query cluster error", "分页查询集群列表错误"),
+            // VerifyClusterError(AuroraData, Option<Vec<String>>), //(1200030, "verify cluster error", "验证集群信息错误"),
+            // ClusterProcessDefinitionsIsInvalid(AuroraData, Option<Vec<String>>), //(1200031, "cluster worker groups is invalid format", "集群关联的工作组参数解析错误"),
+            // UpdateClusterProcessDefinitionRelationError(AuroraData, Option<Vec<String>>), //(1200032,"You can't modify the process definition, because the process definition [{0}] and this cluster [{1}] already be used in the task [{2}]","您不能修改集群选项，因为该工作流组 [{0}] 和 该集群 [{1}] 已经被用在任务 [{2}] 中"),
+            // ClusterNotExists(AuroraData, Option<Vec<String>>), //(120033, "this cluster can not found in db.", "集群配置数据库里查询不到为空"),
+            // DeleteClusterRelatedNamespaceExists(AuroraData, Option<Vec<String>>), //(120034, "this cluster has been used in namespace,so you can't delete it.","该集群已经被命名空间使用，所以不能删除该集群信息"),
+            (120020, _, _) => Error::CreateClusterError(value.error_data, value.error_param), //(120020, "create cluster error", "创建集群失败"),
+            (120021, _, _) => Error::ClusterNameExists(value.error_data, value.error_param), //(120021, "this cluster name [{0}] already exists", "集群名称[{0}]已经存在"),
+            (120022, _, _) => Error::ClusterNameIsNull(value.error_data, value.error_param), //(120022, "this cluster name shouldn't be empty.", "集群名称不能为空"),
+            (120023, _, _) => Error::ClusterConfigIsNull(value.error_data, value.error_param), //(120023, "this cluster config shouldn't be empty.", "集群配置信息不能为空"),
+            (120024, _, _) => Error::UpdateClusterError(value.error_data, value.error_param), //(120024, "update cluster [{0}] info error", "更新集群[{0}]信息失败"),
+            (120025, _, _) => Error::DeleteClusterError(value.error_data, value.error_param), //(120025, "delete cluster error", "删除集群信息失败"),
+            (120026, _, _) => Error::DeleteClusterRelatedTaskExists(value.error_data, value.error_param), //(120026, "this cluster has been used in tasks,so you can't delete it.", "该集群已经被任务使用，所以不能删除该集群信息"),
+            (1200027, _, _) => Error::QueryClusterByNameError(value.error_data, value.error_param), //(1200027, "not found cluster [{0}] ", "查询集群名称[{0}]信息不存在"),
+            (1200028, _, _) => Error::QueryClusterByCodeError(value.error_data, value.error_param), //(1200028, "not found cluster [{0}] ", "查询集群编码[{0}]不存在"),
+            (1200029, _, _) => Error::QueryClusterError(value.error_data, value.error_param), //(1200029, "login user query cluster error", "分页查询集群列表错误"),
+            (1200030, _, _) => Error::VerifyClusterError(value.error_data, value.error_param), //(1200030, "verify cluster error", "验证集群信息错误"),
+            (1200031, _, _) => Error::ClusterProcessDefinitionsIsInvalid(value.error_data, value.error_param), //(1200031, "cluster worker groups is invalid format", "集群关联的工作组参数解析错误"),
+            (1200032, _, _) => Error::UpdateClusterProcessDefinitionRelationError(value.error_data, value.error_param), //(1200032,"You can't modify the process definition, because the process definition [{0}] and this cluster [{1}] already be used in the task [{2}]","您不能修改集群选项，因为该工作流组 [{0}] 和 该集群 [{1}] 已经被用在任务 [{2}] 中"),
+            (120033, _, _) => Error::ClusterNotExists(value.error_data, value.error_param), //(120033, "this cluster can not found in db.", "集群配置数据库里查询不到为空"),
+            (120034, _, _) => Error::DeleteClusterRelatedNamespaceExists(value.error_data, value.error_param), //(120034, "this cluster has been used in namespace,so you can't delete it.","该集群已经被命名空间使用，所以不能删除该集群信息"),
+
             (130001, _, _) => Error::TaskGroupNameExist(value.error_data, value.error_param), //(130001, "this task group name is repeated in a project", "该任务组名称在一个项目中已经使用")
             (130002, _, _) => Error::TaskGroupSizeError(value.error_data, value.error_param), //(130002, "task group size error", "任务组大小应该为大于1的整数")
             (130003, _, _) => Error::TaskGroupStatusError(value.error_data, value.error_param), //(130003, "task group status error", "任务组已经被关闭")
@@ -5070,6 +5181,113 @@ impl From<Error> for AuroraErrorInfo {
                 "租户名过长".to_string(),
             )
             .new_with_data(data)
+            .parse(_param),
+
+            Error::CreateClusterError(_data, _param) => {
+                AuroraErrorInfo::new(120020, "create cluster error".to_string(), "创建集群错误".to_string())
+                    .new_with_data(_data)
+                    .parse(_param)
+            }
+
+            Error::ClusterNameExists(_data, _param) => AuroraErrorInfo::new(
+                120021,
+                "this cluster name [{0}] already exists".to_string(),
+                "集群名称[{0}]已经存在".to_string(),
+            )
+            .new_with_data(_data)
+            .parse(_param),
+            Error::ClusterNameIsNull(_data, _param) => AuroraErrorInfo::new(
+                120022,
+                "this cluster name shouldn't be empty.".to_string(),
+                "集群名称不能为空".to_string(),
+            )
+            .new_with_data(_data)
+            .parse(_param),
+            Error::ClusterConfigIsNull(_data, _param) => AuroraErrorInfo::new(
+                120023,
+                "this cluster config shouldn't be empty.".to_string(),
+                "集群配置信息不能为空".to_string(),
+            )
+            .new_with_data(_data)
+            .parse(_param),
+            Error::UpdateClusterError(_data, _param) => AuroraErrorInfo::new(
+                120024,
+                "update cluster [{0}] info error".to_string(),
+                "更新集群[{0}]信息失败".to_string(),
+            )
+            .new_with_data(_data)
+            .parse(_param),
+            Error::DeleteClusterError(_data, _param) => AuroraErrorInfo::new(
+                120025,
+                "delete cluster error".to_string(),
+                "删除集群信息失败".to_string(),
+            )
+            .new_with_data(_data)
+            .parse(_param),
+            Error::DeleteClusterRelatedTaskExists(_data, _param) => AuroraErrorInfo::new(
+                120026,
+                "this cluster has been used in tasks,so you can't delete it.".to_string(),
+                "该集群已经被任务使用，所以不能删除该集群信息".to_string(),
+            )
+            .new_with_data(_data)
+            .parse(_param),
+            Error::QueryClusterByNameError(_data, _param) => AuroraErrorInfo::new(
+                1200027,
+                "not found cluster [{0}] ".to_string(),
+                "查询集群名称[{0}]信息不存在".to_string(),
+            )
+            .new_with_data(_data)
+            .parse(_param),
+            Error::QueryClusterByCodeError(_data, _param) => AuroraErrorInfo::new(
+                1200028,
+                "not found cluster [{0}] ".to_string(),
+                "查询集群编码[{0}]不存在".to_string(),
+            )
+            .new_with_data(_data)
+            .parse(_param),
+            Error::QueryClusterError(_data, _param) => AuroraErrorInfo::new(
+                1200029,
+                "login user query cluster error".to_string(),
+                "分页查询集群列表错误".to_string(),
+            )
+            .new_with_data(_data)
+            .parse(_param),
+            Error::VerifyClusterError(_data, _param) => AuroraErrorInfo::new(
+                1200030,
+                "verify cluster error".to_string(),
+                "验证集群信息错误".to_string(),
+            )
+            .new_with_data(_data)
+            .parse(_param),
+            Error::ClusterProcessDefinitionsIsInvalid(_data, _param) => AuroraErrorInfo::new(
+                1200031,
+                "cluster worker groups is invalid format".to_string(),
+                "集群关联的工作组参数解析错误".to_string(),
+            )
+            .new_with_data(_data)
+            .parse(_param),
+            Error::UpdateClusterProcessDefinitionRelationError(_data, _param) => AuroraErrorInfo::new(
+                1200032,
+                "You can't modify the process definition, because the process definition [{0}] and this cluster [{1}] \
+                 already be used in the task [{2}]"
+                    .to_string(),
+                "您不能修改集群选项，因为该工作流组 [{0}] 和 该集群 [{1}] 已经被用在任务 [{2}] 中".to_string(),
+            )
+            .new_with_data(_data)
+            .parse(_param),
+            Error::ClusterNotExists(_data, _param) => AuroraErrorInfo::new(
+                120033,
+                "this cluster can not found in db.".to_string(),
+                "集群配置数据库里查询不到为空".to_string(),
+            )
+            .new_with_data(_data)
+            .parse(_param),
+            Error::DeleteClusterRelatedNamespaceExists(_data, _param) => AuroraErrorInfo::new(
+                120034,
+                "this cluster has been used in namespace,so you can't delete it.".to_string(),
+                "该集群已经被命名空间使用，所以不能删除该集群信息".to_string(),
+            )
+            .new_with_data(_data)
             .parse(_param),
         }
     }
