@@ -1,9 +1,9 @@
 use anyhow::{Context, Result};
 use aurora_config::dao_config::Settings;
 
-use log::info;
 use sqlx::{postgres::PgPoolOptions, PgPool};
-use std::net::SocketAddr;
+use std::{env, net::SocketAddr};
+use tracing::info;
 pub mod service;
 use service::*;
 pub mod models;
@@ -11,6 +11,8 @@ use aurora_common::logger::setup_logger;
 #[tokio::main]
 async fn main() -> Result<()> {
     //let _addr: SocketAddr = "0.0.0.0:50051".parse()?;
+    env::set_var("RUST_LOG", "debug");
+    env::set_var("RUST_BACKTRACE", "full");
     setup_logger()?;
     // establish database connection
     let settings = Settings::new()?;

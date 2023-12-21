@@ -2,6 +2,7 @@ use crate::get_api_config_path;
 use config::{Config, ConfigError, Environment, File};
 use serde::Deserialize;
 use std::env;
+use tracing::debug;
 
 #[derive(Debug, Deserialize)]
 #[allow(unused)]
@@ -92,8 +93,8 @@ impl Settings {
             // .set_override("database.url", "postgres://")?
             .build()?;
 
-        log::debug!("debug: {:?}", s.get_bool("debug"));
-        log::debug!("database: {:?}", s.get::<String>("database.url"));
+        debug!("debug: {:?}", s.get_bool("debug"));
+        debug!("database: {:?}", s.get::<String>("database.url"));
         // You can deserialize (and thus freeze) the entire configuration as
         s.try_deserialize()
     }

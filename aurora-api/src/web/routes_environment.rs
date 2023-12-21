@@ -12,8 +12,8 @@ use axum::{
     routing::{get, put},
     Form, Router,
 };
-use log::info;
 use tower_cookies::Cookies;
+use tracing::info;
 
 use crate::{ctx::Ctx, model};
 

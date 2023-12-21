@@ -1,10 +1,10 @@
 use std::time::Duration;
 
-use log::info;
 use proto::helloworld::greeter_server::GreeterServer;
 use sqlx::PgPool;
 use tonic::transport::{server::Router, Server};
 use tonic_health::server::HealthReporter;
+use tracing::info;
 
 use self::{dao_service::AuroraRpcServer, my_greeter::MyGreeter};
 

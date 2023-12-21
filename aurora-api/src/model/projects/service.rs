@@ -11,7 +11,7 @@ use aurora_proto::{
     },
     pb::ds_project::CreateDsProjectRequest,
 };
-use log::error;
+use tracing::error;
 
 pub async fn create(user_id: i32, name: String, description: Option<String>) -> Result<DsProject> {
     let client = _ds_project_service_client().await?;

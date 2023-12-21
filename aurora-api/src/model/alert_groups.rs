@@ -4,7 +4,7 @@ use aurora_proto::ds_alertgroup::{
     CreateDsAlertGroupRequest, DeleteDsAlertGroupRequest, ListDsAlertGroupsRequest, ListDsAlertGroupsResponse,
     UpdateDsAlertGroupRequest, VerifyAlertGroupRequest,
 };
-use log::{error, info};
+use tracing::{error, info};
 
 pub async fn delete(id: i32) -> Result<()> {
     let client = _ds_alert_group_service_client().await?;

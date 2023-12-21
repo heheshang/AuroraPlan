@@ -6,8 +6,10 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 
-use log::error;
+// #[cfg(feature = "log_rs")]
+// use tracing::error;
 use serde_json::json;
+use tracing::log::error;
 //dolphinscheduler/dolphinscheduler-api/src/main/java/org/apache/dolphinscheduler/api/enums/Status.java
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum Error {

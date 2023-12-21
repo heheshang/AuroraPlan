@@ -12,13 +12,12 @@ license.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-aurora_common = { path = "../aurora-common", package = "aurora-common" }
+aurora_common = { path = "../aurora-common", package = "aurora-common" ,features=["otel"]}
 aurora_config = { path = "../aurora-config", package = "aurora-config" }
 bigdecimal = { workspace = true, features = ["serde"] }
 chrono = { workspace = true, features = ["serde"] }
 dotenvy.workspace = true
 listenfd.workspace = true
-log.workspace = true
 proto = { path = "../aurora-proto", package = "aurora-proto" }
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
@@ -35,3 +34,4 @@ tokio = { workspace = true, features = ["full"] }
 tokio-stream = { workspace = true, features = ["net"] }
 tonic.workspace = true
 tonic-health.workspace = true
+tracing.workspace = true

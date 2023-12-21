@@ -3,9 +3,9 @@ use crate::models::t_ds_tenant::Model;
 use aurora_common::core_error::error::AuroraData;
 use aurora_common::core_error::error::AuroraErrorInfo;
 use aurora_common::core_error::error::Error;
-use log::error;
-use log::info;
 use proto::ds_tenant::ds_tenant_service_server::DsTenantService;
+use tracing::error;
+use tracing::info;
 
 #[tonic::async_trait]
 impl DsTenantService for AuroraRpcServer {

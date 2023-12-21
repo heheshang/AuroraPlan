@@ -1,8 +1,8 @@
 use super::dao_service::AuroraRpcServer;
 use crate::models::t_ds_queue::Model;
 use aurora_common::core_error::error::{AuroraData, AuroraErrorInfo, Error};
-use log::info;
 use proto::ds_queue::ds_queue_service_server::DsQueueService;
+use tracing::info;
 
 use serde_json::json;
 

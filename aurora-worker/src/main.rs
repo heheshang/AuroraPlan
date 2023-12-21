@@ -4,8 +4,8 @@ use anyhow::Result;
 use aurora_common::logger::setup_logger;
 use aurora_config::worker_config::Settings;
 use axum::{routing::get, Router};
-use log::info;
 use tokio::net::TcpListener;
+use tracing::info;
 
 #[tokio::main]
 async fn main() -> Result<()> {

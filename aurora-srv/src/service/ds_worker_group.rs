@@ -2,8 +2,8 @@ use super::dao_service::AuroraRpcServer;
 use aurora_common::core_error::error::{AuroraData, Error};
 
 use crate::models::t_ds_worker_group::Model;
-use log::info;
 use proto::ds_worker_group::ds_worker_group_service_server::DsWorkerGroupService;
+use tracing::info;
 #[tonic::async_trait]
 impl DsWorkerGroupService for AuroraRpcServer {
     async fn list_ds_worker_groups(

@@ -2,8 +2,8 @@ use super::dao_service::AuroraRpcServer;
 use crate::models::t_ds_environment;
 use crate::models::t_ds_environment_relation;
 use aurora_common::core_error::error::{AuroraData, AuroraErrorInfo, Error};
-use log::{error, info};
 use proto::ds_environment::{ds_environment_service_server::DsEnvironmentService, DsEnvironmentPage};
+use tracing::{error, info};
 
 #[tonic::async_trait]
 impl DsEnvironmentService for AuroraRpcServer {

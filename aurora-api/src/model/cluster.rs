@@ -4,7 +4,7 @@ use aurora_proto::ds_cluster::{
     CreateDsClusterRequest, DeleteDsClusterRequest, ListDsClustersRequest, ListDsClustersResponse,
     UpdateDsClusterRequest, VerifyClusterRequest,
 };
-use log::{error, info};
+use tracing::{error, info};
 
 pub async fn delete(code: i64) -> Result<()> {
     let client = _ds_cluster_service_client().await?;

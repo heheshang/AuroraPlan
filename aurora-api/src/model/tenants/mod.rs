@@ -4,7 +4,7 @@ use aurora_proto::ds_tenant::{
     CreateDsTenantRequest, DeleteDsTenantRequest, DsTenant, ListDsTenantsRequest, ListDsTenantsResponse,
     UpdateDsTenantRequest, VerifyDsTenantRequest,
 };
-use log::{error, info};
+use tracing::{error, info};
 
 pub async fn delete(id: i32) -> Result<()> {
     let client = _ds_tenant_service_client().await?;

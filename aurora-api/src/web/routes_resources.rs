@@ -12,10 +12,10 @@ use axum::{
     routing::{get, post},
     Form, Json, Router,
 };
-use log::error;
 use serde::Deserialize;
 use serde_json::json;
 use tower_cookies::Cookies;
+use tracing::error;
 
 use super::{
     bean::{request::user::UserInfoReq, response::user::UserInfoRes},

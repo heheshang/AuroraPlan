@@ -11,8 +11,8 @@ use axum::{
     routing::{get, post},
     Form, Json, Router,
 };
-use log::error;
 use tower_cookies::Cookies;
+use tracing::error;
 
 use super::{
     bean::{

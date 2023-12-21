@@ -1,8 +1,8 @@
 use super::dao_service::AuroraRpcServer;
 use crate::models::t_ds_project_parameter::Model;
 use aurora_common::core_error::error::{AuroraData, AuroraErrorInfo, Error};
-use log::{error, info};
 use proto::ds_project_parameter::project_parameter_service_server::ProjectParameterService;
+use tracing::{error, info};
 
 #[tonic::async_trait]
 impl ProjectParameterService for AuroraRpcServer {

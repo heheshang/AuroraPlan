@@ -10,7 +10,7 @@ use aurora_proto::ds_user::{
     CreateDsUserRequest, DsUser, GetDsUserByIdRequest, ListDsUsersRequest, ListDsUsersResponse,
     QueryUserByNamePasswordRequest, QueryUserByNameRequest, UpdateDsUserRequest,
 };
-use log::{error, info};
+use tracing::{error, info};
 
 pub async fn query_user_by_name_password(user_name: String, user_password: String, extra: String) -> Result<DsUser> {
     info!(

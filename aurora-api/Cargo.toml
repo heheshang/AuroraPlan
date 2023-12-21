@@ -8,12 +8,12 @@ edition = "2021"
 [dependencies]
 anyhow = { workspace = true }
 async-trait = { workspace = true }
-aurora_common = { path = "../aurora-common", package = "aurora-common" }
+aurora_common = { path = "../aurora-common", package = "aurora-common" , features = ["otel"]}
 aurora_config = { path = "../aurora-config", package = "aurora-config" }
 aurora_proto = { path = "../aurora-proto", package = "aurora-proto" }
 axum = { workspace = true }
 axum-extra = { workspace = true }
-log.workspace = true
+# log.workspace = true
 md5 = { workspace = true }
 once_cell = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
@@ -27,6 +27,7 @@ tonic-health = { workspace = true }
 tower = { workspace = true, features = ["full"] }
 tower-cookies = { workspace = true }
 tower-http = { workspace = true, features = ["fs", "trace"] }
+tracing.workspace = true
 typed-builder = "0.18.0"
 uuid = { workspace = true, features = ["v4", "fast-rng"] }
 [dev-dependencies]

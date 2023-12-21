@@ -14,5 +14,5 @@ license.workspace = true
 anyhow = { workspace = true, optional = false }
 config = { workspace = true, optional = false, features = ["toml"] }
 dotenvy = { workspace = true, optional = false }
-log = "0.4.20"
 serde = { workspace = true, optional = false, features = ["derive"] }
+tracing.workspace = true

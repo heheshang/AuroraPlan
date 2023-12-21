@@ -3,8 +3,8 @@ use crate::models::t_ds_project::Model;
 use super::dao_service::AuroraRpcServer;
 use aurora_common::core_error::error::{AuroraData, Error};
 use aurora_common::utils::code_generate_utils::gen_code;
-use log::info;
 use proto::ds_project::ds_project_service_server::DsProjectService;
+use tracing::info;
 
 #[tonic::async_trait]
 impl DsProjectService for AuroraRpcServer {

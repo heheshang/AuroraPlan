@@ -1,8 +1,8 @@
 use super::dao_service::AuroraRpcServer;
 use crate::models::t_ds_alertgroup::Model;
 use aurora_common::core_error::error::{AuroraData, AuroraErrorInfo, Error};
-use log::error;
 use proto::ds_alertgroup::ds_alert_group_service_server::DsAlertGroupService;
+use tracing::error;
 
 #[tonic::async_trait]
 impl DsAlertGroupService for AuroraRpcServer {

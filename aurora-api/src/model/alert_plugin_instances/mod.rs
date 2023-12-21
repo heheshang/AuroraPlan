@@ -7,7 +7,7 @@ use aurora_proto::ds_alert_plugin_instance::{
     CreateDsAlertPluginInstanceRequest, DeleteDsAlertPluginInstanceRequest, ListDsAlertPluginInstancesRequest,
     ListDsAlertPluginInstancesResponse, UpdateDsAlertPluginInstanceRequest, VerifyAlertPluginInstanceRequest,
 };
-use log::{error, info};
+use tracing::{error, info};
 
 pub async fn all() -> Result<Vec<AlertPluginInstance>> {
     let client = _ds_alert_plugin_instance_service_client().await?;

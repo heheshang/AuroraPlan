@@ -1,8 +1,8 @@
 use super::dao_service::AuroraRpcServer;
 use crate::models::t_ds_alert_plugin_instance::Model;
 use aurora_common::core_error::error::{AuroraData, AuroraErrorInfo, Error};
-use log::{error, info};
 use proto::ds_alert_plugin_instance::ds_alert_plugin_instance_service_server::DsAlertPluginInstanceService;
+use tracing::{error, info};
 
 #[tonic::async_trait]
 impl DsAlertPluginInstanceService for AuroraRpcServer {

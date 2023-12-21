@@ -1,8 +1,8 @@
 use super::dao_service::AuroraRpcServer;
 use crate::models::t_ds_cluster::Model;
 use aurora_common::core_error::error::{AuroraData, AuroraErrorInfo, Error};
-use log::error;
 use proto::ds_cluster::ds_cluster_service_server::DsClusterService;
+use tracing::error;
 
 #[tonic::async_trait]
 impl DsClusterService for AuroraRpcServer {
