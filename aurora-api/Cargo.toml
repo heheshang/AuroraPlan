@@ -13,8 +13,6 @@ aurora_config = { path = "../aurora-config", package = "aurora-config" }
 aurora_proto = { path = "../aurora-proto", package = "aurora-proto" }
 axum = { workspace = true }
 axum-extra = { workspace = true }
-fern = { workspace = true, features = ["chrono", "colored"] }
-humantime.workspace = true
 log.workspace = true
 md5 = { workspace = true }
 once_cell = { workspace = true }

@@ -26,3 +26,5 @@ serde_with = { workspace = true, optional = false }
 tokio = { workspace = true, features = ["full"] }
 tonic = { workspace = true }
 typed-builder = "0.18.0"
+fern = { workspace = true, features = ["chrono", "colored"] }
+humantime.workspace = true

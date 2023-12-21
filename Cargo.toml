@@ -6,11 +6,10 @@ members = [
     # "aurora-entity",
     "aurora-common",
     # "aurora-service",
-    "aurora-tests",
     # "migration",
     # "aurora-dao", 
-    "aurora-srv",
-    # "aurora-base",
+    'mini-redis',
+    "aurora-srv", "aurora-remote", "aurora-master", "aurora-worker",
 ]
 
 resolver = "2"

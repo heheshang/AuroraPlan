@@ -17,8 +17,6 @@ aurora_config = { path = "../aurora-config", package = "aurora-config" }
 bigdecimal = { workspace = true, features = ["serde"] }
 chrono = { workspace = true, features = ["serde"] }
 dotenvy.workspace = true
-fern = { workspace = true, features = ["chrono", "colored"] }
-humantime.workspace = true
 listenfd.workspace = true
 log.workspace = true
 proto = { path = "../aurora-proto", package = "aurora-proto" }
