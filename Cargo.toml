@@ -9,7 +9,7 @@ members = [
     "./crates/lib-remote",
     "./services/aurora-master",
     "./services/aurora-worker",
-    "crates/lib-models",
+    "./crates/lib-models",
 ]
 
 resolver = "2"
