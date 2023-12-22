@@ -1,15 +1,11 @@
 [workspace]
 members = [
-    "aurora-api",
-    "aurora-proto",
-    "aurora-config",
-    # "aurora-entity",
-    "aurora-common",
-    # "aurora-service",
-    # "migration",
-    # "aurora-dao", 
-    'mini-redis',
-    "aurora-srv", "aurora-remote", "aurora-master", "aurora-worker",
+    "./services/aurora-api",
+    "./crates/lib-proto",
+    "./crates/lib-config",
+    "./crates/lib-common",
+    './examples/mini-redis',
+    "./services/aurora-srv", "./crates/lib-remote", "./services/aurora-master", "./services/aurora-worker",
 ]
 
 resolver = "2"

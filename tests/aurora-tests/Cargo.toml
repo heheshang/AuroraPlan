@@ -1,0 +1,30 @@
+name = "aurora-tests"
+
+[workspace]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+name = "aurora-tests-authenticator"
+path = "src/aurora_api/authenticator.rs"
+
+[[bin]]
+name = "aurora-tests-rpc_client"
+path = "src/aurora_api/rpc_client.rs"
+
+[dependencies]
+# tokio = { workspace = true }
+aurora_api = { path = "../../services/aurora-api", package = "aurora-api" }
+lib_common = { path = "../../crates/lib-common", package = "lib-common" , features = ["otel"]}
+lib_conifg = { path = "../../crates/lib-config", package = "lib-config" }
+lib_proto = { path = "../../crates/lib-proto", package = "lib-proto" }
+tokio = { version = "1.35.1", features = ["full"] }
+tonic = "0.10.2"
+regex = "1.10.2"
+config = { version = "0.13.4", features = ["toml"] }
+rs-snowflake = "0.6.0"
+# tonic = { workspace = true }
+
+# regex = { workspace = true }
+# config = { workspace = true, optional = false, features = ["toml"] }
+# rs-snowflake = { workspace = true }

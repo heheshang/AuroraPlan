@@ -1,0 +1,23 @@
+[package]
+name = "aurora-worker"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+license.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = { workspace = true }
+async-trait = { workspace = true }
+lib_common = { path = "../../crates/lib-common", package = "lib-common" ,features = ["otel"]}
+lib_conifg = { path = "../../crates/lib-config", package = "lib-config" }
+lib_proto = { path = "../../crates/lib-proto", package = "lib-proto" }
+lib_remote = { path = "../../crates/lib-remote", package = "lib-remote" }
+axum = { workspace = true }
+axum-extra = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+tracing.workspace = true

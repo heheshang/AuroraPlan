@@ -17,14 +17,14 @@
     },
     // vscode 的vim配置
     "vim.statusBarColorControl": true,
-    "vim.statusBarColors.normal": ["#8FBCBB", "#434C5E"],
+    // "vim.statusBarColors.normal": ["#8FBCBB", "#434C5E"],
     "vim.statusBarColors.insert": "#BF616A",
     "vim.statusBarColors.visual": "#B48EAD",
     "vim.statusBarColors.visualline": "#B48EAD",
     "vim.statusBarColors.visualblock": "#A3BE8C",
     "vim.statusBarColors.replace": "#D08770",
-    "vim.statusBarColors.commandlineinprogress": "#8FBCBB",
-    "vim.statusBarColors.searchinprogressmode": "#8FBCBB",
+    // "vim.statusBarColors.commandlineinprogress": "#8FBCBB",
+    // "vim.statusBarColors.searchinprogressmode": "#8FBCBB",
     // "vim.statusBarColors.easymotionmode": "#007ACC",
     // "vim.statusBarColors.easymotioninputmode": "#007ACC",
     // "vim.statusBarColors.surroundinputmode": "#007ACC",
@@ -208,7 +208,7 @@
         }
     ],
     "rust-analyzer.linkedProjects": [
-        "./aurora-api/Cargo.toml"
+        "./Cargo.toml"
     ],
     "rust-analyzer.showUnlinkedFileNotification": false,
     // "vim.digraphs": {}

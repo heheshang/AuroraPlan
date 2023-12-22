@@ -1,0 +1,43 @@
+[package]
+name = "lib-proto"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+license.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+derive_builder = { workspace = true }
+prost = { workspace = true }
+prost-build = { workspace = true, optional = true }
+prost-types = { workspace = true }
+proto-builder-trait = { workspace = true, optional = true }
+serde = { workspace = true, features = ['derive'] }
+serde_with = { workspace = true }
+tonic = { workspace = true }
+tonic-build = { workspace = true, optional = true }
+# [dev-dependencies]
+# prost-build = { workspace = true }
+# tonic-build = { workspace = true }
+# proto-builder-trait = { workspace = true }
+
+
+[build-dependencies]
+prost-build = { workspace = true }
+tonic-build = { workspace = true }
+proto-builder-trait = { workspace = true }
+[features]
+aurora-proto-gen = [
+    "dep:prost-build",
+    "dep:tonic-build",
+    "dep:proto-builder-trait",
+]
+default = ["aurora-proto-gen"]
+
+[[bin]]
+name = "aurora-proto-gen"
+path = "src/bin/aurora-proto-gen.rs"
