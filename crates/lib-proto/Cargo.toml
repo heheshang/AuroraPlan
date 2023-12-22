@@ -13,13 +13,13 @@ license.workspace = true
 [dependencies]
 derive_builder = { workspace = true }
 prost = { workspace = true }
-prost-build = { workspace = true, optional = true }
+# prost-build = { workspace = true, optional = true }
 prost-types = { workspace = true }
-proto-builder-trait = { workspace = true, optional = true }
+# proto-builder-trait = { workspace = true, optional = true }
 serde = { workspace = true, features = ['derive'] }
 serde_with = { workspace = true }
 tonic = { workspace = true }
-tonic-build = { workspace = true, optional = true }
+# tonic-build = { workspace = true, optional = true }
 # [dev-dependencies]
 # prost-build = { workspace = true }
 # tonic-build = { workspace = true }
@@ -27,17 +27,19 @@ tonic-build = { workspace = true, optional = true }
 
 
 [build-dependencies]
-prost-build = { workspace = true }
-tonic-build = { workspace = true }
-proto-builder-trait = { workspace = true }
-[features]
-aurora-proto-gen = [
-    "dep:prost-build",
-    "dep:tonic-build",
-    "dep:proto-builder-trait",
-]
-default = ["aurora-proto-gen"]
 
-[[bin]]
-name = "aurora-proto-gen"
-path = "src/bin/aurora-proto-gen.rs"
+prost-build = { version = "0.11.6" }
+tonic-build = "0.9.2"
+proto-builder-trait = "0.5.1"
+
+# [features]
+# aurora-proto-gen = [
+#     "dep:prost-build",
+#     "dep:tonic-build",
+#     "dep:proto-builder-trait",
+# ]
+# default = ["aurora-proto-gen"]
+
+# [[bin]]
+# name = "aurora-proto-gen"
+# path = "src/bin/aurora-proto-gen.rs"

@@ -11,7 +11,7 @@ description = """
 An incomplete implementation of a Rust client and server. Used as a
 larger example of an idiomatic Tokio application.
 """
-
+[workspace]
 [[bin]]
 name = "mini-redis-cli"
 path = "src/bin/cli.rs"

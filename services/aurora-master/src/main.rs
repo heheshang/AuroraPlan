@@ -5,6 +5,8 @@ use axum::{routing::get, Router};
 use lib_common::logger::setup_logger;
 use lib_conifg::master_config::Settings;
 use tokio::net::TcpListener;
+use tokio_stream::StreamExt;
+use tokio_util::codec::{Framed, LinesCodec};
 use tracing::info;
 
 #[tokio::main]
@@ -25,6 +27,19 @@ async fn listen(listen_port: u32) -> Result<()> {
 
     loop {
         let (_socket, _) = listener.accept().await?;
+        let mut socket = Framed::new(_socket, LinesCodec::new());
+        tokio::spawn(async move {
+            while let Some(line) = socket.next().await {
+                match line {
+                    Ok(line) => {
+                        info!("master  receive  {}", line);
+                    }
+                    Err(e) => {
+                        info!("master  receive  {}", e);
+                    }
+                }
+            }
+        });
 
         // process(socket ).await;
     }

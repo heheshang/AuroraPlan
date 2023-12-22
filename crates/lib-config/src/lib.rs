@@ -45,7 +45,7 @@ fn glb_config_dir() -> PathBuf {
             let path = dirs.iter().rev().copied().collect::<Vec<_>>().join("/");
 
             debug!("final path: {:?}", path);
-            print!("final path: {:?}", path);
+            // print!("final path: {:?}", path);
 
             Path::new(&path).join("crates").join("lib-config")
         }

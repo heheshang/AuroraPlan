@@ -4,7 +4,7 @@ members = [
     "./crates/lib-proto",
     "./crates/lib-config",
     "./crates/lib-common",
-    './examples/mini-redis',
+    # './examples/mini-redis',
     "./services/aurora-srv",
     "./crates/lib-remote",
     "./services/aurora-master",
@@ -42,12 +42,9 @@ tonic = "0.10.2"
 tower-http = "0.5.0"
 prost = "0.12.1"
 prost-types = "0.12.1"
-prost-build = { version = "0.11.6" }
-tonic-build = "0.9.2"
 tonic-health = "0.10.2"
 listenfd = { version = "1.0" }
 tokio-stream = { version = "0.1" }
-proto-builder-trait = "0.5.1"
 # prost = "0.11.9"
 # prost-types = "0.11.9"
 # sea-orm = { version = "0.12.4", features = [

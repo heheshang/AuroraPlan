@@ -58,13 +58,20 @@ pub type Error = Box<dyn std::error::Error + Send + Sync>;
 pub type Result<T> = std::result::Result<T, Error>;
 #[cfg(not(feature = "otel"))]
 pub fn setup_logger() -> Result<()> {
+    use std::env;
+    env::set_var("RUST_LOG", "debug");
+    env::set_var("RUST_BACKTRACE", "full");
     // See https://docs.rs/tracing for more info
     tracing_subscriber::fmt::try_init()
 }
 
 #[cfg(feature = "otel")]
 pub fn setup_logger() -> std::result::Result<(), TryInitError> {
+    use std::env;
+
     println!("Setting up logger");
+    env::set_var("RUST_LOG", "debug");
+    env::set_var("RUST_BACKTRACE", "full");
     // Set the global propagator to X-Ray propagator
     // Note: If you need to pass the x-amzn-trace-id across services in the same trace,
     // you will need this line. However, this requires additional code not pictured here.
