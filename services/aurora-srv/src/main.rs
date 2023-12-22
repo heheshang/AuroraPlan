@@ -5,9 +5,8 @@ use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::{env, net::SocketAddr};
 use tracing::info;
 pub mod service;
-use service::*;
-pub mod models;
 use lib_common::logger::setup_logger;
+use service::*;
 #[tokio::main]
 async fn main() -> Result<()> {
     //let _addr: SocketAddr = "0.0.0.0:50051".parse()?;

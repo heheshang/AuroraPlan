@@ -56,7 +56,7 @@ impl From<Model> for DsAlertPluginInstance {
     }
 }
 impl Model {
-    pub(crate) async fn page(
+    pub async fn page(
         search_val: &str,
         page_num: i64,
         page_size: i64,
@@ -84,7 +84,7 @@ impl Model {
         let cur_page = page_num;
         Ok((items, total_page, total, start, cur_page))
     }
-    pub(crate) async fn find_by_instance_name(instance_name: String, pool: &sqlx::PgPool) -> Result<Option<Self>> {
+    pub async fn find_by_instance_name(instance_name: String, pool: &sqlx::PgPool) -> Result<Option<Self>> {
         Ok(sqlx::query_as!(
             Self,
             r#"
@@ -95,7 +95,7 @@ impl Model {
         .fetch_optional(pool)
         .await?)
     }
-    pub(crate) async fn _create(
+    pub async fn _create(
         plugin_define_id: i32,
         plugin_instance_params: Option<String>,
         instance_name: Option<String>,
@@ -112,7 +112,7 @@ impl Model {
         .fetch_one(pool)
         .await?)
     }
-    pub(crate) async fn _update(
+    pub async fn _update(
         id: i32,
         plugin_instance_params: Option<String>,
         instance_name: Option<String>,
@@ -129,7 +129,7 @@ impl Model {
         .await?)
     }
 
-    pub(crate) async fn _find_by_name(plugin_define_id: i32, pool: &sqlx::PgPool) -> Result<Self> {
+    pub async fn _find_by_name(plugin_define_id: i32, pool: &sqlx::PgPool) -> Result<Self> {
         Ok(sqlx::query_as!(
             Self,
             r#"
@@ -140,7 +140,7 @@ impl Model {
         .fetch_one(pool)
         .await?)
     }
-    pub(crate) async fn _delete(id: i32, pool: &sqlx::PgPool) -> Result<u64> {
+    pub async fn _delete(id: i32, pool: &sqlx::PgPool) -> Result<u64> {
         Ok(sqlx::query!(
             r#"
             delete from t_ds_alert_plugin_instance where id=$1 
@@ -151,7 +151,7 @@ impl Model {
         .await?
         .rows_affected())
     }
-    pub(crate) async fn all(pool: &sqlx::PgPool) -> Result<Vec<Self>> {
+    pub async fn all(pool: &sqlx::PgPool) -> Result<Vec<Self>> {
         Ok(sqlx::query_as!(Self, "select * from t_ds_alert_plugin_instance")
             .fetch_all(pool)
             .await?)

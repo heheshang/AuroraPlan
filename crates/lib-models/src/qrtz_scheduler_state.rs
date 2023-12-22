@@ -8,7 +8,7 @@ pub struct Model {
 
 impl Model {
     #[allow(dead_code)]
-    pub(crate) async fn get(pool: &sqlx::PgPool, sched_name: &str, instance_name: &str) -> Result<Self> {
+    pub async fn get(pool: &sqlx::PgPool, sched_name: &str, instance_name: &str) -> Result<Self> {
         let result = sqlx::query_as!(
             Self,
             "SELECT * FROM qrtz_scheduler_state WHERE sched_name=$1 AND instance_name=$2",
@@ -20,7 +20,7 @@ impl Model {
         Ok(result)
     }
     #[allow(dead_code)]
-    pub(crate) async fn get_all(pool: &sqlx::PgPool) -> Result<Vec<Self>> {
+    pub async fn get_all(pool: &sqlx::PgPool) -> Result<Vec<Self>> {
         let result = sqlx::query_as!(Self, "SELECT * FROM qrtz_scheduler_state")
             .fetch_all(pool)
             .await?;

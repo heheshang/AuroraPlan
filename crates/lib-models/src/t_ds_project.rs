@@ -78,7 +78,7 @@ impl From<Model> for DsProject {
 }
 
 impl Model {
-    pub(crate) async fn page(
+    pub async fn page(
         search_val: &str,
         page_num: i64,
         page_size: i64,
@@ -114,7 +114,7 @@ impl Model {
         let cur_page = page_num;
         Ok((items, total_page, total, start, cur_page))
     }
-    pub(crate) async fn create(
+    pub async fn create(
         code: i64,
         name: Option<String>,
         desc: Option<String>,
@@ -133,7 +133,7 @@ impl Model {
         .await?)
     }
 
-    pub(crate) async fn update(
+    pub async fn update(
         name: Option<String>,
         desc: Option<String>,
         user_id: Option<i32>,
@@ -149,7 +149,7 @@ impl Model {
         .fetch_one(pool)
         .await?)
     }
-    pub(crate) async fn delete(id: i32, pool: &PgPool) -> Result<bool> {
+    pub async fn delete(id: i32, pool: &PgPool) -> Result<bool> {
         Ok(sqlx::query!(r#"delete from t_ds_project where id=$1"#, id)
             .execute(pool)
             .await?

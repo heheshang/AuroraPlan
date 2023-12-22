@@ -20,7 +20,7 @@ pub struct Model {
 }
 impl Model {
     #[allow(clippy::too_many_arguments)]
-    pub(crate) async fn _create(
+    pub async fn _create(
         code: i64,
         name: String,
         version: i32,
@@ -60,7 +60,7 @@ impl Model {
         .await?)
     }
     #[allow(clippy::too_many_arguments)]
-    pub(crate) async fn _update(
+    pub async fn _update(
         code: i64,
         name: String,
         version: i32,

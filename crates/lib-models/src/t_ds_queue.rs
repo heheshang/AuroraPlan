@@ -45,7 +45,7 @@ impl From<ModelPage> for Model {
 }
 
 impl Model {
-    pub(crate) async fn page(
+    pub async fn page(
         search_val: &str,
         page_num: i64,
         page_size: i64,
@@ -79,7 +79,7 @@ impl Model {
         Ok((items, total_page, total, start, cur_page))
     }
 
-    pub(crate) async fn queue_name_count(queue_name: String, pool: &PgPool) -> Result<i64> {
+    pub async fn queue_name_count(queue_name: String, pool: &PgPool) -> Result<i64> {
         let count = sqlx::query!(
             r#"
          select count(*) as count from t_ds_queue where queue_name=$1
@@ -92,7 +92,7 @@ impl Model {
         .unwrap_or_default();
         Ok(count)
     }
-    pub(crate) async fn queue_value_count(queue_value: String, pool: &PgPool) -> Result<i64> {
+    pub async fn queue_value_count(queue_value: String, pool: &PgPool) -> Result<i64> {
         let count = sqlx::query!(
             r#"
          select count(*) as count from t_ds_queue where queue=$1
@@ -105,7 +105,7 @@ impl Model {
         .unwrap_or_default();
         Ok(count)
     }
-    pub(crate) async fn queue_name_count_extra(queue_name: &str, id: i32, pool: &PgPool) -> Result<i64> {
+    pub async fn queue_name_count_extra(queue_name: &str, id: i32, pool: &PgPool) -> Result<i64> {
         let count = sqlx::query!(
             r#"
          select count(*) as count from t_ds_queue where queue_name=$1 and id<>$2
@@ -120,7 +120,7 @@ impl Model {
         Ok(count)
     }
 
-    pub(crate) async fn queue_value_count_extra(queue: &str, id: i32, pool: &PgPool) -> Result<i64> {
+    pub async fn queue_value_count_extra(queue: &str, id: i32, pool: &PgPool) -> Result<i64> {
         let count = sqlx::query!(
             r#"
          select count(*) as count from t_ds_queue where queue=$1 and id<>$2
@@ -135,7 +135,7 @@ impl Model {
         Ok(count)
     }
 
-    pub(crate) async fn find_by_id(id: i32, pool: &PgPool) -> Result<Self> {
+    pub async fn find_by_id(id: i32, pool: &PgPool) -> Result<Self> {
         let model = sqlx::query_as!(
             Model,
             r#"
@@ -172,7 +172,7 @@ impl Model {
         Ok(model)
     }
 
-    pub(crate) async fn create(queue_name: String, queue: String, pool: &PgPool) -> Result<Self> {
+    pub async fn create(queue_name: String, queue: String, pool: &PgPool) -> Result<Self> {
         let model = sqlx::query_as!(
             Model,
             r#"
@@ -185,12 +185,7 @@ impl Model {
         .await?;
         Ok(model)
     }
-    pub(crate) async fn update(
-        id: i32,
-        queue_name: Option<String>,
-        queue: Option<String>,
-        pool: &PgPool,
-    ) -> Result<Self> {
+    pub async fn update(id: i32, queue_name: Option<String>, queue: Option<String>, pool: &PgPool) -> Result<Self> {
         let model = sqlx::query_as!(
             Model,
             r#"
@@ -204,7 +199,7 @@ impl Model {
         .await?;
         Ok(model)
     }
-    pub(crate) async fn delete(id: i32, pool: &PgPool) -> Result<bool> {
+    pub async fn delete(id: i32, pool: &PgPool) -> Result<bool> {
         let count = sqlx::query!(
             r#"
          delete from t_ds_queue where id=$1
@@ -216,7 +211,7 @@ impl Model {
         .rows_affected();
         Ok(count > 0)
     }
-    pub(crate) async fn all(pool: &PgPool) -> Result<Vec<Self>> {
+    pub async fn all(pool: &PgPool) -> Result<Vec<Self>> {
         let items = sqlx::query_as!(
             Model,
             r#"

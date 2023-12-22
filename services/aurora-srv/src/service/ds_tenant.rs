@@ -1,8 +1,8 @@
 use super::dao_service::AuroraRpcServer;
-use crate::models::t_ds_tenant::Model;
 use lib_common::core_error::error::AuroraData;
 use lib_common::core_error::error::AuroraErrorInfo;
 use lib_common::core_error::error::Error;
+use lib_models::t_ds_tenant::Model;
 use lib_proto::ds_tenant::ds_tenant_service_server::DsTenantService;
 use tracing::error;
 use tracing::info;

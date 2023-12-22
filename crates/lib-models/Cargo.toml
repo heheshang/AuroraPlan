@@ -1,0 +1,30 @@
+[package]
+name = "lib-models"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+license.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow.workspace = true
+lib_proto = { path = "../../crates/lib-proto", package = "lib-proto" }
+lib_common = { path = "../../crates/lib-common", package = "lib-common" }
+sqlx = { workspace = true, features = [
+    "postgres",
+    "time",
+    "uuid",
+    "runtime-tokio-rustls",
+    "chrono",
+    "json",
+    "bigdecimal",
+] }
+chrono = { workspace = true, features = ["serde"] }
+dotenvy.workspace = true
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+bigdecimal = { workspace = true, features = ["serde"] }

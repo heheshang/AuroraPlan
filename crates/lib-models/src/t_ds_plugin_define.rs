@@ -23,7 +23,7 @@ impl From<Model> for dto::DsPluginDefine {
     }
 }
 impl Model {
-    pub(crate) async fn query_by_id(id: i32, pool: &PgPool) -> Result<Self> {
+    pub async fn query_by_id(id: i32, pool: &PgPool) -> Result<Self> {
         let row = sqlx::query!(
             r#"
             SELECT * FROM t_ds_plugin_define WHERE id = $1
@@ -41,7 +41,7 @@ impl Model {
             update_time: row.update_time,
         })
     }
-    pub(crate) async fn query_by_type(plugin_type: &str, pool: &PgPool) -> Result<Vec<Self>> {
+    pub async fn query_by_type(plugin_type: &str, pool: &PgPool) -> Result<Vec<Self>> {
         let rows = sqlx::query_as!(
             Self,
             r#"

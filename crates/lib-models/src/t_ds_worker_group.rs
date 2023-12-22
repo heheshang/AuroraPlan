@@ -52,7 +52,7 @@ impl From<ModelPage> for Model {
 }
 
 impl Model {
-    pub(crate) async fn page(
+    pub async fn page(
         search_val: &str,
         page_num: i64,
         page_size: i64,
@@ -86,7 +86,7 @@ impl Model {
         Ok((items, total_page, total, start, cur_page))
     }
 
-    // pub(crate) async fn find_by_id(id: i64, pool: &PgPool) -> Result<Self> {
+    // pub async fn find_by_id(id: i64, pool: &PgPool) -> Result<Self> {
     //     let model = sqlx::query_as!(
     //         Model,
     //         r#"
@@ -99,7 +99,7 @@ impl Model {
     //     Ok(model)
     // }
 
-    pub(crate) async fn create(name: String, addr: Option<String>, pool: &PgPool) -> Result<Self> {
+    pub async fn create(name: String, addr: Option<String>, pool: &PgPool) -> Result<Self> {
         let model = sqlx::query_as!(
             Model,
             r#"
@@ -112,7 +112,7 @@ impl Model {
         .await?;
         Ok(model)
     }
-    pub(crate) async fn update(id: i64, name: Option<String>, pool: &PgPool) -> Result<Self> {
+    pub async fn update(id: i64, name: Option<String>, pool: &PgPool) -> Result<Self> {
         let model = sqlx::query_as!(
             Model,
             r#"
@@ -125,7 +125,7 @@ impl Model {
         .await?;
         Ok(model)
     }
-    pub(crate) async fn delete(id: i64, pool: &PgPool) -> Result<bool> {
+    pub async fn delete(id: i64, pool: &PgPool) -> Result<bool> {
         let count = sqlx::query!(
             r#"
          delete from t_ds_worker_group where id=$1
@@ -137,7 +137,7 @@ impl Model {
         .rows_affected();
         Ok(count > 0)
     }
-    pub(crate) async fn all(pool: &PgPool) -> Result<Vec<Self>> {
+    pub async fn all(pool: &PgPool) -> Result<Vec<Self>> {
         let items = sqlx::query_as!(
             Model,
             r#"

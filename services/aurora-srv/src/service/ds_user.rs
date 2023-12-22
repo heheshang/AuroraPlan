@@ -1,4 +1,4 @@
-use crate::models::t_ds_user::User;
+use lib_models::t_ds_user::User;
 
 use super::dao_service::AuroraRpcServer;
 use lib_common::{

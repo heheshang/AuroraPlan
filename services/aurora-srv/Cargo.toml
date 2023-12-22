@@ -17,23 +17,24 @@ lib_common = { path = "../../crates/lib-common", package = "lib-common" , featur
 lib_conifg = { path = "../../crates/lib-config", package = "lib-config" }
 lib_proto = { path = "../../crates/lib-proto", package = "lib-proto" }
 lib_remote = { path = "../../crates/lib-remote", package = "lib-remote" }
-bigdecimal = { workspace = true, features = ["serde"] }
+lib_models = { path = "../../crates/lib-models", package = "lib-models" }
+# bigdecimal = { workspace = true, features = ["serde"] }
 chrono = { workspace = true, features = ["serde"] }
-dotenvy.workspace = true
 listenfd.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
-sqlx = { workspace = true, features = [
-    "postgres",
-    "time",
-    "uuid",
-    "runtime-tokio-rustls",
-    "chrono",
-    "json",
-    "bigdecimal",
-] }
+
 tokio = { workspace = true, features = ["full"] }
 tokio-stream = { workspace = true, features = ["net"] }
 tonic.workspace = true
 tonic-health.workspace = true
 tracing.workspace = true
+sqlx = { workspace = true, features = [
+    "postgres",
+    # "time",
+    # "uuid",
+    # "runtime-tokio-rustls",
+    # "chrono",
+    # "json",
+    # "bigdecimal",
+] }

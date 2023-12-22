@@ -5,7 +5,11 @@ members = [
     "./crates/lib-config",
     "./crates/lib-common",
     './examples/mini-redis',
-    "./services/aurora-srv", "./crates/lib-remote", "./services/aurora-master", "./services/aurora-worker",
+    "./services/aurora-srv",
+    "./crates/lib-remote",
+    "./services/aurora-master",
+    "./services/aurora-worker",
+    "crates/lib-models",
 ]
 
 resolver = "2"
@@ -70,7 +74,6 @@ sqlx = "0.7.3"
 bigdecimal = "0.4.2"
 tracing = "0.1.34"
 tokio-cron-scheduler = "0.9.4"
-
 
 
 [workspace.metadata.hackerman]

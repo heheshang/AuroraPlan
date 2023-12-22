@@ -77,7 +77,7 @@ impl From<UserPage> for DsUserPage {
 }
 
 impl User {
-    pub(crate) async fn page(
+    pub async fn page(
         search_val: &str,
         page_num: i64,
         page_size: i64,
@@ -127,7 +127,7 @@ impl User {
         Ok(Some(user))
     }
     #[allow(clippy::too_many_arguments)]
-    pub(crate) async fn create(
+    pub async fn create(
         user_name: Option<String>,
         user_password: Option<String>,
         email: Option<String>,
@@ -201,7 +201,7 @@ impl User {
         .await?;
         Ok(Some(user))
     }
-    pub(crate) async fn query_user_by_name(_name: &str, pool: &PgPool) -> Result<Option<Self>> {
+    pub async fn query_user_by_name(_name: &str, pool: &PgPool) -> Result<Option<Self>> {
         let user = query_as!(Self, r#"select * from t_ds_user where user_name = $1"#, _name)
             .fetch_optional(pool)
             .await?;

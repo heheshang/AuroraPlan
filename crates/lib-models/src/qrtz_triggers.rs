@@ -19,7 +19,7 @@ pub struct Model {
 }
 impl Model {
     #[allow(clippy::too_many_arguments)]
-    pub(crate) async fn _create(
+    pub async fn _create(
         sched_name: String,
         trigger_name: String,
         trigger_group: String,

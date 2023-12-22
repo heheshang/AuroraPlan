@@ -17,7 +17,7 @@ pub struct Model {
 }
 impl Model {
     #[allow(clippy::too_many_arguments)]
-    pub(crate) async fn _create(
+    pub async fn _create(
         sched_name: String,
         entry_id: String,
         trigger_name: String,
@@ -57,7 +57,7 @@ impl Model {
         .await?)
     }
     #[allow(clippy::too_many_arguments)]
-    pub(crate) async fn _update(
+    pub async fn _update(
         sched_name: String,
         entry_id: String,
         trigger_name: String,

@@ -52,7 +52,7 @@ impl From<Model> for DsAlertGroup {
 }
 impl Model {
     /// page function for t_ds_alertgroup
-    pub(crate) async fn page(
+    pub async fn page(
         search_val: &str,
         page_num: i64,
         page_size: i64,
@@ -81,7 +81,7 @@ impl Model {
         Ok((items, total_page, total, start, cur_page))
     }
 
-    pub(crate) async fn _create(
+    pub async fn _create(
         alert_instance_ids: Option<String>,
         create_user_id: Option<i32>,
         group_name: Option<String>,
@@ -100,7 +100,7 @@ impl Model {
         .fetch_one(pool)
         .await?)
     }
-    pub(crate) async fn _update(
+    pub async fn _update(
         id: i32,
         alert_instance_ids: Option<String>,
         create_user_id: Option<i32>,
@@ -122,7 +122,7 @@ impl Model {
         .fetch_one(pool)
         .await?)
     }
-    pub(crate) async fn _find_by_name(group_name: String, pool: &sqlx::PgPool) -> Result<Option<Self>> {
+    pub async fn _find_by_name(group_name: String, pool: &sqlx::PgPool) -> Result<Option<Self>> {
         Ok(sqlx::query_as!(
             Self,
             r#"
@@ -134,7 +134,7 @@ impl Model {
         .await?)
     }
     ///delete by id
-    pub(crate) async fn _delete(id: i32, pool: &sqlx::PgPool) -> Result<u64> {
+    pub async fn _delete(id: i32, pool: &sqlx::PgPool) -> Result<u64> {
         Ok(sqlx::query!(
             r#"
             delete from t_ds_alertgroup where id=$1

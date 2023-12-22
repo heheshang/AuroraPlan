@@ -1,6 +1,6 @@
 use super::dao_service::AuroraRpcServer;
-use crate::models::t_ds_alertgroup::Model;
 use lib_common::core_error::error::{AuroraData, AuroraErrorInfo, Error};
+use lib_models::t_ds_alertgroup::Model;
 use lib_proto::ds_alertgroup::ds_alert_group_service_server::DsAlertGroupService;
 use tracing::error;
 

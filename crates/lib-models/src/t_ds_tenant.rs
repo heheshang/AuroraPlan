@@ -42,7 +42,7 @@ impl From<ModelPage> for Model {
 }
 
 impl Model {
-    pub(crate) async fn page(
+    pub async fn page(
         search_val: &str,
         page_num: i64,
         page_size: i64,
@@ -76,12 +76,7 @@ impl Model {
         Ok((items, total_page, total, start, cur_page))
     }
 
-    pub(crate) async fn create(
-        code: Option<String>,
-        desc: Option<String>,
-        queue: Option<i32>,
-        pool: &PgPool,
-    ) -> Result<Self> {
+    pub async fn create(code: Option<String>, desc: Option<String>, queue: Option<i32>, pool: &PgPool) -> Result<Self> {
         let row = sqlx::query_as!(
             Self,
             r#"
@@ -96,7 +91,7 @@ impl Model {
         Ok(row)
     }
 
-    pub(crate) async fn find_by_code(code: &str, pool: &PgPool) -> Result<Option<Self>> {
+    pub async fn find_by_code(code: &str, pool: &PgPool) -> Result<Option<Self>> {
         let res = sqlx::query_as!(
             Self,
             r#"
@@ -109,7 +104,7 @@ impl Model {
         Ok(res)
     }
 
-    pub(crate) async fn update(_id: i32, desc: String, queue: i32, pool: &PgPool) -> Result<Self> {
+    pub async fn update(_id: i32, desc: String, queue: i32, pool: &PgPool) -> Result<Self> {
         Ok(sqlx::query_as!(
             Self,
             r#"
@@ -122,13 +117,13 @@ impl Model {
         .fetch_one(pool)
         .await?)
     }
-    pub(crate) async fn delete(_id: i32, pool: &PgPool) -> Result<usize> {
+    pub async fn delete(_id: i32, pool: &PgPool) -> Result<usize> {
         Ok(sqlx::query_as!(Self, r#"delete from t_ds_tenant where id = $1"#, _id)
             .execute(pool)
             .await?
             .rows_affected() as usize)
     }
-    pub(crate) async fn all(pool: &PgPool) -> Result<Vec<Self>> {
+    pub async fn all(pool: &PgPool) -> Result<Vec<Self>> {
         let res = sqlx::query_as!(Self, r#"select * from t_ds_tenant"#).fetch_all(pool).await?;
         Ok(res)
     }

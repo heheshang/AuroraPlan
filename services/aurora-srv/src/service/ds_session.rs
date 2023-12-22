@@ -1,9 +1,9 @@
 use super::dao_service::AuroraRpcServer;
-use crate::models::t_ds_session::Model;
 use lib_common::{
     core_error::error::{AuroraData, AuroraErrorInfo, Error},
     core_results::results::{GrpcRequest, GrpcResponse},
 };
+use lib_models::t_ds_session::Model;
 use lib_proto::ds_session::{
     ds_session_service_server::DsSessionService, DsSession, GetDsSessionByIdRequest, GetDsSessionUserIdRequest,
     GetDsSessionUserIdResponse,

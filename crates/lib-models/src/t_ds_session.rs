@@ -25,7 +25,7 @@ impl From<Model> for DsSession {
 }
 
 impl Model {
-    pub(crate) async fn create(id: String, user_id: i32, ip: Option<String>, pool: &PgPool) -> Result<Self> {
+    pub async fn create(id: String, user_id: i32, ip: Option<String>, pool: &PgPool) -> Result<Self> {
         let current_time = chrono::prelude::Local::now().naive_local();
         Ok(sqlx::query_as!(
             Self,
@@ -42,7 +42,7 @@ impl Model {
         .await?)
     }
 
-    pub(crate) async fn update(id: String, user_id: i32, ip: Option<String>, pool: &PgPool) -> Result<Self> {
+    pub async fn update(id: String, user_id: i32, ip: Option<String>, pool: &PgPool) -> Result<Self> {
         let current_time = chrono::prelude::Local::now().naive_local();
         Ok(sqlx::query_as!(
             Self,
@@ -59,7 +59,7 @@ impl Model {
         .await?)
     }
 
-    pub(crate) async fn delete(id: String, pool: &PgPool) -> Result<bool> {
+    pub async fn delete(id: String, pool: &PgPool) -> Result<bool> {
         Ok(sqlx::query!(
             r#"
             delete from t_ds_session where id=$1
@@ -72,7 +72,7 @@ impl Model {
             > 0)
     }
 
-    pub(crate) async fn find_by_id(id: String, pool: &PgPool) -> Result<Self> {
+    pub async fn find_by_id(id: String, pool: &PgPool) -> Result<Self> {
         Ok(sqlx::query_as!(
             Self,
             r#"
@@ -83,7 +83,7 @@ impl Model {
         .fetch_one(pool)
         .await?)
     }
-    pub(crate) async fn find_by_user_id(user_id: i32, pool: &PgPool) -> Result<Vec<Self>> {
+    pub async fn find_by_user_id(user_id: i32, pool: &PgPool) -> Result<Vec<Self>> {
         Ok(sqlx::query_as!(
             Self,
             r#"

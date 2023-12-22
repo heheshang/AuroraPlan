@@ -11,7 +11,7 @@ pub struct Model {
 }
 
 impl Model {
-    pub(crate) async fn _create(k8s_name: String, k8s_config: String, pool: &PgPool) -> Result<Self> {
+    pub async fn _create(k8s_name: String, k8s_config: String, pool: &PgPool) -> Result<Self> {
         Ok(sqlx::query_as!(
             Self,
             r#"

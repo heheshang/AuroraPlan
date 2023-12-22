@@ -1,6 +1,6 @@
 use super::dao_service::AuroraRpcServer;
-use crate::models::t_ds_queue::Model;
 use lib_common::core_error::error::{AuroraData, AuroraErrorInfo, Error};
+use lib_models::t_ds_queue::Model;
 use lib_proto::ds_queue::ds_queue_service_server::DsQueueService;
 use tracing::info;
 

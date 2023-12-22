@@ -26,8 +26,9 @@ pub fn get_worker_config_path() -> PathBuf {
 fn glb_config_dir() -> PathBuf {
     // 获取当前工作目录
     let value = dotenvy::var("CURRENT_DIR");
+
     match value {
-        Ok(v) => Path::new(&v).join("aurora-config"),
+        Ok(v) => Path::new(&v).join("lib-config"),
         Err(_) => {
             let current_dir = env::current_dir().unwrap();
 
@@ -44,8 +45,9 @@ fn glb_config_dir() -> PathBuf {
             let path = dirs.iter().rev().copied().collect::<Vec<_>>().join("/");
 
             debug!("final path: {:?}", path);
+            print!("final path: {:?}", path);
 
-            Path::new(&path).join("aurora-config")
+            Path::new(&path).join("crates").join("lib-config")
         }
     }
 }

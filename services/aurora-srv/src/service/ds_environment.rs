@@ -1,7 +1,7 @@
 use super::dao_service::AuroraRpcServer;
-use crate::models::t_ds_environment;
-use crate::models::t_ds_environment_relation;
 use lib_common::core_error::error::{AuroraData, AuroraErrorInfo, Error};
+use lib_models::t_ds_environment;
+use lib_models::t_ds_environment_relation;
 use lib_proto::ds_environment::{self, ds_environment_service_server::DsEnvironmentService, DsEnvironmentPage};
 use tracing::{error, info};
 

@@ -1,4 +1,4 @@
-use crate::models::t_ds_project::Model;
+use lib_models::t_ds_project::Model;
 
 use super::dao_service::AuroraRpcServer;
 use lib_common::core_error::error::{AuroraData, Error};

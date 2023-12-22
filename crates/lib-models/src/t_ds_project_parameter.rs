@@ -55,7 +55,7 @@ impl From<Model> for ProjectParameter {
 }
 
 impl Model {
-    pub(crate) async fn page(
+    pub async fn page(
         search_val: &str,
         page_num: i64,
         page_size: i64,
@@ -91,7 +91,7 @@ impl Model {
         let cur_page = page_num;
         Ok((items, total_page, total, start, cur_page))
     }
-    pub(crate) async fn create(
+    pub async fn create(
         param_name: &str,
         param_value: &str,
         code: i64,
@@ -114,7 +114,7 @@ impl Model {
         .fetch_one(pool)
         .await?)
     }
-    pub(crate) async fn update_by_code_and_project_code(
+    pub async fn update_by_code_and_project_code(
         param_name: &str,
         param_value: &str,
         code: i64,
@@ -135,7 +135,7 @@ impl Model {
       )
     }
 
-    pub(crate) async fn delete_by_code_and_project_code(code: i64, project_code: i64, pool: &PgPool) -> Result<bool> {
+    pub async fn delete_by_code_and_project_code(code: i64, project_code: i64, pool: &PgPool) -> Result<bool> {
         Ok(sqlx::query!(
             r#"
             delete from t_ds_project_parameter where code = $1 and project_code = $2

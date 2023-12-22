@@ -1,6 +1,6 @@
 use super::dao_service::AuroraRpcServer;
-use crate::models::t_ds_project_parameter::Model;
 use lib_common::core_error::error::{AuroraData, AuroraErrorInfo, Error};
+use lib_models::t_ds_project_parameter::Model;
 use lib_proto::ds_project_parameter::project_parameter_service_server::ProjectParameterService;
 use tracing::{error, info};
 

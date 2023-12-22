@@ -1,7 +1,7 @@
 use super::dao_service::AuroraRpcServer;
 use lib_common::core_error::error::{AuroraData, Error};
 
-use crate::models::t_ds_worker_group::Model;
+use lib_models::t_ds_worker_group::Model;
 use lib_proto::ds_worker_group::ds_worker_group_service_server::DsWorkerGroupService;
 use tracing::info;
 #[tonic::async_trait]

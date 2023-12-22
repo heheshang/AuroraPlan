@@ -110,7 +110,7 @@ impl Model {
         .await?;
         Ok(())
     }
-    pub(crate) async fn delete_by_code_and_relation(_code: i64, pool: &PgPool) -> Result<()> {
+    pub async fn delete_by_code_and_relation(_code: i64, pool: &PgPool) -> Result<()> {
         let mut transtion = pool.begin().await?;
 
         match Self::delete_by_code(_code, &mut transtion).await {
@@ -124,7 +124,7 @@ impl Model {
             }
         }
     }
-    pub(crate) async fn _all(pool: &PgPool) -> Result<Vec<Self>> {
+    pub async fn _all(pool: &PgPool) -> Result<Vec<Self>> {
         Ok(sqlx::query_as!(
             Self,
             r#"

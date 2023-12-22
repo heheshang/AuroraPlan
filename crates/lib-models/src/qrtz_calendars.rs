@@ -7,12 +7,7 @@ pub struct Model {
 }
 
 impl Model {
-    pub(crate) async fn _create(
-        sched_name: String,
-        calendar_name: String,
-        calendar: String,
-        pool: &PgPool,
-    ) -> Result<Self> {
+    pub async fn _create(sched_name: String, calendar_name: String, calendar: String, pool: &PgPool) -> Result<Self> {
         Ok(sqlx::query_as!(
             Self,
             "insert into qrtz_calendars (sched_name,calendar_name,calendar ) values ($1,$2,$3) returning *",
@@ -23,12 +18,7 @@ impl Model {
         .fetch_one(pool)
         .await?)
     }
-    pub(crate) async fn _update(
-        sched_name: String,
-        calendar_name: String,
-        calendar: String,
-        pool: &PgPool,
-    ) -> Result<Self> {
+    pub async fn _update(sched_name: String, calendar_name: String, calendar: String, pool: &PgPool) -> Result<Self> {
         Ok(sqlx::query_as!(
             Self,
             r#"
@@ -42,7 +32,7 @@ impl Model {
         .await?)
     }
 
-    pub(crate) async fn _find_by_name(sched_name: String, pool: &PgPool) -> Result<Self> {
+    pub async fn _find_by_name(sched_name: String, pool: &PgPool) -> Result<Self> {
         Ok(sqlx::query_as!(
             Self,
             r#"

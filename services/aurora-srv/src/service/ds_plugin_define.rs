@@ -1,6 +1,6 @@
 use super::dao_service::AuroraRpcServer;
-use crate::models::t_ds_plugin_define::Model;
 use lib_common::core_error::error::{AuroraData, Error};
+use lib_models::t_ds_plugin_define::Model;
 use lib_proto::ds_plugin_define::{
     ds_plugin_define_service_server::DsPluginDefineService, GetDsPluginDefineByTypeResponse,
 };
