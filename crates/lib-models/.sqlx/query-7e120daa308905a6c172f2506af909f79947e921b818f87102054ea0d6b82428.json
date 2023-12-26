@@ -1,0 +1,127 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO qrtz_triggers (\n                sched_name,\n                trigger_name,\n                trigger_group,\n                job_name,\n                job_group,\n                description,\n                next_fire_time,\n                prev_fire_time,\n                priority,\n                trigger_state,\n                trigger_type,\n                start_time,\n                end_time,\n                calendar_name,\n                misfire_instr,\n                job_data\n            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) returning *;\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "sched_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "trigger_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "trigger_group",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "job_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "job_group",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "description",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "next_fire_time",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "prev_fire_time",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 8,
+        "name": "priority",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "trigger_state",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 10,
+        "name": "trigger_type",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 11,
+        "name": "start_time",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 12,
+        "name": "end_time",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 13,
+        "name": "calendar_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 14,
+        "name": "misfire_instr",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 15,
+        "name": "job_data",
+        "type_info": "Bytea"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Int8",
+        "Int8",
+        "Int4",
+        "Varchar",
+        "Varchar",
+        "Int8",
+        "Int8",
+        "Varchar",
+        "Int2",
+        "Bytea"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "7e120daa308905a6c172f2506af909f79947e921b818f87102054ea0d6b82428"
+}

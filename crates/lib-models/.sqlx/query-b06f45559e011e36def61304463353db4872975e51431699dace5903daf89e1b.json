@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT * FROM qrtz_scheduler_state",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "sched_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "instance_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "last_checkin_time",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "checkin_interval",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "b06f45559e011e36def61304463353db4872975e51431699dace5903daf89e1b"
+}

@@ -279,5 +279,6 @@
         "fortran": "cd $dir && gfortran $fileName -o $fileNameWithoutExt && $dir$fileNameWithoutExt",
         "sml": "cd $dir && sml $fileName",
         "mojo": "mojo run"
-    }
+    },
+    "rust-analyzer.cargo.autoreload": true,
 }

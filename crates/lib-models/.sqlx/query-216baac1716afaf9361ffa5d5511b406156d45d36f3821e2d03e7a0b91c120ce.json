@@ -1,0 +1,61 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into t_ds_alertgroup (alert_instance_ids,create_user_id,group_name,description ) values ($1,$2,$3,$4) returning *",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "alert_instance_ids",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "create_user_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "group_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "description",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "create_time",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 6,
+        "name": "update_time",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Int4",
+        "Varchar",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "216baac1716afaf9361ffa5d5511b406156d45d36f3821e2d03e7a0b91c120ce"
+}

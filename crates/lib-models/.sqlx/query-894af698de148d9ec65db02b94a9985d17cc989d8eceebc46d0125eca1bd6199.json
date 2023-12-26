@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT * FROM t_ds_plugin_define WHERE id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "plugin_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "plugin_type",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "plugin_params",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "create_time",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 5,
+        "name": "update_time",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "894af698de148d9ec65db02b94a9985d17cc989d8eceebc46d0125eca1bd6199"
+}

@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            select * from qrtz_calendars where sched_name=$1 \n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "sched_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "calendar_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "calendar",
+        "type_info": "Bytea"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "18cbd1997b72ed3e35c2f505cec21c80a514854bc1b4de218b6658022111eaeb"
+}

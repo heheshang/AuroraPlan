@@ -1,0 +1,106 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n           update qrtz_fired_triggers set trigger_name=$1,trigger_group=$2,instance_name=$3,fired_time=$4,sched_time=$5,priority=$6,state=$7,job_name=$8,job_group=$9,is_nonconcurrent=$10,requests_recovery=$11 where sched_name=$12 and entry_id=$13 returning *\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "sched_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "entry_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "trigger_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "trigger_group",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "instance_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "fired_time",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "sched_time",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "priority",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "state",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 9,
+        "name": "job_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 10,
+        "name": "job_group",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 11,
+        "name": "is_nonconcurrent",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 12,
+        "name": "requests_recovery",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Int8",
+        "Int8",
+        "Int4",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "874cfb41cbdb453912b2f7bf42fb782ac19f0ca97c8e3f1124a2679ea0478dc5"
+}

@@ -1,0 +1,94 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            insert into t_ds_user (user_name,user_password,email,phone,tenant_id,queue,state)\n            values ($1,$2,$3,$4,$5,$6,$7)\n            returning *\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "user_password",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "user_type",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "email",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "phone",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "tenant_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "create_time",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 8,
+        "name": "update_time",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 9,
+        "name": "queue",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 10,
+        "name": "state",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 11,
+        "name": "time_zone",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Int4",
+        "Varchar",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "580578dd79c1d837953c762efa34c5154ab87ea2fcd280431acbecb650715017"
+}

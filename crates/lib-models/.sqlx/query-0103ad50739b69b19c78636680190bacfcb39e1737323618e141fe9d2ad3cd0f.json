@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            select * from t_ds_alert_plugin_instance where plugin_define_id=$1 \n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "plugin_define_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "plugin_instance_params",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "create_time",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 4,
+        "name": "update_time",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 5,
+        "name": "instance_name",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "0103ad50739b69b19c78636680190bacfcb39e1737323618e141fe9d2ad3cd0f"
+}

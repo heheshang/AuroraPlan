@@ -4,10 +4,8 @@ use anyhow::Result;
 use axum::{routing::get, Router};
 use lib_common::logger::setup_logger;
 use lib_conifg::master_config::Settings;
-use tokio::net::TcpListener;
-use tokio_stream::StreamExt;
-use tokio_util::codec::{Framed, LinesCodec};
 use tracing::info;
+pub mod rpc;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -15,41 +13,28 @@ async fn main() -> Result<()> {
     let settings = Settings::new()?;
     let host = settings.server.host;
     let port = settings.server.port;
-    let listen_port = settings.master.listen_port;
-    let _ = tokio::join!(start(host, port), listen(listen_port));
+    let _ = tokio::join!(start(host, port), listen());
 
     info!("master  start success!");
     Ok(())
 }
-async fn listen(listen_port: u32) -> Result<()> {
-    info!("master  start  {}", listen_port);
-    let listener = TcpListener::bind(format!("0.0.0.0:{}", listen_port)).await?;
-
-    loop {
-        let (_socket, _) = listener.accept().await?;
-        let mut socket = Framed::new(_socket, LinesCodec::new());
-        tokio::spawn(async move {
-            while let Some(line) = socket.next().await {
-                match line {
-                    Ok(line) => {
-                        info!("master  receive  {}", line);
-                    }
-                    Err(e) => {
-                        info!("master  receive  {}", e);
-                    }
-                }
-            }
-        });
-
-        // process(socket ).await;
-    }
+async fn listen() -> Result<()> {
+    rpc::MasterRpcClient::start().await?;
+    rpc::MasterRpcServer::start().await?;
+    Ok(())
 }
 
 async fn start(host: String, port: u32) -> Result<()> {
     info!("master axum  start {}:{}", host, port);
     // let backtrace = backtrace::Backtrace::new();
     let addr: SocketAddr = format!("{}:{}", host, port).parse()?;
-    let router = Router::new().route("/", get(|| async { "Hello, world!" }));
+    let router = Router::new().route(
+        "/",
+        get(|| async {
+            info!("hello world");
+            "Hello, world!"
+        }),
+    );
     let tcp_listener = tokio::net::TcpListener::bind(addr).await?;
     axum::serve(tcp_listener, router).await?;
 

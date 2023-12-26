@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            delete from t_ds_alertgroup where id=$1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0cc14f330cc966fe5b1492e1d18c6c6c69e3d6fa03362c5a360bbefa747e90ac"
+}

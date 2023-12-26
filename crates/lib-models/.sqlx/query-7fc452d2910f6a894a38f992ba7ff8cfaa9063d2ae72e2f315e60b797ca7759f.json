@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            update t_ds_user set\n            user_name = $1,\n            tenant_id = $2,\n            email = $3,\n            queue = $4,\n            phone = $5,\n            state = $6\n            where id = $7\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Int4",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7fc452d2910f6a894a38f992ba7ff8cfaa9063d2ae72e2f315e60b797ca7759f"
+}

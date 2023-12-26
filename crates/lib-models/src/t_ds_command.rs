@@ -1,4 +1,6 @@
+use anyhow::Result;
 use chrono::NaiveDateTime;
+use sqlx::PgPool;
 
 pub struct Model {
     pub id: i32,
@@ -21,4 +23,18 @@ pub struct Model {
     pub process_instance_id: Option<i32>,
     pub process_definition_version: Option<i32>,
     pub test_flag: Option<i32>,
+}
+
+impl Model {
+    pub async fn get_by_id(id: i32, pool: &PgPool) -> Result<Self> {
+        Ok(sqlx::query_as!(
+            Model,
+            r#"
+            SELECT * FROM t_ds_command WHERE id = $1
+            "#,
+            id
+        )
+        .fetch_one(pool)
+        .await?)
+    }
 }

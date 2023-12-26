@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            delete from t_ds_cluster where code=$1;\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "cbd4aa1a5b5b3c836c1e52148b7e1289fff018c9aeff75a2d80d6417188ab216"
+}

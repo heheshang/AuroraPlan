@@ -1,0 +1,106 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into qrtz_fired_triggers (sched_name,entry_id,trigger_name,trigger_group,instance_name,fired_time,sched_time,priority,state,job_name,job_group,is_nonconcurrent,requests_recovery ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) returning *",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "sched_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "entry_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "trigger_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "trigger_group",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "instance_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "fired_time",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "sched_time",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "priority",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "state",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 9,
+        "name": "job_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 10,
+        "name": "job_group",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 11,
+        "name": "is_nonconcurrent",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 12,
+        "name": "requests_recovery",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Int8",
+        "Int8",
+        "Int4",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Bool",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "c9d2553d7308077660659855c46c197a5b907dad5e6c96618e473a1fe67565fa"
+}

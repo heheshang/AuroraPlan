@@ -1,0 +1,36 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into qrtz_calendars (sched_name,calendar_name,calendar ) values ($1,$2,$3) returning *",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "sched_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "calendar_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "calendar",
+        "type_info": "Bytea"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Varchar",
+        "Bytea"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "f664d20d7b13e85ce9e66c0371b5f6ed2477da7762d9a6474cfa6bbca4a2bbe9"
+}

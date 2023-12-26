@@ -1,0 +1,47 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            insert into t_ds_k8s (k8s_name,k8s_config) values ($1,$2) returning *\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "k8s_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "k8s_config",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "create_time",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 4,
+        "name": "update_time",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "03defcb34637c9c1896ab1842e445953264588d216ec7cc6c51958551147ba80"
+}

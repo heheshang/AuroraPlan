@@ -126,3 +126,6 @@ server {
 ```shell
  docker run --add-host=myhost:172.18.0.1 -di --name=nginx -p 5174:80 -v /home/ssk/dist:/usr/share/nginx/html  -v /home/ssk/aurora-ui.conf:/etc/nginx/conf.d/aurora-ui.conf nginx
 ```
+```shell
+pg_dump -U root -W -F p --clean  --if-exists  --inserts  -f dump.sql dolphinscheduler
+```

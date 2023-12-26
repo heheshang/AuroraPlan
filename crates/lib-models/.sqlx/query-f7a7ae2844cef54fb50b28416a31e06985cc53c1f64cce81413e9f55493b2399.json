@@ -1,0 +1,41 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT * FROM qrtz_scheduler_state WHERE sched_name=$1 AND instance_name=$2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "sched_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "instance_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "last_checkin_time",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "checkin_interval",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "f7a7ae2844cef54fb50b28416a31e06985cc53c1f64cce81413e9f55493b2399"
+}

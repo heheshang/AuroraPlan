@@ -103,6 +103,6 @@ pub fn setup_logger() -> std::result::Result<(), TryInitError> {
     tracing_subscriber::registry()
         .with(opentelemetry)
         .with(filter)
-        .with(fmt::Layer::default())
+        .with(fmt::Layer::default().with_thread_names(true).with_thread_ids(true))
         .try_init()
 }
