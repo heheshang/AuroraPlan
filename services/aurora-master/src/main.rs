@@ -5,6 +5,7 @@ use axum::{routing::get, Router};
 use lib_common::logger::setup_logger;
 use lib_conifg::master_config::Settings;
 use tracing::info;
+pub mod processor;
 pub mod rpc;
 
 #[tokio::main]
@@ -21,6 +22,7 @@ async fn main() -> Result<()> {
 async fn listen() -> Result<()> {
     rpc::MasterRpcClient::start().await?;
     rpc::MasterRpcServer::start().await?;
+    dbg!("listen");
     Ok(())
 }
 

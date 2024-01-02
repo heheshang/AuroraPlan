@@ -11,6 +11,13 @@ license.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+educe = { workspace = true, features = ["full"] }
+overload.workspace = true
 # log = { workspace = true, features = ["std", "serde"] }
 tokio = { workspace = true, features = ["full"] }
+tokio-util = { features = ["full"], version = "0.7.10" }
 tracing.workspace = true
+typed-builder.workspace = true
+
+[dev-dependencies]
+ enum_dispatch.workspace = true

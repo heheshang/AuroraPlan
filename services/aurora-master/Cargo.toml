@@ -20,7 +20,7 @@ path = "src/cli.rs"
 
 [dependencies]
 anyhow = { workspace = true }
-async-trait = { workspace = true }
+async-trait.workspace = true
 
 lib_common = { path = "../../crates/lib-common", package = "lib-common" ,features = ["otel"]}
 lib_conifg = { path = "../../crates/lib-config", package = "lib-config" }
@@ -34,3 +34,6 @@ tokio-cron-scheduler.workspace = true
 tracing.workspace = true
 tokio-util = { version = "0.7.10", features = ["rt", "codec"] }
 tokio-stream.workspace = true
+typed-builder.workspace = true
+# enum_dispatch.workspace = true
+futures-util = { workspace = true, features = ["futures-sink"] }

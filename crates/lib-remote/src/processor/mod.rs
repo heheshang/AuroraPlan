@@ -1,38 +1,40 @@
+use crate::cmd::message::Message;
+#[cfg(test)]
+pub mod test;
 pub trait RequestProcessor {
-    fn process(&self);
+    fn process(&self, msg: &Message);
 }
-trait MasterRpcProcessor: RequestProcessor {}
+
+pub trait MasterRpcProcessor: RequestProcessor {
+    // fn process(&self, msg: &Message);
+}
 
 pub struct BaseLogProcessor;
 pub struct WorkflowMetricsCleanUpProcessor;
 
 impl RequestProcessor for BaseLogProcessor {
-    fn process(&self) {
-        println!("BaseLogProcessor");
-    }
-}
-impl RequestProcessor for WorkflowMetricsCleanUpProcessor {
-    fn process(&self) {
-        println!("WorkflowMetricsCleanUpProcessor");
+    fn process(&self, msg: &Message) {
+        println!("{:?}", msg);
     }
 }
 
-pub fn exce(p: Box<dyn RequestProcessor>) {
-    p.process();
+impl MasterRpcProcessor for BaseLogProcessor {
+    // fn process(&self, msg: &Message) {
+    //     println!("BaseLogProcessor process");
+    // }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
     #[test]
-    fn test_processor() {
-        let processors = vec![
-            Box::new(BaseLogProcessor) as Box<dyn RequestProcessor>,
-            Box::new(WorkflowMetricsCleanUpProcessor) as Box<dyn RequestProcessor>,
-        ];
-        for p in processors {
-            exce(p);
-        }
+    fn test_base_log_processor() {
+        let base_log_processor = BaseLogProcessor;
+        base_log_processor.process(&Message {
+            id: 1,
+            data: "test".as_bytes().to_vec(),
+            message_type: crate::cmd::message_type::MessageType::CACHE_EXPIRE,
+            opaque: 1,
+        });
     }
 }
