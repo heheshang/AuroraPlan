@@ -916,214 +916,59 @@ is_normal::<MyType>();
 对于除了最简单的程序之外，您将会有可能失败的方法。在本章中，我们将探讨表示、处理和传播这些失败的不同方式，以及每种方式的优点和缺点。我们将首先探讨不同的错误表示方式，包括枚举和擦除，然后研究一些需要不同表示技术的特殊错误情况。接下来，我们将看一些处理错误的方法以及错误处理的未来发展方向。
 值得注意的是，Rust中的错误处理最佳实践仍然是一个活跃的讨论话题，在撰写本文时，生态系统尚未就单一统一的方法达成一致。因此，本章将重点介绍基本原则和技术，而不是推荐特定的crate或模式。
 
-#### Representing Errors
+#### 表示错误
 
-When you write code that can fail, the most important question to ask yourself
-is how your users will interact with any errors returned. Will users need
-to know exactly which error happened and the minutiae about what went
-wrong, or will they simply log that an error occurred and move on as best
-they can? To understand this, we have to look at whether the nature of the
-error is likely to affect what the caller does upon receiving it. This in turn
-will dictate how we represent different errors.
-You have two main options for representing errors: enumeration and erasure.
-That is, you can either have your error type enumerate the possible error
-conditions so that the caller can distinguish them, or you can just provide the
-caller with a single, opaque error. Let’s discuss these two options in turn.
-Enumeration
-For our example, we’ll use a library function that copies bytes from some
-input stream into some output stream, much like std::io::copy. The user
-provides you with two streams, one to read from and one to write to, and
-you copy the bytes from one to the other. During this process, it’s entirely
-possible for either stream to fail, at which point the copy has to stop and
-return an error to the user. Here, the user will likely want to know whether
-it was the input stream or the output stream that failed. For example, in a
-web server, if an error occurs on the input stream while streaming a file to a
-client, it might be because a disk was ejected, whereas if the output stream
-errors, maybe the client just disconnected. The latter may be an error the
-server should ignore, since copies to new connections can still complete,
-whereas the former may require that the whole server be shut down!
-This is a case where we want to enumerate the errors. The user needs
-to be able to distinguish between the different error cases so that they can
-respond appropriately, so we use an enum named CopyError, with each variant
-representing a separate underlying cause for the error, like in Listing 4-1.
+当你编写可能失败的代码时，最重要的问题是要问自己的是用户将如何与返回的任何错误进行交互。用户是否需要知道确切发生了哪个错误以及出了什么问题的细节，还是他们只需记录错误发生并尽力继续进行？为了理解这一点，我们必须看看错误的性质是否可能影响调用者在接收到错误时的操作。这反过来将决定我们如何表示不同的错误。
+
+- 表示错误有两种主要选项：枚举和擦除。也就是说，您可以让错误类型枚举可能的错误条件，以便调用者可以区分它们，或者您可以只向调用者提供一个不透明的错误。让我们依次讨论这两个选项。
+
+##### 枚举
+
+对于我们的示例，我们将使用一个库函数，该函数将字节从某个输入流复制到某个输出流，类似于std::io::copy。用户提供两个流，一个用于读取，一个用于写入，您将字节从一个流复制到另一个流。在此过程中，任何一个流都有可能失败，此时复制过程必须停止并向用户返回错误。在这种情况下，用户可能想知道是输入流还是输出流发生了错误。例如，在Web服务器中，如果在向客户端流式传输文件时发生输入流错误，可能是因为磁盘被弹出，而如果输出流发生错误，可能是客户端断开连接。后者可能是服务器应该忽略的错误，因为可以继续将数据复制到新的连接，而前者可能需要整个服务器关闭！
+
+这是一个我们希望枚举错误的情况。用户需要能够区分不同的错误情况，以便能够适当地做出响应，因此我们使用了一个名为CopyError的枚举，其中每个变体表示错误的不同根本原因，就像在清单4-1中所示。
+
+```rust
 pub enum CopyError {
 In(std::io::Error),
 Out(std::io::Error),
 }
-Listing 4-1: An enumerated error type
-Each variant also includes the error that was encountered to provide
-the caller with as much information about went wrong as possible.
-When making your own error type, you need to take a number of steps to
-make the error type play nicely with the rest of the Rust ecosystem. First, your
-error type should implement the std::error::Error trait, which provides callers
-with common methods for introspecting error types. The main method of
-interest is Error::source, which provides a mechanism to find the underlying
-cause of an error. This is most commonly used to print a backtrace that displays
-a trace all the way back to the error’s root cause. For our CopyError type,
-Error Handling 59
-the implementation of source is straightforward: we match on self and extract
-and return the inner std::io::Error.
-Second, your type should implement both Display and Debug so that callers
-can meaningfully print your error. This is required if you implement the
-Error trait. In general, your implementation of Display should give a one-line
-description of what went wrong that can easily be folded into other error messages.
-The display format should be lowercase and without trailing punctuation
-so that it fits nicely into other, larger error reports. Debug should provide
-a more descriptive error including auxiliary information that may be useful
-in tracking down the cause of the error, such as port numbers, request identifiers,
-filepaths, and the like, which #[derive(Debug)] is usually sufficient for.
-NOTE In older Rust code, you may see references to the Error::description method, but this
-has been deprecated in favor of Display.
-Third, your type should, if possible, implement both Send and Sync so
-that users are able to share the error across thread boundaries. If your error
-type is not thread-safe, you will find that it’s almost impossible to use your
-crate in a multithreaded context. Error types that implement Send and Sync
-are also much easier to use with the very common std::io::Error type, which
-is able to wrap errors that implement Error, Send, and Sync. Of course, not all
-error types can reasonably be Send and Sync, such as if they’re tied to particular
-thread-local resources, and that’s okay. You’re probably not sending those
-errors across thread boundaries either. However, it’s something to be aware
-of before you go placing Rc<String> and RefCell<bool> types in your errors.
-Finally, where possible, your error type should be 'static. The most
-immediate benefit of this is that it allows the caller to more easily propagate
-your error up the call stack without running into lifetime issues. It also
-enables your error type to be used more easily with type-erased error types,
-as we’ll see shortly.
-Opaque Errors
-Now let’s consider a different example: an image decoding library. You
-give the library a bunch of bytes to decode, and it gives you access to various
-image manipulation methods. If the decoding fails, the user needs to
-be able to figure out how to resolve the issue, and so must understand the
-cause. But is it important whether the cause is the size field in the image
-header being invalid, or the compression algorithm failing to decompress
-a block? Probably not—the application can’t meaningfully recover from
-either situation, even if it knows the exact cause. In cases like this, you as
-the library author may instead want to provide a single, opaque error type.
-This also makes your library a little nicer to use, because there is only one
-error type in use everywhere. This error type should implement Send, Debug,
-Display, and Error (including the source method where appropriate), but
-beyond that, the caller doesn’t need to know anything more. You might
-internally represent more fine-grained error states, but there is no need
-to expose those to the users of the library. Doing so would only serve to
-unnecessarily increase the size and complexity of your API.
+```
 
+清单4-1：一个枚举的错误类型
 
-60 Chapter 4
-Exactly what your opaque error type should be is mostly up to you. It
-could just be a type with all private fields that exposes only limited methods
-for displaying and introspecting the error, or it could be a severely
-type-erased error type like Box<dyn Error + Send + Sync + 'static>, which
-reveals nothing more than the fact that it is an error and does not generally
-let your users introspect at all. Deciding how opaque to make your
-error types is mostly a matter of whether there is anything interesting
-about the error beyond its description. With Box<dyn Error>, you leave your
-users with little option but to bubble up your error. That might be fine if
-it truly has no information of value to present to the user—for example, if
-it’s just a dynamic error message or is one of a large number of unrelated
-errors from deeper inside your program. But if the error has some interesting
-facets to it, such as a line number or a status code, you may want to
-expose that through a concrete but opaque type instead.
-NOTE In general, the community consensus is that errors should be rare and therefore should
-not add much cost to the “happy path.” For that reason, errors are often placed behind
-a pointer type, such as a Box or Arc. This way, they’re unlikely to add much to the size
-of the overall Result type they’re contained within.
-One benefit of using type-erased errors is that it allows you to easily
-combine errors from different sources without having to introduce additional
-error types. That is, type-erased errors often compose nicely, and allow
-you to express an open-ended set of errors. If you write a function whose
-return type is Box<dyn Error + ...>, then you can use ? across different error
-types inside that function, on all sorts of different errors, and they will all
-be turned into that one common error type.
-The 'static bound on Box<dyn Error + Send + Sync + 'static> is worth
-spending a bit more time on in the context of erasure. I mentioned in the
-previous section that it’s useful for letting the caller propagate the error
-without worrying about the lifetime bounds of the method that failed, but
-it serves an even bigger purpose: access to downcasting. Downcasting is the
-process of taking an item of one type and casting it to a more specific type.
-This is one of the few cases where Rust gives you access to type information at
-runtime; it’s a limited case of the more general type reflection that dynamic
-languages often provide. In the context of errors, downcasting allows a user to
-turn a dyn Error into a concrete underlying error type when that dyn Error was
-originally of that type. For example, the user may want to take a particular
-action if the error they received was a std::io::Error of kind std::io::ErrorKind
-::WouldBlock, but they would not take that same action in any other case. If the
-user gets a dyn Error, they can use Error::downcast_ref to try to downcast the
-error into a std::io::Error. The downcast_ref method returns an Option, which
-tells the user whether or not the downcast succeeded. And here is the key
-observation: downcast_ref works only if the argument is 'static. If we return an
-opaque Error that’s not 'static, we take away the user’s ability to do this kind of
-error introspection should they wish.
-There’s some disagreement in the ecosystem about whether a library’s
-type-erased errors (or more generally, its type-erased types) are part of
+- 每个变体还包括遇到的错误，以尽可能提供给调用者有关出错的详细信息。
+- 当创建自己的错误类型时，您需要采取一些步骤，使错误类型与Rust生态系统的其他部分良好地协同工作。首先，您的错误类型应实现std::error::Error trait，该trait为调用者提供了用于检查错误类型的常用方法。最感兴趣的主要方法是Error::source，它提供了一种查找错误根本原因的机制。这通常用于打印回溯，显示一直追溯到错误的根本原因。对于我们的CopyError类型，source的实现很简单：我们匹配self并提取并返回内部的std::io::Error。
+- 第二，您的类型应该实现Display和Debug，以便调用者可以有意义地打印您的错误。如果您实现了Error trait，则需要这样做。一般来说，您的Display实现应该提供一个简短的描述，说明出了什么问题，可以轻松地与其他错误消息合并。显示格式应该是小写的，不带尾部标点符号，以便它可以很好地适应其他更大的错误报告。Debug应该提供更详细的错误信息，包括可能有助于追踪错误原因的辅助信息，例如端口号、请求标识符、文件路径等。通常，使用#[derive(Debug)]就足够了。
+**注意** 在旧的 Rust 代码中，您可能会看到对 Error::description 方法的引用，但这已被弃用，推荐使用 Display。
+- 第三，如果可能的话，您的类型应该实现Send和Sync，以便用户能够在线程边界上共享错误。如果您的错误类型不是线程安全的，那么在多线程环境中几乎不可能使用您的crate。实现Send和Sync的错误类型也更容易与非常常见的std::io::Error类型一起使用，该类型能够包装实现Error、Send和Sync的错误。当然，并非所有的错误类型都可以合理地实现Send和Sync，比如如果它们与特定的线程本地资源相关联，那就没关系。您可能也不会将这些错误发送到线程边界之外。然而，在将Rc<String>和RefCell<bool>类型放入错误中之前，这是需要注意的事项。
+- 最后，如果可能的话，您的错误类型应该是 'static。这样做的最直接好处是，它使调用者更容易将您的错误传播到调用堆栈上，而不会遇到生命周期问题。它还使您的错误类型更容易与类型擦除的错误类型一起使用，我们很快就会看到。
 
-Error Handling 61
-its public and stable API. That is, if the method foo in your library returns
-lib::MyError as a Box<dyn Error>, would changing foo to return a different
-error type be a breaking change? The type signature hasn’t changed, but
-users may have written code that assumes that they can use downcast to
-turn that error back into lib::MyError. My opinion on this matter is that
-you chose to return Box<dyn Error> (and not lib::MyError) for a reason, and
-unless explicitly documented, that does not guarantee anything in particular
-about downcasting.
-NOTE While Box<dyn Error + ...> is an attractive type-erased error type, it counterintuitively
-does not itself implement Error. Therefore, consider adding your own
-BoxError type for type erasure in libraries that does implement Error.
-You may wonder how Error::downcast_ref can be safe. That is, how does
-it know whether a provided dyn Error argument is indeed of the given type
-T? The standard library even has a trait called Any that is implemented for
-any type, and which implements downcast_ref for dyn Any—how can that
-be okay? The answer lies in the compiler-supported type std::any::TypeId,
-which allows you to get a unique identifier for any type. The Error trait has
-a hidden provided method called type_id, whose default implementation is
-to return TypeId::of::<Self>(). Similarly, Any has a blanket implementation
-of impl Any for T, and in that implementation, its type_id returns the same.
-In the context of these impl blocks, the concrete type of Self is known, so
-this type_id is the type identifier of the real type. That provides all the information
-downcast_ref needs. downcast_ref calls self.type_id, which forwards
-through the vtable for dynamically sized types (see Chapter 2) to the implementation
-for the underlying type and compares that to the type identifier
-of the provided downcast type. If they match, then the type behind the dyn
-Error or dyn Any really is T, and it is safe to cast from a reference to one to a
-reference to the other.
-Special Error Cases
-Some functions are fallible but cannot return any meaningful error if they
-fail. Conceptually, these functions have a return type of Result<T, ()>. In
-some codebases, you may see this represented as Option<T> instead. While
-both are legitimate choices for the return type for such a function, they
-convey different semantic meanings, and you should usually avoid “simplifying”
-a Result<T, ()> to Option<T>. An Err(()) indicates that an operation failed
-and should be retried, reported, or otherwise handled exceptionally. None,
-on the other hand, conveys only that the function has nothing to return;
-it is usually not considered an exceptional case or something that should
-be handled. You can see this in the #[must_use] annotation on the Result
-type—when you get a Result, the language expects that it is important to
-handle both cases, whereas with an Option, neither case actually needs to
-be handled.
+##### 不透明错误
 
-62 Chapter 4
-NOTE You should also keep in mind that () does not implement the Error trait. This means
-that it cannot be type-erased into Box<dyn Error> and can be a bit of a pain to use
-with ?. For this reason, it is often better to define your own unit struct type, implement
-Error for it, and use that as the error instead of () in these cases.
-Some functions, like those that start a continuously running server
-loop, only ever return errors; unless an error occurs, they run forever. Other
-functions never error but need to return a Result nonetheless, for example,
-to match a trait signature. For functions like these, Rust provides the never
-type, written with the ! syntax. The never type represents a value that can
-never be generated. You cannot construct an instance of this type yourself—
-the only way to make one is by entering an infinite loop or panicking, or
-through a handful of other special operations that the compiler knows never
-return. With Result, when you have an Ok or Err that you know will never
-be used, you can set it to the ! type. If you write a function that returns
-Result<T, !>, you will be unable to ever return Err, since the only way to do
-so is to enter code that will never return. Because the compiler knows that
-any variant with a ! will never be produced, it can also optimize your code
-with that in mind, such as by not generating the panic code for an unwrap on
-Result<T, !>. And when you pattern match, the compiler knows that any variant
-that contains a ! does not even need to be listed. Pretty neat!
-One last curious error case is the error type std::thread::Result. Here’s
-its definition:
+现在让我们考虑一个不同的例子：一个图像解码库。您将一堆字节提供给库进行解码，并且库会为您提供各种图像操作方法。如果解码失败，用户需要能够找出如何解决问题，因此必须了解失败的原因。但是，是否重要的是原因是图像头中的大小字段无效，还是压缩算法无法解压缩块？可能不重要 - 即使应用程序知道确切的原因，也无法有意义地从任何一种情况中恢复。在这种情况下，作为库的作者，您可能希望提供单个不透明的错误类型。这也使得您的库更易于使用，因为在任何地方都只使用一个错误类型。此错误类型应实现Send、Debug、Display和Error（包括适当的source方法），但除此之外，调用者不需要了解更多信息。您可能在内部表示更细粒度的错误状态，但没有必要将其暴露给库的用户。这样做只会增加API的大小和复杂性，没有任何好处。
+
+- 确定不透明错误类型的具体形式主要取决于您。它可以是一个具有所有私有字段的类型，仅公开有限的用于显示和检查错误的方法，或者它可以是一个严重类型擦除的错误类型，如Box<dyn Error + Send + Sync + 'static>，它只透露它是一个错误，通常不允许用户进行内省。决定将错误类型设置为多么不透明主要取决于错误是否除了其描述之外还有其他有趣的内容。使用`Box<dyn Error>`，您只能将错误向上传递给用户。如果它确实没有任何有价值的信息要向用户呈现，那可能没问题，例如，如果它只是一个动态错误消息或来自程序内部更深层次的大量不相关错误之一。但是，如果错误具有一些有趣的方面，例如行号或状态码，您可能希望通过一个具体但不透明的类型来公开它。
+**注意** 一般来说，社区共识是错误应该很少发生，因此不应该对“正常路径”增加太多成本。因此，错误通常被放置在指针类型（如Box或Arc）后面。这样，它们不太可能对它们所包含的整体Result类型的大小产生太大影响。
+- 使用类型擦除错误的一个好处是，它允许您轻松地组合来自不同来源的错误，而无需引入额外的错误类型。也就是说，类型擦除错误通常可以很好地组合，并允许您表示一组开放的错误。如果您编写的函数的返回类型是`Box<dyn Error + ...>`，那么您可以在该函数内部使用`?`处理不同类型的错误，这些错误可能来自各种不同的错误，并且它们都将转换为相同的错误类型。
+- 在擦除的上下文中，Box<dyn Error + Send + Sync + 'static> 上的 'static 约束值得花更多时间来讨论。我在前一节中提到，它对于让调用者传播错误而不必担心失败的方法的生命周期边界非常有用，但它还有一个更重要的目的：访问 downcasting。Downcasting 是将一个类型的项转换为更具体类型的过程。这是 Rust 提供的少数几种可以在运行时访问类型信息的情况之一；它是动态语言通常提供的更一般类型反射的有限情况。在错误的上下文中，downcasting 允许用户将 dyn Error 转换为原始的具体错误类型，前提是该 dyn Error 最初就是该类型。例如，用户可能希望在收到的错误是 std::io::Error 类型的 std::io::ErrorKind::WouldBlock 时采取特定的操作，但在其他情况下不采取相同的操作。如果用户得到了 dyn Error，他们可以使用 Error::downcast_ref 尝试将错误向下转换为 std::io::Error。downcast_ref 方法返回一个 Option，告诉用户 downcast 是否成功。这里的关键观察是：downcast_ref 仅在参数是 'static 的情况下起作用。如果我们返回一个不是 'static 的不透明错误，我们就剥夺了用户进行这种错误内省的能力，即使他们希望这样做。
+- 在生态系统中，关于库的类型擦除错误（或更一般地说，类型擦除类型）是否属于其公共和稳定的API存在一些争议。也就是说，如果您的库中的方法foo返回一个`Box<dyn Error>`作为lib::MyError，将foo更改为返回不同的错误类型是否会导致破坏性更改？类型签名没有改变，但用户可能已经编写了假设他们可以使用downcast将该错误转换回lib::MyError的代码。我对此问题的观点是，您选择返回`Box<dyn Error>`（而不是lib::MyError）是有原因的，并且除非明确记录，否则不保证downcasting方面的任何特定内容。
+
+**注意**，虽然`Box<dyn Error + ...>` 是一种吸引人的类型擦除错误类型，但它本身并没有实现 Error。因此，在实现了 Error 的库中，考虑添加自己的 BoxError 类型以进行类型擦除。你可能会想知道 Error::downcast_ref 如何安全地工作。也就是说，它如何知道提供的 dyn Error 参数是否确实是给定的类型 T？标准库甚至有一个叫做 Any 的 trait，它对任何类型都实现了，并且为 dyn Any 实现了 downcast_ref ——这怎么可能没问题呢？答案在于编译器支持的类型 std::any::TypeId，它允许你为任何类型获取一个唯一的标识符。Error trait 有一个隐藏的提供的方法叫做 type_id，默认实现是返回 `TypeId::of::<Self>()`。类似地，Any 有一个针对 T 的通用实现 impl Any for T，在该实现中，它的 type_id 返回相同的值。在这些 impl 块的上下文中，Self 的具体类型是已知的，所以这个 type_id 就是真实类型的类型标识符。这提供了 downcast_ref 需要的所有信息。downcast_ref 调用 self.type_id，通过动态大小类型的虚函数表（参见第2章）转发到底层类型的实现，并将其与提供的 downcast 类型的类型标识符进行比较。如果它们匹配，那么 dyn Error 或 dyn Any 后面的类型确实是 T，从一个引用到另一个引用的转换是安全的。
+
+##### 特殊错误情况
+
+有些函数可能会失败，但如果它们失败了，就无法返回任何有意义的错误。从概念上讲，这些函数的返回类型是 Result<T, ()>。在某些代码库中，您可能会看到它表示为 Option<T>。虽然这两种选择都是合法的函数返回类型，但它们传达了不同的语义含义，通常应避免将 Result<T, ()> “简化”为 Option<T>。Err(()) 表示操作失败，应该重试、报告或以其他方式进行特殊处理。另一方面，None 只表示函数没有返回值；通常不被视为异常情况或需要处理的情况。您可以在 Result 类型上看到 #[must_use] 注解 - 当您获得一个 Result 时，语言期望您重视处理两种情况，而对于 Option，实际上不需要处理任何一种情况。
+
+**注意** 还要记住，`()` 不实现 `Error` 特质。这意味着它不能被类型擦除为 `Box<dyn Error>`，并且在使用 `?` 时可能会有些麻烦。因此，在这些情况下，通常最好定义自己的单元结构类型，为其实现 `Error`，并将其作为错误类型，而不是使用 `()`。
+
+- 有些函数，比如那些启动一个持续运行的服务器循环的函数，只会返回错误；除非发生错误，它们会一直运行。其他一些函数永远不会出错，但仍然需要返回一个Result，例如为了匹配一个trait的签名。对于这样的函数，Rust提供了never类型，使用!语法来表示。never类型表示一个永远不会生成的值。你不能自己构造这种类型的实例——唯一的方法是进入一个无限循环或者panic，或者通过一些其他特殊的操作，编译器知道这些操作永远不会返回。对于Result来说，当你有一个你知道永远不会被使用的Ok或Err时，你可以将其设置为!类型。如果你编写一个返回Result<T, !>的函数，你将无法返回Err，因为唯一的方法是进入永远不会返回的代码。因为编译器知道任何包含!的变体永远不会被生成，所以它也可以根据这一点对你的代码进行优化，比如在Result<T, !>上的unwrap不会生成panic代码。而且当你进行模式匹配时，编译器知道任何包含!的变体甚至不需要列出。非常巧妙！
+- 最后一个奇特的错误类型是std::thread::Result。这是它的定义：
+
+```rust
 type Result<T> = Result<T, Box<dyn Any + Send + 'static>>;
+
+```
 The error type is type-erased, but it’s not erased into a dyn Error as
 we’ve seen so far. Instead, it is a dyn Any, which guarantees only that the
 error is some type, and nothing more . . . which is not much of a guarantee
