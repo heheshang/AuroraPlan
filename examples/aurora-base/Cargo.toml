@@ -9,7 +9,7 @@ categories.workspace = true
 license.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
+[workspace]
 [dependencies]
 anyhow = { workspace = true, optional = true }
 chrono = { workspace = true, optional = true }
