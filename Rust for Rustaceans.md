@@ -911,23 +911,10 @@ is_normal::<MyType>();
 
 在本章中，我们探讨了设计Rust接口的许多方面，无论是用于外部使用还是作为您的crate中不同模块之间的抽象边界。我们涵盖了许多具体的陷阱和技巧，但最终，高级原则应该指导您的思考：您的接口应该是不令人惊讶、灵活、明显和受限制的。在下一章中，我们将深入探讨如何在Rust代码中表示和处理错误。
 
-### 4.ERROR HANDLING
+### 4.错误处理
 
-For all but the simplest programs, you will
-have methods that can fail. In this chapter,
-we’ll look at different ways to represent,
-handle, and propagate those failures and
-the advantages and drawbacks of each. We’ll start by
-exploring different ways to represent errors, including
-enumeration and erasure, and then examine some
-special error cases that require a different representation
-technique. Next, we’ll look at various ways of handling
-errors and the future of error handling.
-It’s worth noting that best practices for error handling in Rust are still
-an active topic of conversation, and at the time of writing, the ecosystem
-has not yet settled on a single, unified approach. This chapter will therefore
-focus on the underlying principles and techniques rather than recommending
-specific crates or patterns.
+对于除了最简单的程序之外，您将会有可能失败的方法。在本章中，我们将探讨表示、处理和传播这些失败的不同方式，以及每种方式的优点和缺点。我们将首先探讨不同的错误表示方式，包括枚举和擦除，然后研究一些需要不同表示技术的特殊错误情况。接下来，我们将看一些处理错误的方法以及错误处理的未来发展方向。
+值得注意的是，Rust中的错误处理最佳实践仍然是一个活跃的讨论话题，在撰写本文时，生态系统尚未就单一统一的方法达成一致。因此，本章将重点介绍基本原则和技术，而不是推荐特定的crate或模式。
 
 #### Representing Errors
 
