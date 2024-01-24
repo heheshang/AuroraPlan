@@ -877,61 +877,21 @@ EmptyIterator { it: bestiter::iter() }
 
 清单3-7：重新导出使外部 crate 成为接口契约的一部分。
 
+- 如果您的 crate 从 itercrate 1.0 移动到 itercrate 2.0，但其他方面没有改变，那么此清单中的代码将不再编译。即使没有更改任何类型，编译器也认为（正确地）itercrate1.0::Empty 和 itercrate2.0::Empty 是不同的类型。因此，您无法将后者赋值给前者，这使得这个接口的更改是破坏性的。
+- 为了缓解这类问题，通常最好使用新类型模式对外部类型进行封装，然后仅暴露您认为有用的外部类型的部分。在许多情况下，您可以通过使用impl Trait来为调用方提供仅最小的合约，从而完全避免使用新类型包装器。通过承诺更少，您可以减少破坏性的更改。
+**语义版本控制技巧**
+- - itercrate的例子可能让您感到不舒服。如果Empty类型没有改变，那么为什么编译器不允许使用它的任何代码继续工作，无论代码是使用版本1.0还是2.0？答案是...复杂的。归根结底，这是因为Rust编译器不会假设只因为两个类型具有相同的字段，它们就是相同的类型。举个简单的例子，假设itercrate 2.0为Empty添加了`#[derive(Copy)]`。现在，这个类型在使用1.0或2.0时具有不同的移动语义！而针对其中一个版本编写的代码将无法与另一个版本一起工作。
+- - 这个问题往往在大型、广泛使用的库中出现，在这些库中，随着时间的推移，破坏性的更改很可能发生在 crate 的某个地方。不幸的是，语义化版本控制是在 crate 级别上进行的，而不是类型级别上进行的，因此任何地方的破坏性更改都是全局的破坏性更改。
+- - 但并非一切都失去了。几年前，David Tolnay（serde的作者，以及其他大量Rust贡献的作者）提出了一个巧妙的技巧来处理这种情况。他称之为“语义版本技巧”。这个想法很简单：如果某个类型T在破坏性更改（从1.0到2.0）之后保持不变，那么在发布2.0之后，您可以发布一个新的1.0次要版本，该版本依赖于2.0，并用来自2.0的T重新导出替换T。
 
-- If your crate moves from itercrate 1.0 to itercrate 2.0 but otherwise does
-not change, the code in this listing will no longer compile. Even though no
-types have changed, the compiler believes (correctly) that itercrate1.0::Empty
-and itercrate2.0::Empty are different types. Therefore, you cannot assign the
-latter to the former, making this a breaking change in your interface.
-- To mitigate issues like this, it’s often best to wrap foreign types using
-the newtype pattern, and then expose only the parts of the foreign type
-that you think are useful. In many cases, you can avoid the newtype wrapper
-altogether by using impl Trait to provide only the very minimal contract
-to the caller. By promising less, you make fewer changes breaking.
-**THE SEMVER TRICK**
-- - The itercrate example may have rubbed you the wrong way. If the Empty type
-did not change, then why does the compiler not allow anything that uses it to
-keep working, regardless of whether the code is using version 1.0 or 2.0 of it?
-The answer is . . . complicated. It boils down to the fact that the Rust compiler
-does not assume that just because two types have the same fields, they are the
-same. To take a simple example of this, imagine that itercrate 2.0 added a
-`#[derive(Copy)]` for Empty. Now, the type suddenly has different move semantics
-depending on whether you are using 1.0 or 2.0! And code written with one
-in mind won’t work with the other.
-- - This problem tends to crop up in large, widely used libraries, where over
-time, breaking changes are likely to have to happen somewhere in the crate.
-Unfortunately, semantic versioning happens at the crate level, not the type level,
-so a breaking change anywhere is a breaking change everywhere.
-- - But all is not lost. A few years ago, David Tolnay (the author of serde,
-among a vast number of other Rust contributions) came up with a neat trick to
-handle exactly this kind of situation. He called it “the semver trick.” The idea
-is simple: if some type T stays the same across a breaking change (from 1.0
-to 2.0, say), then after releasing 2.0, you can release a new 1.0 minor version
-that depends on 2.0 and replaces T with a re-export of T from 2.0.
-- - By doing this, you’re ensuring that there is in fact only a single type T
-across both major versions. This, in turn, means that any crate that depends on
-1.0 will be able to use a T from 2.0, and vice versa. And because this happens
-only for types you explicitly opt into with this trick, changes that were in fact
-breaking will continue to be.
-##### Auto-Traits
-Rust has a handful of traits that are automatically implemented for every
-type depending on what that type contains. The most relevant of these for
-this discussion are Send and Sync, though the Unpin, Sized, and UnwindSafe
-traits have similar issues. By their very nature, these add a hidden promise
-made by nearly every type in your interface. These traits even propagate
-through otherwise type-erased types like impl Trait.
+- - 通过这样做，您确保在两个主要版本之间只有一个类型T。这反过来意味着依赖于1.0的任何crate都可以使用来自2.0的T，反之亦然。而且，由于这仅适用于您使用此技巧明确选择的类型，实际上是破坏性的更改将继续存在。
 
-- Implementations for these traits are (generally) automatically added by
-the compiler, but that also means that they are not automatically added if
-they no longer apply. So, if you have a public type A that contains a private
-type B, and you change B so that it is no longer Send, then A is now also not
-Send. That is a breaking change!
-- These changes can be hard to keep track of and are often not discovered
-until a user of your interface complains that their code no longer
-works. To catch these cases before they happen, it’s good practice to include
-some simple tests in your test suite that check that all your types implement
-these traits the way you expect. Listing 3-8 gives an example of what such a
-test might look like.
+##### 自动特质
+
+Rust拥有一些特质，根据类型的内容自动为每个类型实现。对于本讨论而言，最相关的是Send和Sync，尽管Unpin、Sized和UnwindSafe特质也存在类似的问题。根据它们的本质，这些特质为您的接口中几乎每个类型添加了一个隐藏的承诺。这些特质甚至会传播到像impl Trait这样的类型擦除类型中。
+
+- 这些特质的实现（通常）由编译器自动添加，但这也意味着如果它们不再适用，它们将不会自动添加。因此，如果您有一个包含私有类型B的公共类型A，并且您更改B以使其不再是Send，那么A现在也不再是Send。这是一个破坏性的更改！
+- 这些更改很难跟踪，并且通常直到接口的用户抱怨他们的代码不再工作时才会发现。为了在发生之前捕捉到这些情况，最好在测试套件中包含一些简单的测试，检查所有类型是否按照您的预期实现了这些特质。清单3-8给出了一个这样的测试的示例。
 
 ```rust
 fn is_normal<T: Sized + Send + Sync + Unpin>() {}
@@ -940,39 +900,16 @@ fn normal_types() {
 is_normal::<MyType>();
 }
 ```
-Listing 3-8: Testing that a type implements a set of traits
-- Notice that this test does not run any code, but simply tests that the
-code compiles. If MyType no longer implements Sync, the test code will not
-compile, and you will know that the change you just made broke the autotrait
-implementation.
-**HIDING ITEMS FROM DOCUMENTATION**
-The #[doc(hidden)] attribute lets you hide a public item from your documentation
-without making it inaccessible to code that happens to know it is there. This
-is often used to expose methods and types that are needed by macros, but not
-by user code. How such hidden items interact with your interface contract is a
-matter of some debate. In general, items marked as #[doc(hidden)] are only
-considered part of your contract insofar as their public effects; for example, if
-user code may end up containing a hidden type, then whether that type is Send
-or not is part of the contract, whereas its name is not. Hidden inherent methods
-and hidden trait methods on sealed traits are not generally part of your interface
-contract, though you should make sure to state this clearly in the documentation
-for those methods. And yes, hidden items should still be documented!
 
+清单3-8：测试类型是否实现了一组特质
 
-56 Chapter 3
-Summary
-In this chapter we’ve explored the many facets of designing a Rust interface,
-whether it’s intended for external use or just as an abstraction boundary
-between the different modules within your crate. We covered a lot of
-specific pitfalls and tricks, but ultimately, the high-level principles are what
-should guide your thinking: your interfaces should be unsurprising, flexible,
-obvious, and constrained. In the next chapter, we will dig into how to
-represent and handle errors in Rust code.
+- **注意**，这个测试不运行任何代码，只是测试代码是否编译通过。如果MyType不再实现Sync，测试代码将无法编译，您将知道刚刚进行的更改破坏了自动特质的实现。
+**隐藏文档中的项目**
+`#[doc(hidden)] 属性`允许您在文档中隐藏公共项目，而不会使其对知道其存在的代码不可访问。这通常用于公开宏所需的方法和类型，但不用于用户代码。隐藏的项目与接口契约的交互方式存在一些争议。一般来说，标记为#[doc(hidden)]的项目只在其公共影响方面被视为接口契约的一部分；例如，如果用户代码可能包含一个隐藏的类型，那么该类型是否是Send是契约的一部分，而其名称则不是。隐藏的内在方法和封闭特质上的隐藏特质方法通常不是接口契约的一部分，但您应确保在这些方法的文档中明确说明这一点。是的，隐藏的项目仍然应该被记录在文档中！
 
+#### Summary
 
-
-
-
+在本章中，我们探讨了设计Rust接口的许多方面，无论是用于外部使用还是作为您的crate中不同模块之间的抽象边界。我们涵盖了许多具体的陷阱和技巧，但最终，高级原则应该指导您的思考：您的接口应该是不令人惊讶、灵活、明显和受限制的。在下一章中，我们将深入探讨如何在Rust代码中表示和处理错误。
 
 ### 4.ERROR HANDLING
 
