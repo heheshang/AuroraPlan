@@ -1895,30 +1895,29 @@ assert_eq!(x, 2);
 
 属性宏还会整体替换属性所赋予的项，但它接受两个输入：出现在属性中的标记树（不包括属性的名称）和整个项的标记树，包括该项可能具有的其他属性。属性宏允许您轻松编写一个过程宏，用于转换项，例如通过向函数定义添加前言或尾声（类似于 #[test] 的作用）或通过修改结构体的字段。
 
-Derive Macros
+###### Derive Macros
+
 The derive macro is slightly different from the other two in that it adds
 to, rather than replaces, the target of the macro. Even though this limitation
 may seem severe, derive macros were one of the original motivating
 factors behind the creation of procedural macros. Specifically, the serde
-crate needed derive macros to be able to implement its now-well-known
+crate needed derive macros to be able to implement its now-well-known # [derive(Serialize, Deserialize)] magic
 
-# [derive(Serialize, Deserialize)] magic
-
-Derive macros are arguably the simplest of the procedural macros,
+- Derive macros are arguably the simplest of the procedural macros,
 since they have such a rigid form: you can append items only after the
 annotated item; you can’t replace the annotated item, and you cannot have
 the derivation take arguments. Derive macros do allow you to define helper
 attributes—attributes that can be placed inside the annotated type to give
 clues to the derive macro (like #[serde(skip)])—but these function mostly
 like markers and are not independent macros.
-The Cost of Procedural Macros
+
+###### The Cost of Procedural Macros
 Before we talk about when each of the different procedural macro types is
 appropriate, it’s worth discussing why you may want to think twice before
 you reach for a procedural macro—namely, increased compile time.
-Procedural macros can significantly increase compile times for two
-main reasons. The first is that they tend to bring with them some pretty
 
-Macros 111
+- Procedural macros can significantly increase compile times for two
+main reasons. The first is that they tend to bring with them some pretty
 heavy dependencies. For example, the syn crate, which provides a parser
 for Rust token streams that makes the experience of writing procedural
 macros much easier, can take tens of seconds to compile with all features
@@ -1927,23 +1926,27 @@ not need and compiling your procedural macros in debug mode rather
 than release mode. Code often compiles several times faster in debug
 mode, and for most procedural macros, you won’t even notice the difference
 in execution time.
-The second reason why procedural macros increase compile time is
+- The second reason why procedural macros increase compile time is
 that they make it easy for you to generate a lot of code without realizing it.
 While the macro saves you from having to actually type the generated code,
 it does not save the compiler from having to parse, compile, and optimize
 it. As you use more procedural macros, that generated boilerplate adds up,
 and it can bloat your compile times.
-That said, the actual execution time of procedural macros is rarely a
+- That said, the actual execution time of procedural macros is rarely a
 factor in overall compile time. While the compiler has to wait for the procedural
 macro to do its thing before it can continue, in practice, most procedural
 macros don’t do any heavy computation. That said, if your procedural
 macro is particularly involved, you may end up with your compiles spending
 a significant chunk of execution time on your procedural macro code,
 which is worth keeping an eye out for!
-So You Think You Want a Macro
+
+###### So You Think You Want a Macro
+
 Let’s now look at some good uses for each type of procedural macro. We’ll
 start with the easy one: derive macros.
-When to Use Derive Macros
+
+###### When to Use Derive Macros
+
 Derive macros are used for one thing, and one thing only: to automate the
 implementation of a trait where automation is possible. Not all traits have
 obvious automated implementations, but many do. In practice, you should
