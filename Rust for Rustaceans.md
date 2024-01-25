@@ -969,179 +969,77 @@ Out(std::io::Error),
 type Result<T> = Result<T, Box<dyn Any + Send + 'static>>;
 
 ```
-The error type is type-erased, but it’s not erased into a dyn Error as
-we’ve seen so far. Instead, it is a dyn Any, which guarantees only that the
-error is some type, and nothing more . . . which is not much of a guarantee
-at all. The reason for this curious-looking error type is that the error variant
-of std::thread::Result is produced only in response to a panic; specifically,
-if you try to join a thread that has panicked. In that case, it’s not clear
-that there’s much the joining thread can do other than either ignore the
-error or panic itself using unwrap. In essence, the error type is “a panic” and
-the value is “whatever argument was passed to panic!,” which can truly be
-any type (even though it’s usually a formatted string).
-Propagating Errors
-Rust’s ? operator acts as a shorthand for unwrap or return early, for working
-easily with errors. But it also has a few other tricks up its sleeve that are worth
-knowing about. First, ? performs type conversion through the From trait. In
-a function that returns Result<T, E>, you can use ? on any Result<T, X> where
-E: From<X>. This is the feature that makes error erasure through Box<dyn Error>
-so appealing; you can just use ? everywhere and not worry about the particular
-error type, and it will usually “ just work.”
 
-Error Handling 63
+错误类型是类型擦除的，但它并不像我们之前看到的那样被擦除为dyn Error。相反，它是一个dyn Any，它只保证错误是某种类型，没有更多的信息...这并不是一个很好的保证。这个奇怪的错误类型之所以存在，是因为std::thread::Result的错误变体只在发生panic时产生；具体来说，如果您尝试加入一个已经panic的线程。在这种情况下，加入线程除了忽略错误或使用unwrap自己发生panic之外，似乎没有其他什么可以做的。本质上，错误类型是“一个panic”，值是“传递给panic!的任何参数”，它确实可以是任何类型（尽管通常是格式化的字符串）。
+
+##### 传播错误
+
+Rust的?运算符是unwrap或提前返回的简写形式，用于轻松处理错误。但它还有一些其他值得了解的技巧。首先，?通过From trait执行类型转换。在返回Result<T, E>的函数中，您可以在任何Result<T, X>上使用?，其中E: From<X>。这就是使通过Box<dyn Error>进行错误擦除如此吸引人的特性；您可以随处使用?，而不用担心特定的错误类型，它通常会“正常工作”。
+
 **FROM AND INTO**
-The standard library has many conversion traits, but two of the core ones are
-From and Into. It might strike you as odd to have two: if we have From, why
-do we need Into, and vice versa? There are a couple of reasons, but let’s start
-with the historical one: it wouldn’t have been possible to have just one in the
-early days of Rust due to the coherence rules discussed in Chapter 2. Or, more
-specifically, what the coherence rules used to be.
-Suppose you want to implement two-way conversion between some
-local type you have defined in your crate and some type in the standard
-library. You can write impl<T> From<Vec<T>> for MyType<T> and impl<T>
-Into<Vec<T>> for MyType<T> easily enough, but if you only had From or Into,
-you would have to write impl<T> From<MyType<T>> for Vec<T> or impl<T>
-Into<MyType<T>> for Vec<T>. However, the compiler used to reject those
-implementations! Only since Rust 1.41.0, when the exception for covered types
-was added to the coherence rules, are they legal. Before that change, it was
-necessary to have both traits. And since much Rust code was written before
-Rust 1.41.0, neither trait can be removed now.
-Beyond that historical fact, however, there are also good ergonomic reasons
-to have both of these traits, even if we could start from scratch today. It is
-often significantly easier to use one or the other in different situations. For example,
-if you’re writing a method that takes a type that can be turned into a Foo,
-would you rather write fn(impl Into<Foo>) or fn<T>(T) where Foo: From<T>?
-And conversely, to turn a string into a syntax identifier, would you rather write
-Ident::from("foo") or <_ as Into<Ident>>::into("foo")? Both of these traits
-have their uses, and we’re better off having them both.
-Given that we do have both, you may wonder which you should use in
-your code today. The answer, it turns out, is pretty simple: implement From, and
-use Into in bounds. The reason is that Into has a blanket implementation for
-any T that implements From, so regardless of whether a type explicitly implements
-From or Into, it implements Into!
-Of course, as simple things frequently go, the story doesn’t quite end there.
-Since the compiler often has to “go through” the blanket implementation when
-Into is used as a bound, the reasoning for whether a type implements Into
-is more complicated than whether it implements From. And in some cases, the
-compiler is not quite smart enough to figure that puzzle out. For this reason,
-the ? operator at the time of writing uses From, not Into. Most of the time that
-doesn’t make a difference, because most types implement From, but it does
-mean that error types from old libraries that implement Into instead may not
-work with ?. As the compiler gets smarter, ? will likely be “upgraded” to use
-Into, at which point that problem will go away, but it's what we have for now.
 
+标准库中有许多转换特质，但其中两个核心特质是 From 和 Into。如果我们有了 From，为什么还需要 Into，反之亦然，这可能让你感到奇怪。有几个原因，但让我们从历史原因开始：由于第2章中讨论的一致性规则，早期的 Rust 不可能只有一个特质。或者更具体地说，一致性规则曾经是什么样子。
 
-64 Chapter 4
-The second aspect of ? to be aware of is that this operator is really just
-syntax sugar for a trait tentatively called Try. At the time of writing, the Try
-trait has not yet been stabilized, but by the time you read this, it’s likely that
-it, or something very similar, will have been settled on. Since the details
-haven’t all been figured out yet, I’ll give you only an outline of how Try
-works, rather than the full method signatures. At its heart, Try defines a
-wrapper type whose state is either one where further computation is useful
-(the happy path), or one where it is not. Some of you will correctly think
-of monads, though we won’t explore that connection here. For example, in
-the case of Result<T, E>, if you have an Ok(t), you can continue on the happy
-path by unwrapping the t. If you have an Err(e), on the other hand, you
-want to stop executing and produce the error value immediately, since further
-computation is not possible as you don’t have the t.
-What’s interesting about Try is that it applies to more types than just
-Result. An Option<T>, for example, follows the same pattern—if you have a
-Some(t), you can continue on the happy path, whereas if you have a None, you
-want to yield None instead of continuing. This pattern extends to more complex
-types, like Poll<Result<T, E>>, whose happy path type is Poll<T>, which
-makes ? apply in far more cases than you might expect. When Try stabilizes,
-we may see ? start to work with all sorts of types to make our happy path
-code nicer.
-The ? operator is already usable in fallible functions, in doctests, and in
-fn main. To reach its full potential, though, we also need a way to scope this
-error handling. For example, consider the function in Listing 4-2.
+- 假设您想在您的crate中实现某个本地类型与标准库中某个类型之间的双向转换。您可以很容易地编写`impl<T> From<Vec<T>> for MyType<T>`和`impl<T> Into<Vec<T>> for MyType<T>`，但如果您只有From或Into，您将不得不编写`impl<T> From<MyType<T>> for Vec<T>`或`impl<T> Into<MyType<T>> for Vec<T>`。然而，编译器过去会拒绝这些实现！只有在Rust 1.41.0之后，当为覆盖类型添加了一项例外规则到一致性规则中时，它们才合法。在那个改变之前，必须同时具备这两个特质。由于大部分Rust代码是在Rust 1.41.0之前编写的，现在无法删除任何一个特质。
+
+- 除了这个历史事实之外，还有一些良好的人机工程学原因，即使我们今天可以从头开始，也要同时拥有这两个特质。在不同的情况下，使用其中一个特质通常要容易得多。例如，如果您正在编写一个接受可以转换为Foo的类型的方法，您是希望编写fn(impl Into<Foo>)还是fn<T>(T) where Foo: From<T>？相反地，要将字符串转换为语法标识符，您是希望编写Ident::from("foo")还是<_ as Into<Ident>>::into("foo")？这两个特质都有各自的用途，我们最好同时拥有它们。
+- 鉴于我们两者都有，您可能想知道在您的代码中应该使用哪个。事实证明，答案非常简单：实现From，并在边界中使用Into。原因是Into对于任何实现了From的T都有一个默认实现，所以无论类型是否显式实现了From或Into，它都实现了Into！
+- 当然，就像简单的事情经常发生的那样，故事并没有就此结束。由于编译器在使用Into作为约束时通常需要“穿过”泛型实现，判断一个类型是否实现了Into比实现From更复杂。在某些情况下，编译器并不聪明到足以解决这个难题。因此，在撰写本文时，?运算符使用的是From而不是Into。大多数情况下，这并没有什么区别，因为大多数类型都实现了From，但这意味着旧库中实现了Into而不是From的错误类型可能无法与?一起使用。随着编译器变得更加智能，?可能会“升级”为使用Into，这样问题就会消失，但目前我们只能这样。
+
+- ?的第二个要注意的方面是，这个操作符实际上只是一个被暂时称为Try的特质的语法糖。在撰写本文时，Try特质尚未稳定，但在您阅读本文时，很可能已经确定了它或类似的东西。由于细节尚未完全确定，我只会给出Try如何工作的概要，而不是完整的方法签名。在本质上，Try定义了一个包装类型，其状态要么是进一步计算有用的（即happy path），要么是不可用的。其中一些人可能会正确地想到monad，尽管我们不会在这里探讨这种联系。例如，在Result<T, E>的情况下，如果你有一个Ok(t)，你可以通过解包t继续happy path。另一方面，如果你有一个Err(e)，你希望立即停止执行并产生错误值，因为你没有t，所以无法进行进一步的计算。
+- 有趣的是，Try适用于更多类型，而不仅仅是Result。例如，Option<T>遵循相同的模式 - 如果你有一个Some(t)，你可以继续在happy path上，而如果你有一个None，你希望返回None而不是继续。这种模式扩展到更复杂的类型，比如Poll<Result<T, E>>，其happy path类型是Poll<T>，这使得?适用于更多情况。当Try稳定下来时，我们可能会看到?开始与各种类型一起工作，使我们的happy path代码更加优雅。
+
+- ?运算符已经可以在可失败函数、doctest和fn main中使用。然而，为了发挥其全部潜力，我们还需要一种方式来限定这种错误处理的范围。例如，考虑列表4-2中的函数。
+
+```rust
 fn do_the_thing() -> Result<(), Error> {
-let thing = Thing::setup()?;
-// .. code that uses thing and ? ..
-thing.cleanup();
-Ok(())
+    let thing = Thing::setup()?;
+    // .. code that uses thing and ? ..
+    thing.cleanup();
+    Ok(())
 }
-Listing 4-2: A multi-step fallible function using the ? operator
-This won’t quite work as expected. Any ? between setup and cleanup
-will cause an early return from the entire function, which would skip the
-cleanup code! This is the problem try blocks are intended to solve. A try block
-acts pretty much like a single-iteration loop, where ? uses break instead of
-return, and the final expression of the block has an implicit break. We can
-now fix the code in Listing 4-2 to always do cleanup, as shown in Listing 4-3.
+```
+
+清单4-2：使用?运算符的多步骤可失败函数
+这不会按预期工作。在setup和cleanup之间的任何?都会导致整个函数提前返回，从而跳过清理代码！这是try块旨在解决的问题。try块的行为几乎类似于单次迭代循环，其中?使用break而不是return，并且块的最后一个表达式具有隐式的break。我们现在可以修复清单4-2中的代码，以始终执行清理操作，如清单4-3所示。
+
+```rust
 fn do_the_thing() -> Result<(), Error> {
-let thing = Thing::setup()?;
-let r = try {
-// .. code that uses thing and ? ..
-};
-thing.cleanup();
-r
+    let thing = Thing::setup()?;
+    let r = try {
+        // .. code that uses thing and ? ..
+    };
+    thing.cleanup();
+    r
 }
-Listing 4-3: A multi-step fallible function that always cleans up after itself
+```
 
-Error Handling 65
-Try blocks are also not stable at the time of writing, but there is enough
-of a consensus on their usefulness that they’re likely to land in a form similar
-to that described here.
-Summary
-This chapter covered the two primary ways to construct error types in Rust:
-enumeration and erasure. We looked at when you may want to use each one
-and the advantages and drawbacks of each. We also took a look at some of
-the behind-the-scenes aspects of the ? operator and considered how ? may
-become even more useful going forward. In the next chapter, we’ll take a
-step back from the code and look at how you structure a Rust project. We’ll
-look at feature flags, dependency management, and versioning as well as
-how to manage more complex crates using workspaces and subcrates. See
-you on the next page!
+清单4-3：一个多步骤的可失败函数，总是在完成后进行清理
 
-### 5.PROJECT S TRUCTURE
+在撰写本文时，try块还不稳定，但是对于它们的有用性已经达成了足够的共识，它们很可能以类似于此处描述的形式出现。
 
-This chapter provides some ideas for structuring
-your Rust projects. For simple projects,
-the structure set up by cargo new is likely
-to be something you think little about. You
-may add some modules to split up the code, and some
-dependencies for additional functionality, but that’s about it. However, as a
-project grows in size and complexity, you’ll find that you need to go beyond
-that. Maybe the compilation time for your crate is getting out of hand, or
-you need conditional dependencies, or you need a better strategy for continuous
-integration. In this chapter, we will look at some of the tools that the
-Rust language, and Cargo in particular, provide that make it easier to manage
-such things.
-Features
-Features are Rust’s primary tool for customizing projects. At its core, a feature
-is just a build flag that crates can pass to their dependencies in order
-to add optional functionality. Features carry no semantic meaning in and of
-themselves—instead, you choose what a feature means for your crate
+#### 总结
 
-68 Chapter 5
-Generally, we use features in three ways: to enable optional dependencies,
-to conditionally include additional components of a crate, and to augment the
-behavior of the code. Note that all of these uses are additive; features can add
-to the functionality of the crate, but they shouldn’t generally do things like
-remove modules or replace types or function signatures. This stems from the
-principle that if a developer makes a simple change to their Cargo.toml, such
-as adding a new dependency or enabling a feature, that shouldn’t make their
-crate stop compiling. If a crate has mutually exclusive features, that principle
-quickly falls by the wayside—if crate A depends on one feature of crate C,
-and crate B on another mutually exclusive feature of C, adding a dependency
-on crate B would then break crate A! For that reason, we generally follow the
-principle that if crate A compiles against crate C with some set of features, it
-should also compile if all features are enabled on crate C.
-Cargo leans into this principle quite hard. For example, if two crates
-(A and B) both depend on crate C, but they each enable different features
-on C, Cargo will compile crate C only once, with all the features that either
-A or B requires. That is, it’ll take the union of the requested features for C
-across A and B. Because of this, it’s generally hard to add mutually exclusive
-features to Rust crates; chances are that some two dependents will depend
-on the crate with different features, and if those features are mutually
-exclusive, the downstream crate will fail to build.
-NOTE I highly recommend that you configure your continuous integration infrastructure to
-check that your crate compiles for any combination of its features. One tool that helps you
-do this is cargo-hack, which you can find at https://github.com/taiki-e/cargo-hack/.
-Defining and Including Features
-Features are defined in Cargo.toml. Listing 5-1 shows an example of a crate
-named foo with a simple feature that enables the optional dependency syn.
+本章介绍了在Rust中构建错误类型的两种主要方法：枚举和擦除。我们讨论了何时使用每种方法以及每种方法的优点和缺点。我们还深入探讨了?运算符的一些幕后细节，并考虑了?在未来可能变得更加有用的情况。在下一章中，我们将从代码中退后一步，看看如何组织一个Rust项目。我们将讨论特性标志、依赖管理和版本控制，以及如何使用工作区和子模块来管理更复杂的crate。我们在下一页见！
+
+### 5.项目结构
+
+本章提供了一些关于组织Rust项目的思路。对于简单的项目，由cargo new设置的结构可能是你很少考虑的事情。你可以添加一些模块来拆分代码，添加一些依赖来增加功能，但仅此而已。然而，随着项目的规模和复杂性的增长，你会发现需要超越这个范围。也许你的crate的编译时间过长，或者你需要条件依赖，或者你需要更好的持续集成策略。在本章中，我们将介绍一些Rust语言和Cargo提供的工具，这些工具可以更轻松地管理这些问题。
+
+#### 特性
+
+特性是Rust中定制项目的主要工具。在其核心，特性只是一个构建标志，crate可以传递给它们的依赖项，以添加可选功能。特性本身没有语义意义-相反，您可以选择为您的crate定义特性的含义。
+
+- 通常，我们使用特性有三种方式：启用可选依赖项，有条件地包含 crate 的其他组件，以及增强代码的行为。请注意，所有这些用法都是累加的；特性可以增加 crate 的功能，但通常不应该删除模块或替换类型或函数签名。这源于一个原则，即如果开发人员对他们的 Cargo.toml 进行简单的更改，比如添加一个新的依赖项或启用一个特性，那么这不应该导致他们的 crate 停止编译。如果一个 crate 有互斥的特性，这个原则很快就会被抛弃——如果 crate A 依赖于 crate C 的一个特性，而 crate B 依赖于 C 的另一个互斥特性，那么添加对 crate B 的依赖将会破坏 crate A！因此，我们通常遵循这样的原则：如果 crate A 在某个特性集上编译通过了 crate C，那么在 crate C 上启用所有特性时，它也应该能够编译通过。
+- Cargo非常强调这个原则。例如，如果两个crate（A和B）都依赖于crate C，但它们分别在C上启用了不同的特性，Cargo只会编译一次crate C，并使用A或B所需的所有特性。也就是说，它会对A和B对C请求的特性取并集。因此，向Rust crate添加互斥特性通常很困难；很有可能有两个依赖项会依赖于具有不同特性的crate，如果这些特性是互斥的，那么下游crate将无法构建。
+
+**注意** 我强烈建议您配置持续集成基础设施，以检查您的crate在其特性的任何组合下是否编译通过。一个帮助您完成这个任务的工具是cargo-hack，您可以在<https://github.com/taiki-e/cargo-hack/>找到。
+
+##### 定义和包含特性
+
+特性是在Cargo.toml中定义的。清单5-1展示了一个名为foo的crate的示例，其中包含一个简单的特性，用于启用可选依赖syn。
+
+```toml
 [package]
 name = "foo"
 ...
@@ -1149,26 +1047,24 @@ name = "foo"
 derive = ["syn"]
 [dependencies]
 syn = { version = "1", optional = true }
-Listing 5-1: A feature that enables an optional dependency
-When Cargo compiles this crate, it will not compile the syn crate by default,
-which reduces compile time (often significantly). The syn crate will be compiled
-only if a downstream crate needs to use the APIs enabled by the derive
-feature and explicitly opts in to it. Listing 5-2 shows how such a downstream
-crate bar would enable the derive feature, and thus include the syn dependency.
+```
+
+清单5-1：启用可选依赖项的特性
+当Cargo编译这个crate时，默认情况下不会编译syn crate，这样可以减少编译时间（通常会显著减少）。只有当下游crate需要使用由derive特性启用的API，并明确选择启用它时，syn crate才会被编译。清单5-2展示了这样一个下游crate bar如何启用derive特性，并包含syn依赖项。
+
+```toml
 [package]
 name = "bar"
 ...
-Project Structure 69
 [dependencies]
 foo = { version = "1", features = ["derive"] }
-Listing 5-2: Enabling a feature of a dependency
-Some features are used so frequently that it makes more sense to have a
-crate opt out of them rather than in to them. To support this, Cargo allows
-you to define a set of default features for a crate. And similarly, it allows you
-to opt out of the default features of a dependency. Listing 5-3 shows how
-foo can make its derive feature enabled by default, while also opting out of
-some of syn’s default features and instead enabling only the ones it needs
-for the derive feature.
+```
+
+清单5-2：启用依赖项的特性
+
+- 有些特性使用得非常频繁，因此更合理的做法是让一个crate选择性地禁用它们，而不是选择性地启用它们。为了支持这一点，Cargo允许您为一个crate定义一组默认特性。同样地，它也允许您选择性地禁用依赖项的默认特性。清单5-3展示了foo如何使其derive特性默认启用，并选择性地禁用syn的一些默认特性，而只启用它所需的用于derive特性的特性。
+
+```toml
 [package]
 name = "foo"
 ...
@@ -1180,210 +1076,95 @@ version = "1"
 default-features = false
 features = ["derive", "parsing", "printing"]
 optional = true
-Listing 5-3: Adding and opting out of default features, and thus optional dependencies
-Here, if a crate depends on foo and does not explicitly opt out of the
-default features, it will also compile foo’s syn dependency. In turn, syn will
-be built with only the three listed features, and no others. Opting out of
-default features this way, and opting in to only what you need, is a great way
-to cut down on your compile times!
-OPTIONAL DEPENDENCIES AS FEATURES
-When you define a feature, the list that follows the equal sign is itself a list of
-features. This might, at first, sound a little odd—in Listing 5-3, syn is a dependency,
-not a feature. It turns out that Cargo makes every optional dependency
-a feature with the same name as the dependency. You’ll see this if you try to
-add a feature with the same name as an optional dependency; Cargo won’t
-allow it. Support for a different namespace for features and dependencies is
-in the works in Cargo, but has not been stabilized at the time of writing. In the
-meantime, if you want to have a feature named after a dependency, you can
-rename the dependency using package = "" to avoid the name collision. The list
-of features that a feature enables can also include features of dependencies.
-For example, you can write derive = ["syn/derive"] to have your derive feature
-enable the derive feature of the syn dependency.
+```
 
-70 Chapter 5
-Using Features in Your Crate
-When using features, you need to make sure your code uses a dependency
-only if it is available. And if your feature enables a particular component,
-you need to make sure that if the feature isn’t enabled, the component is
-not included.
-You achieve this using conditional compilation, which lets you use annotations
-to give conditions under which a particular piece of code should or
-should not be compiled. Conditional compilation is primarily expressed
-using the #[cfg] attribute. There is also the closely related cfg! macro, which
-lets you change runtime behavior based on similar conditions. You can do
-all sorts of neat things with conditional compilation, as we’ll see later in this
-chapter, but the most basic form is #[cfg(feature = "some-feature")], which
-makes it so that the next “thing” in the source code is compiled only if the
-some-feature feature is enabled. Similarly, if cfg!(feature = "some-feature")
-is equivalent to if true only if the derive feature is enabled (and if false
-otherwise).
-The #[cfg] attribute is used more often than the cfg! macro, because
-the macro modifies runtime behavior based on the feature, which can
-make it difficult to ensure that features are additive. You can place #[cfg]
-in front of certain Rust items—such as functions and type definitions, impl
-blocks, modules, and use statements—as well as on certain other constructs
-like struct fields, function arguments, and statements. The #[cfg] attribute
-can’t go just anywhere, though; where it can appear is carefully restricted by
-the Rust language team so that conditional compilation can’t cause situations
-that are too strange and hard to debug.
-Remember that modifying certain public parts of your API may inadvertently
-make a feature nonadditive, which in turn may make it impossible
-for some users to compile your crate. You can often use the rules for
-backward compatible changes as a rule of thumb here—for example, if you
-make an enum variant or a public struct field conditional upon a feature,
-then that type must also be annotated with #[non_exhaustive]. Otherwise,
-a dependent crate that does not have the feature enabled may no longer
-compile if the feature is added due to some second crate in the dependency
-tree.
-NOTE If you’re writing a large crate where you expect that your users will need only a subset
-of the functionality, you should consider making it so that larger components (usually
-modules) are guarded by features. That way, users can opt in to, and pay the compilation
-cost of, only the parts they really need.
-Workspaces
-Crates play many roles in Rust—they are the vertices in the dependency
-graph, the boundaries for trait coherence, and the scopes for compilation
-features. Because of this, each crate is managed as a single compilation
+清单5-3：添加和选择性禁用默认特性，以及可选依赖项
 
-Project Structure 71
-unit; the Rust compiler treats a crate more or less as one big source file
-compiled as one chunk that is ultimately turned into a single binary output
-(either a binary or a library).
-While this simplifies many aspects of the compiler, it also means that
-large crates can be painful to work with. If you change a unit test, a comment,
-or a type in one part of your application, the compiler must re-evaluate
-the
-entire crate to determine what, if anything, changed. Internally, the compiler
-implements a number of mechanisms to speed up this process, like incremental
-recompilation and parallel code generation, but ultimately the size of your
-crate is a big factor in how long your project takes to compile.
-For this reason, as your project grows, you may want to split it into
-multiple crates that internally depend on one another. Cargo has just the
-feature you need to make this convenient: workspaces. A workspace is a collection
-of crates (often called subcrates) that are tied together by a top-level
-Cargo.toml file like the one shown in Listing 5-4.
+- 在这里，如果一个crate依赖于foo，并且没有明确选择禁用默认特性，它将编译foo的syn依赖项。反过来，syn将只使用列出的三个特性进行构建，而不使用其他特性。通过这种方式选择禁用默认特性，并仅选择您需要的特性，是减少编译时间的好方法！
+
+**将可选依赖项作为特性**
+
+当您定义一个特性时，等号后面的列表本身就是一个特性列表。这可能一开始听起来有点奇怪-在清单5-3中，syn是一个依赖项，而不是一个特性。事实证明，Cargo将每个可选依赖项都作为具有相同名称的特性。如果您尝试添加与可选依赖项同名的特性，您将看到这一点；Cargo不会允许这样做。在Cargo中，特性和依赖项的不同命名空间的支持正在进行中，但在撰写本文时尚未稳定。与此同时，如果您想要一个以依赖项命名的特性，您可以使用package = ""重命名依赖项，以避免名称冲突。特性启用的特性列表还可以包括依赖项的特性。
+
+- 例如，您可以编写 derive = ["syn/derive"] 来使您的 derive 特性启用 syn 依赖项的 derive 特性。
+
+#### 在您的crate中使用特性
+
+在使用特性时，您需要确保您的代码仅在依赖可用时使用。如果您的特性启用了特定的组件，您需要确保如果特性未启用，则不包含该组件。
+
+- 你可以使用条件编译来实现这一点，它允许你使用注解来给出特定代码在何种条件下应该或不应该被编译。条件编译主要通过 #[cfg] 属性来表达。还有一个紧密相关的 cfg! 宏，它允许你根据类似的条件来改变运行时行为。你可以用条件编译做很多有趣的事情，我们将在本章后面看到，但最基本的形式是 #[cfg(feature = "some-feature")]，它使得源代码中的下一个“东西”只在启用了 some-feature 特性时才被编译。类似地，如果 cfg!(feature = "some-feature") 等价于 if true，只有在启用了 derive 特性时（否则为 false）。
+- `#[cfg]`属性比cfg!宏更常用，因为宏根据特性修改运行时行为，这可能会导致难以确保特性是可添加的。您可以将#[cfg]放在某些Rust项（如函数和类型定义、impl块、模块和use语句）以及某些其他结构（如结构体字段、函数参数和语句）之前。但是，#[cfg]属性不能随意放置；Rust语言团队精心限制了它的出现位置，以避免条件编译引发过于奇怪和难以调试的情况。
+- 请记住，修改API的某些公共部分可能会意外地使特性不可添加，从而使一些用户无法编译您的crate。在这里，您通常可以使用向后兼容更改的规则作为经验法则-例如，如果您将枚举变体或公共结构字段条件化为一个特性，那么该类型也必须用#[non_exhaustive]进行注解。否则，如果由于依赖树中的第二个crate添加了该特性，没有启用该特性的依赖crate可能无法再编译。
+**注意** 如果您正在编写一个大型的crate，您预计用户只需要其中的一部分功能，那么您应该考虑通过特性来保护较大的组件（通常是模块）。这样，用户可以选择性地启用他们真正需要的部分，并支付编译的成本。
+
+#### 工作区
+
+在Rust中，crate扮演着多种角色——它们是依赖关系图中的顶点，是特质一致性的边界，也是编译特性的作用域。因此，每个crate都被视为一个单独的编译单元；Rust编译器将一个crate几乎视为一个大的源文件，作为一个整体进行编译，并最终转换为单个二进制输出（可以是可执行文件或库）。
+
+- 虽然这简化了编译器的许多方面，但也意味着处理大型 crate 可能会很困难。如果您对应用程序的某个部分进行了单元测试、注释或类型的更改，编译器必须重新评估整个 crate，以确定是否有任何更改。在内部，编译器实现了许多机制来加速这个过程，比如增量重新编译和并行代码生成，但最终您的 crate 的大小是确定项目编译时间的一个重要因素。
+- 因此，随着项目的增长，您可能希望将其拆分为相互依赖的多个crate。Cargo正好有一个方便的功能来实现这一点：工作区。工作区是一组crate（通常称为子crate），它们由顶层的Cargo.toml文件绑定在一起，如清单5-4所示。
+
+```toml
 [workspace]
 members = [
 "foo",
 "bar/one",
 "bar/two",
 ]
-Listing 5-4: A workspace Cargo.toml
-The members array is a list of directories that each contain a crate in
-the workspace. Those crates all have their own Cargo.toml files in their own
-subdirectories, but they share a single Cargo.lock file and a single output
-directory. The crate names don’t need to match the entry in members. It is
-common, but not required, that crates in a workspace share a name prefix,
-usually chosen as the name of the “main” crate. For example, in the tokio
-crate, the members are called tokio, tokio-test, tokio-macros, and so on.
-Perhaps the most important feature of workspaces is that you can interact
-with all of the workspace’s members by invoking cargo in the root of the
-workspace. Want to check that they all compile? cargo check will check them
-all. Want to run all your tests? cargo test will test them all. It’s not quite as
-convenient as having everything in one crate, so don’t go splitting everything
-into minuscule crates, but it’s a pretty good approximation.
-NOTE Cargo commands will generally do the “right thing” in a workspace. If you ever need
-to disambiguate, such as if two workspace crates both have a binary by the same
-name, use the -p flag (for package). If you are in the subdirectory for a particular
-workspace crate, you can pass --workspace to perform the command for the entire
-workspace instead.
-Once you have a workspace-level Cargo.toml with the array of workspace
-members, you can set your crates to depend on one another using path
-dependencies, as shown in Listing 5-5.
+```
+清单5-4：工作区的 Cargo.toml
 
+- members 数组是一个包含工作区中每个 crate 的目录列表。这些 crate 都有自己的 Cargo.toml 文件在自己的子目录中，但它们共享一个单独的 Cargo.lock 文件和一个单独的输出目录。crate 的名称不需要与 members 中的条目匹配。通常情况下，工作区中的 crate 具有相同的名称前缀，通常选择为“主”crate 的名称。例如，在 tokio crate 中，成员被称为 tokio、tokio-test、tokio-macros 等等。
+- 工作区最重要的特性之一是您可以在工作区的根目录中通过调用 cargo 与所有工作区成员进行交互。想要检查它们是否都编译通过？cargo check 将检查它们全部。想要运行所有测试？cargo test 将测试它们全部。虽然不像将所有内容放在一个 crate 中那样方便，所以不要将所有内容拆分成微小的 crate，但这是一个相当好的近似。
+**注意** 在工作区中，Cargo 命令通常会做“正确的事情”。如果您需要消除歧义，例如如果两个工作区 crate 都有相同名称的二进制文件，请使用 -p 标志（用于 package）。如果您在特定工作区 crate 的子目录中，可以传递 --workspace 来执行整个工作区的命令。
+- 一旦您在工作区级别的 Cargo.toml 文件中设置了工作区成员的数组，您可以使用路径依赖关系来使您的 crate 互相依赖，如清单5-5所示。
 
-72 Chapter 5
-
+```toml
 # bar/two/Cargo.toml
-
 [dependencies]
 one = { path = "../one" }
-
 # bar/one/Cargo.toml
-
 [dependencies]
 foo = { path = "../../foo" }
-Listing 5-5: Intercrate dependencies among workspace crates
-Now if you make a change to the crate in bar/two, then only that crate
-is re-compiled, since foo and bar/one did not change. It may even be faster
-to compile your project from scratch, since the compiler does not need to
-evaluate your entire project source for optimization opportunities.
-SPECIFYING INTRA-WORKSPACE DEPENDENCIES
-The most obvious way to specify that one crate in a workspace depends on
-another is to use the path specifier, as shown in Listing 5-5. However, if your
-individual subcrates are intended for public consumption, you may want to use
-version specifiers instead.
-Say you have a crate that depends on a Git version of the one crate from
-the bar workspace in Listing 5-5 with one = { git = ". . ." }, and a released
-version of foo (also from bar) with foo = "1.0.0". Cargo will dutifully fetch
-the one Git repository, which holds the entire bar workspace, and see that one
-in turn depends on foo, located at ../../foo inside the workspace. But Cargo
-doesn’t know that the released version foo = "1.0.0" and the foo in the Git
-repository are the same crate! It considers them two separate dependencies
-that just happen to have the same name.
-You may already see where this is going. If you try to use any type from
-foo (1.0.0) with an API from one that accepts a type from foo, the compiler will
-reject the code. Even though the types have the same name, the compiler can’t
-know that they are the same underlying type. And the user will be thoroughly
-confused, since the compiler will say something like “expected foo::Type, got
-foo::Type.”
-The best way to mitigate this problem is to use path dependencies between
-subcrates only if they depend on unpublished changes. As long as one works
-with foo 1.0.0, it should list foo = "1.0.0" in its dependencies. Only if you
-make a change to foo that one needs should you change one to use a path
-dependency. And once you release a new version of foo that one can depend
-on, you should remove the path dependency again.
-This approach also has its shortcomings. Now if you change foo and then
-run the tests for one, you’ll see that one will be tested using the old foo, which
-may not be what you expected. You’ll probably want to configure your continuous
-integration infrastructure to test each subcrate both with the latest released
-versions of the other subcrates and with all of them configured to use path
-dependencies.
+```
 
-Project Structure 73
-Project Configuration
-Running cargo new sets you up with a minimal Cargo.toml that has the crate’s
-name, its version number, some author information, and an empty list of
-dependencies. That will take you pretty far, but as your project matures, there
-are a number of useful things you may want to add to your Cargo.toml.
-Crate Metadata
-The first and most obvious thing to add to your Cargo.toml is all the metadata
-directives that Cargo supports. In addition to obvious fields like
-description and homepage, it can be useful to include information such as
-the path to a README for the crate (readme), the default binary to run
-with cargo run (default-run), and additional keywords and categories to help
-crates.io categorize your crate.
-For crates with a more convoluted project layout, it’s also useful to set
-the include and exclude metadata fields. These dictate which files should be
-included and published in your package. By default, Cargo includes all files
-in a crate’s directory except any listed in your .gitignore file, but this may not
-be what you want if you also have large test fixtures, unrelated scripts, or
-other auxiliary data in the same directory that you do want under version
-control. As their names suggest, include and exclude allow you to include
-only a specific set of files or exclude files matching a given set of patterns,
-respectively.
-NOTE If you have a crate that should never be published, or should be published only to certain
-alternative registries (that is, not to crates.io), you can set the publish directive
-to false or to a list of allowed registries.
-The list of metadata directives you can use continues to grow, so make
-sure to periodically check in on the Manifest Format page of the Cargo reference
-(https://doc.rust-lang.org/cargo/reference/manifest.html).
-Build Configuration
-Cargo.toml can also give you control over how Cargo builds your crate.
-The most obvious tool for this is the build parameter, which allows you to
-write a completely custom build program for your crate (we’ll revisit this
-in Chapter 11). However, Cargo also provides two smaller, but very useful,
-mechanisms that we’ll explore here: patches and profiles.
-[patch]
-The [patch] section of Cargo.toml allows you to specify a different source for
-a dependency that you can use temporarily, no matter where in your dependencies
-the patched dependency appears. This is invaluable when you need
-to compile your crate against a modified version of some transitive dependency
-to test a bug fix, a performance improvement, or a new minor release
-you’re about to publish. Listing 5-6 shows an example of how you might
-temporarily use a variant of a set of dependencies.
+清单5-5：工作区中的crate之间的依赖关系
+
+- 现在，如果您对bar/two中的crate进行更改，那么只有该crate会重新编译，因为foo和bar/one没有更改。甚至从头编译项目可能会更快，因为编译器不需要评估整个项目源代码以寻找优化机会。
+
+**指定工作区内部的依赖关系**
+在工作区中，最明显的指定一个crate依赖于另一个crate的方法是使用路径指定符，如清单5-5所示。然而，如果您的子crate是为公共使用而设计的，您可能希望使用版本指定符。
+
+- 假设您有一个crate依赖于清单5-5中bar工作区中的一个crate的Git版本，使用one = { git = ". . ." }，以及一个已发布的foo版本（也来自bar），使用foo = "1.0.0"。Cargo将会忠实地获取one的Git仓库，该仓库包含整个bar工作区，并且会看到one依赖于foo，位于工作区内的../../foo。但是Cargo不知道已发布的版本foo = "1.0.0"和Git仓库中的foo是同一个crate！它将它们视为两个独立的依赖项，只是碰巧具有相同的名称。
+
+- 你可能已经看到了这个问题的所在。如果你尝试使用来自 foo（1.0.0）的任何类型与一个接受来自 foo 的类型的 API，编译器将拒绝该代码。尽管这些类型具有相同的名称，但编译器无法知道它们是相同的底层类型。用户会感到非常困惑，因为编译器会显示类似“expected foo::Type，got foo::Type”的错误信息。
+- 缓解这个问题的最佳方法是仅在子crate依赖于未发布的更改时使用路径依赖关系。只要一个crate使用foo 1.0.0，它应该在其依赖项中列出foo = "1.0.0"。只有当您对foo进行了更改，并且one需要这些更改时，才应将one更改为使用路径依赖关系。一旦您发布了one可以依赖的foo的新版本，您应该再次删除路径依赖关系。
+- 这种方法也有其缺点。现在，如果您更改了 foo，然后运行 one 的测试，您会发现 one 将使用旧的 foo 进行测试，这可能不是您期望的结果。您可能希望配置您的持续集成基础设施，以便对每个子 crate 进行测试，既使用其他子 crate 的最新发布版本，又使用所有子 crate 配置为使用路径依赖项。
+
+#### Project Configuration
 
 
-74 Chapter 5
+运行 cargo new 会为您设置一个最小的 Cargo.toml，其中包含 crate 的名称、版本号、一些作者信息以及一个空的依赖项列表。这可以让您走得很远，但随着项目的发展，您可能希望在 Cargo.toml 中添加一些有用的内容。
+
+##### Crate 元数据
+
+将所有Cargo支持的元数据指令添加到Cargo.toml中是最明显的事情。除了显而易见的字段，如描述和主页，还可以包含其他信息，例如crate的README路径（readme）、与cargo run一起运行的默认二进制文件（default-run）以及额外的关键字和类别，以帮助crates.io对您的crate进行分类。
+对于项目布局更复杂的crate，设置include和exclude元数据字段也非常有用。它们决定了应该包含和发布哪些文件。默认情况下，Cargo会包含crate目录中的所有文件，除非在.gitignore文件中列出，但如果您还有大型测试夹具、无关的脚本或其他辅助数据与您想要进行版本控制的相同目录中，这可能不是您想要的。正如它们的名称所示，include和exclude允许您仅包含特定的文件集或排除与给定模式匹配的文件。
+
+**注意** 如果您有一个 crate 不应该被发布，或者只应该发布到某些特定的替代注册表（即不发布到 crates.io），您可以将 publish 指令设置为 false 或允许的注册表列表。
+您可以使用的元数据指令列表不断增长，因此请定期查看 Cargo 参考文档的 Manifest Format 页面（<https://doc.rust-lang.org/cargo/reference/manifest.html>）。
+
+#### Build Configuration
+
+Cargo.toml还可以让您控制Cargo如何构建您的crate。
+最明显的工具是build参数，它允许您为您的crate编写完全自定义的构建程序（我们将在第11章中重新讨论此问题）。
+然而，Cargo还提供了两种较小但非常有用的机制，我们将在这里探讨：patches和profiles。
+
+`**[patch]**`
+Cargo.toml的[patch]部分允许您指定一个不同的源来替换依赖项，无论修补的依赖项在依赖关系中的位置如何。当您需要针对某个传递依赖项的修改版本进行编译，以测试错误修复、性能改进或即将发布的新次要版本时，这非常有价值。清单5-6展示了一个临时使用一组依赖项的变体的示例。
+
+```toml
+
 [patch.crates-io]
 
 # use a local (presumably modified) source
@@ -1392,63 +1173,45 @@ regex = { path = "/home/jon/regex" }
 
 # use a modification on a git branch
 
-serde = { git = "https://github.com/serde-rs/serde.git", branch = "faster" }
+serde = { git = "<https://github.com/serde-rs/serde.git>", branch = "faster" }
 
 # patch a git dependency
 
 [patch.'https://github.com/jonhoo/project.git']
 project = { path = "/home/jon/project" }
-Listing 5-6: Overriding dependency sources in Cargo.toml using [patch]
-Even if you patch a dependency, Cargo takes care to check the crate
-versions so that you don’t accidentally end up patching the wrong major version
-of a crate. If you for some reason transitively depend on multiple major
-versions of the same crate, you can patch each one by giving them distinct
-identifiers, as shown in Listing 5-7.
+```
+
+清单5-6：使用[patch]在Cargo.toml中覆盖依赖项源
+即使您修补了一个依赖项，Cargo也会检查crate的版本，以防止意外地修补错误的主要版本crate。如果由于某种原因您在传递依赖项中依赖于多个主要版本的相同crate，您可以通过为每个版本提供不同的标识符来修补它们，如清单5-7所示。
+
+```toml
+
 [patch.crates-io]
 nom4 = { path = "/home/jon/nom4", package = "nom" }
 nom5 = { path = "/home/jon/nom5", package = "nom" }
-Listing 5-7: Overriding multiple versions of the same crate in Cargo.toml using [patch]
-Cargo will look at the Cargo.toml inside each path, realize that /nom4
-contains major version 4 and that /nom5 contains major version 5, and patch
-the two versions appropriately. The package keyword tells Cargo to look for a
-crate by the name nom in both cases instead of using the dependency identifiers
-(the part on the left) as it does by default. You can use package this way
-in your regular dependencies as well to rename a dependency!
-Keep in mind that patches are not taken into account in the package
-that’s uploaded when you publish a crate. A crate that depends on your
-crate will use only its own [patch] section (which may be empty), not that of
-your crate!
-CRATES VS. PACKAGES
-You may wonder what the difference between a package and a crate is.
-These two terms are often used interchangeably in informal contexts, but they
-also have specific definitions that vary depending on whether you’re talking
-about the Rust compiler, Cargo, crates.io, or something else. I personally think
-of a crate as a Rust module hierarchy starting at a root .rs file (one where you
-can use crate-level attributes like #![feature])—usually something like lib.rs or
-main.rs. In contrast, a package is a collection of crates and metadata, so essentially
-all that’s described by a Cargo.toml file. That may include a library crate,
-multiple binary crates, some integration test crates, and maybe even multiple
-workspace members that themselves have Cargo.toml files.
 
+```
+清单5-7：使用[patch]在Cargo.toml中覆盖同一crate的多个版本
 
-Project Structure 75
-[profile]
-The [profile] section lets you pass additional options to the Rust compiler
-in order to change the way it compiles your crate. These options fall primarily
-into three categories: performance options, debugging options, and
-options that change code behavior in user-defined ways. They all have different
-defaults depending on whether you are compiling in debug mode or
-in release mode (other modes also exist).
-The three primary performance options are opt-level, codegen-units,
+- Cargo将查看每个路径中的Cargo.toml文件，意识到/nom4包含主要版本4，/nom5包含主要版本5，并相应地修补这两个版本。package关键字告诉Cargo在这两种情况下都查找名为nom的crate，而不是像默认情况下那样使用依赖标识符（左侧部分）。您也可以在常规依赖项中使用package来重命名依赖项！
+- 请记住，在发布crate时，补丁不会被考虑在上传的包中。依赖于您的crate的crate将仅使用自己的[patch]部分（可能为空），而不是您的crate的[patch]部分！
+**CRATES VS. PACKAGES**
+您可能想知道包和crate之间的区别是什么。
+这两个术语在非正式的上下文中经常可以互换使用，但它们在Rust编译器、Cargo、crates.io或其他情况下具有不同的定义。我个人认为crate是一个Rust模块层次结构，从一个根.rs文件开始（您可以在其中使用crate级别的属性，如#![feature]）-通常是类似lib.rs或main.rs的文件。相比之下，一个package是一组crate和元数据，因此基本上是由Cargo.toml文件描述的所有内容。这可能包括一个库crate、多个二进制crate、一些集成测试crate，甚至可能是多个工作区成员，它们本身就有Cargo.toml文件。
+
+`**[profile]**`
+[profile]部分允许您向Rust编译器传递附加选项，以改变它编译crate的方式。这些选项主要分为三类：性能选项、调试选项和以用户定义方式改变代码行为的选项。它们在调试模式和发布模式下有不同的默认值（还有其他模式）。
+
+- The three primary performance options are opt-level, codegen-units,
 and lto. The opt-level option tweaks runtime performance by telling the
 compiler how aggressively to optimize your program (0 is “not at all,” 3 is “as
 much as you can”). The higher the setting, the more optimized your code
 will be, which may make it run faster. Extra optimization comes at the cost
 of higher compile times, though, which is why optimizations are generally
 enabled only for release builds.
-NOTE You can also set opt-level to "s" to optimize for binary size, which may be important
+**NOTE** You can also set opt-level to "s" to optimize for binary size, which may be important
 on embedded platforms.
-The codegen-units option is about compile-time performance. It tells the
+- The codegen-units option is about compile-time performance. It tells the
 compiler how many independent compilation tasks (code generation units) it
 is allowed to split the compilation of a single crate into. The more pieces a
 large crate’s compilation is split into, the faster it will compile, since more
@@ -1461,7 +1224,7 @@ happen! This setting, then, is a trade-off between compile-time performance
 and runtime performance. By default, Rust uses an effectively unbounded
 number of codegen units in debug mode (basically, “compile as fast as you
 can”) and a smaller number (16 at the time of writing) in release mode.
-The lto setting toggles link-time optimization (LTO), which enables the
+- The lto setting toggles link-time optimization (LTO), which enables the
 compiler (or the linker, if you want to get technical about it) to jointly
 optimize bits of your program, known as compilation units, that were originally
 compiled separately. The exact details of LTO are beyond the scope
@@ -1476,20 +1239,18 @@ boosts to performance-
 sensitive programs that might benefit from
 cross-crate optimization. Beware, though, that cross-crate LTO can add a
 lot to your compile time.
-Rust performs LTO across all the codegen units within each crate by
+- Rust performs LTO across all the codegen units within each crate by
 default in an attempt to make up for the lost optimizations caused by using
 many codegen units. Since the LTO is performed only within each crate,
-
-
-76 Chapter 5
 rather than across crates, this extra pass isn’t too onerous, and the added
 compile time should be lower than the amount of time saved by using a lot
 of codegen units. Rust also offers a technique known as thin LTO, which
 allows the LTO pass to be mostly parallelized, at the cost of missing some
 optimizations a “full” LTO pass would have found.
-NOTE LTO can be used to optimize across foreign function interface boundaries in many
+
+**NOTE** LTO can be used to optimize across foreign function interface boundaries in many
 cases, too. See the linker-plugin-lto rustc flag for more details.
-The [profile] section also supports flags that aid in debugging, such as
+- The [profile] section also supports flags that aid in debugging, such as
 debug, debug-assertions, and overflow-checks. The debug flag tells the compiler
 to include debug symbols in the compiled binary. This increases the binary
 size, but it means that you get function names and such, rather than just
@@ -1501,13 +1262,15 @@ at runtime. The overflow-checks flag, as the name implies, enables overflow
 checks on integer operations. This slows them down (notice a trend
 here?) but can help you catch tricky bugs early on. By default, these are all
 enabled in debug mode and disabled in release mode.
-[profile.*.panic]
-The [profile] section has another flag that deserves its own subsection: panic.
+
+`[profile.*.panic]`
+
+- The [profile] section has another flag that deserves its own subsection: panic.
 This option dictates what happens when code in your program calls panic!,
 either directly or indirectly through something like unwrap. You can set panic to
 either unwind (the default on most platforms) or abort. We’ll talk more about
 panics and unwinding in Chapter 9, but I’ll give a quick summary here.
-Normally in Rust, when your program panics, the thread that panicked
+- Normally in Rust, when your program panics, the thread that panicked
 starts unwinding its stack. You can think of unwinding as forcibly returning
 recursively from the current function all the way to the bottom of that
 thread’s stack. That is, if main called foo, foo called bar, and bar called baz, a
@@ -1516,24 +1279,22 @@ from main, resulting in the program exiting. A thread that unwinds will
 drop all values on the stack normally, which gives the values a chance to
 clean up resources, report errors, and so on. This gives the running system
 a chance to exit gracefully even in the case of a panic.
-When a thread panics and unwinds, other threads continue running
+- When a thread panics and unwinds, other threads continue running
 unaffected. Only when (and if) the thread that ran main exits does the
 program terminate. That is, the panic is generally isolated to the thread in
 which the panic occurred.
-This means unwinding is a double-edged sword; the program is limping
+- This means unwinding is a double-edged sword; the program is limping
 along with some failed components, which may cause all sorts of strange
 behaviors. For example, imagine a thread that panics halfway through updating
 the state in a Mutex. Any thread that subsequently acquires that Mutex
 must now be prepared to handle the fact that the state may be in a partially
 updated, inconsistent state. For this reason, some synchronization primitives
 (like Mutex) will remember if a panic occurred when they were last accessed
-
-Project Structure 77
 and communicate that to any thread that tries to access the primitive subsequently.
 If a thread encounters such a state, it will normally also panic, which
 leads to a cascade that eventually terminates the entire program. But that is
 arguably better than continuing to run with corrupted state!
-The bookkeeping needed to support unwinding is not free, and it
+- The bookkeeping needed to support unwinding is not free, and it
 often requires special support by the compiler and the target platform. For
 example, many embedded platforms cannot unwind the stack efficiently at
 all. Rust therefore supports a different panic mode: abort ensures the whole
@@ -1541,41 +1302,44 @@ program simply exits immediately when a panic occurs. In this mode, no
 threads get to do any cleanup. This may seem severe, and it is, but it ensures
 that the program is never running in a half-working state and that errors are
 made visible immediately.
-WARNI N G The panic setting is global—if you set it to abort, all your dependencies are also compiled
+
+**WARNING** The panic setting is global—if you set it to abort, all your dependencies are also compiled
 with abort.
-You may have noticed that when a thread panics, it tends to print a backtrace:
+- You may have noticed that when a thread panics, it tends to print a backtrace:
 the trail of function calls that led to where the panic occurred. This is
 also a form of unwinding, though it is separate from the unwinding panic
 behavior discussed here. You can have backtraces even with panic=abort by
 passing -Cforce-unwind-tables to rustc, which makes rustc include the information
 necessary to walk back up the stack while still terminating the program
 on a panic.
-PROFILE OVERRIDES
+**PROFILE OVERRIDES**
 You can set profile options for just a particular dependency, or a particular profile,
 using profile overrides. For example, Listing 5-8 shows how to enable aggressive
 optimizations for the serde crate and moderate optimizations for all other crates in
 debug mode, using the [profile.<profile-name>.package.<crate-name>] syntax.
+
+```toml
+
 [profile.dev.package.serde]
 opt-level = 3
 [profile.dev.package."*"]
 opt-level = 2
+```
 Listing 5-8: Overriding profile options for a specific dependency or for a
 specific mode
-This kind of optimization override can be handy if some dependency would
+- This kind of optimization override can be handy if some dependency would
 be prohibitively slow in debug mode (such as decompression or video encoding),
 and you need it optimized so that your test suite won’t take several days to
 complete. You can also specify global profile defaults using a [profile.dev] (or
 similar) section in the Cargo configuration file in ~/.cargo/config.
-When you set optimization parameters for a specific dependency, keep in
+- When you set optimization parameters for a specific dependency, keep in
 mind that the parameters apply only to the code compiled as part of that crate;
 if serde in this example has a generic method or type that you use in your crate,
-(continued)
-
-78 Chapter 5
 the code of that method or type will be monomorphized and optimized in your
 crate, and your crate’s profile settings will apply, not those in the profile override
 for serde.
-Conditional Compilation
+
+#### Conditional Compilation
 Most Rust code you write is universal—it’ll work the same regardless of
 what CPU or operating system it runs on. But sometimes you’ll have to do
 something special to get the code to work on Windows, on ARM chips, or
@@ -1586,27 +1350,27 @@ uninteresting setup code when running in a continuous integration (CI)
 environment. To cater to cases like these, Rust provides mechanisms for conditional
 compilation, in which a particular segment of code is compiled only
 if certain conditions are true of the compilation environment.
-We denote conditional compilation with the cfg keyword that you saw
+- We denote conditional compilation with the cfg keyword that you saw
 earlier in the chapter in “Using Features in Your Crate.” It usually appears in
 the form of the #[cfg(condition)] attribute, which says to compile the next item
 only if condition is true. Rust also has #[cfg_attr(condition, attribute)], which
 is compiled as #[attribute] if condition holds and is a no-op otherwise. You can
 also evaluate a cfg condition as a Boolean expression using the cfg!(condition)
 macro.
-Every cfg construct takes a single condition made up of options, like
+- Every cfg construct takes a single condition made up of options, like
 feature = "some-feature", and the combinators all, any, and not, which do
 what you would probably expect. Options are either simple names, like unix,
 or key/value pairs like those used by feature conditions.
-There are a number of interesting options you can make compilation
+- There are a number of interesting options you can make compilation
 dependent on. Let’s go through them, from most common to least common:
-Feature options
-You’ve already seen examples of these. Feature options take the form
+##### Feature options
+- You’ve already seen examples of these. Feature options take the form
 feature = "name-of-feature" and are considered true if the named feature
 is enabled. You can check for multiple features in a single condition
 using the combinators. For example, any(feature = "f1", feature =
 "f2") is true if either feature f1 or feature f2 is enabled.
-Operating system options
-These use key/value syntax with the key target_os and values like windows,
+##### Operating system options
+- These use key/value syntax with the key target_os and values like windows,
 macos, and linux. You can also specify a family of operating systems
 using target_family, which takes the value windows or unix. These are
 common enough that they have received their own named short forms,
@@ -1614,9 +1378,8 @@ so you can use cfg(windows) and cfg(unix) directly. For example, if you
 wanted a particular code segment to be compiled only on macOS and
 Windows, you would write: #[cfg(any(windows, target_os = "macos"))].
 
-Project Structure 79
-Context options
-These let you tailor code to a particular compilation context. The most
+##### Context options
+- These let you tailor code to a particular compilation context. The most
 common of these is the test option, which is true only when the crate
 is being compiled under the test profile. Keep in mind that test is set
 only for the crate that is being tested, not for any of its dependencies.
@@ -1627,21 +1390,21 @@ test set). The same applies to the doc and doctest options, which are set
 only when building documentation or compiling doctests, respectively.
 There’s also the debug_assertions option, which is set in debug mode by
 default.
-Tool options
-Some tools, like clippy and Miri, set custom options (more on that
+##### Tool options
+- Some tools, like clippy and Miri, set custom options (more on that
 later) that let you customize compilation when run under these tools.
 Usually, these options are named after the tool in question. For example,
 if you want a particular compute-intensive test not to run under
 Miri, you can give it the attribute #[cfg_attr(miri, ignore)].
-Architecture options
-These let you compile based on the CPU instruction set the compiler
+##### Architecture options
+- These let you compile based on the CPU instruction set the compiler
 is targeting. You can specify a particular architecture with target_arch,
 which takes values like x86, mips, and aarch64, or you can specify a particular
 platform feature with target_feature, which takes values like avx
 or sse2. For very low-level code, you may also find the target_endian and
 target_pointer_width options useful.
-Compiler options
-These let you adapt your code to the platform ABI it is compiled against
+##### Compiler options
+- These let you adapt your code to the platform ABI it is compiled against
 and are available through target_env with values like gnu, msvc, and musl.
 For historical reasons, this value is often empty, especially on GNU
 platforms. You normally need this option only if you need to interface
@@ -1652,15 +1415,16 @@ be used to customize dependencies. For example, the dependency winrt
 usually makes sense only on Windows, and the nix crate is probably useful
 only on Unix-based platforms. Listing 5-9 gives an example of how you can
 use cfg conditions for this:
+```toml 
+
 [target.'cfg(windows)'.dependencies]
 winrt = "0.7"
 [target.'cfg(unix)'.dependencies]
 nix = "0.17"
+```
 Listing 5-9: Conditional dependencies
 
-
-80 Chapter 5
-Here, we specify that winrt version 0.7 should be considered a dependency
+- Here, we specify that winrt version 0.7 should be considered a dependency
 only under cfg(windows) (so, on Windows), and nix version 0.17 only
 under cfg(unix) (so, on Linux, macOS, and other Unix-based platforms).
 One thing to keep in mind is that the [dependencies] section is evaluated
@@ -1670,14 +1434,14 @@ so you cannot use this syntax to pull in dependencies based on features
 and contexts. You can, however, use any cfg that depends only on the target
 specification or architecture, as well as any options explicitly set by tools
 that call into rustc (like cfg(miri)).
-NOTE While we’re on the topic of dependency specifications, I highly recommend that you set
+**NOTE** While we’re on the topic of dependency specifications, I highly recommend that you set
 up your CI infrastructure to perform basic auditing of your dependencies using tools
 like cargo-deny and cargo-audit. These tools will detect cases where you transitively
 depend on multiple major versions of a given dependency, where you depend on
 crates that are unmaintained or have known security vulnerabilities, or where you
 use licenses that you may want to avoid. Using such a tool is a great way to raise the
 quality of your codebase in an automated way!
-It’s also quite simple to add your own custom conditional compilation
+- It’s also quite simple to add your own custom conditional compilation
 options. You just have to make sure that --cfg=myoption is passed to rustc
 when rustc compiles your crate. The easiest way to do this is to add your
 --cfg to the RUSTFLAGS environment variable. This can come in handy in CI,
@@ -1685,7 +1449,7 @@ where you may want to customize your test suite depending on whether it’s
 being run on CI or on a dev machine: add --cfg=ci to RUSTFLAGS in your CI
 setup, and then use cfg(ci) and cfg(not(ci)) in your code. Options set this
 way are also available in Cargo.toml dependencies.
-Versioning
+#### Versioning
 All Rust crates are versioned and are expected to follow Cargo’s implementation
 of semantic versioning. Semantic versioning dictates the rules for what
 kinds of changes require what kinds of version increases and for which versions
@@ -1696,13 +1460,12 @@ require a major version change; additions, which require a minor version
 change; and bug fixes, which require only a patch version change. RFC 1105
 does a decent job of outlining what constitutes a breaking change in Rust,
 and we’ve touched on some aspects of it elsewhere in this book.
-I won’t go into detail here about the exact semantics of the different
+- I won’t go into detail here about the exact semantics of the different
 types of changes. Instead, I want to highlight some less straightforward ways
 version numbers come up in the Rust ecosystem, which you need to keep in
 mind when deciding how to version your own crates.
 
-Project Structure 81
-Minimum Supported Rust Version
+#### Minimum Supported Rust Version
 The first Rust-ism is the minimum supported Rust version (MSRV). There is
 much debate in the Rust community about what policy projects should
 adhere to when it comes to their MSRV and versioning, and there’s no truly
@@ -1711,7 +1474,7 @@ using older versions of Rust, often in an enterprise setting where they have
 little choice. If we constantly take advantage of newly stabilized APIs, those
 users will not be able to compile the latest versions of our crates and will be
 left behind.
-There are two techniques crate authors can use to make life a little easier
+- There are two techniques crate authors can use to make life a little easier
 for users in this position. The first is to establish an MSRV policy promising
 that new versions of a crate will always compile with any stable release from
 the last X months. The exact number varies, but 6 or 12 months is common.
@@ -1721,7 +1484,7 @@ compile with the MSRV compiler (usually checked by CI) or be held until the
 MSRV policy allows it to be merged as is. This can sometimes be a pain, as it
 means these crates cannot take advantage of the latest and greatest the language
 has to offer, but it will make life easier for your users.
-The second technique is to make sure to increase the minor version
+- The second technique is to make sure to increase the minor version
 number of your crate any time that the MSRV changes. So, if you release
 version 2.7.0 of your crate and that increases your MSRV from Rust 1.44
 to Rust 1.45, then a project that is stuck on 1.44 and that depends on your
@@ -1730,14 +1493,14 @@ the project working until it can move on to Rust 1.45. It’s important that you
 increment the minor version, not just the patch version, so that you can still
 issue critical security fixes for the previous MSRV release by doing another
 patch release if necessary.
-Some projects take their MSRV support so seriously that they consider
+- Some projects take their MSRV support so seriously that they consider
 an MSRV change a breaking change and increment the major version number.
 This means that downstream projects will explicitly have to opt in to an
 MSRV change, rather than opting out—but it also means that users who do
 not have such strict MSRV requirements will not see future bug fixes without
 updating their dependencies, which may require them to issue a breaking
 change as well. As I said, none of these solutions are without drawbacks.
-Enforcing an MSRV in the Rust ecosystem today is challenging. Only
+- Enforcing an MSRV in the Rust ecosystem today is challenging. Only
 a small subset of crates provide any MSRV guarantees, and even if your
 dependencies do, you will need to constantly monitor them to know when
 they increase their MSRV. When they do, you’ll need to do a new release
@@ -1749,8 +1512,7 @@ updating. And that decision also carries over to your dependents. There
 have been proposals to build MSRV checking into Cargo itself, but nothing
 workable has been stabilized as of this writing.
 
-82 Chapter 5
-Minimal Dependency Versions
+#### Minimal Dependency Versions
 When you first add a dependency, it’s not always clear what version specifier
 you should give that dependency. Programmers commonly choose the latest
 version, or just the current major version, but chances are that both of those
@@ -1765,7 +1527,7 @@ about their MSRV policy, so they depend on hugs = "1, <1.6". Here, you’ll run
 into trouble. When Cargo sees hugs = "1.7.3", it considers only versions >=1.7.
 But then it sees that foo’s dependency on hugs requires <1.6, so it gives up and
 reports that there is no version of hugs compatible with all the requirements.
-NOTE In practice, there are a number of reasons why a crate may explicitly not want a
+**NOTE** In practice, there are a number of reasons why a crate may explicitly not want a
 newer version of a dependency. The most common ones are to enforce MSRV, to meet
 enterprise auditing requirements (the newer version will contain code that hasn’t been
 audited), and to ensure reproducible builds where only the exact listed version is used.
@@ -1804,7 +1566,7 @@ but these workarounds can be painful to set up and maintain. You may end
 up listing a large number of dependencies that are only really pulled in
 through your transitive dependencies, and you’ll have to keep that list up to
 date as time goes on.
-NOTE One current proposal is to present a flag that favors minimal versions for the current
+**NOTE** One current proposal is to present a flag that favors minimal versions for the current
 crate but maximal ones for dependencies, which seems quite promising.
 Changelogs
 For all but the most trivial crates, I highly recommend keeping a changelog.
@@ -1814,7 +1576,7 @@ out what changed and how to update your code. I recommend that you do
 not just dump your Git logs into a file named changelog, but instead keep a
 manual changelog. It is much more likely to be useful.
 A simple but good format for changelogs is the Keep a Changelog format
-documented at https://keepachangelog.com/.
+documented at <https://keepachangelog.com/>.
 Unreleased Versions
 Rust considers version numbers even when the source of a dependency is a
 directory or a Git repository. This means that semantic versioning is important
@@ -1841,7 +1603,6 @@ much better. First, imagine that a developer depends on major version 2
 of your crate, but they need a feature that’s currently available only in Git.
 Then you commit a breaking change. If you don’t increase the major version
 at the same time, their code will suddenly fail in unexpected ways,
-
 
 84 Chapter 5
 either by failing to compile or as a result of weird runtime issues. If you follow
@@ -1878,7 +1639,6 @@ dependencies and features in Cargo that now hopefully won’t catch you out
 in the future. In the next chapter we’ll turn to testing and dig into how you
 go beyond Rust’s simple #[test] functions that we know and love.
 
-
 ### 6.TESTING
 
 In this chapter, we’ll look at the various
@@ -1897,7 +1657,6 @@ This chapter is divided into two main sections. The first part covers
 Rust testing mechanisms, like the standard testing harness and conditional
 testing code. The second looks at other ways to evaluate the correctness of
 your Rust code, such as benchmarking, linting, and fuzzing.
-
 
 86 Chapter 6
 Rust Testing Mechanisms
@@ -1937,7 +1696,7 @@ test harness is generated for each file in tests/. Test harnesses are not genera
 for files in subdirectories under tests/ to allow you to have shared
 submodules
 for your tests.
-NOTE If you explicitly want a test harness for a file in a subdirectory, you can opt in to that
+**NOTE** If you explicitly want a test harness for a file in a subdirectory, you can opt in to that
 by calling the file main.rs.
 Rust does not require that you use the default test harness. You can
 instead opt out of it and implement your own main method that represents
@@ -1985,8 +1744,6 @@ tests that don’t fit the standard “one function, one test” model. For exam
 you’ll frequently see harnessless tests used with fuzzers, model checkers,
 and tests that require a custom global setup (like under WebAssembly
 or when working with custom targets).
-
-
 
 88 Chapter 6
 `#[cfg(test)]`
@@ -2040,6 +1797,7 @@ standard library HashMap. The HashMap type is really just a wrapper around
 a RawTable type, which is what implements most of the hash table logic.
 Suppose that after doing a HashMap::insert on an empty map, you want to
 check that a single bucket in the map is nonempty, as shown in Listing 6-2.
+
 ```rust
 #[test]
 fn insert_just_one() {
@@ -2049,6 +1807,7 @@ let full = m.table.buckets.iter().filter(Bucket::is_full).count();
 assert_eq!(full, 1);
 }
 ```
+
 Listing 6-2: A test that accesses inaccessible internal state and thus does not compile
 This code will not compile as written, because while the test code can
 access the private table field of HashMap, it cannot access the also private
@@ -2063,6 +1822,7 @@ that allows access to buckets only while testing, as shown in Listing 6-3,
 and thereby avoid adding footguns for the rest of the code. The code from
 Listing 6-2 can then be updated to call buckets() instead of accessing the
 private buckets field.
+
 ```rust
 impl RawTable {
 #[cfg(test)]
@@ -2071,6 +1831,7 @@ pub(crate) fn buckets(&self) -> &[Bucket] {
 }
 }
 ```
+
 Listing 6-3: Using #[cfg(test)] to make internal state accessible in the testing context
 Bookkeeping for Test Assertions
 The second benefit of having code that exists only during testing is that
@@ -2084,10 +1845,14 @@ unnecessarily. The most obvious way to do so is to have the BufWriter keep
 track of how many times it has invoked write on the underlying Write.
 However, in production this information isn’t important, and keeping
 track of it introduces (marginal) performance and memory overhead. With
-#[cfg(test)], you can have the bookkeeping happen only when testing, as
+
+# [cfg(test)], you can have the bookkeeping happen only when testing, as
+
 shown in Listing 6-4.
 struct BufWriter<T> {
-#[cfg(test)]
+
+# [cfg(test)]
+
 write_through: usize,
 // other fields...
 }
@@ -2095,7 +1860,9 @@ impl<T: Write> Write for BufWriter<T> {
 fn write(&mut self, buf: &[u8]) -> Result<usize> {
 // ...
 if self.full() {
-#[cfg(test)]
+
+# [cfg(test)]
+
 self.write_through += 1;
 let n = self.inner.write(&self.buffer[..])?;
 // ...
@@ -2178,7 +1945,7 @@ fn frobnify(i: usize) -> std::io::Result<()> {
 Listing 6-5: Hiding lines in a doctest with #
 
 92 Chapter 6
-NOTE Use this feature with care; it can be frustrating to users if they copy-paste an example
+**NOTE** Use this feature with care; it can be frustrating to users if they copy-paste an example
 and then it doesn’t work because of required steps that you’ve hidden.
 Much like #[test] functions, doctests also support attributes that
 modify how the doctest is run. These attributes go immediately after the
@@ -2197,11 +1964,13 @@ can also use this attribute to check that certain static properties hold for
 your types. Listing 6-6 shows an example of how you can use compile_fail to
 check that a given type does not implement Send, which may be necessary to
 uphold safety guarantees in unsafe code.
+
 ```compile_fail
 # struct MyNonSendType(std::rc::Rc<()>);
 fn is_send<T: Send>() {}
 is_send::<MyNonSendType>();
 ```
+
 Listing 6-6: Testing that code fails to compile with compile_fail
 compile_fail is a fairly crude tool in that it gives no indication of why the
 code does not compile. For example, if code doesn’t compile because of a
@@ -2238,7 +2007,7 @@ The Rust compiler also comes with its own set of lints in the form of
 warnings, though these are usually more directed toward writing idiomatic
 code than checking for correctness. Instead, correctness lints in the compiler
 are simply treated as errors (take a look at rustc -W help for a list).
-NOTE Not all compiler warnings are enabled by default. Those disabled by default are usually
+**NOTE** Not all compiler warnings are enabled by default. Those disabled by default are usually
 still being refined, or are more about style than content. A good example of this is
 the “idiomatic Rust 2018 edition” lint, which you can enable with #![warn(rust_2018
 _idioms)]. When this lint is enabled, the compiler will tell you if you’re failing to take
@@ -2263,7 +2032,6 @@ program crashes, that’s a bug. For example, if you’re writing a URL parsing
 library, you can fuzz-test your program by systematically generating random
 strings and throwing them at the parsing function until it panics. Done
 
-
 94 Chapter 6
 naively, this would take a while to yield results: if the fuzzer starts with a,
 then b, then c, and so on, it will take it a long time to generate a tricky URL
@@ -2276,7 +2044,7 @@ fuzzer at a function that takes a “fuzzable” input, and off it goes. For exa
 Listing 6-7 shows an example of how you might fuzz-test a URL parser.
 libfuzzer_sys::fuzz_target!(|data: &[u8]| {
 if let Ok(s) = std::str::from_utf8(data) {
-let _ = url::Url::parse(s);
+let_ = url::Url::parse(s);
 }
 });
 Listing 6-7: Fuzzing a URL parser with libfuzzer
@@ -2385,7 +2153,7 @@ For example, consider the very unsound code in Listing 6-8, which creates
 two exclusive references to a value.
 let mut x = 42;
 let x: *mut i32 = &mut x;
-let (x1, x2) = unsafe { (&mut *x, &mut *x) };
+let (x1, x2) = unsafe { (&mut*x, &mut *x) };
 println!("{} {}", x1, x2);
 Listing 6-8: Wildly unsafe code that Miri detects is incorrect
 At the time of writing, if you run this code through Miri, you get an
@@ -2394,12 +2162,12 @@ error: Undefined Behavior: trying to reborrow for Unique at alloc1383, but
 parent tag <2772> does not have an appropriate item in the borrow stack
 --> src/main.rs:4:6
 |
-4 | let (x1, x2) = unsafe { (&mut *x, &mut *x) };
+4 | let (x1, x2) = unsafe { (&mut*x, &mut *x) };
 | ^^ trying to reborrow for Unique at alloc1383, but parent tag <2772>
 does not have an appropriate item in the borrow stack
 
 Testing 97
-NOTE Miri is still under development, and its error messages aren’t always the easiest to
+**NOTE** Miri is still under development, and its error messages aren’t always the easiest to
 understand. This is a problem that’s being actively worked on, so by the time you read
 this, the error output may have already gotten much better!
 Another tool worth looking at is Loom, a clever library that tries to
@@ -2580,7 +2348,6 @@ that focuses on higher-level aspects of intermediate Rust use in this book.
 Starting with the next chapter on declarative and procedural macros, we
 will be focusing much more on Rust code. See you on the next page!
 
-
 ### 7.MACROS
 
 Macros are, in essence, a tool for making
@@ -2601,7 +2368,6 @@ Programmers coming from C-based languages may be used to the
 unholy land of C and C++ where you can use #define to change each true to
 false, or to remove all occurrences of the else keyword. If that’s the case for
 
-
 102 Chapter 7
 you, you’ll need to disassociate macros from a feeling of doing something
 “bad.” Macros in Rust are far from the Wild West of C macros. They follow
@@ -2620,7 +2386,7 @@ macros. Note, however, that not all function-like macros are declarative
 macros; macro_rules! itself is one example of this, and format_args! is another.
 The ! suffix merely indicates to the compiler that the macro invocation will
 be replaced with different source code at compile time.
-NOTE Since Rust’s parser specifically recognizes and parses macro invocations annotated
+**NOTE** Since Rust’s parser specifically recognizes and parses macro invocations annotated
 with !, you can use them only in places where the parser allows them. They work in
 most places you’d expect, like in expression position or in an impl block, but not everywhere.
 For example, you cannot (at the time of writing) invoke a function-like macro
@@ -2648,12 +2414,16 @@ implementations. For tests, I often want to run the same test multiple times
 but with slightly different configurations. I might have something like what
 is shown in Listing 7-1.
 fn test_inner<T>(init: T, frobnify: bool) { ... }
-#[test]
+
+# [test]
+
 fn test_1u8_frobnified() {
 test_inner(1u8, true);
 }
 // ...
-#[test]
+
+# [test]
+
 fn test_1i128_not_frobnified() {
 test_inner(1i128, false);
 }
@@ -2664,9 +2434,13 @@ macro_rules! test_battery {
 ($($t:ty as $name:ident),*)) => {
 $(
 mod $name {
-#[test]
+
+# [test]
+
 fn frobnified() { test_inner::<$t>(1, true) }
-#[test]
+
+# [test]
+
 fn unfrobnified() { test_inner::<$t>(1, false) }
 }
 )*
@@ -2696,7 +2470,7 @@ you invented the Clone trait and want to implement it for all the Copy types
 in the standard library. Instead of manually writing an implementation for
 each one, you can use a macro like the one in Listing 7-3.
 macro_rules! clone_from_copy {
-($($t:ty),*) => {
+($($t:ty),_) => {
 $(impl Clone for $t {
 fn clone(&self) -> Self { *self }
 })*
@@ -2715,7 +2489,7 @@ is still some way off. So, for the time being, we’re better off enumerating
 the types specifically. This pattern also extends beyond simple forwarding
 implementations: for example, you could easily alter the code in Listing 7-3
 to implement an AddOne trait to all integer types!
-NOTE If you ever find yourself wondering if you should use generics or a declarative macro,
+**NOTE** If you ever find yourself wondering if you should use generics or a declarative macro,
 you should use generics. Generics are generally more ergonomic than macros and
 integrate much better with other constructs in the language. Consider this rule of
 thumb: if your code changes based on type, use generics; otherwise, use macros.
@@ -2729,9 +2503,9 @@ names. For example, the text (value + 4) would be represented by the fivetoken
 sequence (, value, +, 4, ) in Rust-like grammar. The process of turning
 text into tokens also provides a layer of abstraction between the rest of the
 compiler and the gnarly low-level details of parsing text. For example, in
-the token representation, there is no notion of whitespace, and /*"foo"*/
-and "/*foo*/" have distinct representations (the former is no token, and the
-latter is a string literal token with the content /*foo*/).
+the token representation, there is no notion of whitespace, and /_"foo"*/
+and "/_foo_/" have distinct representations (the former is no token, and the
+latter is a string literal token with the content /_foo_/).
 Once the source code has been turned into a sequence of tokens, the
 compiler walks that sequence and assigns syntactic meaning to the tokens. For
 example, ()-delimited tokens make up a group, ! tokens denote macro invocations,
@@ -2800,9 +2574,9 @@ matchers from first to last, and when it finds a matcher that
 matches the tokens in the invocation, it substitutes the invocation by walking
 the tokens of the corresponding transcriber. Listing 7-4 shows how the
 different parts of a declarative macro rule fit together.
-macro_rules! /* macro name */ {
-(/* 1st matcher */) => { /* 1st transcriber */ };
-(/* 2nd matcher */) => { /* 2nd transcriber */ };
+macro_rules! /_macro name _/ {
+(/_ 1st matcher _/) => { /_ 1st transcriber _/ };
+(/_ 2nd matcher _/) => { /_ 2nd transcriber_/ };
 }
 Listing 7-4: Declarative macro definition components
 Matchers
@@ -2811,9 +2585,9 @@ twist and bend in predefined ways to match the input token tree it was given
 at the invocation site. As an example, consider a macro with the matcher
 $a:ident + $b:expr. That matcher will match any identifier (:ident) followed
 by a plus sign followed by any Rust expression (:expr). If the macro is invoked
-with x + 3 * 5, the compiler notices that the matcher matches if it sets $a = x
-and $b = 3 * 5. Even though * never appears in the matcher, the compiler
-realizes that 3 * 5 is a valid expression and that it can therefore be matched
+with x + 3 _5, the compiler notices that the matcher matches if it sets $a = x
+and $b = 3_ 5. Even though _never appears in the matcher, the compiler
+realizes that 3_ 5 is a valid expression and that it can therefore be matched
 with $b:expr, which accepts anything that is an expression (the :expr part).
 Matchers can get pretty hairy, but they have huge expressive power,
 much like regular expressions. For a not-too-hairy example, this matcher
@@ -2833,7 +2607,6 @@ a pattern repeatedly ($()), enable you to match most straightforward
 code patterns. If, however, you find that it is difficult to express the pattern
 you want with a matcher, you may want to try a procedural macro instead,
 
-
 Macros 107
 where you don’t need to follow the strict syntax that macro_rules! requires.
 We’ll look at these in more detail later in the chapter.
@@ -2852,7 +2625,7 @@ insert call into some map for each $key/$value pair that was matched:
 $(map.insert($key, $value);)+
 Notice that here we want a semicolon for each repetition, not just to delimit
 the repetition, so we place the semicolon inside the repetition parentheses.
-NOTE You must use a metavariable in each repetition in the transcriber so that the compiler
+**NOTE** You must use a metavariable in each repetition in the transcriber so that the compiler
 knows which repetition in the matcher to use (in case there is more than one).
 Hygiene
 You may have heard that Rust macros are hygienic, and perhaps that being
@@ -2878,7 +2651,6 @@ let foo = 1;
 let_foo!(2);
 assert_eq!(foo, 1);
 Listing 7-5: Macros exist in their own little universes. Mostly.
-
 
 108 Chapter 7
 After the compiler expands let_foo!(2), the assert looks like it should
@@ -2907,7 +2679,7 @@ or has imported its own Result type. To be on the safe side, make sure you
 use fully specified types like ::core::option::Option or ::alloc::boxed::Box.
 If you specifically need to refer to something in the crate that defines the
 macro, use the special metavariable $crate.
-NOTE Avoid using ::std paths if you can so that the macro will continue to work in
+**NOTE** Avoid using ::std paths if you can so that the macro will continue to work in
 no_std crates.
 You can choose to share identifiers between a macro and its caller if you
 want the macro to affect a specific variable in the caller’s scope. The key is
@@ -2945,7 +2717,7 @@ a macro in one module and want to use it in another, the module you declare
 the macro in must appear earlier in the crate, not later. If foo and bar are modules
 at the root of a crate, and foo declares a macro that bar wants to use, then
 mod foo must appear before mod bar in lib.rs!
-NOTE There is one exception to this odd scoping of macros (formally called textual scoping),
+**NOTE** There is one exception to this odd scoping of macros (formally called textual scoping),
 and that is if you mark the macro with #[macro_export]. That annotation effectively
 hoists the macro to the root of the crate and marks it as pub so that it can then be
 used anywhere in your crate or by your crate’s dependents.
@@ -2970,7 +2742,6 @@ particular common use case:
 All three types use the same underlying mechanism: the compiler provides
 your macro with a sequence of tokens, and it expects you to produce
 
-
 110 Chapter 7
 a sequence of tokens in return that are (probably) related to the input tree.
 However, they differ in how the macro is invoked and how its output is handled.
@@ -2993,14 +2764,18 @@ attribute (minus the attribute’s name) and the token tree of the entire item
 it is attached to, including any other attributes that item may have. Attribute
 macros allow you to easily write a procedural macro that transforms an
 item, such as by adding a prelude or epilogue to a function definition (like
-#[test] does) or by modifying the fields of a struct.
+
+# [test] does) or by modifying the fields of a struct
+
 Derive Macros
 The derive macro is slightly different from the other two in that it adds
 to, rather than replaces, the target of the macro. Even though this limitation
 may seem severe, derive macros were one of the original motivating
 factors behind the creation of procedural macros. Specifically, the serde
 crate needed derive macros to be able to implement its now-well-known
-#[derive(Serialize, Deserialize)] magic.
+
+# [derive(Serialize, Deserialize)] magic
+
 Derive macros are arguably the simplest of the procedural macros,
 since they have such a rigid form: you can append items only after the
 annotated item; you can’t replace the annotated item, and you cannot have
@@ -3014,7 +2789,6 @@ appropriate, it’s worth discussing why you may want to think twice before
 you reach for a procedural macro—namely, increased compile time.
 Procedural macros can significantly increase compile times for two
 main reasons. The first is that they tend to bring with them some pretty
-
 
 Macros 111
 heavy dependencies. For example, the syn crate, which provides a parser
@@ -3111,7 +2885,9 @@ Macros 113
 the like. Essentially, the attributes make up a miniature domain-specific
 language (DSL) that hides a lot of boilerplate that’d otherwise be necessary.
 Similarly, the asynchronous I/O framework tokio lets you use
-#[tokio::main] async fn main() to automatically set up a runtime and run
+
+# [tokio::main] async fn main() to automatically set up a runtime and run
+
 your asynchronous code, thereby saving you from writing the same runtime
 setup in every asynchronous application’s main function.
 Transparent middleware
@@ -3151,13 +2927,12 @@ procedural macro. There are two main ways to do so. The first is to manually
 construct a TokenStream and extend it one TokenTree at a time. The second is to
 use TokenStream’s implementation of FromStr, which lets you parse a string that
 
-
 114 Chapter 7
 contains Rust code into a TokenStream with "".parse::<TokenStream>(). You can
 also mix and match these; if you want to prepend some code to your macro’s
 input, just construct a TokenStream for the prologue, and then use the Extend
 trait to append the original input.
-NOTE TokenStream also implements Display, which pretty-prints the tokens in the stream.
+**NOTE** TokenStream also implements Display, which pretty-prints the tokens in the stream.
 This comes in super handy for debugging!
 Tokens are very slightly more magical than I’ve described so far in that
 every token, and indeed every TokenTree, also has a span. Spans are how the
@@ -3197,9 +2972,8 @@ errors that seem to stem from the relevant part of the code, even though
 the actual compiler error is somewhere in the generated code that the
 user never even sees!
 
-
 Macros 115
-NOTE If you’ve ever been curious how syn’s error handling works, its Error type implements
+**NOTE** If you’ve ever been curious how syn’s error handling works, its Error type implements
 an Error::to_compile_error method, which turns it into a TokenStream that
 holds only a compile_error! directive. What’s particularly neat with syn’s Error type
 is that it internally holds a collection of errors, each of which produces a distinct
@@ -3227,7 +3001,6 @@ your own macros. In the next chapter, we’ll start our journey into asynchronou
 programming and the Future trait. I promise—it’s just on
 the next page.
 
-
 ### 8.ASYNCHRONOUS PROGRAMMING
 
 Asynchronous programming is, as the
@@ -3248,7 +3021,6 @@ model before we can understand the asynchronous one. This is important
 in both clarifying the concepts and demonstrating the trade-offs of using
 asynchronous programming: an asynchronous solution is not always the
 right one! We’ll start this chapter by taking a quick journey through what
-
 
 118 Chapter 8
 motivates asynchronous programming as a concept in the first place; then
@@ -3420,7 +3192,7 @@ appropriate Output type. This doesn’t change the fact that you have to poll
 them—we’ll deal with that later—but it does mean that at least there is a
 standardized interface to these kinds of pending values, and we don’t need
 to use the poll_ prefix everywhere.
-NOTE In general, you should not poll a future again after it has returned Poll::Ready. If
+**NOTE** In general, you should not poll a future again after it has returned Poll::Ready. If
 you do, the future is well within its rights to panic. A future that is safe to poll after it
 has returned Ready is sometimes referred to as a fused future.
 Ergonomic Futures
@@ -3434,7 +3206,6 @@ tx.send(t).await;
 }
 }
 Listing 8-3: Implementing a channel-forwarding future using async and await
-
 
 122 Chapter 8
 This code, written using async and await syntax, looks very similar to its
@@ -3487,8 +3258,6 @@ important insight into how things work under the hood, so let’s walk through
 it. First, we define our future type as an enum 1, which we’ll use to keep track
 of what we’re currently waiting on. This is a consequence of the fact that
 
-
-
 Asynchronous Programming 123
 when we return Poll::Pending, the next call to poll will start at the top of the
 function again. We need some way to know what we were in the middle of so
@@ -3538,13 +3307,10 @@ have no way to write out the types for our variants. The send and receive
 methods also have to take ownership of the sender and the receiver; if they
 did not, the lifetimes of the futures they returned would be tied to the
 
-
-
-
 124 Chapter 8
 borrow of self, which would end when we return from poll. But that would
 not work, since we’re trying to store those futures in self.
-NOTE You may have noticed that Receiver looks a lot like an asynchronous version of
+**NOTE** You may have noticed that Receiver looks a lot like an asynchronous version of
 Iterator. Others have noticed the same thing, and the standard library is on its way
 to adding a trait specifically for types that can meaningfully implement poll_next.
 Down the line, these asynchronous iterators (often referred to as streams) may end up
@@ -3583,7 +3349,6 @@ return. Now suppose the channel eventually clears and we want to proceed
 with the send. If we call forward again from the top, it’ll call next again and
 the item we previously tried to send will be lost, so that’s no good. Instead,
 we turn forward into a generator.
-
 
 Asynchronous Programming 125
 Whenever the forward generator cannot make progress anymore, it
@@ -3677,7 +3442,6 @@ is not immediately available so that it knows where to try again when the
 generator next resumes. When the generator yields, the future and the reference
 the future contains get stashed away inside the generator. But what
 
-
 Asynchronous Programming 127
 now happens if the generator is moved? Specifically, look at the code in
 Listing 8-7, which calls forward.
@@ -3729,7 +3493,7 @@ In particular, this definition requires that you call poll on Pin<&mut Self>.
 Once you have a value behind a Pin, that constitutes a contract that that value
 will never move again. This means that you can construct self-references
 internally to your heart’s delight, exactly as you want for generators.
-NOTE While Future makes use of Pin, Pin is not tied to the Future trait—you can use Pin for
+**NOTE** While Future makes use of Pin, Pin is not tied to the Future trait—you can use Pin for
 any self-referential data structure.
 But how do you get a Pin to call poll? And how can Pin ensure that
 the contained value won’t move? To see how this magic works, let’s look
@@ -3802,7 +3566,7 @@ then it could be that that &T initially came from a Pin<&mut T>, and that you
 have now violated the invariant that the T behind the Pin may never move,
 even though the place where you unsafely replaced the &T did not even mention
 Pin!
-NOTE If you’ve browsed through the Pin documentation while reading this chapter, you may
+**NOTE** If you’ve browsed through the Pin documentation while reading this chapter, you may
 have noticed Pin::set, which takes a &mut self and a <P as Deref>::Target and
 safely changes the value behind the Pin. This is possible because set does not return
 the value that was previously pinned—it simply drops it in place and stores the new
@@ -3861,7 +3625,6 @@ being the safe version of get_unchecked_mut). In fact, we can even provide a
 Pin::into_inner that simply gives back the owned P if the target type is Unpin,
 since the Pin is essentially irrelevant!
 
-
 Asynchronous Programming 131
 Ways of Obtaining a Pin
 With our new understanding of Pin and Unpin, we can now make progress
@@ -3914,7 +3677,7 @@ for any target type that’s !Unpin). By moving the value stored
 in $var, the macro also ensures that the caller cannot drop the $var binding
 the macro declarations without also dropping the original variable.
 Specifically, without that line, the caller could write (note the extra scope):
-let foo = /* */; { pin_mut!(foo); foo.poll() }; foo.mut_self_method();
+let foo = /**/; { pin_mut!(foo); foo.poll() }; foo.mut_self_method();
 Here, we give a pinned instance of foo to poll, but then we later use a
 &mut to foo without a Pin, which violates the Pin contract. With the extra reassignment,
 on the other hand, that code would also move foo into the new
@@ -3993,7 +3756,6 @@ The &mut Context contains the Waker. The argument is a Context, not a
 Waker directly, so that we can augment the asynchronous ecosystem with
 additional context for futures should that be deemed necessary.
 
-
 134 Chapter 8
 The primary method on Waker is wake (and the by-reference variant wake
 _by_ref), which should be called when the future can again make progress.
@@ -4026,7 +3788,7 @@ futures but instead does something like write to a network socket or attempt
 to receive on a channel. These are commonly referred to as leaf futures since
 they have no children. A leaf future has no inner future but instead directly
 represents some resource that may not yet be ready to return a result.
-NOTE The poll contract is the reason why the recursive poll call 6 back in Listing 8-4 is
+**NOTE** The poll contract is the reason why the recursive poll call 6 back in Listing 8-4 is
 necessary for correctness.
 Leaf futures typically come in one of two shapes: those that wait for
 events that originate within the same process (like a channel receiver), and
@@ -4040,7 +3802,6 @@ the sender and the receiver and then returns Poll::Pending. When a sender
 later comes along and injects a message into the channel, it notices the Waker
 left there by the waiting receiver and calls wake on the Waker before returning
 from send. Now the receiver is awoken, and the poll contract is upheld.
-
 
 Asynchronous Programming 135
 Leaf futures that deal with external events are more involved, as the
@@ -4071,7 +3832,7 @@ Windows, the BSDs, macOS, and pretty much every other operating system
 provide similar mechanisms. When that call returns, the executor calls wake
 on all the wakers associated with event sources that the operating system
 reported events for, and thus the poll contract is fulfilled.
-NOTE A reactor is the part of an executor that leaf futures register event sources with and
+**NOTE** A reactor is the part of an executor that leaf futures register event sources with and
 that the executor waits on when it has no more useful work to do. It is possible to
 separate the executor and the reactor, though bundling them together often improves
 performance as the two can be co-optimized more readily.
@@ -4089,8 +3850,6 @@ at the same time, which can reduce performance and mean you must
 inspect the state of multiple executors when debugging.
 Library crates that wish to support multiple executors have to be generic
 over their leaf resources. For example, instead of using a particular executor’s
-
-
 
 136 Chapter 8
 TcpStream or File future type, a library can store a generic T: AsyncRead +
@@ -4139,7 +3898,6 @@ between tasks while sharing the code for the various Waker methods.
 When the executor eventually polls a task, that task starts running from
 the top of its implementation of Future::poll and must decide from there how
 
-
 Asynchronous Programming 137
 to get to the future deeper down that can now make progress. Since each
 future knows only about its own fields, and nothing about the whole tree, this
@@ -4183,7 +3941,6 @@ code might block or for yielding voluntarily in the context of loops that might
 otherwise not yield, which can compose part of the solution. A good rule of
 thumb is that no future should be able to run for more than 1 ms without returning
 Poll::Pending.
-
 
 138 Chapter 8
 Tying It All Together with spawn
@@ -4367,7 +4124,7 @@ safe method as_ref. If you call decr and then drop the second-to-last Rc of a
 given T, the reference count drops to zero and the T will be dropped—but
 the program might still call as_ref on the last Rc, and end up with a dangling
 reference.
-NOTE Undefined behavior describes the consequences of a program that violates invariants
+**NOTE** Undefined behavior describes the consequences of a program that violates invariants
 of the language at runtime. In general, if a program triggers undefined behavior,
 the outcome is entirely unpredictable. We’ll cover undefined behavior in greater
 detail later in this chapter.
@@ -4387,7 +4144,7 @@ unsafe block inside it. The lint will also likely become a hard error in future
 editions of Rust. The idea is to reduce the “footgun radius”—if every unsafe
 fn is one giant unsafe block, then you might accidentally perform unsafe
 operations without realizing it! For example, in decr in Listing 9-1, under
-the current rules you could also have added *std::ptr::null() without any
+the current rules you could also have added*std::ptr::null() without any
 unsafe annotation.
 The distinction between unsafe as a marker and unsafe blocks as a
 mechanism to enable unsafe operations is important, because you must
@@ -4420,30 +4177,30 @@ that comes after. Instead, we’ll look at these neat shiny new toys and what
 we can do with them.
 Juggling Raw Pointers
 One of the most fundamental reasons to use unsafe is to deal with Rust’s raw
-pointer types: *const T and *mut T. You should think of these as more or less
+pointer types: *const T and*mut T. You should think of these as more or less
 analogous to &T and &mut T, except that they don’t have lifetimes and are not
 subject to the same validity rules as their & counterparts, which we’ll discuss
 later in the chapter. These types are interchangeably referred to as pointers
 and raw pointers, mostly because many developers instinctively refer to
 references as pointers, and calling them raw pointers makes the distinction
 clearer.
-Since fewer rules apply to * than &, you can cast a reference to a pointer
-even outside an unsafe block. Only if you want to go the other way, from *
+Since fewer rules apply to *than &, you can cast a reference to a pointer
+even outside an unsafe block. Only if you want to go the other way, from*
 to &, do you need unsafe. You’ll generally turn a pointer back into a reference
 to do useful things with the pointed-to data, such as reading or modifying
 its value. For that reason, a common operation to use on pointers is
-unsafe { &*ptr } (or &mut *). The * there may look strange as the code is just
+unsafe { &_ptr } (or &mut_). The *there may look strange as the code is just
 constructing a reference, not dereferencing the pointer, but it makes sense
-if you look at the types; if you have a *mut T and want a &mut T, then &mut ptr
-would just give you a &mut *mut T. You need the * to indicate that you want
+if you look at the types; if you have a*mut T and want a &mut T, then &mut ptr
+would just give you a &mut _mut T. You need the_ to indicate that you want
 the mutable reference to what ptr is a pointer to.
 Unsafe Code 145
 POINTER TYPES
-You may be wondering what the difference is between *mut T and *const T
+You may be wondering what the difference is between *mut T and*const T
 and std::ptr::NonNull<T>. Well, the exact specification is still being worked
-out, but the primary practical difference between *mut T and *const T/
+out, but the primary practical difference between *mut T and*const T/
 NonNull<T> is that *mut T is invariant in T (see “Lifetime Variance” in Chapter 1),
-whereas the other two are covariant. As the names imply, *const T and
+whereas the other two are covariant. As the names imply,*const T and
 NonNull<T> differ primarily in that NonNull<T> is not allowed to be a null pointer,
 whereas *const T is.
 My best advice in choosing among these types is to use your intuition
@@ -4454,7 +4211,7 @@ optimization: basically, since the compiler knows that the type can never be
 null, it can use that information to represent types like Option<NonNull<T>> without
 any extra overhead, since the None case can be represented by setting the
 NonNull to be a null pointer! The null pointer value is a niche in the NonNull<T>
-type. If the pointer might be null, use *const T. And if you would have written
+type. If the pointer might be null, use*const T. And if you would have written
 &mut T, use *mut T.
 Unrepresentable Lifetimes
 As raw pointers do not have lifetimes, they can be used in circumstances
@@ -4504,7 +4261,7 @@ space-optimized data structures, like hash tables, where storing an extra
 pointer for each element would add too much overhead and using slices
 isn’t possible. Those are fairly niche use cases, and we won’t be talking
 more about them in this book, but I encourage you to read the code for
-hashbrown::RawTable (https://github.com/rust-lang/hashbrown/) if you want to
+hashbrown::RawTable (<https://github.com/rust-lang/hashbrown/>) if you want to
 learn more!
 The pointer arithmetic methods are unsafe to call even if you don’t
 want to turn the pointer into a reference afterwards. There are a couple
@@ -4533,7 +4290,7 @@ Whether that’s because you need to do lightning-fast zero-copy parsing
 or because you need to fiddle with some lifetimes, Rust provides you with
 some (very unsafe) tools to do so.
 The first and by far most widely used of these is pointer casting: you can
-cast a *const T to any other *const U (and the same for mut), and you don’t
+cast a*const T to any other *const U (and the same for mut), and you don’t
 even need unsafe to do it. The unsafety comes into play only when you later
 try to use the cast pointer as a reference, as you have to assert that the raw
 pointer can in fact be used as a reference to the type it’s pointing to.
@@ -4736,7 +4493,7 @@ introduce undefined behavior. Instead, the raw pointer types block these
 automatic implementations as an additional safeguard to unsafe code to
 make authors explicitly sign the contract that they have also followed the
 Send and Sync invariants.
-NOTE A common mistake with unsafe implementations of Send and Sync is to forget to add
+**NOTE** A common mistake with unsafe implementations of Send and Sync is to forget to add
 bounds to generic parameters: unsafe impl<T: Send> Send for MyUnsafeType<T> {}.
 GlobalAlloc
 The GlobalAlloc trait is how you implement a custom memory allocator
@@ -4745,7 +4502,7 @@ trait itself is interesting. Listing 9-4 gives the required methods for the
 GlobalAlloc trait.
 152 Chapter 9
 pub unsafe trait GlobalAlloc {
-pub unsafe fn alloc(&self, layout: Layout) -> *mut u8;
+pub unsafe fn alloc(&self, layout: Layout) ->*mut u8;
 pub unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout);
 }
 Listing 9-4: The GlobalAlloc trait with its required methods
@@ -4816,7 +4573,7 @@ The same is true for an implementation of Deref that dereferenced to a different
 contract of Hash or Deref that does not actually hold; Hash never claimed that
 it was deterministic, and neither did Deref. Or rather, the authors of those
 implementations never used the unsafe keyword to make that claim!
-NOTE An important implication of traits like Eq, Hash, and Deref being safe is that unsafe
+**NOTE** An important implication of traits like Eq, Hash, and Deref being safe is that unsafe
 code can rely only on the safety of safe code, not its correctness. This applies not only
 to traits, but to all unsafe/safe code interactions.
 Great Responsibility
@@ -4857,7 +4614,7 @@ specification.
 If you want a good illustration of how specifications and compiler optimizations
 interact in strange ways where it’s hard to assign blame, I recommend
 reading through Ralf Jung’s blog post “We Need Better Language Specs”
-(https://www.ralfj.de/blog/2020/12/14/provenance.html).
+(<https://www.ralfj.de/blog/2020/12/14/provenance.html>).
 Validity
 Perhaps the most important concept to understand before writing unsafe
 code is validity, which dictates the rules for what values inhabit a given
@@ -4876,7 +4633,7 @@ it!
 Shared references have the additional constraint that the pointee is
 not allowed to change during the reference’s lifetime. That is, any value
 the pointee contains must remain exactly the same over its lifetime. This
-applies transitively, so if you have an & to a type that contains a *mut T, you
+applies transitively, so if you have an & to a type that contains a*mut T, you
 are not allowed to ever mutate the T through that *mut even though you
 could write code to do so using unsafe. The only exception to this rule is a
 value wrapped by the UnsafeCell type. All other types that provide interior
@@ -4885,7 +4642,7 @@ An interesting result of Rust’s strict rules for references is that for many
 years, it was impossible to safely take a reference to a field of a packed or
 partially uninitialized struct that used repr(Rust). Since repr(Rust) leaves
 a type’s layout undefined, the only way to get the address of a field was by
-writing &some_struct.field as *const _. However, if some_struct is packed,
+writing &some_struct.field as*const_. However, if some_struct is packed,
 then some_struct.field may not be aligned, and thus creating an & to it is
 illegal! Further, if some_struct isn’t fully initialized, then the some_struct reference
 itself cannot exist! In Rust 1.51.0, the ptr::addr_of! macro was stabilized,
@@ -4984,7 +4741,7 @@ Normally that wouldn’t have a noticeable impact on performance, but if
 this was in a sufficiently hot loop, it might! Here, we instead allow the array
 to keep whatever values happened to be on the stack when the function was
 called, and then overwrite only what we end up needing.
-NOTE Be careful with dropping partially initialized memory. If a panic causes an unexpected
+**NOTE** Be careful with dropping partially initialized memory. If a panic causes an unexpected
 early drop before the MaybeUninit<T> has been fully initialized, you’ll have to
 take care to drop only the parts of T that are now valid, if any. You can just drop the
 MaybeUninit and have the backing memory forgotten, but if it holds, say, a Box, you
@@ -5165,7 +4922,7 @@ unsafe impl<#[may_dangle] T> Drop for ..
 This escape hatch allows a type to declare that a given generic parameter
 isn’t used in Drop, which enables use cases like Box<&mut T>. However,
 it also introduces a new problem if your Box<T> holds a raw heap pointer,
-*mut T, and allows T to dangle using #[may_dangle]. Specifically, the *mut T
+*mut T, and allows T to dangle using #[may_dangle]. Specifically, the*mut T
 makes Rust’s drop check think that your Box<T> doesn’t own a T, and thus
 that it doesn’t call T::drop either. Combined with the may_dangle assertion
 that we don’t access T when the Box<T> is dropped, the drop check now concludes
@@ -5177,16 +4934,16 @@ that even though the Box<T> doesn’t hold any T, and won’t access T on drop,
 it does still own a T and will drop one when the Box is dropped. Listing 9-11
 shows what our hypothetical Box type would look like.
 struct Box<T> {
-t: NonNull<T>, // NonNull not *mut for covariance (Chapter 1)
+t: NonNull<T>, // NonNull not _mut for covariance (Chapter 1)
 _owned: PhantomData<T>, // For drop check to realize we drop a T
 }
-unsafe impl<#[may_dangle] T> for Box<T> { /* ... */ }
+unsafe impl<#[may_dangle] T> for Box<T> { /_ ... _/ }
 Listing 9-11: A definition for Box that is maximally flexible in terms of the drop check
 This interaction is subtle and easy to miss, but it arises only when you
 use the unstable #[may_dangle] attribute. Hopefully this subsection will serve
 as a warning so that when you see unsafe impl Drop in the wild in the future,
 you’ll know to look for a PhantomData<T> as well!
-NOTE Another consideration for unsafe code concerning Drop is to make sure that you have
+**NOTE** Another consideration for unsafe code concerning Drop is to make sure that you have
 a Type<T> that lets T continue to live after self is dropped. For example, if you’re
 implementing delayed garbage collection, you need to also add T: 'static. Otherwise,
 if T = WriteOnDrop<&mut U>, the later access or drop of T could trigger undefined
@@ -5285,7 +5042,7 @@ to your project who just stumbled across this unsafe call and wants to
 understand what’s going on.
 Unsafe Code 165
 Before you get too deep into writing unsafe code, I also highly recommend
-that you go read the Rustonomicon (https://doc.rust-lang.org/nomicon/)
+that you go read the Rustonomicon (<https://doc.rust-lang.org/nomicon/>)
 cover to cover. There are so many details that are easy to miss, and will
 come back to bite you if you’re not aware of them. We’ve covered many
 of them in this chapter, but it never hurts to be more aware. You should
@@ -5331,7 +5088,7 @@ code. A panic is always better than triggering undefined behavior! Check
 all of your assumptions with assertions if you can—even things like the size
 166 Chapter 9
 of a usize if you rely on that for safety. If you’re concerned about runtime
-cost, make use of the debug_assert* macros and the if cfg!(debug_assertions)
+cost, make use of the debug_assert_ macros and the if cfg!(debug_assertions)
 || cfg!(test) construct to execute them only in debug and test contexts.
 A HOUSE OF CARDS?
 Unsafe code can violate all of Rust’s safety guarantees, and this is often touted
@@ -5500,14 +5257,14 @@ programs. Similarly, many operating system operations that may seem like
 they should be independent, such as creating two files with different names
 in the same directory, may end up having to happen sequentially inside the
 kernel.
-NOTE Scalable concurrent allocations is the raison d’être for the jemalloc memory allocator!
+**NOTE** Scalable concurrent allocations is the raison d’être for the jemalloc memory allocator!
 Mutual exclusion is the most obvious barrier to parallel speedup since,
 by definition, it forces serial execution of some portion of your program.
 Even if you make the remainder of your program scale with the number of
 cores perfectly, the total speedup you can achieve is limited by the length of
 the mutually exclusive, serial section. Be mindful of your mutually exclusive
 sections, and seek to restrict them to only where strictly necessary.
-NOTE For the theoretically minded, the limits on the achievable speedup as a result of mutually
+**NOTE** For the theoretically minded, the limits on the achievable speedup as a result of mutually
 exclusive sections of code can be computed using Amdahl’s law.
 Shared Resource Exhaustion
 Unfortunately, even if you achieve perfect concurrency within your tasks,
@@ -5520,10 +5277,6 @@ fixes for such cases tend to require substantial re-engineering (or even new
 hardware!), so we won’t talk much more about this topic in this chapter. Just
 remember that scalability is rarely something you can “achieve,” and more
 something you just strive for.
-
-
-
-
 
 Concurrency (and Parallelism) 171
 False Sharing
@@ -5583,7 +5336,7 @@ slower than its single-threaded counterpart, given any number of cores! This is
 why it’s important to measure both before and after you optimize and parallelize:
 the results may surprise you.
 If you’re curious about this topic, I highly recommend you read Frank
-McSherry’s 2015 paper “Scalability! But at what COST?” (https://www
+McSherry’s 2015 paper “Scalability! But at what COST?” (<https://www>
 .frankmcsherry.org/assets/COST.pdf), which uncovers some particularly
 egregious examples of “costly scaling.”
 Concurrency Models
@@ -5622,7 +5375,7 @@ another has to update the state with some function g, and f(g(s)) != g(f(s)),
 then shared memory concurrency is likely necessary. If that is not the case,
 the other two patterns are likely better fits, as they tend to lead to simpler
 and more performant designs.
-NOTE Some problems have known algorithms that can provide concurrent shared memory
+**NOTE** Some problems have known algorithms that can provide concurrent shared memory
 operations without the use of locks. As the number of cores grows, these lock-free
 algorithms may scale better than lock-based algorithms, though they also often have
 slower per-core performance due to their complexity. As always with performance matters,
@@ -5966,7 +5719,7 @@ reorder the loads and stores involved. Let’s walk through exactly what happens
 here to make r2 = true possible.
 First, the CPU notices that 4 doesn’t have to happen after 3, since 4
 doesn’t use any output or side effect of 3. That is, 4 has no execution dependency
-on 3. So, the CPU decides to reorder them for *waves hands* reasons
+on 3. So, the CPU decides to reorder them for _waves hands_ reasons
 that’ll make your program go faster. The CPU thus goes ahead and executes 4
 first, setting Y = true, even though 3 hasn’t run yet. Then, t2 is put to sleep
 by the operating system and thread t1 executes a few instructions, or t1 simply
@@ -6006,10 +5759,11 @@ the threads involved. This is because every execution must respect the program
 order; if a load in thread B has a dependency on some store in thread
 A (the store in A must execute before the load in B), then any read or write
 in B after that load must also happen after that store in A.
-NOTE The Acquire memory ordering can be applied only to loads, Release only to stores,
+**NOTE** The Acquire memory ordering can be applied only to loads, Release only to stores,
 and AcqRel only to operations that both load and store (like fetch_add).
 Concretely, these memory orderings place the following restrictions on
 execution:
+
 1. Loads and stores cannot be moved forward past a store with
 Ordering::Release.
 2. Loads and stores cannot be moved back before a load with
@@ -6045,7 +5799,7 @@ do. By performing a Release store to release the lock and an Acquire load to
 acquire the lock, you can guarantee that the loads and stores in the critical
 section are never moved to before the lock was actually acquired or to after
 the lock was released!
-NOTE On some CPU architectures, like x86, Acquire/Release ordering is guaranteed
+**NOTE** On some CPU architectures, like x86, Acquire/Release ordering is guaranteed
 by the hardware, and there is no additional cost to using Ordering::Release and
 Ordering::Acquire over Ordering::Relaxed. On other architectures that is not the
 case, and your program may see speedups if you switch to Relaxed for atomic operations
@@ -6169,7 +5923,7 @@ static LOCK: AtomicBool = AtomicBool::new(false);
 fn mutex(f: impl FnOnce()) {
 // Wait for the lock to become free (false).
 while LOCK.load(Ordering::Acquire)
-{ /* .. TODO: avoid spinning .. */ }
+{ /* .. TODO: avoid spinning .. _/ }
 // Store the fact that we hold the lock.
 LOCK.store(true, Ordering::Release);
 // Call f while holding the lock.
@@ -6203,7 +5957,7 @@ match take {
 Ok(false) => break,
 Ok(true) | Err(false) => unreachable!(),
 186 Chapter 10
-Err(true) => { /* .. TODO: avoid spinning .. */ }
+Err(true) => { /_ .. TODO: avoid spinning .. _/ }
 }
 }
 // Call f while holding the lock.
@@ -6224,7 +5978,7 @@ an AtomicBool since we know what the value must be if the operation failed,
 but for something like an AtomicI32, the updated current value will let you
 quickly recompute what to store and then try again without having to do
 another load.
-NOTE Note that compare_exchange checks only whether the value is the same as the one that
+**NOTE** Note that compare_exchange checks only whether the value is the same as the one that
 was passed in as the current value. If some other thread modifies the atomic variable’s
 value and then resets it to the original value again, a compare_exchange on that variable
 will still succeed. This is often referred to as the A-B-A problem.
@@ -6312,7 +6066,7 @@ general, the best way to significantly improve the performance of a concurrent
 algorithm is to split contended variables into more atomic variables
 that are each less contended, rather than switching from compare_exchange to
 a fetch method.
-NOTE The fetch_update method is somewhat deceptively named—behind the scenes, it is
+**NOTE** The fetch_update method is somewhat deceptively named—behind the scenes, it is
 really just a compare_exchange_weak loop, so its performance profile will more closely
 match that of compare_exchange than the other fetch methods.
 Sane Concurrency
@@ -6370,7 +6124,7 @@ stress tests are therefore only as good as the assertions in your code; they
 can’t tell you about a bug that doesn’t manifest in some easy-to-spot way
 like an assertion failure or some other kind of panic. For that reason, it’s a
 good idea to litter your low-level concurrency code with assertions, or debug_
-assert_* if you’re worried about runtime cost in particularly hot loops.
+assert__ if you’re worried about runtime cost in particularly hot loops.
 Use Concurrency Testing Tools
 The primary challenge in writing concurrent code is to handle all the possible
 ways the execution of different threads can interleave. As we saw in the
@@ -6510,7 +6264,7 @@ and explore some of the intricacies of allowing data to flow across the FFI
 boundary. Finally, we’ll talk about some of the tools you’ll likely want to use
 if you’re doing any nontrivial amount of FFI.
 194 Chapter 11
-NOTE While I often refer to FFI as being about crossing the boundary between one language
+**NOTE** While I often refer to FFI as being about crossing the boundary between one language
 and another, FFI can also occur entirely inside Rust-land. If one Rust program shares
 memory with another Rust program but the two aren’t compiled together—say, if you’re
 using a dynamically linked library in your Rust program that happens to be written in
@@ -6554,7 +6308,7 @@ no sharing would take place. In fact, in all likelihood, compilation would
 fail since any code that referred to that symbol wouldn’t know which definition
 (that is, which address) to use for it!
 Foreign Function Interfaces 195
-NOTE A quick note about terminology: a symbol can be declared multiple times but
+**NOTE** A quick note about terminology: a symbol can be declared multiple times but
 defined only once. Every declaration of a symbol will link to the same single definition
 for that symbol at linking time. If no definition for a declaration is found, or if
 there are multiple definitions, the linker will complain.
@@ -6612,7 +6366,9 @@ a symbol that’s defined elsewhere. In Listing 11-1 we define a static variable
 called RS_DEBUG in Rust that we make available to other code via FFI. We also
 declare a static variable called FOREIGN_DEBUG whose definition is unspecified
 but will be resolved at linking time.
-#[no_mangle]
+
+# [no_mangle]
+
 pub static RS_DEBUG: bool = true;
 extern {
 static FOREIGN_DEBUG: bool;
@@ -6635,7 +6391,7 @@ which should match the type used at the definition site. Because Rust
 doesn’t know anything about the code that defines the static variable,
 and thus can’t check that you’ve declared the correct type for the symbol,
 FOREIGN_DEBUG can be accessed only inside an unsafe block.
-NOTE Static variables in Rust aren’t mutable by default, regardless of whether they’re in an
+**NOTE** Static variables in Rust aren’t mutable by default, regardless of whether they’re in an
 extern block. These variables are always available from any thread, so mutable access
 would pose a data race risk. You can declare a static as mut, but if you do, it becomes
 unsafe to access.
@@ -6643,7 +6399,9 @@ The procedure to declare FFI functions is very similar. In Listing 11-2,
 we make hello_rust accessible to non-Rust code and pull in the external
 hello_foreign function.
 Foreign Function Interfaces 197
-#[no_mangle]
+
+# [no_mangle]
+
 pub extern fn hello_rust(i: i32) { ... }
 extern {
 fn hello_foreign(i: i32);
@@ -6664,7 +6422,9 @@ with #[link_name = "<actual_symbol_name>"], and then the item links to
 whatever name you wish. Similarly, you can rename a Rust item for export
 using #[export_name = "<export_symbol_name>"].
 Link Kinds
-#[link] also accepts the argument kind, which dictates how the items in the
+
+# [link] also accepts the argument kind, which dictates how the items in the
+
 block should be linked. The argument defaults to "dylib", which signifies
 C-compatible dynamic linking. The alternative kind value is "static", which
 indicates that the items in the block should be linked fully at compile time
@@ -6725,7 +6485,7 @@ declare anything else. Using extern on its own, as in Listing 11-2, is shorthand
 for extern "C", which means “use the standard C calling convention.”
 The shorthand is there because the C calling convention is what you want
 in nearly every case of FFI.
-NOTE Unwinding generally works only with regular Rust functions. If you unwind
+**NOTE** Unwinding generally works only with regular Rust functions. If you unwind
 across the end of a Rust function that isn’t extern "Rust", your program will abort.
 Unwinding across the FFI boundary into external code is undefined behavior. With
 RFC 2945, Rust gained a new extern declaration, extern "C-unwind"; this permits
@@ -6740,7 +6500,7 @@ as "C" everywhere except on Win32, which uses the "stdcall" calling convention.
 In general, you’ll rarely need to supply a calling convention explicitly
 unless you’re working with particularly platform-specific or highly optimized
 external interfaces, so just extern (which is extern "C") will be fine.
-NOTE A function’s calling convention is part of its type. That is, the type extern "C" fn()
+**NOTE** A function’s calling convention is part of its type. That is, the type extern "C" fn()
 is not the same as fn() (or extern "Rust" fn()), which is different again from extern
 "system" fn().
 OTHER BINARY ARTIFACTS
@@ -6801,7 +6561,7 @@ types the Rust standard library provides you with the correct C types in
 the std::os::raw module, which defines type c_int = i32, type c_char = i8/
 u8 depending on whether char is signed, type c_long = i32/i64 depending on
 the target pointer width, and so on.
-NOTE Take particular note of quirky integer types in C like __be32. These often do not translate
+**NOTE** Take particular note of quirky integer types in C like __be32. These often do not translate
 directly to Rust types and may be best left as something like [u8; 4]. For example,
 __be32 is always encoded as big-endian, whereas Rust’s i32 uses the endianness of the
 current platform.
@@ -6833,13 +6593,15 @@ the same size that a C compiler would choose for an enum with the same
 number of variants. The first variant has the value 0, the second the value 1,
 and so on. You can also manually assign values to each variant, as shown in
 Listing 11-3.
-#[repr(C)]
+
+# [repr(C)]
+
 enum Foo {
 Bar = 1,
 Baz = 2,
 }
 Listing 11-3: Defining explicit variant values for a dataless enum
-NOTE Technically, the specification says that the first variant’s value is 0 and every subsequent
+**NOTE** Technically, the specification says that the first variant’s value is 0 and every subsequent
 variant’s value is one greater than that of the previous one. This makes a difference
 if you manually set the value for some variants but not others—those you do
 not set will continue from the last one you did set.
@@ -6853,11 +6615,13 @@ by taking Bar | Baz would not be valid for Foo in Rust! If you need to
 model a C API that uses an enumeration for a set of bitflags that can be set
 and unset individually, consider using a newtype wrapper around an integer
 type, with associated constants for each variant and implementations of
-the various Bit* traits for improved ergonomics. Or use the bitflags crate.
-NOTE For fieldless enums, you can also pass a numeric type to #[repr] to use a different
+the various Bit*traits for improved ergonomics. Or use the bitflags crate.
+**NOTE** For fieldless enums, you can also pass a numeric type to #[repr] to use a different
 type than isize for the discriminator. For example, #[repr(u8)] will encode the discriminator
 using a single unsigned byte. For a data-carrying enum, you can pass
-#[repr(C, u8)] to get the same effect.
+
+# [repr(C, u8)] to get the same effect
+
 202 Chapter 11
 On an enum that contains data, the #[repr(C)] attribute causes the enum
 to be represented using a tagged union. That is, it is represented in memory
@@ -6865,24 +6629,36 @@ by a #[repr(C)] struct with two fields, where the first is the discriminator as
 it would be encoded if none of the variants had fields, and the second is a
 union of the data structures for each variant. For a concrete example, consider
 the enum and associated representation in Listing 11-4.
-#[repr(C)]
+
+# [repr(C)]
+
 enum Foo {
 Bar(i32),
 Baz { a: bool, b: f64 }
 }
 // is represented as
-#[repr(C)]
+
+# [repr(C)]
+
 enum FooTag { Bar, Baz }
-#[repr(C)]
+
+# [repr(C)]
+
 struct FooBar(i32);
-#[repr(C)]
+
+# [repr(C)]
+
 struct FooBaz{ a: bool, b: f64 }
-#[repr(C)]
+
+# [repr(C)]
+
 union FooData {
 bar: FooBar,
 baz: FooBaz,
 }
-#[repr(C)]
+
+# [repr(C)]
+
 struct Foo {
 tag: FooTag,
 data: FooData
@@ -6901,7 +6677,6 @@ Allocations
 When you allocate memory, that allocation belongs to its allocator and can
 be freed only by that same allocator. This is the case if you use multiple
 
-
 Foreign Function Interfaces 203
 allocators within Rust and also if you are allocating memory both in Rust
 and with some allocator on the other side of the FFI boundary. You’re
@@ -6918,7 +6693,7 @@ OpenSSL library that use implementation-managed memory.
 extern fn ECDSA_SIG_new() -> *mut ECDSA_SIG;
 // And another accepts a pointer created by new
 // and deallocates it when the caller is done with it.
-extern fn ECDSA_SIG_free(sig: *mut ECDSA_SIG);
+extern fn ECDSA_SIG_free(sig:*mut ECDSA_SIG);
 Listing 11-5: An implementation-managed memory interface
 The functions ECDSA_SIG_new and ECDSA_SIG_free form a pair, where the
 caller is expected to call the new function, use the returned pointer for as
@@ -6934,7 +6709,7 @@ Listing 11-6 shows an example of caller-managed memory.
 // The caller provides a pointer to a chunk of memory,
 // which the implementation then uses to instantiate its own types.
 // No free function is provided, as that happens in the caller.
-extern fn BIO_new_mem_buf(buf: *const c_void, len: c_int) -> *mut BIO
+extern fn BIO_new_mem_buf(buf: *const c_void, len: c_int) ->*mut BIO
 Listing 11-6: A caller-managed memory interface
 Here, the BIO_new_mem_buf function instead has the caller supply the
 backing memory. The caller can choose to allocate memory on the heap,
@@ -7042,7 +6817,7 @@ next_event only after calling start_main_loop, and only on the same thread.
 You enforce the “same thread” part by making EventLoop neither Send nor
 Sync, by having it hold a phantom raw pointer (which itself is neither Send
 nor Sync).
-Using PhantomData<*const ()> to “undo” the Send and Sync auto-traits as
+Using PhantomData<_const ()> to “undo” the Send and Sync auto-traits as
 we do here is a bit ugly and indirect. Rust does have an unstable compiler
 feature that enables negative trait implementations like impl !Send for
 EventLoop {}, but it’s surprisingly difficult to get its implementation right,
@@ -7057,7 +6832,7 @@ representation for each and every chunk of memory you give it pointers to.
 The type might have internal state that the caller shouldn’t fiddle with, or
 the state might be difficult to express in a cross-language-compatible way.
 For these kinds of situations, C-style APIs usually expose void pointers, written
-out as the C type void*, which is equivalent to *mut std::ffi::c_void in
+out as the C type void_, which is equivalent to *mut std::ffi::c_void in
 Rust. A type-erased pointer like this is, effectively, just a pointer, and does
 not convey anything about the thing it points to. For that reason, these
 kinds of pointers are often referred to as opaque.
@@ -7065,21 +6840,24 @@ Opaque pointers effectively serve the role of visibility modifiers for
 types across FFI boundaries—since the method signature does not say
 what’s being pointed to, the caller has no option but to pass around the
 pointer as is and use any available FFI methods to provide visibility into
-the referenced data. Unfortunately, since one *mut c_void is indistinguishable
+the referenced data. Unfortunately, since one*mut c_void is indistinguishable
 from another, there’s nothing stopping a user from taking an opaque
 pointer as is returned from one FFI method and supplying it to a method
 that expects a pointer to a different opaque type.
 We can do better than this in Rust. To mitigate this kind of pointer
-type confusion, we can avoid using *mut c_void directly for opaque pointers
-in FFI, even if the actual interface calls for a void*, and instead construct
+type confusion, we can avoid using _mut c_void directly for opaque pointers
+in FFI, even if the actual interface calls for a void_, and instead construct
 different empty types for each distinct opaque type. For example,
 in Listing 11-9 I use two distinct opaque pointer types that cannot be
 confused.
-#[non_exhaustive] #[repr(transparent)] pub struct Foo(c_void);
-#[non_exhaustive] #[repr(transparent)] pub struct Bar(c_void);
+
+# [non_exhaustive] #[repr(transparent)] pub struct Foo(c_void)
+
+# [non_exhaustive] #[repr(transparent)] pub struct Bar(c_void)
+
 extern {
 pub fn foo() -> *mut Foo;
-pub fn take_foo(arg: *mut Foo);
+pub fn take_foo(arg:*mut Foo);
 pub fn take_bar(arg: *mut Bar);
 }
 Listing 11-9: Opaque pointer types that cannot be confused
@@ -7088,7 +6866,9 @@ Since Foo and Bar are both zero-sized types, they can be used in place of
 () in the extern method signatures. Even better, since they are now distinct
 types, Rust won’t let you use one where the other is required, so it’s now
 impossible to call take_bar with a pointer you got back from foo. Adding the
-#[non_exhaustive] annotation ensures that the Foo and Bar types cannot be
+
+# [non_exhaustive] annotation ensures that the Foo and Bar types cannot be
+
 constructed outside of this crate.
 bindgen and Build Scripts
 Mapping out the Rust types and externs for a larger external library can be
@@ -7109,7 +6889,7 @@ be necessary. If, on the other hand, you want to generate the bindings automatic
 on every build and just include the C header files in your source
 code, bindgen also ships as a library that you can invoke in a custom build
 script for your package.
-NOTE If you check in the bindings directly, keep in mind that they will be correct only on
+**NOTE** If you check in the bindings directly, keep in mind that they will be correct only on
 the platform they were generated for. Generating the bindings in a build script will
 generate them specifically for the current target platform, which is less likely to cause
 platform-related layout inconsistencies.
@@ -7119,7 +6899,7 @@ your crate, it should compile <some-file.rs> as a stand-alone Rust program
 and run it; only then should it compile the source code of your crate. The
 build script also gets its own dependencies, which you declare in the [builddependencies]
 section of your Cargo.toml.
-NOTE If you name your build script build.rs, you don’t need to declare it in your Cargo.toml.
+**NOTE** If you name your build script build.rs, you don’t need to declare it in your Cargo.toml.
 Build scripts come in very handy with FFI—they can compile a bundled
 C library from source, dynamically discover and declare additional build
 flags to be passed to the compiler, declare additional files that Cargo
@@ -7156,7 +6936,7 @@ the Rust bindings change—say, if the header files themselves are upgraded
 or a bindgen upgrade causes the generated Rust code to change slightly—
 without also having to cut a breaking release of the crate that safely wraps
 the FFI bindings.
-NOTE Remember that if you include any of the types from the -sys crate in the public interface
+**NOTE** Remember that if you include any of the types from the -sys crate in the public interface
 of your main library crate, changing the dependency on the -sys crate to a new
 major version still constitutes a breaking change for your main library!
 If your crate instead produces a library file that you intend others to
@@ -7274,7 +7054,7 @@ std that, when enabled, gives access to more sophisticated APIs and integrations
 with types that live in std. This allows crate authors to both supply the
 core implementation for constrained use cases and add bells and whistles
 for consumers on more standard platforms.
-NOTE Since features should be additive, prefer an std-enabling feature to an std-disabling
+**NOTE** Since features should be additive, prefer an std-enabling feature to an std-disabling
 one. Otherwise, if any crate in a consumer’s dependency graph enables the no-std
 feature, all consumers will be given access only to the bare-bones API without std support,
 which may then mean that APIs they depend on aren’t available, causing them
@@ -7330,10 +7110,10 @@ Do keep in mind, though, that depending on alloc means your #![no_std]
 crate will no longer be usable by any program that disallows dynamic memory
 allocation, either because it doesn’t have an allocator or because it has
 too little memory to permit dynamic memory allocation in the first place.
-NOTE Some programming domains, like the Linux kernel, may allow dynamic memory
+**NOTE** Some programming domains, like the Linux kernel, may allow dynamic memory
 allocation only if out-of-memory errors are handled gracefully (that is, without panicking).
 For such use cases, you’ll want to provide try_ versions of any methods you
-expose that might allocate. The try_ methods should use fallible methods of any inner
+expose that might allocate. The try_methods should use fallible methods of any inner
 types (like the currently unstable Box::try_new or Vec::try_reserve) rather than ones
 that just panic (like Box::new or Vec::reserve) and propagate those errors out to the
 caller, who can then handle them appropriately.
@@ -7370,7 +7150,7 @@ maximum number of elements, N, and then represent the vector as an array
 of N optional Ts. This structure always stores N Option<T>, so it has a size known
 at compile time and can be stored on the stack, but it can still act like a vector
 by using runtime information to inform how we access the array.
-NOTE We could have implemented ArrayVec using [MaybeUninit<T>; N] to avoid the overhead
+**NOTE** We could have implemented ArrayVec using [MaybeUninit<T>; N] to avoid the overhead
 of the Option, but that would require using unsafe code, which isn’t warranted
 for this example.
 The Rust Runtime
@@ -7426,7 +7206,7 @@ entirely using the #![no_main] crate-level attribute. This attribute completely
 omits lang_start, meaning you as the developer must figure out how the program
 should be started, such as by declaring a function with #[export_name =
 "main"] that matches the expected launch sequence for the target platform.
-NOTE On platforms that truly run no code before they jump to the defined start symbol,
+**NOTE** On platforms that truly run no code before they jump to the defined start symbol,
 like most embedded devices, the initial values of static variables may not even match
 what’s specified in the source code. In such cases, your initialization function will
 need to explicitly initialize the various static memory segments with the initial data
@@ -7449,7 +7229,7 @@ unstable attribute #[lang = "oom"]. Keep in mind that the handler should
 almost certainly prevent future execution, as otherwise the code that tried
 to allocate will continue executing without knowing that it did not receive
 the memory it asked for!
-NOTE By the time you read this, the out-of-memory handler may already have been stabilized
+**NOTE** By the time you read this, the out-of-memory handler may already have been stabilized
 under a permanent name (#[alloc_error_handler], most likely). Work is also underway
 to give the default std out-of-memory handler the same kind of “hook” functionality
 as Rust’s panic handler, so that code can change the out-of-memory behavior on
@@ -7510,7 +7290,7 @@ of one address and a store to a different address). The no-reordering guarantee
 also helps the exceptional execution situation, as long as any code
 that touches memory accessed in an exceptional context uses only volatile
 memory operations.
-NOTE There is also a std::sync::atomic::compiler_fence function that prevents the compiler
+**NOTE** There is also a std::sync::atomic::compiler_fence function that prevents the compiler
 from reordering non-volatile memory accesses. You’ll very rarely need a compiler
 fence, but its documentation is an interesting read.
 INCLUDING ASSEMBLY CODE
@@ -7549,7 +7329,7 @@ certain combinations of register values cannot occur at the same time, then
 create a single type whose type parameters indicate the current state of the
 relevant registers, and implement only legal transitions on it, like we did for
 the rocket example in Listing 3-2.
-NOTE Make sure to also review the advice from Chapter 3 on API design—all of that
+**NOTE** Make sure to also review the advice from Chapter 3 on API design—all of that
 applies in the context of no_std programs as well!
 For example, consider a pair of registers where at most one register
 should be “on” at any given point in time. Listing 12-2 shows how you can
@@ -7612,7 +7392,7 @@ Rust Without the Standard Library 221
 artifacts for all consumer platforms rather than trying to have a build pipeline
 for every platform your consumers may be using, and that means using
 cross-compilation.
-NOTE If you’re actually compiling for something sock-like with limited memory, or even
+**NOTE** If you’re actually compiling for something sock-like with limited memory, or even
 something as fancy as a potato, you may want to set the opt-level Cargo configuration
 to "s" to optimize for smaller binary sizes.
 Cross-compiling involves two platforms: the host platform and the target
@@ -7628,7 +7408,7 @@ and doesn’t affect compilation in any meaningful way; it’s mostly irrelevant
 and can even be left out. The os part tells the compiler what format to use
 for the final binary artifacts, so a value of linux dictates Linux .so files, windows
 dictates Windows .dll files, and so on.
-NOTE By default, Cargo assumes that the target platform is the same as the host platform,
+**NOTE** By default, Cargo assumes that the target platform is the same as the host platform,
 which is why you generally never have to tell Cargo to, say, compile for Linux when
 you’re already on Linux. Sometimes you may want to use --target even if the CPU
 and OS of the target are the same, though, such as to target the musl implementation
@@ -7919,7 +7699,7 @@ shared artifacts to go in, and Cargo will take care of the rest. No more target
 directories in sight! Just make sure you clean out that directory every
 now and again too, and be aware that cargo clean will now clean all of your
 projects’ build artifacts.
-NOTE Using a shared build directory can cause problems for projects that assume that compiler
+**NOTE** Using a shared build directory can cause problems for projects that assume that compiler
 artifacts will always be under the target/ subdirectory, so watch out for that.
 Also note that if a project does use different compiler flags, you’ll end up recompiling
 affected dependencies every time you move into or out of that project. In such cases,
@@ -7953,7 +7733,7 @@ particular type’s size, alignment, and layout, I recommend adding static
 assertions to make sure that they don’t regress over time. You may also be
 interested in the variant_size_differences lint, which issues a warning if a
 crate contains enum types whose variants significantly differ in size.
-NOTE To call rustc with particular flags, you have a few options: you can either set them in
+**NOTE** To call rustc with particular flags, you have a few options: you can either set them in
 the RUSTFLAGS environment variable or [build] rustflags in your .cargo/config.toml
 to have them apply to every invocation of rustc from Cargo, or you can use cargo
 rustc, which will pass any arguments you provide only to the rustc invocation for the
@@ -8045,7 +7825,7 @@ which allows the caller to use just references to call the method. And find_
 by can return EntityIdentifier<'static>, where all the fields are Cow::Owned.
 One type shared across both interfaces, with no unnecessary allocation
 requirements!
-NOTE If you implement a type this way, I recommend you also provide an into_owned
+**NOTE** If you implement a type this way, I recommend you also provide an into_owned
 method that turns an <'a> instance into a <'static> instance by calling Cow::into_
 owned on all the fields. Otherwise, users will have no way to make longer-lasting
 clones of your type when all they have is an <'a>.
@@ -8074,12 +7854,12 @@ The Clone::clone_from method is an alternative form of .clone() that
 lets you reuse an instance of the type you clone rather than allocate a new
 one. In other words, if you already have an x: T, you can do x.clone_from(y)
 rather than x = y.clone(), and you might save yourself some allocations.
-std::fmt::Formatter::debug_* is by far the easiest way to implement Debug
+std::fmt::Formatter::debug_*is by far the easiest way to implement Debug
 yourself if #[derive(Debug)] won’t work for your use case, such as if you want
 to include only some fields or expose information that isn’t exposed by the
 The Rust Ecosystem 233
 Debug implementations of your type’s fields. When implementing the fmt
-method of Debug, simply call the appropriate debug_ method on the Formatter
+method of Debug, simply call the appropriate debug_method on the Formatter
 that’s passed in (debug_struct or debug_map, for example), call the included
 methods on the resulting type to fill in details about the type (like field to
 add a field or entries to add a key/value entry), and then call finish.
@@ -8089,7 +7869,7 @@ and subtracting the earlier instance.
 Option::as_deref takes an Option<P> where P: Deref and returns
 Option<&P::Target> (there’s also an as_deref_mut method). This simple operation
 can make functional transformation chains that operate on Option
-much cleaner by avoiding the inscrutable .as_ref().map(|r| &**r).
+much cleaner by avoiding the inscrutable .as_ref().map(|r| &*_r).
 Ord::clamp lets you take any type that implements Ord and clamp it
 between two other values of a given range. That is, given a lower limit min
 and an upper limit max, x.clamp(min, max) returns min if x is less than min, max
@@ -8196,7 +7976,7 @@ at the end of the scope, after the user-provided code has been executed.
 This means that even though we never refer to the guard’s variable again, it
 needs to be given a name, as let _ = DropGuard(lock) would drop the guard
 immediately—before the user-provided code even runs!
-NOTE Like catch_unwind, drop guards work only when panics unwind. If the code is compiled
+**NOTE** Like catch_unwind, drop guards work only when panics unwind. If the code is compiled
 with panic=abort, no code gets to run after the panic.
 This pattern is frequently used in conjunction with thread locals,
 when library code may wish to set the thread local state so that it’s valid
@@ -8208,7 +7988,7 @@ through function signatures that are visible to users. It’d be no good if the
 thread local state continued to indicate that a particular executor thread
 was active even after Future::poll returned due to a panic, so Tokio uses a
 drop guard to ensure that the thread local state is reset.
-NOTE You’ll often see Cell or Rc<RefCell> used in thread locals. This is because thread
+**NOTE** You’ll often see Cell or Rc<RefCell> used in thread locals. This is because thread
 locals are accessible only through shared references, since a thread might access a
 thread local again that it is already referencing somewhere higher up in the call stack.
 Both types provide interior mutability without incurring much overhead because
@@ -8241,11 +8021,11 @@ their own prelude in the form of a module called prelude, which re-exports
 some particularly common subset of those types, traits, and functions.
 There’s nothing magical about that module name, and it doesn’t get used
 automatically, but it serves as a signal to users that they likely want to add
-use somecrate::prelude::* to files that want to use the crate in question. The *
+use somecrate::prelude::_ to files that want to use the crate in question. The *
 is a glob import and tells Rust to use all publicly available items from the indicated
 module. This can save quite a bit of typing when the crate has a lot of
 items you’ll usually need to name.
-NOTE Items used through * have lower precedence than items that are used explicitly by
+**NOTE** Items used through* have lower precedence than items that are used explicitly by
 name. This is what allows you to define items in your own crate that overlap with
 what’s in the standard library prelude without having to specify which one to use.
 Preludes are also great for crates that expose a lot of extension traits,
@@ -8265,7 +8045,7 @@ available on a type that already had some other foo method, code that calls
 foo on that type will no longer compile as the call to foo is now ambiguous.
 Interestingly enough, while the existence of glob imports makes any module
 addition a technically breaking change, the Rust RFC on API evolution
-(RFC 1105; see https://rust-lang.github.io/rfcs/1105-api-evolution.html) does not
+(RFC 1105; see <https://rust-lang.github.io/rfcs/1105-api-evolution.html>) does not
 require a library to issue a new major version for such a change. The RFC
 goes into great detail about why, and I recommend you read it, but the gist
 is that minor releases are allowed to require minimally invasive changes to
@@ -8286,7 +8066,7 @@ with significant developments so that you can take advantage of the latest
 and greatest features in your projects.
 For monitoring improvements to Rust itself, including new language
 features, standard library additions, and core tooling upgrades, the official
-Rust blog at https://blog.rust-lang.org/ is a good, low-volume place to start. It
+Rust blog at <https://blog.rust-lang.org/> is a good, low-volume place to start. It
 mainly features announcements for each new Rust release. I recommend
 you make a habit of reading these, as they tend to include interesting tidbits
 that will slowly but surely deepen your knowledge of the language. To
@@ -8295,23 +8075,23 @@ for Rust and Cargo as well (links can usually be found near the bottom of
 each release announcement). The changelogs surface changes that weren’t
 large enough to warrant a paragraph in the release notes but that may be
 just what you need two weeks from now. For a less frequently updated news
-source, check in on The Edition Guide at https://doc.rust-lang.org/edition-guide/,
+source, check in on The Edition Guide at <https://doc.rust-lang.org/edition-guide/>,
 which outlines what’s new in each Rust edition. Rust editions tend to be
 released every three years.
-NOTE Clippy is often able to tell you when you can take advantage of a new language or
+**NOTE** Clippy is often able to tell you when you can take advantage of a new language or
 standard library feature—always enable Clippy!
 238 Chapter 13
 If you’re curious about how Rust itself is developed, you may also want
-to subscribe to the Inside Rust blog at https://blog.rust-lang.org/inside-rust/. It
+to subscribe to the Inside Rust blog at <https://blog.rust-lang.org/inside-rust/>. It
 includes updates from the various Rust teams, as well as incident reports,
 larger change proposals, edition planning information, and the like. To get
 involved in Rust development yourself—which I highly encourage, as it’s
 a lot of fun and a great learning experience—you can check out the various
-Rust working groups at https://www.rust-lang.org/governance/, which each
+Rust working groups at <https://www.rust-lang.org/governance/>, which each
 focus on improving a specific aspect of Rust. Find one that appeals to you,
 check in with the group wherever it meets and ask how you may be able to
 help. You can also join the community discussion about Rust internals over
-at https://internals.rust-lang.org/; this is another great way to get insight into
+at <https://internals.rust-lang.org/>; this is another great way to get insight into
 the thought that goes into every part of Rust’s design and development.
 As is the case for most programming languages, much of Rust’s value
 is derived from its community. Not only do the members of the Rust community
@@ -8325,13 +8105,13 @@ Dipping into these discussions even just once in a while is almost
 guaranteed to show you new things about a language feature, a technique,
 or a crate that you didn’t already know.
 The Rust community lives in a lot of places, but some good places to
-start are the Users forum (https://users.rust-lang.org/), the Rust subreddit
-(https://www.reddit.com/r/rust/), the Rust Community Discord (https://discord
-.gg/rust-lang-community), and the Rust Twitter account (https://twitter.com/
+start are the Users forum (<https://users.rust-lang.org/>), the Rust subreddit
+(<https://www.reddit.com/r/rust/>), the Rust Community Discord (<https://discord>
+.gg/rust-lang-community), and the Rust Twitter account (<https://twitter.com/>
 rustlang). You don’t have to engage with all of these, or all of the time—
 pick one you like the vibe of, and check in occasionally!
 A great single location for staying up to date with ongoing developments
-is the This Week in Rust blog (https://this-week-in-rust.org/), a “weekly summary
+is the This Week in Rust blog (<https://this-week-in-rust.org/>), a “weekly summary
 of [Rust’s] progress and community.” It links to official announcements and
 changelogs as well as popular community discussions and resources, interesting
 new crates, opportunities for contributions, upcoming Rust events, and
@@ -8340,14 +8120,14 @@ PRs, so this site truly has it all! Discerning what information is valuable to
 you and what isn’t may be a little daunting, but even just scrolling through
 and clicking occasional links that appear interesting is a good way to keep a
 steady stream of new Rust knowledge trickling into your brain.
-NOTE Want to look up when a particular feature landed on stable? Can I Use…
-(https://caniuse.rs/) has you covered.
+**NOTE** Want to look up when a particular feature landed on stable? Can I Use…
+(<https://caniuse.rs/>) has you covered.
 What Next?
 So, you’ve read this book front to back, absorbed all the knowledge it
 imparts, and are still hungry for more? Great! There are a number of other
 The Rust Ecosystem 239
 excellent resources out there for broadening and deepening your knowledge and understanding of Rust, and in this very final section I’ll give you a survey of some of my favorites so that you can keep learning. I’ve divided them into subsections based on how different people prefer to learn so that you can find resources that’ll work for you.
-NOTE A challenge with learning on your own, especially in the beginning, is that progress
+**NOTE** A challenge with learning on your own, especially in the beginning, is that progress
 is hard to perceive. Implementing even the simplest of things can take an outsized
 amount of time when you have to constantly refer to documentation and other
 resources, ask for help, or debug to learn how some aspect of Rust works. All of that
@@ -8362,20 +8142,20 @@ variety of auxiliary knowledge like debugging techniques, design patterns,
 and best practices. Eventually you will have to sit down and do things yourself—it’s the only way to check that you actually understand what you’ve
 observed—but piggybacking on the experience of others will almost certainly make the early stages more pleasant. And if the experience is interactive, that’s even better!
 So, with that said, here are some Rust video channels that I recommend:
-Perhaps unsurprisingly, my own channel: https://www.youtube.com/c/
+Perhaps unsurprisingly, my own channel: <https://www.youtube.com/c/>
 JonGjengset/. I have a mix of long-form coding videos and short(er) code-
 based theory/concept explanation videos, as well as occasional videos
 that dive into interesting Rust coding stories.
-The Awesome Rust Streaming listing: https://github.com/jamesmunns/awesome-rust-streaming/. This resource lists a wide variety of developers
+The Awesome Rust Streaming listing: <https://github.com/jamesmunns/awesome-rust-streaming/>. This resource lists a wide variety of developers
 who stream Rust coding or other Rust content.
 The channel of Tim McNamara, the author of Rust in Action: https://
-www.youtube.com/c/timClicks/. Tim’s channel, like mine, splits its time
+<www.youtube.com/c/timClicks/>. Tim’s channel, like mine, splits its time
 between implementation and theory, though Tim has a particular
 knack for creative visual projects, which makes for fun viewing.
-Jonathan Turner’s Systems with JT channel: https://www.youtube.com/c/
+Jonathan Turner’s Systems with JT channel: <https://www.youtube.com/c/>
 SystemswithJT/. Jonathan’s videos document their work on Nushell, their take on a “new type of shell,” providing a great sense of what it’s
 like to work on a nontrivial existing codebase.
-Ryan Levick’s channel: https://www.youtube.com/c/RyanLevicksVideos/. Ryan mainly posts videos that tackle particular Rust concepts and walks
+Ryan Levick’s channel: <https://www.youtube.com/c/RyanLevicksVideos/>. Ryan mainly posts videos that tackle particular Rust concepts and walks
 240 Chapter 13
 through them using concrete code examples, but he also occasionally
 does implementation videos (like FFI for Microsoft Flight Simulator!)
@@ -8427,10 +8207,10 @@ The Rust Ecosystem 241
 in Rust or in other languages). Such repetition tends to be a good signal
 that something is reusable and could be turned into a library. If nothing
 comes to mind, David Tolnay maintains a list of smaller utility crates that
-other Rust developers have requested at https://github.com/dtolnay/request-forimplementation/
+other Rust developers have requested at <https://github.com/dtolnay/request-forimplementation/>
 that may provide a source of inspiration. If you’re looking for
 something more substantial and ambitious, there’s also the Not Yet Awesome
-list at https://github.com/not-yet-awesome-rust/not-yet-awesome-rust/ that lists
+list at <https://github.com/not-yet-awesome-rust/not-yet-awesome-rust/> that lists
 things that should exist in Rust but don’t (yet).
 Learn by Reading
 Although the state of affairs is constantly improving, finding good Rust
@@ -8439,61 +8219,61 @@ of pointers to some of my favorite resources that continue to teach
 me new things or serve as good references when I have particularly niche or
 nuanced questions.
 First, I recommend looking through the official virtual Rust books
-linked from https://www.rust-lang.org/learn/. Some, like the Cargo book, are
+linked from <https://www.rust-lang.org/learn/>. Some, like the Cargo book, are
 more reference-like while others, like the Embedded book, are more guidelike,
 but they’re all deep sources of solid technical information about their
-respective topics. The Rustonomicon (https://doc.rust-lang.org/nomicon/), in particular,
+respective topics. The Rustonomicon (<https://doc.rust-lang.org/nomicon/>), in particular,
 is a lifesaver when you’re writing unsafe code.
 Two more books that are worth checking out are the Guide to rustc
-Development (https://rustc-dev-guide.rust-lang.org/) and the Standard Library
-Developers Guide (https://std-dev-guide.rust-lang.org/). These are fantastic
+Development (<https://rustc-dev-guide.rust-lang.org/>) and the Standard Library
+Developers Guide (<https://std-dev-guide.rust-lang.org/>). These are fantastic
 resources if you’re curious about how the Rust compiler does what it does
 or how the standard library is designed, or if you want some pointers before
 you try your hand at contributing to Rust itself. The official Rust guidelines
 are also a treasure trove of information; I’ve already mentioned the Rust
-API Guidelines (https://rust-lang.github.io/api-guidelines/) in the book, but a
-Rust Unsafe Code Guidelines Reference is also available (https://rust-lang.github
+API Guidelines (<https://rust-lang.github.io/api-guidelines/>) in the book, but a
+Rust Unsafe Code Guidelines Reference is also available (<https://rust-lang.github>
 .io/unsafe-code-guidelines/), and by the time you read this book there may
 be more.
-NOTE One of the resources listed at https://www.rust-lang.org/learn/ is the Rust
+**NOTE** One of the resources listed at <https://www.rust-lang.org/learn/> is the Rust
 Reference, which is essentially a full specification for the Rust language. While parts
 of it are quite dry, like the exact grammar used for parsing or basics about the inmemory
 representations of the primitive types, some of it is fascinating reading, like
 the section on type layout and the enumeration of behavior considered undefined.
 There are also a number of unofficial virtual Rust books that are
 enormously valuable collections of experience and knowledge. The Little
-Book of Rust Macros (https://veykril.github.io/tlborm/), for example, is indispensable
+Book of Rust Macros (<https://veykril.github.io/tlborm/>), for example, is indispensable
 if you want to write nontrivial declarative macros, and The Rust
-Performance Book (https://nnethercote.github.io/perf-book/) is filled with tips and
+Performance Book (<https://nnethercote.github.io/perf-book/>) is filled with tips and
 tricks for improving the performance of Rust code both at the micro and
 the macro level. Other great resources include the Rust Fuzz Book (https://
 rust-fuzz.github.io/book/), which explores fuzz testing in more detail, and
 242 Chapter 13
-the Rust Cookbook (https://rust-lang-nursery.github.io/rust-cookbook/), which suggests
+the Rust Cookbook (<https://rust-lang-nursery.github.io/rust-cookbook/>), which suggests
 idiomatic solutions to common programming tasks. There’s even a
-resource for finding more books, The Little Book of Rust Books (https://lborb.
+resource for finding more books, The Little Book of Rust Books (<https://lborb>.
 github.io/book/unofficial.html)!
 If you prefer more hands-on reading, the Tokio project has published
-mini-redis (https://github.com/tokio-rs/mini-redis/), an incomplete but idiomatic
+mini-redis (<https://github.com/tokio-rs/mini-redis/>), an incomplete but idiomatic
 implementation of a Redis client and server that’s extremely well documented
 and specifically written to serve as a guide to writing asynchronous
 code. If you’re more of a data structures person, Learn Rust with Entirely Too
-Many Linked Lists (https://rust-unofficial.github.io/too-many-lists/) is an enlightening
+Many Linked Lists (<https://rust-unofficial.github.io/too-many-lists/>) is an enlightening
 and fun read that gets into lots of gnarly details about ownership and
 references. If you’re looking for something closer to the hardware, Philipp
-Oppermann’s Writing an OS in Rust (https://os.phil-opp.com/) goes through
+Oppermann’s Writing an OS in Rust (<https://os.phil-opp.com/>) goes through
 the whole operating system stack in great detail while teaching you good
 Rust patterns in the process. I also highly recommend Amos’s collection of
-articles (https://fasterthanli.me/tags/rust/) if you want a wide sampling of interesting
+articles (<https://fasterthanli.me/tags/rust/>) if you want a wide sampling of interesting
 deep dives written in a conversational style.
 When you feel more confident in your Rust abilities and need more of
 a quick reference than a long tutorial, I’ve found the Rust Language Cheat
-Sheet (https://cheats.rs/) great for looking things up quickly. It also provides
+Sheet (<https://cheats.rs/>) great for looking things up quickly. It also provides
 very nice visual explanations for most topics, so even if you’re looking up
 something you’re not intimately familiar with already, the explanations are
 pretty approachable.
 And finally, if you want to put all of your Rust understanding to the
-test, go give David Tolnay’s Rust Quiz (https://dtolnay.github.io/rust-quiz/) a try.
+test, go give David Tolnay’s Rust Quiz (<https://dtolnay.github.io/rust-quiz/>) a try.
 There are some real mind-benders in there, but each question comes with
 a thorough explanation of what’s going on, so even if you get one wrong,
 you’ll have learned from the experience!
@@ -8511,8 +8291,8 @@ someone who doesn’t already understand the topic—in doing so, you also
 give back to the community so that the next you that comes along has a
 slightly easier time getting up to speed. Teaching is a humbling and deeply
 educational experience, and I cannot recommend it highly enough.
-NOTE Whether you’re looking to teach or be taught, make sure to visit Awesome Rust
-Mentors (https://rustbeginners.github.io/awesome-rust-mentors/).
+**NOTE** Whether you’re looking to teach or be taught, make sure to visit Awesome Rust
+Mentors (<https://rustbeginners.github.io/awesome-rust-mentors/>).
 The Rust Ecosystem 243
 Summary
 In this chapter, we’ve covered Rust beyond what exists in your local workspace.
