@@ -1605,7 +1605,6 @@ does not have an appropriate item in the borrow stack
 
 - 另一个值得一看的工具是 Loom，这是一个聪明的库，它尝试确保您的测试在每个相关的并发操作交错中运行。在高层次上，Loom跟踪所有跨线程同步点，并一遍又一遍地运行您的测试，每次调整线程从这些同步点继续的顺序。因此，如果线程A和线程B都获取相同的Mutex，Loom将确保测试先以A先获取，然后以B先获取的方式运行。Loom还跟踪原子访问、内存顺序和对UnsafeCell的访问（我们将在第9章中讨论），并检查线程是否不适当地访问它们。如果测试失败，Loom可以给出确切的运行情况，包括哪些线程以什么顺序执行，以便您确定崩溃发生的原因。
 
-
 ##### Performance Testing
 
 编写性能测试很困难，因为往往很难准确地模拟反映您的 crate 在实际使用中的工作负载。但是拥有这样的测试非常重要；如果您的代码突然运行速度变慢了100倍，那真的应该被视为一个 bug，但如果没有性能测试，您可能无法发现这个回归。如果您的代码运行速度提高了100倍，这也可能表明有些地方出了问题。这两种情况都是将自动化性能测试作为 CI 的一部分的好理由——如果性能发生了显著的变化，无论是向好的方向还是向坏的方向，您都应该知道。
@@ -1676,7 +1675,7 @@ println!("took {:?}", start.elapsed());
 - 当基准测试使用随机数时，类似的情况也会发生。如果你在循环中运行my_function(rand::random())，你可能主要测量的是生成一百万个随机数所花费的时间。对于获取当前时间、读取配置文件或启动新线程等操作也是如此，相对而言，这些操作都需要很长时间，可能会掩盖你实际想要测量的时间。
 - 幸运的是，一旦你意识到这个问题，解决起来通常很容易。确保你的基准测试循环的主体几乎只包含你想要测量的特定代码。所有其他代码应该在基准测试开始之前或在基准测试的测量部分之外运行。如果你使用 criterion，可以看一下它提供的不同计时循环，它们都是为了满足需要不同测量策略的基准测试情况！
 
-#### 摘要
+##### 摘要
 
 在本章中，我们详细探讨了Rust提供的内置测试功能。我们还介绍了一些在测试Rust代码时有用的测试设施和技术。这是本书中关于中级Rust使用的高级方面的最后一章。从下一章关于声明式和过程式宏开始，我们将更加专注于Rust代码。下一页见！
 
@@ -1746,6 +1745,7 @@ i128 as i128_tests
 );
 
 ```
+
 清单 7-2：让宏为您重复
 
 - 这个宏将每个逗号分隔的指令扩展为自己的模块，每个模块包含两个测试，一个调用带有true参数的test_inner，另一个调用带有false参数的test_inner。虽然宏的定义并不简单，但它使添加更多的测试变得更容易。在test_battery!调用中，每个类型占据一行，宏将负责生成针对true和false参数的测试。我们还可以让它为init的不同值生成测试。现在，我们大大降低了忘记测试特定配置的可能性！
@@ -1761,6 +1761,7 @@ fn clone(&self) -> Self { *self }
 }
 clone_from_copy![bool, f32, f64, u8, i8, /* ... */];
 ```
+
 清单 7-3：使用宏一次性为许多相似类型实现 trait
 
 - 在这里，我们为每个提供的类型生成了一个 Clone 的实现，其主体只是使用 * 从 &self 复制出来。你可能会想为什么我们不为 T: Copy 的类型添加一个 Clone 的通用实现。我们可以这样做，但一个很大的原因是它会强制其他 crate 中的类型也使用相同的 Clone 实现来处理它们自己的类型，而这些类型恰好是 Copy 的。一个名为 specialization 的实验性编译器特性可能提供了一种解决方法，但在撰写本文时，该特性的稳定化还有一段时间。因此，目前我们最好是具体列举这些类型。这种模式也不仅限于简单的转发实现：例如，你可以很容易地修改清单 7-3 中的代码，为所有整数类型实现一个 AddOne trait！
@@ -1768,92 +1769,36 @@ clone_from_copy![bool, f32, f64, u8, i8, /* ... */];
 
 ##### How They Work
 
-Every programming language has a grammar that dictates how the individual
-characters that make up the source code can be turned into tokens.
-Tokens are the lowest-level building blocks of a language, such as numbers,
-punctuation characters, string and character literals, and identifiers; at
-this level, there’s no distinction between language keywords and variable
-names. For example, the text (value + 4) would be represented by the fivetoken
-sequence (, value, +, 4, ) in Rust-like grammar. The process of turning
-text into tokens also provides a layer of abstraction between the rest of the
-compiler and the gnarly low-level details of parsing text. For example, in
-the token representation, there is no notion of whitespace, and /_"foo"*/
-and "/_foo_/" have distinct representations (the former is no token, and the
-latter is a string literal token with the content /_foo_/).
-Once the source code has been turned into a sequence of tokens, the
-compiler walks that sequence and assigns syntactic meaning to the tokens. For
-example, ()-delimited tokens make up a group, ! tokens denote macro invocations,
-and so on. This is the process of parsing, which ultimately produces
-an abstract syntax tree (AST) that describes the structure represented by the
+每种编程语言都有一种语法，它规定了如何将构成源代码的个别字符转换为标记（tokens）。
+标记是语言的最低级构建块，例如数字、标点符号、字符串和字符字面量以及标识符；在这个级别上，语言关键字和变量名之间没有区别。例如，在类似Rust的语法中，文本(value + 4)将由五个标记序列(, value, +, 4, )表示。将文本转换为标记的过程还为编译器的其余部分和解析文本的低级细节提供了一层抽象。例如，在标记表示中，没有空白字符的概念，"/_foo_*/"和"/_foo_/"具有不同的表示（前者不是标记，后者是一个具有内容"/_foo_/"的字符串字面量标记）。
 
-Macros 105
-source code. As an example, consider the expression let x = || 4, which consists
-of the sequence of tokens let (keyword), x (identifier), = (punctuation),
-two instances of | (punctuation), and 4 (literal). When the compiler turns that
-into a syntax tree, it represents it as a statement whose pattern is the identifier x
-and whose right-hand expression is a closure that has an empty argument list and a
-literal expression of the integer literal 4 as its body. Notice how the syntax tree representation
-is much richer than the token sequence, since it assigns syntactic
-meaning to the token combinations following the language’s grammar.
-Rust macros dictate the syntax tree that a given sequence of tokens gets
-turned into—when the compiler encounters a macro invocation during
-parsing, it has to evaluate the macro to determine the replacement tokens,
-which will ultimately become the syntax tree for the macro invocation. At
-this point, however, the compiler is still parsing the tokens and might not be
-in a position to evaluate a macro yet, since all it has done is parse the tokens
-of the macro definition. Instead, then, the compiler defers the parsing of
-anything contained within the delimiters of a macro invocation and remembers
-the input token sequence. When the compiler is ready to evaluate the
-indicated macro, it evaluates the macro over the token sequence, parses the
-tokens it yields, and substitutes the resulting syntax tree into the tree where
-the macro invocation was.
-Technically, the compiler does do a little bit of parsing for the input
-to a macro. Specifically, it parses out basic things like string literals and
-delimited groups and so produces a sequence of token trees rather than just
-tokens. For example, the code x - (a.b + 4) parses as a sequence of three
-token trees. The first token tree is a single token that is the identifier x, the
-second is a single token that is the punctuation character -, and the third
-is a group (using parentheses as the delimiter), which itself consists of a
-sequence of five token trees: a (an identifier), . (punctuation), b (another
-identifier), + (another punctuation token), and 4 (a literal). This means
-that the input to a macro does not necessarily have to be valid Rust, but it
-must consist of code that the Rust compiler can parse. For example, you
-couldn’t write for <- x in Rust outside of a macro invocation, but inside of
-a macro invocation you can, as long as the macro produces valid syntax.
-On the other hand, you cannot pass for { to a macro because it doesn’t
-have a closing brace.
-Declarative macros always generate valid Rust as output. You cannot
-have a macro generate, say, the first half of a function invocation or an if
-without the block that follows it. A declarative macro must generate an
-expression (basically anything that you can assign to a variable), a statement
-such as let x = 1;, an item like a trait definition or impl block, a type, or a
-match pattern. This makes Rust macros resistant to misuse: you simply cannot
-write a declarative macro that generates invalid Rust code, because the
-macro definition itself would not compile!
-That’s really all there is to declarative macros at a high level—when
-the compiler encounters a macro invocation, it passes the tokens contained
-within the invocation delimiters to the macro, parses the resulting token
-stream, and replaces the macro invocation with the resulting AST.
+- 一旦源代码被转换为一系列的标记，编译器会遍历这个序列并为标记赋予语法意义。例如，以()为界定的标记组成一个组，!标记表示宏调用，等等。这就是解析的过程，最终产生了描述源代码结构的抽象语法树（AST）。举个例子，考虑表达式let x = || 4，它由一系列的标记组成：let（关键字）、x（标识符）、=（标点符号）、两个|（标点符号）和4（字面量）。当编译器将其转换为语法树时，它将其表示为一个语句，其模式是标识符x，右侧的表达式是一个没有参数的闭包，其主体是一个整数字面量4。请注意，语法树表示比标记序列更丰富，因为它根据语言的语法为标记组合赋予了语法意义。
+- Rust宏决定了给定一系列标记被转换成的语法树。当编译器在解析过程中遇到宏调用时，它必须评估宏以确定替换的标记，这些标记最终将成为宏调用的语法树。然而，在这一点上，编译器仍然在解析标记，可能还没有准备好评估宏，因为它只是解析了宏定义的标记。因此，编译器推迟解析宏调用括号内的任何内容，并记住输入的标记序列。当编译器准备好评估指定的宏时，它在标记序列上评估宏，解析生成的标记，并将结果的语法树替换到宏调用的位置。
+- 从技术上讲，编译器确实对宏的输入进行了一些解析。具体来说，它解析出基本的内容，如字符串字面量和分隔的组，并生成一系列的标记树，而不仅仅是标记。例如，代码x - (a.b + 4)解析为三个标记树的序列。第一个标记树是一个单独的标记，即标识符x，第二个标记树是一个单独的标记，即标点符号-，第三个标记树是一个组（使用括号作为分隔符），它本身由五个标记树组成：a（一个标识符）、.（标点符号）、b（另一个标识符）、+（另一个标点符号）和4（一个字面量）。这意味着宏的输入不一定是有效的Rust代码，但它必须由Rust编译器可以解析的代码组成。例如，你不能在Rust中写for <- x，但在宏调用内部可以，只要宏生成有效的语法。另一方面，你不能将for {传递给宏，因为它没有闭合的大括号。
+- 声明宏始终生成有效的 Rust 代码作为输出。你不能让宏生成函数调用的前半部分或者没有后续代码块的 if 语句。声明宏必须生成一个表达式（基本上任何可以赋值给变量的东西）、一个语句（比如 let x = 1;）、一个项（如 trait 定义或 impl 块）、一个类型或者一个匹配模式。这使得 Rust 宏不容易被滥用：你简单地不能编写一个生成无效 Rust 代码的声明宏，因为宏定义本身就无法编译通过！
+- 从高层次来看，这就是声明式宏的全部内容 - 当编译器遇到宏调用时，它将传递给宏的标记解析为标记流，并用生成的抽象语法树替换宏调用。
 
-106 Chapter 7
-How to Write Declarative Macros
-An exhaustive explanation of all the syntax that declarative macros support
-is outside the scope of this book. However, we’ll cover the basics as there are
-some oddities worth pointing out.
-Declarative macros consist of two main parts: matchers and transcribers.
-A given macro can have many matchers, and each matcher has an associated
-transcriber. When the compiler finds a macro invocation, it walks
-the macro’s
-matchers from first to last, and when it finds a matcher that
-matches the tokens in the invocation, it substitutes the invocation by walking
-the tokens of the corresponding transcriber. Listing 7-4 shows how the
-different parts of a declarative macro rule fit together.
+##### How to Write Declarative Macros
+
+详细解释声明式宏支持的所有语法超出了本书的范围。然而，我们将介绍一些基础知识，因为有一些值得注意的奇怪之处。
+
+- 声明式宏由两个主要部分组成：匹配器和转录器。
+一个给定的宏可以有多个匹配器，每个匹配器都有一个关联的转录器。
+当编译器找到一个宏调用时，它会从第一个到最后一个遍历宏的匹配器，
+当它找到一个与调用中的标记匹配的匹配器时，它会通过遍历相应转录器的标记来替换调用。
+清单 7-4 展示了声明式宏规则的不同部分如何组合在一起。
+
+```rust
 macro_rules! /_macro name _/ {
 (/_ 1st matcher _/) => { /_ 1st transcriber _/ };
 (/_ 2nd matcher _/) => { /_ 2nd transcriber_/ };
 }
-Listing 7-4: Declarative macro definition components
-Matchers
+```
+
+清单 7-4：声明式宏定义组件
+
+##### Matchers
+
 You can think of a macro matcher as a token tree that the compiler tries to
 twist and bend in predefined ways to match the input token tree it was given
 at the invocation site. As an example, consider a macro with the matcher
@@ -1863,16 +1808,23 @@ with x + 3 _5, the compiler notices that the matcher matches if it sets $a = x
 and $b = 3_ 5. Even though _never appears in the matcher, the compiler
 realizes that 3_ 5 is a valid expression and that it can therefore be matched
 with $b:expr, which accepts anything that is an expression (the :expr part).
-Matchers can get pretty hairy, but they have huge expressive power,
+
+- Matchers can get pretty hairy, but they have huge expressive power,
 much like regular expressions. For a not-too-hairy example, this matcher
 accepts a sequence ($()) of one or more (+) comma-separated (),) key/value
 pairs given in key => value format:
+
+```rust
 $($key:expr => $value:expr),+
+
+```
+
 And, crucially, code that invokes a macro with this matcher can give an
 arbitrarily complex expression for the key or value—the magic of matchers
 will make sure that the key and value expressions are partitioned
 appropriately.
-Macro rules support a wide variety of fragment types; you’ve already seen
+
+- Macro rules support a wide variety of fragment types; you’ve already seen
 :ident for identifiers and :expr for expressions, but there is also :ty for types
 and even :tt for any single token tree! You can find a full list of the fragment
 types in Chapter 3 of the Rust language reference (https://doc.rust-lang
