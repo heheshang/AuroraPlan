@@ -1242,95 +1242,37 @@ opt-level = 2
 - 如果某个依赖项在调试模式下非常慢（例如解压缩或视频编码），而您需要对其进行优化，以便测试套件不需要花费数天的时间才能完成，那么这种优化覆盖可能非常有用。您还可以在Cargo配置文件的~/.cargo/config中使用[profile.dev]（或类似的）部分指定全局配置文件默认值。
 - 当您为特定依赖项设置优化参数时，请记住这些参数仅适用于作为该crate的一部分编译的代码；如果在此示例中的serde中有您在crate中使用的通用方法或类型，那么该方法或类型的代码将在您的crate中进行单态化和优化，并且将应用您crate的配置文件设置，而不是serde的配置文件覆盖中的设置。
 
-#### Conditional Compilation
+#### 条件编译
 
-Most Rust code you write is universal—it’ll work the same regardless of
-what CPU or operating system it runs on. But sometimes you’ll have to do
-something special to get the code to work on Windows, on ARM chips, or
-when compiled against a particular platform application binary interface
-(ABI). Or maybe you want to write an optimized version of a particular
-function when a given CPU instruction is available, or disable some slow but
-uninteresting setup code when running in a continuous integration (CI)
-environment. To cater to cases like these, Rust provides mechanisms for conditional
-compilation, in which a particular segment of code is compiled only
-if certain conditions are true of the compilation environment.
+大多数您编写的 Rust 代码都是通用的，无论在哪个 CPU 或操作系统上运行，它都能正常工作。但有时，您可能需要在 Windows 上、在 ARM 芯片上或在针对特定平台应用程序二进制接口（ABI）编译时执行一些特殊操作。或者，当某个 CPU 指令可用时，您可能希望编写一个优化版本的特定函数，或者在连续集成（CI）环境中运行时禁用一些慢但无趣的设置代码。为了满足这些情况，Rust 提供了条件编译的机制，即只有在编译环境满足某些条件时，才会编译特定的代码段。
 
-- We denote conditional compilation with the cfg keyword that you saw
-earlier in the chapter in “Using Features in Your Crate.” It usually appears in
-the form of the #[cfg(condition)] attribute, which says to compile the next item
-only if condition is true. Rust also has #[cfg_attr(condition, attribute)], which
-is compiled as #[attribute] if condition holds and is a no-op otherwise. You can
-also evaluate a cfg condition as a Boolean expression using the cfg!(condition)
-macro.
-- Every cfg construct takes a single condition made up of options, like
-feature = "some-feature", and the combinators all, any, and not, which do
-what you would probably expect. Options are either simple names, like unix,
-or key/value pairs like those used by feature conditions.
-- There are a number of interesting options you can make compilation
-dependent on. Let’s go through them, from most common to least common:
+- 我们使用cfg关键字来表示条件编译，你在本章的“在你的crate中使用特性”中已经见过它。它通常以#[cfg(condition)]属性的形式出现，表示只有在条件为真时才编译下一个项。Rust还有#[cfg_attr(condition, attribute)]，如果条件成立，则编译为#[attribute]，否则不做任何操作。您还可以使用cfg!(condition)宏将cfg条件评估为布尔表达式。
+- 每个cfg结构都接受一个由选项组成的条件，例如feature = "some-feature"，以及组合器all、any和not，它们的功能符合您的预期。选项可以是简单的名称，例如unix，也可以是用于特性条件的键/值对。
+- 有许多有趣的选项可以使编译依赖于它们。让我们从最常见的到最不常见的逐个介绍：
 
-##### Feature options
+##### 功能选项
 
-- You’ve already seen examples of these. Feature options take the form
-feature = "name-of-feature" and are considered true if the named feature
-is enabled. You can check for multiple features in a single condition
-using the combinators. For example, any(feature = "f1", feature =
-"f2") is true if either feature f1 or feature f2 is enabled.
+- 您已经看到了这些的示例。功能选项采用feature = "name-of-feature"的形式，如果启用了指定的功能，则被视为true。您可以使用组合器在单个条件中检查多个功能。例如，any(feature = "f1", feature = "f2")在启用了功能f1或功能f2时为true。
 
-##### Operating system options
+##### 操作系统选项
 
-- These use key/value syntax with the key target_os and values like windows,
-macos, and linux. You can also specify a family of operating systems
-using target_family, which takes the value windows or unix. These are
-common enough that they have received their own named short forms,
-so you can use cfg(windows) and cfg(unix) directly. For example, if you
-wanted a particular code segment to be compiled only on macOS and
-Windows, you would write: #[cfg(any(windows, target_os = "macos"))].
+- 这些使用键/值语法，键为target_os，值为windows、macos和linux。您还可以使用target_family指定操作系统的系列，它接受值windows或unix。它们非常常见，已经有了自己的命名简写形式，因此您可以直接使用cfg(windows)和cfg(unix)。例如，如果您希望特定的代码段仅在macOS和Windows上编译，您可以编写：#[cfg(any(windows, target_os = "macos"))]。
 
-##### Context options
+##### 上下文选项
 
-- These let you tailor code to a particular compilation context. The most
-common of these is the test option, which is true only when the crate
-is being compiled under the test profile. Keep in mind that test is set
-only for the crate that is being tested, not for any of its dependencies.
-This also means that test is not set in your crate when running integration
-tests; it’s the integration tests that are compiled under the test
-profile, whereas your actual crate is compiled normally (that is, without
-test set). The same applies to the doc and doctest options, which are set
-only when building documentation or compiling doctests, respectively.
-There’s also the debug_assertions option, which is set in debug mode by
-default.
+- 这些选项允许您根据特定的编译上下文来定制代码。其中最常见的是test选项，只有在crate在测试配置文件下编译时才为true。请记住，test仅针对正在测试的crate设置，而不针对其任何依赖项设置。这也意味着在运行集成测试时，您的crate中不会设置test；实际上，是集成测试在测试配置文件下编译，而您的crate会正常编译（即没有设置test）。相同的规则也适用于doc和doctest选项，它们仅在构建文档或编译doctest时设置。还有一个debug_assertions选项，默认情况下在调试模式下设置。
 
-##### Tool options
+工具选项
 
-- Some tools, like clippy and Miri, set custom options (more on that
-later) that let you customize compilation when run under these tools.
-Usually, these options are named after the tool in question. For example,
-if you want a particular compute-intensive test not to run under
-Miri, you can give it the attribute #[cfg_attr(miri, ignore)].
+- 一些工具，如clippy和Miri，设置自定义选项（稍后详细介绍），可以在运行这些工具时自定义编译。通常，这些选项以工具的名称命名。例如，如果您不希望某个特定的计算密集型测试在Miri下运行，您可以给它添加属性#[cfg_attr(miri, ignore)]。
 
 ##### Architecture options
 
-- These let you compile based on the CPU instruction set the compiler
-is targeting. You can specify a particular architecture with target_arch,
-which takes values like x86, mips, and aarch64, or you can specify a particular
-platform feature with target_feature, which takes values like avx
-or sse2. For very low-level code, you may also find the target_endian and
-target_pointer_width options useful.
+- 这些选项允许您根据编译器所针对的CPU指令集进行编译。您可以使用target_arch指定特定的架构，它接受值如x86、mips和aarch64，或者您可以使用target_feature指定特定的平台特性，它接受值如avx或sse2。对于非常底层的代码，您可能还会发现target_endian和target_pointer_width选项很有用。
 
 ##### Compiler options
 
-- These let you adapt your code to the platform ABI it is compiled against
-and are available through target_env with values like gnu, msvc, and musl.
-For historical reasons, this value is often empty, especially on GNU
-platforms. You normally need this option only if you need to interface
-directly with the environment ABI, such as when linking against an
-ABI-specific symbol name using #[link].
-While cfg conditions are usually used to customize code, some can also
-be used to customize dependencies. For example, the dependency winrt
-usually makes sense only on Windows, and the nix crate is probably useful
-only on Unix-based platforms. Listing 5-9 gives an example of how you can
-use cfg conditions for this:
+- 这些选项允许您根据编译的平台ABI来调整代码，可以通过target_env来获取，它接受值如gnu、msvc和musl。出于历史原因，这个值通常为空，特别是在GNU平台上。通常只有在需要直接与环境ABI进行接口的情况下，才需要此选项，例如在使用#[link]链接到特定ABI的符号名称时。虽然cfg条件通常用于自定义代码，但有些条件也可以用于自定义依赖项。例如，依赖项winrt通常只在Windows上有意义，而nix crate可能只在基于Unix的平台上有用。清单5-9展示了如何使用cfg条件来实现这一点：
 
 ```toml
 
@@ -1340,465 +1282,173 @@ winrt = "0.7"
 nix = "0.17"
 ```
 
-Listing 5-9: Conditional dependencies
+清单5-9：条件依赖项
 
-- Here, we specify that winrt version 0.7 should be considered a dependency
-only under cfg(windows) (so, on Windows), and nix version 0.17 only
-under cfg(unix) (so, on Linux, macOS, and other Unix-based platforms).
-One thing to keep in mind is that the [dependencies] section is evaluated
-very early in the build process, when only certain cfg options are available.
-In particular, feature and context options are not yet available at this point,
-so you cannot use this syntax to pull in dependencies based on features
-and contexts. You can, however, use any cfg that depends only on the target
-specification or architecture, as well as any options explicitly set by tools
-that call into rustc (like cfg(miri)).
-**NOTE** While we’re on the topic of dependency specifications, I highly recommend that you set
-up your CI infrastructure to perform basic auditing of your dependencies using tools
-like cargo-deny and cargo-audit. These tools will detect cases where you transitively
-depend on multiple major versions of a given dependency, where you depend on
-crates that are unmaintained or have known security vulnerabilities, or where you
-use licenses that you may want to avoid. Using such a tool is a great way to raise the
-quality of your codebase in an automated way!
-- It’s also quite simple to add your own custom conditional compilation
-options. You just have to make sure that --cfg=myoption is passed to rustc
-when rustc compiles your crate. The easiest way to do this is to add your
---cfg to the RUSTFLAGS environment variable. This can come in handy in CI,
-where you may want to customize your test suite depending on whether it’s
-being run on CI or on a dev machine: add --cfg=ci to RUSTFLAGS in your CI
-setup, and then use cfg(ci) and cfg(not(ci)) in your code. Options set this
-way are also available in Cargo.toml dependencies.
+- 在这里，我们指定 winrt 版本 0.7 应该只在 cfg(windows)（即在 Windows 上）下作为依赖项，而 nix 版本 0.17 则只在 cfg(unix)（即在 Linux、macOS 和其他基于 Unix 的平台上）下作为依赖项。需要记住的一件事是，在构建过程的早期阶段，只有某些 cfg 选项可用，因此无法使用此语法基于特性和上下文来引入依赖项。但是，您可以使用仅依赖于目标规范或架构的任何 cfg，以及由调用 rustc 的工具明确设置的任何选项（如 cfg(miri)）。
+**注意** 在我们讨论依赖规范的同时，我强烈建议您设置CI基础设施，使用cargo-deny和cargo-audit等工具对您的依赖项进行基本审核。这些工具可以检测到以下情况：您在传递依赖关系中依赖于多个主要版本的给定依赖项，您依赖于未维护或已知存在安全漏洞的crate，或者您使用了您可能希望避免的许可证。使用这样的工具是提高代码库质量的一种自动化方式！
 
-#### Versioning
+- 添加自定义的条件编译选项也非常简单。您只需要确保在 rustc 编译您的 crate 时传递 --cfg=myoption。最简单的方法是将 --cfg 添加到 RUSTFLAGS 环境变量中。这在 CI 中非常有用，您可以根据测试套件是在 CI 上运行还是在开发机器上运行来自定义测试套件：在 CI 设置中添加 --cfg=ci 到 RUSTFLAGS，然后在代码中使用 cfg(ci) 和 cfg(not(ci))。以这种方式设置的选项也可以在 Cargo.toml 的依赖项中使用。
 
-All Rust crates are versioned and are expected to follow Cargo’s implementation
-of semantic versioning. Semantic versioning dictates the rules for what
-kinds of changes require what kinds of version increases and for which versions
-are considered compatible, and in what ways. The RFC 1105 standard
-itself is well worth reading (it’s not horribly technical), but to summarize,
-it differentiates between three kinds of changes: breaking changes, which
-require a major version change; additions, which require a minor version
-change; and bug fixes, which require only a patch version change. RFC 1105
-does a decent job of outlining what constitutes a breaking change in Rust,
-and we’ve touched on some aspects of it elsewhere in this book.
+#### 版本控制
 
-- I won’t go into detail here about the exact semantics of the different
-types of changes. Instead, I want to highlight some less straightforward ways
-version numbers come up in the Rust ecosystem, which you need to keep in
-mind when deciding how to version your own crates.
+所有的 Rust crate 都有版本号，并且预期遵循 Cargo 对语义化版本控制的实现。语义化版本控制规定了哪些变化需要增加哪些版本号，以及哪些版本被认为是兼容的，以及以何种方式兼容。RFC 1105 标准本身值得一读（它并不是非常技术性），但总结起来，它区分了三种类型的变化：破坏性变化需要进行主版本号的更改；新增功能需要进行次版本号的更改；修复错误只需要进行补丁版本号的更改。RFC 1105 在概述了在 Rust 中什么是破坏性变化方面做得相当不错，我们在本书的其他地方也提到了一些相关内容。
 
-#### Minimum Supported Rust Version
+- 我不会在这里详细介绍不同类型变化的确切语义。相反，我想强调一些在决定如何为自己的 crate 进行版本控制时需要注意的 Rust 生态系统中不太直观的版本号使用方式。
 
-The first Rust-ism is the minimum supported Rust version (MSRV). There is
-much debate in the Rust community about what policy projects should
-adhere to when it comes to their MSRV and versioning, and there’s no truly
-good answer. The core of the problem is that some Rust users are limited to
-using older versions of Rust, often in an enterprise setting where they have
-little choice. If we constantly take advantage of newly stabilized APIs, those
-users will not be able to compile the latest versions of our crates and will be
-left behind.
+#### 最低支持的 Rust 版本
 
-- There are two techniques crate authors can use to make life a little easier
-for users in this position. The first is to establish an MSRV policy promising
-that new versions of a crate will always compile with any stable release from
-the last X months. The exact number varies, but 6 or 12 months is common.
-With Rust’s six-week release cycle, that corresponds to the latest four or eight
-stable releases, respectively. Any new code introduced to the project must
-compile with the MSRV compiler (usually checked by CI) or be held until the
-MSRV policy allows it to be merged as is. This can sometimes be a pain, as it
-means these crates cannot take advantage of the latest and greatest the language
-has to offer, but it will make life easier for your users.
-- The second technique is to make sure to increase the minor version
-number of your crate any time that the MSRV changes. So, if you release
-version 2.7.0 of your crate and that increases your MSRV from Rust 1.44
-to Rust 1.45, then a project that is stuck on 1.44 and that depends on your
-crate can use the dependency version specifier version = "2, <2.7" to keep
-the project working until it can move on to Rust 1.45. It’s important that you
-increment the minor version, not just the patch version, so that you can still
-issue critical security fixes for the previous MSRV release by doing another
-patch release if necessary.
-- Some projects take their MSRV support so seriously that they consider
-an MSRV change a breaking change and increment the major version number.
-This means that downstream projects will explicitly have to opt in to an
-MSRV change, rather than opting out—but it also means that users who do
-not have such strict MSRV requirements will not see future bug fixes without
-updating their dependencies, which may require them to issue a breaking
-change as well. As I said, none of these solutions are without drawbacks.
-- Enforcing an MSRV in the Rust ecosystem today is challenging. Only
-a small subset of crates provide any MSRV guarantees, and even if your
-dependencies do, you will need to constantly monitor them to know when
-they increase their MSRV. When they do, you’ll need to do a new release
-of your crate with the restricted version bounds mentioned previously to
-make sure your MSRV doesn’t also change. This may in turn force you to
-forego security and performance updates made to your dependencies, as
-you’ll have to continue using older versions until your MSRV policy permits
-updating. And that decision also carries over to your dependents. There
-have been proposals to build MSRV checking into Cargo itself, but nothing
-workable has been stabilized as of this writing.
+第一个 Rust 特性是最低支持的 Rust 版本（MSRV）。在 Rust 社区中，关于项目在 MSRV 和版本控制方面应该遵循什么策略存在很多争议，而且没有一个真正好的答案。问题的核心是，一些 Rust 用户受限于使用较旧的 Rust 版本，通常是在企业环境中，他们几乎没有选择。如果我们不断利用新稳定的 API，这些用户将无法编译我们 crate 的最新版本，将被落下。
 
-#### Minimal Dependency Versions
 
-When you first add a dependency, it’s not always clear what version specifier
-you should give that dependency. Programmers commonly choose the latest
-version, or just the current major version, but chances are that both of those
-choices are wrong. By “wrong,” I don’t mean that your crate won’t compile,
-but rather that making that choice may cause strife for users of your crate
-down the line. Let’s look at why each of these cases is problematic.
-First, consider the case where you add a dependency on hugs = "1.7.3",
-the latest published version. Now imagine that a developer somewhere
-depends on your crate, but they also depend on some other crate, foo, that
-itself depends on hugs. Further imagine that the author of foo is really careful
-about their MSRV policy, so they depend on hugs = "1, <1.6". Here, you’ll run
-into trouble. When Cargo sees hugs = "1.7.3", it considers only versions >=1.7.
-But then it sees that foo’s dependency on hugs requires <1.6, so it gives up and
-reports that there is no version of hugs compatible with all the requirements.
-**NOTE** In practice, there are a number of reasons why a crate may explicitly not want a
-newer version of a dependency. The most common ones are to enforce MSRV, to meet
-enterprise auditing requirements (the newer version will contain code that hasn’t been
-audited), and to ensure reproducible builds where only the exact listed version is used.
-This is unfortunate, as it could well be that your crate compiles fine
-with, say, hugs 1.5.6. Maybe it even compiles fine with any 1.X version! But
-by using the latest version number, you are telling Cargo to consider only
-versions at or beyond that minor version. Is the solution to use hugs = "1"
-instead, then? No, that’s not quite right either. It could be that your code
-truly does depend on something that was added only in hugs 1.6, so while
-1.6.2 would be fine, 1.5.6 would not be. You wouldn’t notice this if you were
-only ever compiling your crate in situations where a newer version ends up
-getting used, but if some crate in the dependency graph specifies hugs = "1,
-<1.5", your crate would not compile!
-The right strategy is to list the earliest version that has all the things
-your crate depends on and to make sure that this remains the case even
-as you add new code to your crate. But how do you establish that beyond
-trawling the changelogs, or through trial and error? Your best bet is to use
-Cargo’s unstable -Zminimal-versions flag, which makes your crate use the
-minimum acceptable version for all dependencies, rather than the maximum.
-Then, set all your dependencies to just the latest major version number,
-try to compile, and add a minor version to any dependencies that don’t.
-Rinse and repeat until everything compiles fine, and you now have your
-minimum version requirements!
-It’s worth noting that, like with MSRV, minimal version checking faces
-an ecosystem adoption problem. While you may have set all your version
-specifiers correctly, the projects you depend on may not have. This makes
-the Cargo minimal versions flag hard to use in practice (and is why it’s still
-unstable). If you depend on foo, and foo depends on bar with a specifier
-of bar = "1" when it actually requires bar = "1.4", Cargo will report that it
-failed to compile foo no matter how you list foo because the -Z flag tells it
+- 有两种技术可以让创建者为处于这种情况下的用户提供一些便利。第一种是建立一个最低支持的 Rust 版本（MSRV）策略，承诺新版本的 crate 将始终与过去 X 个月内的任何稳定版本编译通过。确切的数字有所不同，但通常为 6 或 12 个月。根据 Rust 的六周发布周期，这对应于最新的四个或八个稳定版本。项目中引入的任何新代码都必须与 MSRV 编译器（通常由 CI 检查）一起编译通过，或者在 MSRV 策略允许的情况下暂时保留，直到可以合并。这有时可能会有些麻烦，因为这意味着这些 crate 无法充分利用语言的最新功能，但它将为您的用户带来便利。
+- 第二种技术是确保每当 MSRV 更改时，增加您的 crate 的次要版本号。因此，如果您发布了版本为 2.7.0 的 crate，并将其 MSRV 从 Rust 1.44 增加到 Rust 1.45，那么依赖于您的 crate 并停留在 1.44 上的项目可以使用依赖版本说明符 version = "2, <2.7" 来保持项目正常运行，直到可以迁移到 Rust 1.45。重要的是，您要增加次要版本号，而不仅仅是修订版本号，这样您仍然可以通过进行另一个修订版本的关键安全修复来为先前的 MSRV 发布提供支持，如果有必要的话。
+- 一些项目非常重视对最低支持的 Rust 版本（MSRV）的支持，将 MSRV 的更改视为破坏性更改并增加主版本号。这意味着下游项目必须明确选择接受 MSRV 的更改，而不是选择不接受，但这也意味着没有严格的 MSRV 要求的用户将无法看到未来的错误修复，除非更新其依赖项，这可能需要他们进行破坏性更改。正如我所说，这些解决方案都有缺点。
+- 在当前的 Rust 生态系统中，强制最低支持的 Rust 版本（MSRV）是具有挑战性的。只有少数一部分的 crate 提供了任何 MSRV 的保证，即使你的依赖项提供了，你也需要不断监控它们以了解何时增加了 MSRV。当它们增加了 MSRV 时，你需要使用之前提到的限制版本范围进行新的 crate 发布，以确保你的 MSRV 不会改变。这可能会迫使你放弃依赖项的安全性和性能更新，因为你必须继续使用旧版本，直到你的 MSRV 策略允许更新。而这个决定也会影响到你的依赖者。有一些提案将 MSRV 检查集成到 Cargo 中，但截至目前为止，还没有可行的稳定版本。
 
-Project Structure 83
-to always prefer minimal versions. You can work around this by listing bar
-directly in your dependencies with the appropriate version requirement,
-but these workarounds can be painful to set up and maintain. You may end
-up listing a large number of dependencies that are only really pulled in
-through your transitive dependencies, and you’ll have to keep that list up to
-date as time goes on.
-**NOTE** One current proposal is to present a flag that favors minimal versions for the current
-crate but maximal ones for dependencies, which seems quite promising.
-Changelogs
-For all but the most trivial crates, I highly recommend keeping a changelog.
-There is little more frustrating than seeing that a dependency has received
-a major version bump and then having to dig through the Git logs to figure
-out what changed and how to update your code. I recommend that you do
-not just dump your Git logs into a file named changelog, but instead keep a
-manual changelog. It is much more likely to be useful.
-A simple but good format for changelogs is the Keep a Changelog format
-documented at <https://keepachangelog.com/>.
-Unreleased Versions
-Rust considers version numbers even when the source of a dependency is a
-directory or a Git repository. This means that semantic versioning is important
-even when you have not yet published a release to crates.io; it matters
-what version is listed in your Cargo.toml between releases. The semantic versioning
-standard does not dictate how to handle this case, but I’ll provide a
-workflow that works decently well without being too onerous.
-After you’ve published a release, immediately update the version number
-in your Cargo.toml to the next patch version with a suffix like -alpha.1.
-If you just released 2.0.3, make the new version 2.0.4-alpha.1. If you just
-released an alpha, increment the alpha number instead.
-As you make changes to the code between releases, keep an eye out for
-additive or breaking changes. If one happens, and the corresponding version
-number has not changed since the last release, increment it. For example,
-if the last released version is 2.0.3, the current version is 2.0.4-alpha.2,
-and you make an additive change, make the version with the change 2.1.0-
-alpha.1. If you made a breaking change, it becomes 3.0.0-alpha.1 instead. If
-the corresponding version increase has already been made, just increment
-the alpha number.
-When you make a release, remove the suffix (unless you want to do a
-prerelease), then publish, and start from the top.
-This process is effective because it makes two common workflows work
-much better. First, imagine that a developer depends on major version 2
-of your crate, but they need a feature that’s currently available only in Git.
-Then you commit a breaking change. If you don’t increase the major version
-at the same time, their code will suddenly fail in unexpected ways,
+#### 最小依赖版本
 
-84 Chapter 5
-either by failing to compile or as a result of weird runtime issues. If you follow
-the procedure laid out here, they’ll instead be notified by Cargo that a
-breaking change has occurred, and they’ll have to either resolve that or pin
-a specific commit.
-Next, imagine that a developer needs a feature they just contributed
-to your crate, but which isn’t part of any released version of your crate yet.
-They’ve used your crate behind a Git dependency for a while, so other
-developers on their project already have older checkouts of your crate’s
-repository. If you do not increment the major version number in Git, this
-developer has no way to communicate that their project now relies on the
-feature that was just merged. If they push their change, their fellow developers
-will find that the project no longer compiles, since Cargo will reuse the
-old checkout. If, on the other hand, the developer can increment the minor
-version number for the Git dependency, then Cargo will realize that the old
-checkout is outdated.
-This workflow is by no means perfect. It doesn’t provide a good way to
-communicate multiple minor or major changes between releases, and you
-still need to do a bit of work to keep track of the versions. However, it does
-address two of the most common issues Rust developers run into when they
-work against Git dependencies, and even if you make multiple such changes
-between releases, this workflow will still catch many of the issues.
-If you’re not too worried about small or consecutive version numbers
-in releases, you can improve this suggested workflow by simply always incrementing
-the appropriate part of the version number. Be aware, though, that
-depending on how frequently you make such changes, this may make your
-version numbers quite large!
-Summary
-In this chapter, we’ve looked at a number of mechanisms for configuring,
-organizing, and publishing crates, for both your own benefit and that of
-others. We’ve also gone over some common gotchas when working with
-dependencies and features in Cargo that now hopefully won’t catch you out
-in the future. In the next chapter we’ll turn to testing and dig into how you
-go beyond Rust’s simple #[test] functions that we know and love.
+当您首次添加依赖项时，往往不清楚应该给出什么版本说明符。程序员通常选择最新版本或当前主要版本，但很可能这两种选择都是错误的。我所说的“错误”并不意味着您的 crate 无法编译，而是选择这样做可能会给您 crate 的用户带来麻烦。让我们看看为什么每种情况都存在问题。
 
-### 6.TESTING
+- 首先，考虑一种情况，您添加了对 hugs = "1.7.3" 的依赖，这是最新发布的版本。现在想象一下，某个开发人员依赖于您的 crate，但他们还依赖于另一个 crate，名为 foo，它本身依赖于 hugs。进一步想象一下，foo 的作者非常注意他们的 MSRV 策略，所以他们依赖于 hugs = "1, <1.6"。在这种情况下，您将遇到麻烦。当 Cargo 看到 hugs = "1.7.3" 时，它只考虑 >=1.7 的版本。但是然后它看到 foo 对 hugs 的依赖要求 <1.6，所以它放弃了，并报告说没有满足所有要求的 hugs 版本。
+**注意** 在实践中，有许多原因可能导致一个 crate 明确不希望使用较新的依赖项版本。最常见的原因是为了保持最低支持的 Rust 版本（MSRV），满足企业审计要求（较新的版本可能包含未经审计的代码），以及确保可重现构建，只使用精确列出的版本。
+- 这是不幸的，因为很可能您的 crate 可以与 hugs 1.5.6 编译通过。甚至可能它可以与任何 1.X 版本编译通过！但是通过使用最新的版本号，您告诉 Cargo 仅考虑在该次要版本及以上的版本。那么解决方案是使用 hugs = "1" 吗？不，也不完全正确。可能您的代码确实依赖于仅在 hugs 1.6 中添加的某些内容，因此 1.6.2 是可以的，但 1.5.6 不行。如果您只在使用较新版本的情况下编译 crate，您可能不会注意到这一点，但是如果依赖图中的某个 crate 指定了 hugs = "1, <1.5"，则您的 crate 将无法编译！
+- 正确的策略是列出具有您的 crate 所依赖的所有内容的最早版本，并确保即使在向 crate 添加新代码时也保持这种情况。但是，除了浏览更改日志或通过试错之外，如何确定这一点呢？您最好的选择是使用 Cargo 的不稳定 -Zminimal-versions 标志，它使您的 crate 使用所有依赖项的最低可接受版本，而不是最高版本。然后，将所有依赖项设置为最新的主版本号，尝试编译，并为任何不兼容的依赖项添加一个次要版本号。反复尝试，直到一切都能正常编译，这样您就得到了最低版本要求！
+- 值得注意的是，与最低支持的 Rust 版本（MSRV）一样，最小版本检查也面临着生态系统采用的问题。尽管您可能已经正确设置了所有版本规范，但您所依赖的项目可能没有。这使得在实践中很难使用 Cargo 的最小版本标志（这也是为什么它仍然是不稳定的）。如果您依赖于 foo，并且 foo 依赖于 bar，而 bar 的规范为 bar = "1"，而实际上它需要 bar = "1.4"，无论您如何列出 foo，Cargo 都会报告无法编译 foo，因为 -Z 标志告诉它始终优先选择最小版本。您可以通过在依赖项中直接列出 bar 并指定适当的版本要求来解决此问题，但这些解决方法可能很麻烦并且难以维护。您可能会列出大量仅通过传递依赖项引入的依赖项，并且随着时间的推移，您将不得不保持该列表的更新。
+**注意** 目前的一个提案是提供一个标志，该标志在当前 crate 中偏向最小版本，但在依赖项中偏向最大版本，这似乎非常有前景。
 
-In this chapter, we’ll look at the various
-ways in which you can extend Rust’s testing
-capabilities and what other kinds of testing
-you may want to add into your testing mix. Rust
-comes with a number of built-in testing facilities that
-are well covered in The Rust Programming Language,
-represented primarily by the #[test] attribute and the
-tests/ directory. These will serve you well across a wide
-range of applications and scales and are often all you need when you are
-getting started with a project. However, as the codebase develops and your
-testing needs grow more elaborate, you may need to go beyond just tagging
-`#[test]` onto individual functions.
-This chapter is divided into two main sections. The first part covers
-Rust testing mechanisms, like the standard testing harness and conditional
-testing code. The second looks at other ways to evaluate the correctness of
-your Rust code, such as benchmarking, linting, and fuzzing.
+##### 更新日志
 
-86 Chapter 6
-Rust Testing Mechanisms
-To understand the various testing mechanisms Rust provides, you must first
-understand how Rust builds and runs tests. When you run cargo test --lib,
-the only special thing Cargo does is pass the --test flag to rustc. This flag
-tells rustc to produce a test binary that runs all the unit tests, rather than
-just compiling the crate’s library or binary. Behind the scenes, --test has
-two primary effects. First, it enables cfg(test) so that you can conditionally
-include testing code (more on that in a bit). Second, it makes the compiler
-generate a test harness: a carefully generated main function that invokes each
-`#[test] function in your program when it’s run`.
-The Test Harness
-The compiler generates the test harness main function through a mix of
-procedural macros, which we’ll discuss in greater depth in Chapter 7, and
-a light sprinkling of magic. Essentially, the harness transforms every function
-annotated by #[test] into a test descriptor—this is the procedural macro
-part. It then exposes the path of each of the descriptors to the generated
-main function—this is the magic part. The descriptor includes information
-like the test’s name, any additional options it has set (like #[should_panic]),
-and so on. At its core, the test harness iterates over the tests in the crate,
-runs them, captures their results, and prints the results. So, it also includes
-logic to parse command line arguments (for things like --test-threads=1),
-capture test output, run the listed tests in parallel, and collect test results.
-As of this writing, Rust developers are working on making the magic
-part of test harness generation a publicly available API so that developers
-can build their own test harnesses. This work is still at the experimental
-stage, but the proposal aligns fairly closely with the model as it exists today.
-Part of the magic that needs to be figured out is how to ensure that #[test]
-functions are available to the generated main function even if they are inside
-private submodules.
-Integration tests (the tests in tests/) follow the same process as unit
-tests, with the one exception that they are each compiled as their own
-separate crate, meaning they can access only the main crate’s public interface
-and are run against the main crate compiled without #[cfg(test)]. A
-test harness is generated for each file in tests/. Test harnesses are not generated
-for files in subdirectories under tests/ to allow you to have shared
-submodules
-for your tests.
-**NOTE** If you explicitly want a test harness for a file in a subdirectory, you can opt in to that
-by calling the file main.rs.
-Rust does not require that you use the default test harness. You can
-instead opt out of it and implement your own main method that represents
-the test runner by setting harness = false for a given integration test in
-Cargo.toml, as shown in Listing 6-1. The main method that you define will
-then be invoked to run the test.
+- 对于除了最简单的 crate 之外，我强烈建议保持一个更新日志。没有什么比看到一个依赖项进行了主版本升级，然后不得不深入 Git 日志中找出变更内容以及如何更新代码更令人沮丧的了。我建议您不要只是将 Git 日志转储到一个名为 changelog 的文件中，而是保持一个手动的更新日志。这样更有可能有用。
+- 一个简单但不错的更新日志格式是 Keep a Changelog 的格式，文档在 <https://keepachangelog.com/> 中有记录。
 
-Testing 87
+##### Unreleased Versions
+
+即使依赖项的源是目录或Git存储库，Rust在考虑版本号时也会起作用。这意味着即使您尚未发布到crates.io，语义化版本控制也很重要；在发布之间，Cargo.toml中列出的版本号很重要。语义化版本控制标准没有规定如何处理这种情况，但我将提供一个工作流程，既能很好地工作，又不会太繁琐。
+
+- 在发布了一个版本之后，立即在 Cargo.toml 中更新版本号为下一个带有类似 -alpha.1 后缀的补丁版本。如果刚发布了 2.0.3，那么新版本将是 2.0.4-alpha.1。如果刚发布了一个 alpha 版本，则增加 alpha 编号即可。
+- 在发布之间对代码进行更改时，请注意增量或破坏性的更改。如果发生了破坏性更改，并且与上次发布时的版本号没有变化，那么请增加版本号。例如，如果上次发布的版本是2.0.3，当前版本是2.0.4-alpha.2，并且您进行了增量更改，请将具有更改的版本号设置为2.1.0-alpha.1。如果进行了破坏性更改，则将其设置为3.0.0-alpha.1。如果相应的版本增加已经完成，请只增加alpha编号。
+- 当您发布一个版本时，删除后缀（除非您想进行预发布），然后发布，并从头开始。
+- 这个过程是有效的，因为它可以更好地支持两种常见的工作流程。首先，假设开发人员依赖于您 crate 的主版本2，但他们需要一个目前只在Git中可用的功能。然后，您提交了一个破坏性的更改。如果您不同时增加主版本号，他们的代码将以意想不到的方式突然失败，可能是无法编译，或者是由于奇怪的运行时问题。如果您按照这里提出的步骤进行操作，他们将收到Cargo的通知，说明发生了破坏性的更改，他们将不得不解决这个问题或者固定一个特定的提交。
+- 接下来，想象一下，一个开发人员需要一个他们刚刚贡献给您 crate 的功能，但这个功能尚未包含在您 crate 的任何发布版本中。他们在很长一段时间内都在使用您 crate 的 Git 依赖项，因此他们项目中的其他开发人员已经有了您 crate 仓库的旧版本。如果您在 Git 中不增加主版本号，这个开发人员就没有办法告知他们的项目现在依赖于刚刚合并的功能。如果他们推送了他们的更改，他们的同事开发人员将发现项目无法编译，因为 Cargo 将重用旧的检出。然而，如果开发人员可以增加 Git 依赖项的次要版本号，那么 Cargo 将意识到旧的检出已经过时。
+- 这个工作流程并不完美。它没有提供一个很好的方式来传达在发布之间的多个次要或主要更改，并且您仍然需要做一些工作来跟踪版本。然而，它确实解决了 Rust 开发人员在使用 Git 依赖项时遇到的两个最常见问题，即使在发布之间进行多个此类更改，这个工作流程仍然可以捕捉到许多问题。
+- 如果您对版本号的小幅或连续变化不太担心，您可以通过始终增加版本号的适当部分来改进此建议的工作流程。但是，请注意，根据您进行此类更改的频率，这可能会使您的版本号变得非常大！
+
+#### 摘要
+
+在本章中，我们已经介绍了一些配置、组织和发布 crate 的机制，既有利于自己，也有利于他人。我们还讨论了在使用 Cargo 中处理依赖项和特性时的一些常见问题，希望这些问题不会再困扰到你。在下一章中，我们将转向测试，并深入探讨如何超越我们所熟悉和喜爱的 Rust 的简单 #[test] 函数。
+
+### 6.测试
+
+在本章中，我们将介绍各种扩展Rust测试能力的方法，以及您可能希望添加到测试组合中的其他类型的测试。Rust提供了许多内置的测试工具，这些工具在《Rust编程语言》中得到了很好的介绍，主要由#[test]属性和tests/目录表示。当您开始一个项目时，这些工具可以很好地满足您的需求，并且适用于各种应用和规模。然而，随着代码库的发展和测试需求的增加，您可能需要超越仅仅在个别函数上添加#[test]标记的方式。
+
+- 本章分为两个主要部分。第一部分介绍了Rust的测试机制，如标准测试框架和条件测试代码。第二部分介绍了评估Rust代码正确性的其他方法，如基准测试、代码检查和模糊测试。
+
+#### Rust Testing Mechanisms
+
+要理解Rust提供的各种测试机制，首先必须了解Rust如何构建和运行测试。当您运行cargo test --lib时，Cargo所做的唯一特殊之处是向rustc传递--test标志。该标志告诉rustc生成一个测试二进制文件，该文件运行所有单元测试，而不仅仅是编译crate的库或二进制文件。在幕后，--test有两个主要效果。首先，它启用了cfg(test)，以便您可以有条件地包含测试代码（稍后会详细介绍）。其次，它使编译器生成一个测试harness：一个精心生成的main函数，在运行时调用程序中的每个`#[test]函数`。
+
+##### 测试工具
+
+编译器通过一种混合使用过程宏（procedural macros）和一些神奇的方式生成测试harness的main函数。我们将在第7章中更详细地讨论过程宏。测试harness将每个使用#[test]注解的函数转换为一个测试描述符，这是过程宏的一部分。然后，它将每个描述符的路径暴露给生成的main函数，这是神奇的部分。描述符包括测试的名称、任何额外设置的选项（如#[should_panic]），等等。在核心部分，测试harness迭代遍历crate中的测试，运行它们，捕获结果，并打印结果。因此，它还包括解析命令行参数的逻辑（例如--test-threads=1），捕获测试输出，以并行方式运行列出的测试，并收集测试结果。
+
+- 截至目前，Rust开发人员正在努力使测试harness生成的魔法部分成为公开可用的API，以便开发人员可以构建自己的测试harness。这项工作仍处于实验阶段，但该提案与现有模型相当接近。需要解决的一部分魔法是如何确保生成的main函数可以访问#[test]函数，即使它们位于私有子模块中。
+- 集成测试（位于tests/目录中的测试）遵循与单元测试相同的流程，唯一的区别是它们被编译为独立的 crate，意味着它们只能访问主 crate 的公共接口，并且在没有 #[cfg(test)] 的情况下对主 crate 进行编译。对于 tests/ 目录中的每个文件，都会生成一个测试 harness。为了允许您在测试中共享子模块，不会为 tests/ 子目录中的文件生成测试 harness。
+**注意** 如果您明确希望在子目录中的文件中使用测试harness，可以通过将文件命名为main.rs来选择启用它。
+- Rust不要求您使用默认的测试harness。您可以选择退出并实现自己的main方法来代表测试运行器，通过在Cargo.toml中设置harness = false来为给定的集成测试，如示例6-1所示。您定义的main方法将被调用来运行测试。
+
+```rust
+
 [[test]]
 name = "custom"
 path = "tests/custom.rs"
 harness = false
-Listing 6-1: Opting out of the standard test harness
-Without the test harness, none of the magic around #[test] happens.
-Instead, you’re expected to write your own main function to run the testing
-code you want to execute. Essentially, you’re writing a normal Rust binary
-that just happens to be run by cargo test. That binary is responsible for
-handling all the things that the default harness normally does (if you want
-to support them), such as command line flags. The harness property is set
-separately for each integration test, so you can have one test file that uses
-the standard harness and one that does not.
-ARGUMENTS TO THE DEFAULT TEST HARNESS
-The default test harness supports a number of command line arguments to
-configure how the tests are run. These aren’t passed to cargo test directly
-but rather to the test binary that Cargo compiles and runs for you when you
-run cargo test. To access that set of flags, pass -- to cargo test, followed by
-the arguments to the test binary. For example, to see the help text for the test
-binary, you’d run cargo test -- --help.
-A number of handy configuration options are available through these command
-line arguments. The --nocapture flag disables the output capturing that
-normally happens when you run Rust tests. This is useful if you want to observe
-a test’s output in real time rather than all at once after the test has failed. You
-can use the --test-threads option to limit how many tests run concurrently,
-which is helpful if you have a test that hangs or segfaults and you want to figure
-out which one it is by running the tests sequentially. There’s also a --skip option
-for skipping tests that match a certain pattern, --ignored to run tests that would
-normally be ignored (such as those that require an external program to be running),
-and --list to just list all the available tests.
-Keep in mind that these arguments are all implemented by the default test
-harness, so if you disable it (with harness = false), you’ll have to implement the
-ones you need yourself in your main function!
-Integration tests without a harness are primarily useful for benchmarks,
-as we’ll see later, but they also come in handy when you want to run
-tests that don’t fit the standard “one function, one test” model. For example,
-you’ll frequently see harnessless tests used with fuzzers, model checkers,
-and tests that require a custom global setup (like under WebAssembly
-or when working with custom targets).
 
-88 Chapter 6
-`#[cfg(test)]`
-When Rust builds code for testing, it sets the compiler configuration flag
-test, which you can then use with conditional compilation to have code
-that is compiled out unless it is specifically being tested. On the surface,
-this may seem odd: don’t you want to test exactly the same code that’s going
-into production? You do, but having code exclusively available when testing
-allows you to write better, more thorough tests, in a few ways.
-MOCKING
-When writing tests, you often want tight control over the code you’re testing as
-well as any other types that your code may interact with. For example, if you
-are testing a network client, you probably do not want to run your unit tests
-over a real network but instead want to directly control what bytes are emitted
-by the “network” and when. Or, if you’re testing a data structure, you want your
-test to use types that allow you to control what each method returns on each
-invocation. You may also want to gather metrics such as how often a given
-method was called or whether a given byte sequence was emitted.
-These “fake” types and implementations are known as mocks, and they
-are a key feature of any extensive unit test suite. While you can often do the
-work needed to get this kind of control manually, it’s nicer to have a library take
-care of most of the nitty-gritty details for you. This is where automated mocking
-comes into play. A mocking library will have facilities for generating types
-(including functions) with particular properties or signatures, as well as mechanisms
-to control and introspect those generated items during a test execution.
-Mocking in Rust generally happens through generics—as long as your
-program, data structure, framework, or tool is generic over anything you might
-want to mock (or takes a trait object), you can use a mocking library to generate
-conforming types that will instantiate those generic parameters. You then
-write your unit tests by instantiating your generic constructs with the generated
-mock types, and you’re off to the races!
-In situations where generics are inconvenient or inappropriate, such as
-if you want to avoid making a particular aspect of your type generic to users,
-you can instead encapsulate the state and behavior you want to mock in a
-dedicated struct. You would then generate a mocked version of that struct and
-its methods and use conditional compilation to use either the real or mocked
-implementation depending on cfg(test) or a test-only feature like cfg(feature
-= "test_mock_foo").
-At the moment, there isn’t a single mocking library, or even a single mocking
-approach, that has emerged as the One True Answer in the Rust community.
-The most extensive and thorough mocking library I know of is the mockall crate,
-but that is still under active development, and there are many other contenders.
+```
+代码清单 6-1：选择退出标准测试harness
 
-Testing 89
-Test-Only APIs
-First, having test-only code allows you to expose additional methods, fields,
-and types to your (unit) tests so the tests can check not only that the public
-API behaves correctly but also that the internal state is correct. For example,
-consider the HashMap type from hashbrown, the crate that implements the
-standard library HashMap. The HashMap type is really just a wrapper around
-a RawTable type, which is what implements most of the hash table logic.
-Suppose that after doing a HashMap::insert on an empty map, you want to
-check that a single bucket in the map is nonempty, as shown in Listing 6-2.
+- 没有测试harness，#[test]周围的所有魔法都不会发生。
+相反，您需要编写自己的main函数来运行要执行的测试代码。实质上，您正在编写一个普通的Rust二进制文件，只是碰巧由cargo test运行。该二进制文件负责处理默认harness通常执行的所有事情（如果您想支持它们），例如命令行标志。harness属性是针对每个集成测试单独设置的，因此您可以有一个使用标准harness的测试文件和一个不使用harness的测试文件。
+
+**默认测试harness的参数**
+默认的测试harness支持一些命令行参数，用于配置测试的运行方式。这些参数不直接传递给cargo test，而是传递给Cargo为您编译和运行的测试二进制文件。要访问这组参数，您可以在cargo test后面加上--，然后是测试二进制文件的参数。例如，要查看测试二进制文件的帮助文本，您可以运行cargo test -- --help。
+
+- 通过这些命令行参数，可以使用一些方便的配置选项。--nocapture标志禁用了通常在运行Rust测试时发生的输出捕获。如果您想实时观察测试的输出而不是在测试失败后一次性查看，这非常有用。您可以使用--test-threads选项来限制并发运行的测试数量，这对于有 hang 或 segfault 的测试很有帮助，您可以通过按顺序运行测试来找出是哪个测试出了问题。还有一个--skip选项，用于跳过与特定模式匹配的测试，--ignored用于运行通常被忽略的测试（例如那些需要外部程序运行的测试），--list用于列出所有可用的测试。
+
+- 请记住，这些参数都是由默认的测试harness实现的，因此如果您禁用它（使用harness = false），您将需要在您的main函数中自己实现所需的参数！
+- 没有测试harness的集成测试主要用于基准测试，我们稍后会看到，但它们也在您想要运行不适合标准“一个函数，一个测试”模型的测试时非常有用。例如，您经常会看到无harness的测试与模糊测试器、模型检查器以及需要自定义全局设置的测试一起使用（例如在WebAssembly下或在使用自定义目标时）。
+
+#### `#[cfg(test)]`
+
+当 Rust 构建测试代码时，它会设置编译器配置标志 test，您可以使用条件编译来编写代码，除非特别进行测试，否则该代码将被编译掉。表面上看，这似乎有些奇怪：难道您不想测试与生产环境中完全相同的代码吗？确实如此，但是在测试时仅有的代码可以让您编写更好、更全面的测试，有几种方式。
+
+**MOCKING** 
+在编写测试时，您通常希望对正在测试的代码以及代码可能交互的任何其他类型具有严格的控制。例如，如果您正在测试一个网络客户端，您可能不希望在真实网络上运行单元测试，而是希望直接控制“网络”发出的字节和时间。或者，如果您正在测试一个数据结构，您希望您的测试使用的类型允许您控制每次调用时每个方法返回的内容。您还可能希望收集指标，例如给定方法被调用的频率或是否发出了给定的字节序列。
+
+- 这些“假”类型和实现被称为模拟对象（mocks），它们是任何大型单元测试套件的关键特性。虽然您通常可以手动完成获取此类控制所需的工作，但最好有一个库来为您处理大部分琐碎的细节。这就是自动模拟的作用。模拟库将提供生成具有特定属性或签名的类型（包括函数）的功能，以及在测试执行期间控制和检查这些生成的项的机制。
+- 在Rust中，模拟通常通过泛型来实现 - 只要您的程序、数据结构、框架或工具对您可能想要模拟的任何内容都是泛型的（或者接受一个特质对象），您就可以使用模拟库生成符合要求的类型来实例化这些泛型参数。然后，通过使用生成的模拟类型实例化您的泛型构造，编写单元测试，然后开始测试！
+- 在泛型不方便或不合适的情况下，例如如果您想避免将类型的特定方面泛型化给用户，您可以将您想要模拟的状态和行为封装在一个专用的结构体中。然后，您可以生成该结构体及其方法的模拟版本，并使用条件编译根据cfg(test)或类似cfg(feature = "test_mock_foo")的测试专用功能来使用真实或模拟实现。
+- 目前，在Rust社区中还没有出现一个单一的模拟库，甚至也没有出现一个单一的模拟方法，被认为是唯一正确的答案。我所知道的最全面和详尽的模拟库是mockall crate，但它仍在积极开发中，还有许多其他竞争者。
+
+#####  Test-Only APIs
+
+首先，拥有仅供测试使用的代码可以让您向（单元）测试公开额外的方法、字段和类型，以便测试不仅可以检查公共API的行为是否正确，还可以检查内部状态是否正确。例如，考虑 hashbrown 中实现标准库 HashMap 的 HashMap 类型。HashMap 类型实际上只是围绕 RawTable 类型的包装器，而 RawTable 类型实现了大部分哈希表逻辑。假设在对空映射进行 HashMap::insert 操作后，您想要检查映射中的一个桶是否非空，如代码清单 6-2 所示。
 
 ```rust
 #[test]
 fn insert_just_one() {
-let mut m = HashMap::new();
-m.insert(42, ());
-let full = m.table.buckets.iter().filter(Bucket::is_full).count();
-assert_eq!(full, 1);
+  let mut m = HashMap::new();
+  m.insert(42, ());
+  let full = m.table.buckets.iter().filter(Bucket::is_full).count();
+  assert_eq!(full, 1);
 }
 ```
 
-Listing 6-2: A test that accesses inaccessible internal state and thus does not compile
-This code will not compile as written, because while the test code can
-access the private table field of HashMap, it cannot access the also private
-buckets field of RawTable, as RawTable lives in a different module. We could fix
-this by making the buckets field visibility pub(crate), but we really don’t want
-HashMap to be able to touch buckets in general, as it could accidentally corrupt
-the internal state of the RawTable. Even making buckets available as read-only
-could be problematic, as new code in HashMap may then start depending on
-the internal state of RawTable, making future modifications more difficult.
-The solution is to use #[cfg(test)]. We can add a method to RawTable
-that allows access to buckets only while testing, as shown in Listing 6-3,
-and thereby avoid adding footguns for the rest of the code. The code from
-Listing 6-2 can then be updated to call buckets() instead of accessing the
-private buckets field.
+代码清单 6-2：访问不可访问的内部状态的测试，因此无法编译
+
+- 这段代码无法编译，因为尽管测试代码可以访问HashMap的私有table字段，但它无法访问RawTable的私有buckets字段，因为RawTable位于不同的模块中。我们可以通过将buckets字段的可见性设置为pub(crate)来修复这个问题，但我们实际上不希望HashMap能够直接访问buckets，因为它可能会意外地破坏RawTable的内部状态。即使将buckets作为只读字段可用也可能会有问题，因为HashMap中的新代码可能会开始依赖于RawTable的内部状态，从而使未来的修改变得更加困难。
+- 解决方案是使用#[cfg(test)]。我们可以向RawTable添加一个方法，只允许在测试时访问buckets，如代码清单6-3所示，从而避免为其余代码添加不必要的风险。然后，可以更新代码清单6-2中的代码，调用buckets()而不是访问私有的buckets字段。
 
 ```rust
 impl RawTable {
-#[cfg(test)]
-pub(crate) fn buckets(&self) -> &[Bucket] {
-&self.buckets
-}
+    #[cfg(test)]
+    pub(crate) fn buckets(&self) -> &[Bucket] {
+      &self.buckets
+    }
 }
 ```
 
-Listing 6-3: Using #[cfg(test)] to make internal state accessible in the testing context
-Bookkeeping for Test Assertions
-The second benefit of having code that exists only during testing is that
-you can augment the program to perform additional runtime bookkeeping
-that can then be inspected by tests. For example, imagine you’re writing
-your own version of the BufWriter type from the standard library. When
-testing it, you want to make sure that BufWriter does not issue system calls
+代码清单 6-3：使用 #[cfg(test)] 使内部状态在测试环境中可访问
 
-90 Chapter 6
-unnecessarily. The most obvious way to do so is to have the BufWriter keep
-track of how many times it has invoked write on the underlying Write.
-However, in production this information isn’t important, and keeping
-track of it introduces (marginal) performance and memory overhead. With
+##### 测试断言的记账
 
-# [cfg(test)], you can have the bookkeeping happen only when testing, as
+拥有仅在测试期间存在的代码的第二个好处是，您可以增加程序以执行额外的运行时记账，然后可以由测试进行检查。例如，想象一下，您正在编写自己版本的标准库中的BufWriter类型。在测试时，您希望确保BufWriter不会不必要地发出系统调用。最明显的方法是让BufWriter跟踪它在底层Write上调用write的次数。然而，在生产环境中，这些信息并不重要，并且跟踪它会引入（微小的）性能和内存开销。使用 # [cfg(test)]，您可以只在测试时进行记账，如代码清单6-4所示。
 
-shown in Listing 6-4.
+```rust
+
 struct BufWriter<T> {
-
-# [cfg(test)]
-
-write_through: usize,
+  # [cfg(test)]
+  write_through: usize,
 // other fields...
 }
+
 impl<T: Write> Write for BufWriter<T> {
-fn write(&mut self, buf: &[u8]) -> Result<usize> {
-// ...
-if self.full() {
+  fn write(&mut self, buf: &[u8]) -> Result<usize> {
+  // ...
+  if self.full() {
 
-# [cfg(test)]
+    # [cfg(test)]
+    self.write_through += 1;
+    let n = self.inner.write(&self.buffer[..])?;
+  // ...
+  }
+}
+```
 
-self.write_through += 1;
-let n = self.inner.write(&self.buffer[..])?;
-// ...
-}
-}
-Listing 6-4: Using #[cfg(test)] to limit bookkeeping to the testing context
-Keep in mind that test is set only for the crate that is being compiled as
-a test. For unit tests, this is the crate being tested, as you would expect. For
-integration tests, however, it is the integration test binary being compiled as
-a test—the crate you are testing is just compiled as a library and so will not
-have test set.
-Doctests
+代码清单 6-4：使用 #[cfg(test)] 限制记账到测试上下文中
+请记住，test 只对正在编译为测试的 crate 设置。对于单元测试，这是您要测试的 crate，正如您所期望的那样。然而，对于集成测试，它是作为测试编译的集成测试二进制文件 - 您要测试的 crate 只是作为库进行编译，因此不会设置 test。
+
+#### Doctests
+
 Rust code snippets in documentation comments are automatically run as
 test cases. These are commonly referred to as doctests. Because doctests
 appear in the public documentation of your crate, and users are likely to
