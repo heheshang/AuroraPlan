@@ -1897,85 +1897,36 @@ assert_eq!(x, 2);
 
 ###### Derive Macros
 
-The derive macro is slightly different from the other two in that it adds
-to, rather than replaces, the target of the macro. Even though this limitation
-may seem severe, derive macros were one of the original motivating
-factors behind the creation of procedural macros. Specifically, the serde
-crate needed derive macros to be able to implement its now-well-known # [derive(Serialize, Deserialize)] magic
+派生宏与其他两种宏略有不同，它是在目标宏的基础上添加内容，而不是替换它。尽管这种限制可能看起来严格，但派生宏是创建过程宏的最初动机之一。具体来说，serde crate 需要派生宏来实现其现在广为人知的 # [derive(Serialize, Deserialize)] 魔法。
 
-- Derive macros are arguably the simplest of the procedural macros,
-since they have such a rigid form: you can append items only after the
-annotated item; you can’t replace the annotated item, and you cannot have
-the derivation take arguments. Derive macros do allow you to define helper
-attributes—attributes that can be placed inside the annotated type to give
-clues to the derive macro (like #[serde(skip)])—but these function mostly
-like markers and are not independent macros.
+- 派生宏可以说是过程宏中最简单的形式，因为它们具有非常严格的形式：只能在注解项之后追加项；不能替换注解项，也不能让派生接受参数。派生宏允许您定义辅助属性 - 可以放置在注解类型内部以向派生宏提供提示（例如 #[serde(skip)]） - 但这些属性主要起到标记的作用，不是独立的宏。
 
 ###### The Cost of Procedural Macros
-Before we talk about when each of the different procedural macro types is
-appropriate, it’s worth discussing why you may want to think twice before
-you reach for a procedural macro—namely, increased compile time.
 
-- Procedural macros can significantly increase compile times for two
-main reasons. The first is that they tend to bring with them some pretty
-heavy dependencies. For example, the syn crate, which provides a parser
-for Rust token streams that makes the experience of writing procedural
-macros much easier, can take tens of seconds to compile with all features
-enabled. You can (and should) mitigate this by disabling features you do
-not need and compiling your procedural macros in debug mode rather
-than release mode. Code often compiles several times faster in debug
-mode, and for most procedural macros, you won’t even notice the difference
-in execution time.
-- The second reason why procedural macros increase compile time is
-that they make it easy for you to generate a lot of code without realizing it.
-While the macro saves you from having to actually type the generated code,
-it does not save the compiler from having to parse, compile, and optimize
-it. As you use more procedural macros, that generated boilerplate adds up,
-and it can bloat your compile times.
-- That said, the actual execution time of procedural macros is rarely a
-factor in overall compile time. While the compiler has to wait for the procedural
-macro to do its thing before it can continue, in practice, most procedural
-macros don’t do any heavy computation. That said, if your procedural
-macro is particularly involved, you may end up with your compiles spending
-a significant chunk of execution time on your procedural macro code,
-which is worth keeping an eye out for!
+在讨论不同的过程宏类型何时适用之前，值得讨论一下为什么在使用过程宏之前你可能要三思而后行，即增加的编译时间。
+
+- 过程宏会显著增加编译时间，主要有两个原因。首先，它们往往会带来一些相当重的依赖项。例如，syn crate 提供了一个用于解析 Rust 令牌流的解析器，使编写过程宏的体验更加容易，但启用所有功能时，它可能需要几十秒的编译时间。您可以通过禁用不需要的功能并在调试模式下编译过程宏来缓解这个问题。在调试模式下，代码的编译速度通常会快几倍，对于大多数过程宏来说，您甚至不会注意到执行时间的差异。
+- 第二个增加编译时间的原因是，过程宏使您能够生成大量代码而不自知。虽然宏可以帮助您省去实际输入生成的代码的步骤，但编译器仍然需要解析、编译和优化它。随着您使用更多的过程宏，生成的样板代码会累积起来，并且可能会导致编译时间膨胀。
+- 话虽如此，实际执行过程宏的时间很少成为整体编译时间的因素。虽然编译器必须等待过程宏完成其任务才能继续，但实际上，大多数过程宏不会进行任何重型计算。然而，如果你的过程宏特别复杂，你的编译可能会在过程宏代码上花费大量的执行时间，这值得注意！
 
 ###### So You Think You Want a Macro
 
-Let’s now look at some good uses for each type of procedural macro. We’ll
-start with the easy one: derive macros.
+现在让我们来看看每种类型的过程宏的一些好的用途。我们先从简单的开始：派生宏。
 
 ###### When to Use Derive Macros
 
-Derive macros are used for one thing, and one thing only: to automate the
-implementation of a trait where automation is possible. Not all traits have
-obvious automated implementations, but many do. In practice, you should
-consider adding a derive macro for a trait only if the trait is implemented
-often and if its implementation for any given type is fairly obvious. The first
-of these conditions may seem like common sense; if your trait is going to be
-implemented only once or twice, it’s probably not worth writing and maintaining
-a convoluted derive macro for it.
-The second condition may seem stranger, however: what does it mean
-for the implementation to be “obvious”? Consider a trait like Debug. If you
-were told what Debug does and were shown a type, you would probably
-expect an implementation of Debug to output the name of each field alongside
-the debug representation of its value. And that’s what derive(Debug)
-does. What about Clone? You’d probably expect it to just clone every field—
-and again, that’s what derive(Clone) does. With derive(serde::Serialize), we
-expect it to serialize every field and its value, and it does just that. In general,
-you want the derivation of a trait to match the developer’s intuition for
-what it probably does. If there is no obvious derivation for a trait, or worse
-yet, if your derivation does not match the obvious implementation, then
-you’re probably better off not giving it a derive macro.
+- 派生宏只用于一件事，那就是在可能的情况下自动实现一个trait。并非所有的trait都有明显的自动实现，但很多都有。实际上，只有在以下两个条件满足时，才应考虑为一个trait添加派生宏：该trait经常被实现，并且对于任何给定的类型，其实现是相当明显的。第一个条件可能是常识；如果您的trait只会被实现一两次，那么编写和维护一个复杂的派生宏可能不值得。
+- 第二个条件可能看起来更奇怪：什么是“明显”的实现？考虑一个像 Debug 这样的 trait。如果你被告知 Debug 做什么，并展示一个类型，你可能期望 Debug 的实现会在调试表示的值旁边输出每个字段的名称。而 derive(Debug) 就是这样做的。那 Clone 呢？你可能期望它只是克隆每个字段 - 而 derive(Clone) 正是这样做的。对于 derive(serde::Serialize)，我们期望它序列化每个字段及其值，它也确实如此。总的来说，你希望一个 trait 的派生与开发者对其可能的实现的直觉相匹配。如果一个 trait 没有明显的派生方式，或者更糟糕的是，如果你的派生与明显的实现不匹配，那么最好不要给它一个派生宏。
 
-112 Chapter 7
-When to Use Function-Like Macros
+###### When to Use Function-Like Macros
+
 Function-like macros are harder to give a general rule of thumb for. You
 might say you should use function-like macros when you want a functionlike
 macro but can’t express it with macro_rules!, but that’s a fairly subjective
 guideline. You can do a lot with declarative macros if you really put your
 mind to it, after all!
-There are two particularly good reasons to reach for a function-like
+
+- There are two particularly good reasons to reach for a function-like
 macro:
 • If you already have a declarative macro, and its definition is becoming
 so hairy that the macro is hard to maintain.
@@ -1988,16 +1939,20 @@ which takes a string of hexadecimal characters and replaces it with the
 corresponding bytes. In general, anything that does not merely transform
 the input at compile time but actually computes over it is likely to
 be a good candidate.
-I do not recommend reaching for a function-like macro just so that you
+- I do not recommend reaching for a function-like macro just so that you
 can break hygiene within your macro. Hygiene for function-like macros is a
 feature that avoids many debugging headaches, and you should think very
 carefully before you intentionally break it.
-When to Use Attribute Macros
+
+###### When to Use Attribute Macros
+
 That leaves us with attribute macros. Though these are arguably the most
 general of procedural macros, they are also the hardest to know when to
 use. Over the years and time and time again, I have seen four ways in which
 attribute macros add tremendous value.
-Test generation
+
+**Test generation**
+
 It is very common to want to run the same test under multiple different
 configurations, or many similar tests with the same bootstrapping code.
 While a declarative macro may let you express this, your code is often
@@ -2005,30 +1960,31 @@ easier to read and maintain if you have an attribute like #[foo_test] that
 introduces a setup prelude and postscript in each annotated test, or a
 repeatable attribute like #[test_case(1)] #[test_case(2)] to mark that a
 given test should be repeated multiple times, once with each input.
-Framework annotations
+
+###### Framework annotations
+
 Libraries like rocket use attribute macros to augment functions and
 types with additional information that the framework then uses without
 the user having to do a lot of manual configuration. It’s so much more
 convenient to be able to write #[get("/<name>")] fn hello(name: String)
 than to have to set up a configuration struct with function pointers and
-
-Macros 113
 the like. Essentially, the attributes make up a miniature domain-specific
 language (DSL) that hides a lot of boilerplate that’d otherwise be necessary.
-Similarly, the asynchronous I/O framework tokio lets you use
-
-# [tokio::main] async fn main() to automatically set up a runtime and run
-
+Similarly, the asynchronous I/O framework tokio lets you use # [tokio::main] async fn main() to automatically set up a runtime and run
 your asynchronous code, thereby saving you from writing the same runtime
 setup in every asynchronous application’s main function.
-Transparent middleware
+
+###### Transparent middleware
+
 Some libraries want to inject themselves into your application in unobtrusive
 ways to provide added value that does not change the application’s
 functionality. For example, tracing and logging libraries like tracing and
 metric collection libraries like metered allow you to transparently instrument
 a function by adding an attribute to it, and then every call to that
 function will run some additional code dictated by the library.
-Type transformers
+
+###### Type transformers
+
 Sometimes you want to go beyond merely deriving traits for a type and
 actually change the type’s definition in some fundamental way. In these
 cases, attribute macros are the way to go. The pin_project crate is a great
@@ -2042,7 +1998,9 @@ users don’t accidentally shoot themselves in the foot. While pin_project
 could have been implemented with a procedural derive macro, that
 derived trait implementation would likely not have been obvious, which
 violates one of our rules for when to use procedural macros.
-How Do They Work?
+
+#### How Do They Work?
+
 At the heart of all procedural macros is the TokenStream type, which can be
 iterated over to get the individual TokenTree items that make up that token
 stream. A TokenTree is either a single token—like an identifier, punctuation,
@@ -2052,13 +2010,11 @@ the individual tokens are valid Rust tokens. If you want to parse your input
 specifically as Rust code, you will likely want to use the syn crate, which
 implements a complete Rust parser and can turn a TokenStream into an easyto-
 traverse Rust AST.
-With most procedural macros, you want to not only parse a TokenStream
+- With most procedural macros, you want to not only parse a TokenStream
 but also produce Rust code to be injected into the program that invokes the
 procedural macro. There are two main ways to do so. The first is to manually
 construct a TokenStream and extend it one TokenTree at a time. The second is to
 use TokenStream’s implementation of FromStr, which lets you parse a string that
-
-114 Chapter 7
 contains Rust code into a TokenStream with "".parse::<TokenStream>(). You can
 also mix and match these; if you want to prepend some code to your macro’s
 input, just construct a TokenStream for the prologue, and then use the Extend
@@ -2071,28 +2027,31 @@ compiler ties generated code back to the source code that generated it.
 Every token’s span marks where that token originated. For example, consider
 a (declarative) macro like the one in Listing 7-7, which generates a
 trivial Debug implementation for the provided type.
+
+```rust
+
 macro_rules! name_as_debug {
 ($t:ty) => {
 impl ::core::fmt::Debug for $t {
 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result
 { ::core::write!(f, ::core::stringify!($t)) }
 } }; }
+```
 Listing 7-7: A very simple macro for implementing Debug
-Now let’s imagine that someone invokes this macro with name_as_debug!
+- Now let’s imagine that someone invokes this macro with name_as_debug!
 (u31). Technically, the compiler error occurs inside the macro, specifically
 where we write for $t (the other use of $t can handle an invalid type). But
 we’d like the compiler to point the user at the u31 in their code—and indeed,
 that’s what spans let us do.
-The span of the $t in the generated code is the code mapped to $t in
+- The span of the $t in the generated code is the code mapped to $t in
 the macro invocation. That information is then carried through the compiler
 and associated with the eventual compiler error. When that compiler
 error is eventually printed, the compiler will print the error from inside the
 macro saying that the type u31 does not exist but will highlight the u31 argument
 in the macro invocation, since that’s the error’s associated span!
-Spans are quite flexible, and they enable you to write procedural
+- Spans are quite flexible, and they enable you to write procedural
 macros that can produce sophisticated error messages if you use the
-compile_
-error! macro. As its name implies, compile_error! causes the compiler
+compile_error! macro. As its name implies, compile_error! causes the compiler
 to emit an error wherever it is placed with the provided string as the
 message. This may not seem very useful, until you pair it with a span. By
 setting the span of the TokenTree you generate for the compile_error! invocation
@@ -2103,15 +2062,13 @@ errors that seem to stem from the relevant part of the code, even though
 the actual compiler error is somewhere in the generated code that the
 user never even sees!
 
-Macros 115
 **NOTE** If you’ve ever been curious how syn’s error handling works, its Error type implements
 an Error::to_compile_error method, which turns it into a TokenStream that
 holds only a compile_error! directive. What’s particularly neat with syn’s Error type
 is that it internally holds a collection of errors, each of which produces a distinct
-compile_
-error! directive with its own span so that you can easily produce multiple
+compile_error! directive with its own span so that you can easily produce multiple
 independent errors from your procedural macro.
-The power of spans doesn’t end there; spans are also how Rust’s macro
+- The power of spans doesn’t end there; spans are also how Rust’s macro
 hygiene is implemented. When you construct an Ident token, you also give
 the span for that identifier, and that span dictates the scope of that identifier.
 If you set the identifier’s span to be Span::call_site(), the identifier
@@ -2123,7 +2080,9 @@ at the call site. Span::mixed_site is so called because it matches the rules
 around identifier hygiene for macro_rules!, which, as we discussed earlier,
 “mixes” identifier resolution between using the macro definition site for
 variables and using the call site for types, modules, and everything else.
-Summary
+
+#### Summary
+
 In this chapter we covered both declarative and procedural macros, and
 looked at when you might find each of them useful in your own code. We
 also took a deeper dive into the mechanisms that underpin each type of
