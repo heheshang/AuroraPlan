@@ -1854,82 +1854,46 @@ assert_eq!(foo, 1);
 
 - 如果你希望宏影响调用者作用域中的特定变量，你可以选择在宏和调用者之间共享标识符。关键是记住标识符的来源，因为它将与该命名空间绑定。如果在宏中放置 let foo = 1;，那么标识符 foo 的来源是宏，将永远不会在调用者的标识符命名空间中可用。另一方面，如果宏以 $foo:ident 作为参数，然后写入 let $foo = 1;，当调用者使用 !(foo) 调用宏时，标识符将源自调用者，并且将引用调用者作用域中的 foo。
 
-- The identifier does not have to be quite so explicitly passed, either; any
-identifier that appears in code that originates outside the macro will refer
-to the identifier in the caller’s scope. In the example in Listing 7-6, the variable
-identifier appears in an :expr but nonetheless has access to the variable
-in the caller’s scope.
+- 标识符不必如此明确地传递；在宏外部源自代码中出现的任何标识符都将引用调用者作用域中的标识符。在清单 7-6 的示例中，变量标识符出现在 :expr 中，但仍然可以访问调用者作用域中的变量。
+
+```rust
 macro_rules! please_set {
 ($i:ident, $x:expr) => {
-$i = $x;
-}
+  $i = $x;
+  }
 
-Macros 109
 }
 let mut x = 1;
 please_set!(x, x + 1);
 assert_eq!(x, 2);
-Listing 7-6: Giving macros access to identifiers at the call site
-We could have used = $i + 1 in the macro instead, but we could not
-have used = x + 1 as the name x is not available in the macro’s definition
-scope.
-One last note on declarative macros and scoping: unlike pretty much
-everything else in Rust, declarative macros exist in the source code only after
-they are declared. If you try to use a macro that you define further down in
-the file, this will not work! This applies globally to your project; if you declare
-a macro in one module and want to use it in another, the module you declare
-the macro in must appear earlier in the crate, not later. If foo and bar are modules
-at the root of a crate, and foo declares a macro that bar wants to use, then
-mod foo must appear before mod bar in lib.rs!
-**NOTE** There is one exception to this odd scoping of macros (formally called textual scoping),
-and that is if you mark the macro with #[macro_export]. That annotation effectively
-hoists the macro to the root of the crate and marks it as pub so that it can then be
-used anywhere in your crate or by your crate’s dependents.
-Procedural Macros
-You can think of a procedural macro as a combination of a parser and code
-generation, where you write the glue code in between. At a high level, with
-procedural macros, the compiler gathers the sequence of input tokens to
-the macro and runs your program to figure out what tokens to replace
-them with.
-Procedural macros are so called because you define how to generate
-code given some input tokens rather than just writing what code gets generated.
-There are very few smarts involved on the compiler’s side—as far as it is
-aware, the procedural macro is more or less a source code preprocessor that
-may replace code arbitrarily. The requirement that your input can be parsed
-as a stream of Rust tokens still holds, but that’s about it!
-Types of Procedural Macros
-Procedural macros come in three different flavors, each specialized to a
-particular common use case:
-• Function-like macros, like the ones that macro_rules! generates
-• Attribute macros, like #[test]
-• Derive macros, like #[derive(Serialize)]
-All three types use the same underlying mechanism: the compiler provides
-your macro with a sequence of tokens, and it expects you to produce
+```
 
-110 Chapter 7
-a sequence of tokens in return that are (probably) related to the input tree.
-However, they differ in how the macro is invoked and how its output is handled.
-We’ll cover each one briefly.
-Function-Like Macros
-The function-like macro is the simplest form of procedural macro. Like a
-declarative macro, it simply replaces the macro code at the call site with the
-code that the procedural macro returns. However, unlike with declarative
-macros, all the guard rails are off: these macros (like all procedural macros)
-are not required to be hygienic and will not protect you from interacting
-with identifiers in the surrounding code at the call site. Instead, your
-macros are expected to explicitly call out which identifiers should overlap
-with the surrounding code (using Span::call_site) and which should be
-treated as private to the macro (using Span::mixed_site, which we’ll discuss
-later).
-Attribute Macros
-The attribute macro also replaces the item that the attribute is assigned to
-wholesale, but this one takes two inputs: the token tree that appears in the
-attribute (minus the attribute’s name) and the token tree of the entire item
-it is attached to, including any other attributes that item may have. Attribute
-macros allow you to easily write a procedural macro that transforms an
-item, such as by adding a prelude or epilogue to a function definition (like
+清单 7-6：让宏在调用点处访问标识符
 
-# [test] does) or by modifying the fields of a struct
+- 我们可以在宏中使用 = $i + 1，但是我们不能使用 = x + 1，因为宏的定义范围中没有名为 x 的变量。
+- 关于声明式宏和作用域的最后一点说明：与 Rust 中的几乎所有其他内容不同，声明式宏只有在声明后才存在于源代码中。如果您尝试在文件中后面定义的位置使用宏，这是行不通的！这适用于整个项目；如果您在一个模块中声明了一个宏，并希望在另一个模块中使用它，那么声明宏的模块必须出现在 crate 中的较早位置，而不是较晚位置。如果 foo 和 bar 是 crate 根目录下的模块，并且 foo 声明了一个 bar 想要使用的宏，那么 mod foo 必须在 lib.rs 中出现在 mod bar 之前！
+**注意** 这种奇怪的宏作用域规则有一个例外（正式称为文本作用域），即如果你使用#[macro_export]标记宏。这个注解将宏提升到crate的根部，并将其标记为pub，以便它可以在你的crate中的任何地方或者被你的crate的依赖项使用。
+
+#### Procedural Macros
+
+- 你可以将过程宏看作是解析器和代码生成的组合，其中你在中间编写粘合代码。在高层次上，使用过程宏，编译器收集到宏的输入令牌序列，并运行你的程序来确定要用什么令牌替换它们。
+- 过程宏之所以被称为过程宏，是因为你定义了如何根据一些输入令牌生成代码，而不仅仅是编写生成的代码。编译器在这方面几乎没有太多智能的参与 - 就它所知，过程宏更像是一个源代码预处理器，可以任意替换代码。你的输入仍然需要能够被解析为一系列 Rust 令牌的流，但仅此而已！
+
+##### Types of Procedural Macros
+
+过程宏有三种不同的类型，每种类型都专门用于特定的常见用例：
+• 函数宏，例如由 macro_rules! 生成的宏
+• 属性宏，例如 #[test]
+• 派生宏，例如 #[derive(Serialize)]
+这三种类型使用相同的底层机制：编译器会向宏提供一系列的标记，并期望你返回一系列与输入树（可能）相关的标记。然而，它们在宏的调用方式和输出处理方式上有所不同。我们将简要介绍每一种类型。
+
+###### Function-Like Macros
+
+函数宏是过程宏中最简单的形式。与声明式宏类似，它只是将调用点处的宏代码替换为过程宏返回的代码。然而，与声明式宏不同，函数宏没有任何限制：这些宏（像所有的过程宏一样）不需要是清洁的，并且不会保护您免受与调用点周围代码中的标识符交互的影响。相反，您的宏应该明确指出哪些标识符应与周围代码重叠（使用Span::call_site），哪些应该被视为宏的私有标识符（使用Span::mixed_site，我们稍后会讨论）。
+
+###### Attribute Macros
+
+属性宏还会整体替换属性所赋予的项，但它接受两个输入：出现在属性中的标记树（不包括属性的名称）和整个项的标记树，包括该项可能具有的其他属性。属性宏允许您轻松编写一个过程宏，用于转换项，例如通过向函数定义添加前言或尾声（类似于 #[test] 的作用）或通过修改结构体的字段。
 
 Derive Macros
 The derive macro is slightly different from the other two in that it adds
