@@ -1799,66 +1799,39 @@ macro_rules! /_macro name _/ {
 
 ##### 匹配器
 
-- 您可以将宏匹配器视为编译器尝试以预定义的方式扭曲和弯曲以匹配在调用站点给定的输入标记树的标记树。例如，考虑具有匹配器$a:ident + $b:expr的宏。该匹配器将匹配任何标识符（:ident）后跟加号，后跟任何Rust表达式（:expr）。如果使用x + 3 _5调用宏，编译器会注意到匹配器在设置$a = x和$b = 3_ 5时匹配。即使在匹配器中没有出现_，编译器也意识到3_ 5是一个有效的表达式，因此可以与接受任何表达式的$b:expr匹配（:expr部分）。
+- 您可以将宏匹配器视为编译器尝试以预定义的方式扭曲和弯曲以匹配在调用点给定的输入标记树的标记树。例如，考虑具有匹配器$a:ident + $b:expr的宏。该匹配器将匹配任何标识符（:ident）后跟加号，后跟任何Rust表达式（:expr）。如果使用x + 3 _5调用宏，编译器会注意到匹配器在设置$a = x和$b = 3_5时匹配。即使在匹配器中没有出现_，编译器也意识到3_5是一个有效的表达式，因此可以与接受任何表达式的$b:expr匹配（:expr部分）。
 
-- Matchers can get pretty hairy, but they have huge expressive power,
-much like regular expressions. For a not-too-hairy example, this matcher
-accepts a sequence ($()) of one or more (+) comma-separated (),) key/value
-pairs given in key => value format:
+- 匹配器可以变得非常复杂，但它们具有巨大的表达能力，就像正则表达式一样。以一个不太复杂的例子为例，这个匹配器接受一个以 key => value 格式给出的逗号分隔的键值对序列 ($())，其中至少有一个 (+) 键值对：
 
 ```rust
 $($key:expr => $value:expr),+
 
 ```
 
-And, crucially, code that invokes a macro with this matcher can give an
-arbitrarily complex expression for the key or value—the magic of matchers
-will make sure that the key and value expressions are partitioned
-appropriately.
+而且，至关重要的是，使用这个匹配器调用宏的代码可以为键或值提供任意复杂的表达式 - 匹配器的魔力会确保键和值表达式被适当地分割。
 
-- Macro rules support a wide variety of fragment types; you’ve already seen
-:ident for identifiers and :expr for expressions, but there is also :ty for types
-and even :tt for any single token tree! You can find a full list of the fragment
-types in Chapter 3 of the Rust language reference (https://doc.rust-lang
-.org/reference/macros-by-example.html). These, plus the mechanism for matching
-a pattern repeatedly ($()), enable you to match most straightforward
-code patterns. If, however, you find that it is difficult to express the pattern
-you want with a matcher, you may want to try a procedural macro instead,
+- 宏规则支持各种片段类型；你已经看到了标识符的 :ident 和表达式的 :expr，还有类型的 :ty，甚至还有任何单个标记树的 :tt！你可以在 Rust 语言参考手册的第三章中找到片段类型的完整列表（https://doc.rust-lang.org/reference/macros-by-example.html）。这些片段类型，再加上重复匹配模式的机制（$()），使你能够匹配大多数简单的代码模式。然而，如果你发现使用匹配器难以表达你想要的模式，你可以尝试使用过程宏，其中你不需要遵循 macro_rules! 所要求的严格语法。我们将在本章后面更详细地介绍这些内容。
 
-Macros 107
-where you don’t need to follow the strict syntax that macro_rules! requires.
-We’ll look at these in more detail later in the chapter.
-Transcribers
-Once the compiler has matched a declarative macro matcher, it generates
-code using the matcher’s associated transcriber. The variables defined by
-a macro matcher are called metavariables, and the compiler substitutes any
-occurrence of each metavariable in the transcriber (like $key in the example
-in the previous section) with the input that matches that part of the matcher.
-If you have repetition in the matcher (like $(),+ in that same example), you
-can use the same syntax in the transcriber and it will be repeated once for
-each match in the input, with each expansion holding the appropriate substitution
-for each metavariable for that iteration. For example, for the $key
-and $value matcher, we could write the following transcriber to generate an
-insert call into some map for each $key/$value pair that was matched:
+##### Transcribers
+
+- 一旦编译器匹配了声明式宏的匹配器，它就会使用匹配器关联的转录器生成代码。宏匹配器定义的变量被称为元变量，编译器会将转录器中的每个元变量的出现替换为与匹配器中相应部分匹配的输入。如果匹配器中有重复（如前面示例中的$()，+），您可以在转录器中使用相同的语法，它将根据输入中的每个匹配重复一次，并且每个扩展都包含适当的替换值。例如，对于$key和$value匹配器，我们可以编写以下转录器，为每个匹配的$key/$value对生成一个插入调用到某个映射中：
+
+```rust
 $(map.insert($key, $value);)+
-Notice that here we want a semicolon for each repetition, not just to delimit
-the repetition, so we place the semicolon inside the repetition parentheses.
-**NOTE** You must use a metavariable in each repetition in the transcriber so that the compiler
-knows which repetition in the matcher to use (in case there is more than one).
-Hygiene
-You may have heard that Rust macros are hygienic, and perhaps that being
-hygienic makes them safer or nicer to work with, without necessarily understanding
-what that means. When we say Rust macros are hygienic, we mean
-that a declarative macro (generally) cannot affect variables that aren’t explicitly
-passed to it. A trivial example is that if you declare a variable with the
-name foo, and then call a macro that also defines a variable named foo,
-the macro’s foo is by default not visible at the call site (the place where the
-macro is called from). Similarly, macros cannot access variables defined at
-the call site (even self) unless they are explicitly passed in.
-You can, most of the time, think of macro identifiers as existing in their
-own namespace that is separate from that of the code they expand into. For
-an example, take a look at the code in Listing 7-5, which has a macro that
-tries (and fails) to shadow a variable at the call site.
+```
+
+- 注意，在这里我们希望每次重复都有一个分号，而不仅仅是用于分隔重复，因此我们将分号放在重复的括号内。
+
+
+**注意** 在转录器中的每个重复中，您必须使用一个元变量，以便编译器知道在匹配器中使用哪个重复（如果有多个）。
+
+##### Hygiene
+
+你可能听说过 Rust 的宏是清洁的，也许认为它们的清洁性使它们更安全、更易于使用，但可能并不完全理解这是什么意思。当我们说 Rust 的宏是清洁的时，我们的意思是声明式宏（通常）不能影响未显式传递给它的变量。一个简单的例子是，如果你声明了一个名为 foo 的变量，然后调用一个也定义了名为 foo 的变量的宏，那么默认情况下，宏的 foo 在调用点（宏被调用的地方）是不可见的。同样地，宏不能访问在调用点定义的变量（甚至是 self），除非它们被显式传递进来。
+大多数情况下，你可以将宏标识符视为存在于与它们展开的代码不同的命名空间中。举个例子，看一下清单 7-5 中的代码，其中有一个宏试图（但失败了）在调用点遮蔽一个变量。
+
+```rust
+
 macro_rules! let_foo {
 ($x:expr) => {
 let foo = $x;
@@ -1868,47 +1841,20 @@ let foo = 1;
 // expands to let foo = 2;
 let_foo!(2);
 assert_eq!(foo, 1);
-Listing 7-5: Macros exist in their own little universes. Mostly.
 
-108 Chapter 7
-After the compiler expands let_foo!(2), the assert looks like it should
-fail. However, the foo from the original code and the one generated by the
-macro exist in different universes and have no relationship to one another
-beyond that they happen to share a human-readable name. In fact, the
-compiler will complain that the let foo in the macro is an unused variable.
-This hygiene is very helpful in making macros easier to debug—you
-don’t have to worry about accidentally shadowing or overwriting variables
-in the macro caller just because you happened to choose the same variable
-names!
-This hygienic separation does not apply beyond variable identifiers,
-however. Declarative macros do share a namespace for types, modules, and
-functions with the call site. This means your macro can define new functions
-that can be called in the invoking scope, add new implementations to
-a type defined elsewhere (and not passed in), introduce a new module that
-can then be accessed where the macro was invoked, and so on. This is by
-design—if macros could not affect the broader code like this, it would be
-much more cumbersome to use them to generate types, trait implementations,
-and functions, which is where they come in most handy.
-The lack of hygiene for types in macros is particularly important when
-writing a macro you want to export from your crate. For the macro to truly
-be reusable, you cannot assume anything about what types will be in scope
-at the caller. Maybe the code that calls your macro has a mod std {} defined
-or has imported its own Result type. To be on the safe side, make sure you
-use fully specified types like ::core::option::Option or ::alloc::boxed::Box.
-If you specifically need to refer to something in the crate that defines the
-macro, use the special metavariable $crate.
-**NOTE** Avoid using ::std paths if you can so that the macro will continue to work in
-no_std crates.
-You can choose to share identifiers between a macro and its caller if you
-want the macro to affect a specific variable in the caller’s scope. The key is
-to remember where the identifier originated, because that’s the namespace
-the identifier will be tied to. If you put let foo = 1; in a macro, the identifier
-foo originates in the macro and will never be available to the identifier
-namespace at the caller. If, on the other hand, the macro takes $foo:ident
-as an argument and then writes let $foo = 1;, when the caller invokes the
-macro with !(foo), the identifier will have originated in the caller and will
-therefore refer to foo in the caller’s scope.
-The identifier does not have to be quite so explicitly passed, either; any
+```
+清单 7-5：宏存在于它们自己的小宇宙中。大多数情况下。
+
+- 在编译器展开 let_foo!(2) 后，assert 看起来应该会失败。然而，原始代码中的 foo 和宏生成的 foo 存在于不同的宇宙中，除了它们恰好共享一个可读的名称之外，它们之间没有任何关系。实际上，编译器会抱怨宏中的 let foo 是一个未使用的变量。这种隔离对于使宏更容易调试非常有帮助 - 你不必担心因为选择了相同的变量名而意外遮蔽或覆盖宏调用者中的变量！
+- 然而，这种清洁的分离并不适用于除变量标识符之外的内容。声明式宏与调用点共享类型、模块和函数的命名空间。这意味着你的宏可以定义新的函数，在调用点处调用它们，为在其他地方定义的类型添加新的实现（而不是传递进来的类型），引入一个新的模块，然后可以在宏被调用的地方访问它，等等。这是有意设计的 - 如果宏不能影响更广泛的代码，那么使用宏生成类型、特性实现和函数将变得更加繁琐，而这正是它们最有用的地方。
+- 当编写一个希望从你的 crate 中导出的宏时，宏中类型的缺乏清洁性尤为重要。为了使宏真正可重用，你不能假设调用方的作用域中会有什么类型。也许调用你的宏的代码定义了一个 mod std {}，或者导入了自己的 Result 类型。为了保险起见，确保使用完全指定的类型，如 ::core::option::Option 或 ::alloc::boxed::Box。如果你特别需要引用定义宏的 crate 中的内容，可以使用特殊的元变量 $crate。
+  
+**注意** 如果可能的话，避免使用 ::std 路径，以便宏在 no_std crate 中继续工作。
+
+
+- 如果你希望宏影响调用者作用域中的特定变量，你可以选择在宏和调用者之间共享标识符。关键是记住标识符的来源，因为它将与该命名空间绑定。如果在宏中放置 let foo = 1;，那么标识符 foo 的来源是宏，将永远不会在调用者的标识符命名空间中可用。另一方面，如果宏以 $foo:ident 作为参数，然后写入 let $foo = 1;，当调用者使用 !(foo) 调用宏时，标识符将源自调用者，并且将引用调用者作用域中的 foo。
+
+- The identifier does not have to be quite so explicitly passed, either; any
 identifier that appears in code that originates outside the macro will refer
 to the identifier in the caller’s scope. In the example in Listing 7-6, the variable
 identifier appears in an :expr but nonetheless has access to the variable
