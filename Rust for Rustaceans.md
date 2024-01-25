@@ -1920,29 +1920,12 @@ assert_eq!(x, 2);
 
 ###### When to Use Function-Like Macros
 
-Function-like macros are harder to give a general rule of thumb for. You
-might say you should use function-like macros when you want a functionlike
-macro but can’t express it with macro_rules!, but that’s a fairly subjective
-guideline. You can do a lot with declarative macros if you really put your
-mind to it, after all!
+对于函数宏，很难给出一个普遍适用的经验法则。你可以说当你想要一个函数宏但无法用macro_rules!表达时，你应该使用函数宏，但这是一个相当主观的指导方针。毕竟，如果你真的下了决心，你可以用声明式宏做很多事情！
 
-- There are two particularly good reasons to reach for a function-like
-macro:
-• If you already have a declarative macro, and its definition is becoming
-so hairy that the macro is hard to maintain.
-• If you have a pure function that you need to be able to execute at compile
-time but cannot express it with const fn. An example of this is the phf
-crate, which generates a hash map or set using a perfect hash function
-when given a set of keys provided at compile time. Another is hex-
-literal,
-which takes a string of hexadecimal characters and replaces it with the
-corresponding bytes. In general, anything that does not merely transform
-the input at compile time but actually computes over it is likely to
-be a good candidate.
-- I do not recommend reaching for a function-like macro just so that you
-can break hygiene within your macro. Hygiene for function-like macros is a
-feature that avoids many debugging headaches, and you should think very
-carefully before you intentionally break it.
+- 有两个特别好的理由可以使用函数宏：
+• 如果你已经有一个声明式宏，并且它的定义变得非常复杂，以至于很难维护。
+• 如果你有一个纯函数，需要在编译时执行，但无法用 const fn 表达。一个例子是 phf crate，它在给定一组在编译时提供的键时，使用完美哈希函数生成哈希映射或集合。另一个例子是 hex-literal，它接受一个十六进制字符的字符串，并将其替换为相应的字节。总的来说，任何不仅仅在编译时转换输入，而是实际上对其进行计算的内容都有可能成为一个很好的候选。
+- 我不建议仅仅为了打破宏的卫生性而使用函数宏。函数宏的卫生性是一个避免许多调试头疼的特性，你应该在有意打破它之前仔细考虑。
 
 ###### When to Use Attribute Macros
 
