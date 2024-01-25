@@ -1632,164 +1632,77 @@ vs.push(i);
 println!("took {:?}", start.elapsed());
 ```
 
-Listing 6-9: A suspiciously fast performance benchmark
+清单 6-9：一个可疑地快速的性能基准测试
 
-If you were to look at the assembly output of this code compiled in
-release mode using something like the excellent godbolt.org or cargo-asm,
-you’d immediately notice that something was wrong: the calls to Vec::with
-_capacity and Vec::push, and indeed the whole for loop, are nowhere to be
-seen. They have been optimized out completely. The compiler realized
-that nothing in the code actually required the vector operations to be performed
-and eliminated them as dead code. Of course, the compiler is completely
-within its rights to do so, but for benchmarking purposes, this is not
-particularly helpful.
-To avoid these kinds of optimizations for benchmarking, the standard
-library provides std::hint::black_box. This function has been the topic of
-much debate and confusion and is still pending stabilization at the time of
-writing, but is so useful it’s worth discussing here nonetheless. At its core,
-it’s simply an identity function (one that takes x and returns x) that tells the
-compiler to assume that the argument to the function is used in arbitrary
-(legal) ways. It does not prevent the compiler from applying optimizations
-to the input argument, nor does it prevent the compiler from optimizing
-how the return value is used. Instead, it encourages the compiler to actually
-compute the argument to the function (under the assumption that it will
-be used) and to store that result somewhere accessible to the CPU such that
-black_box could be called with the computed value. The compiler is free to,
-say, compute the input argument at compile time, but it should still inject
-the result into the program.
-This function is all we need for many, though admittedly not all, of our
-benchmarking needs. For example, we can annotate Listing 6-9 so that the
-vector accesses are no longer optimized out, as shown in Listing 6-10.
+- 如果你查看使用像 godbolt.org 或 cargo-asm 这样的工具编译的 release 模式下的汇编输出，你会立即注意到有些不对劲：对 Vec::with_capacity 和 Vec::push 的调用，以及整个 for 循环，都不见了。它们被完全优化掉了。编译器意识到代码中实际上没有需要执行的向量操作，并将其消除为死代码。当然，编译器完全有权这样做，但对于基准测试来说，这并不特别有帮助。
+- 为了避免这些优化对基准测试的影响，标准库提供了 std::hint::black_box。这个函数在撰写本文时仍在讨论和混淆中，并且仍在等待稳定，但它非常有用，值得在这里讨论。在其核心，它只是一个恒等函数（接受 x 并返回 x），告诉编译器假设函数的参数以任意（合法）的方式使用。它不会阻止编译器对输入参数应用优化，也不会阻止编译器优化返回值的使用方式。相反，它鼓励编译器实际计算函数的参数（在假设参数将被使用的情况下），并将结果存储在对 CPU 可访问的某个地方，以便可以使用 black_box 调用计算出的值。编译器可以自由地在编译时计算输入参数，但它仍应将结果注入到程序中。
+
+- 对于我们许多基准测试需求来说，这个函数就足够了，尽管不得不承认并非全部。例如，我们可以对清单 6-9 进行注释，以使向量访问不再被优化掉，如清单 6-10 所示。
+
+```rust
+
 let mut vs = Vec::with_capacity(4);
 let start = std::time::Instant::now();
 for i in 0..4 {
-black_box(vs.as_ptr());
-vs.push(i);
-black_box(vs.as_ptr());
+    black_box(vs.as_ptr());
+    vs.push(i);
+    black_box(vs.as_ptr());
 }
 println!("took {:?}", start.elapsed());
-Listing 6-10: A corrected version of Listing 6-9
-We’ve told the compiler to assume that vs is used in arbitrary ways
-on each iteration of the loop, both before and after the calls to push. This
-forces the compiler to perform each push in order, without merging or otherwise
-optimizing consecutive calls, since it has to assume that “arbitrary
-stuff that cannot be optimized out” (that’s the black_box part) may happen
-to vs between each call.
-Note that we used vs.as_ptr() and not, say, &vs. That’s because of the
-caveat that the compiler should assume black_box can perform any legal operation
-on its argument. It is not legal to mutate the Vec through a shared reference,
-so if we used black_box(&vs), the compiler might notice that vs will not
-change between iterations of the loop and implement optimizations based on
-that observation!
+```
 
-100 Chapter 6
-I/O Overhead Measurement
-When writing benchmarks, it’s easy to accidentally measure the wrong
-thing. For example, we often want to get information in real time about
-how far along the benchmark is. To do that, we might write code like that in
-Listing 6-11, intended to measure how fast my_function runs:
+清单 6-10：清单 6-9 的修正版本
+
+- 我们告诉编译器在每次循环迭代之前和之后，假设 vs 在任意方式上被使用，包括 push 调用。这迫使编译器按顺序执行每个 push，而不会合并或优化连续的调用，因为它必须假设在每个调用之间可能发生“无法优化掉的任意操作”（这就是 black_box 的作用）。
+- 注意我们使用了 vs.as_ptr() 而不是 &vs。这是因为编译器应该假设 black_box 可以对其参数执行任何合法操作的一个警告。通过共享引用对 Vec 进行变异是不合法的，所以如果我们使用 black_box(&vs)，编译器可能会注意到 vs 在循环迭代之间不会改变，并基于这个观察实施优化！
+
+###### I/O Overhead Measurement
+
+在编写基准测试时，很容易意外地测量错误的内容。例如，我们经常希望实时获取有关基准测试进度的信息。为了做到这一点，我们可能会编写类似于清单 6-11 中的代码，旨在测量 my_function 的运行速度：
+
+```rust
+
 let start = std::time::Instant::now();
 for i in 0..1_000_000 {
-println!("iteration {}", i);
-my_function();
+  println!("iteration {}", i);
+  my_function();
 }
 println!("took {:?}", start.elapsed());
-Listing 6-11: What are we really benchmarking here?
-This may look like it achieves the goal, but in reality, it does not actually
-measure how fast my_function is. Instead, this loop is most likely to tell
-us how long it takes to print a million numbers. The println! in the body of
-the loop does a lot of work behind the scenes: it turns a binary integer into
-decimal digits for printing, locks standard output, writes out a sequence
-of UTF-8 code points using at least one system call, and then releases the
-standard output lock. Not only that, but the system call might block if your
-terminal is slow to print out the input it receives. That’s a lot of cycles! And
-the time it takes to call my_function might pale in comparison.
-A similar thing happens when your benchmark uses random numbers.
-If you run my_function(rand::random()) in a loop, you may well be mostly measuring
-the time it takes to generate a million random numbers. The story is
-the same for getting the current time, reading a configuration file, or starting
-a new thread—these things all take a long time, relatively speaking, and
-may end up overshadowing the time you actually wanted to measure.
-Luckily, this particular issue is often easy to work around once you are
-aware of it. Make sure that the body of your benchmarking loop contains
-almost nothing but the particular code you want to measure. All other code
-should run either before the benchmark begins or outside of the measured
-part of the benchmark. If you’re using criterion, take a look at the different
-timing loops it provides—they’re all there to cater to benchmarking cases
-that require different measurement strategies!
-Summary
-In this chapter, we explored the built-in testing capabilities that Rust
-offers in great detail. We also looked at a number of testing facilities and
-techniques that are useful when testing Rust code. This is the last chapter
-that focuses on higher-level aspects of intermediate Rust use in this book.
-Starting with the next chapter on declarative and procedural macros, we
-will be focusing much more on Rust code. See you on the next page!
+```
+
+清单 6-11：我们真正在这里进行基准测试的是什么？
+
+- 这看起来似乎达到了目标，但实际上它并没有真正测量 my_function 的速度。相反，这个循环很可能告诉我们打印一百万个数字需要多长时间。循环体中的 println! 在幕后做了很多工作：它将二进制整数转换为十进制数字进行打印，锁定标准输出，使用至少一个系统调用写出一系列 UTF-8 代码点，然后释放标准输出锁。不仅如此，如果您的终端打印输入的速度较慢，系统调用可能会阻塞。这是很多周期！而调用 my_function 的时间可能相形见绌。
+- 当基准测试使用随机数时，类似的情况也会发生。如果你在循环中运行my_function(rand::random())，你可能主要测量的是生成一百万个随机数所花费的时间。对于获取当前时间、读取配置文件或启动新线程等操作也是如此，相对而言，这些操作都需要很长时间，可能会掩盖你实际想要测量的时间。
+- 幸运的是，一旦你意识到这个问题，解决起来通常很容易。确保你的基准测试循环的主体几乎只包含你想要测量的特定代码。所有其他代码应该在基准测试开始之前或在基准测试的测量部分之外运行。如果你使用 criterion，可以看一下它提供的不同计时循环，它们都是为了满足需要不同测量策略的基准测试情况！
+
+#### 摘要
+
+在本章中，我们详细探讨了Rust提供的内置测试功能。我们还介绍了一些在测试Rust代码时有用的测试设施和技术。这是本书中关于中级Rust使用的高级方面的最后一章。从下一章关于声明式和过程式宏开始，我们将更加专注于Rust代码。下一页见！
 
 ### 7.MACROS
 
-Macros are, in essence, a tool for making
-the compiler write code for you. You give
-the compiler a formula for generating code
-given some input parameters, and the compiler
-replaces every invocation of the macro with the result
-of running through the formula. You can think of
-macros as automatic code substitution where you get
-to define the rules for the substitution.
-Rust’s macros come in many different shapes and sizes to make it easy
-to implement many different forms of code generation. The two primary
-types are declarative macros and procedural macros, and we will explore both
-of them in this chapter. We’ll also look at some of the ways macros can come
-in handy in your everyday coding and some of the pitfalls that arise with
-more advanced use.
-Programmers coming from C-based languages may be used to the
-unholy land of C and C++ where you can use #define to change each true to
-false, or to remove all occurrences of the else keyword. If that’s the case for
+宏本质上是一种让编译器为您编写代码的工具。您给编译器一个根据一些输入参数生成代码的公式，编译器会将每次调用宏的地方替换为运行公式的结果。您可以将宏视为自动代码替换，其中您可以定义替换的规则。
 
-102 Chapter 7
-you, you’ll need to disassociate macros from a feeling of doing something
-“bad.” Macros in Rust are far from the Wild West of C macros. They follow
-(mostly) well-defined rules and are fairly misuse-resistant.
-Declarative Macros
-Declarative macros are those defined using the macro_rules! syntax, which
-lets you conveniently define function-like macros without having to resort to
-writing a dedicated crate for the purpose (as you do with procedural macros).
-Once you’ve defined a declarative macro, you can invoke it using the name
-of the macro followed by an exclamation mark. I like to think of this kind
-of macro as a sort of compiler-assisted search and replace: it does the job
-for many regular, well-structured transformation tasks, and for eliminating
-repetitive boilerplate. In your experience with Rust up until this point, most
-of the macros you have recognized as macros are likely to have been declarative
-macros. Note, however, that not all function-like macros are declarative
-macros; macro_rules! itself is one example of this, and format_args! is another.
-The ! suffix merely indicates to the compiler that the macro invocation will
-be replaced with different source code at compile time.
-**NOTE** Since Rust’s parser specifically recognizes and parses macro invocations annotated
-with !, you can use them only in places where the parser allows them. They work in
-most places you’d expect, like in expression position or in an impl block, but not everywhere.
-For example, you cannot (at the time of writing) invoke a function-like macro
-where an identifier or match arm is expected.
-It may not be immediately obvious why declarative macros are called
-declarative. After all, don’t you “declare” everything in your program? In
-this context, declarative refers to the fact that you don’t say how the macro’s
-inputs should be translated into the output, just that you want the output to
-look like A when the input is B. You declare that it shall be so, and the compiler
-figures out all the parsing rewiring that has to happen to make your
-declaration reality. This makes declarative macros concise and expressive,
-though it also has a tendency to make them rather cryptic since you have a
-limited language with which to express your declarations.
-When to Use Them
-Declarative macros are primarily useful when you find yourself writing the
-same code over and over, and you’d like to, well, not do that. They’re best
-suited for fairly mechanical replacements—if you’re aiming to do fancy
-code transformations or lots of code generation, procedural macros are
-likely a better fit.
-I most frequently use declarative macros in cases where I find myself
-writing repetitive and structurally similar code, such as in tests and trait
+- Rust的宏有很多不同的形式和大小，可以轻松实现许多不同形式的代码生成。主要有两种类型的宏：声明式宏和过程宏，我们将在本章中探讨这两种宏。我们还将介绍一些宏在日常编码中的便利之处，以及在更高级使用中可能出现的一些陷阱。
+- 来自基于C的语言的程序员可能习惯于C和C++的邪恶之地，您可以使用#define将每个true更改为false，或者删除所有else关键字的出现。如果您是这种情况，您需要将宏与做一些“不好”的感觉分离开来。在Rust中，宏远非C宏的荒野西部。它们遵循（大多数）明确定义的规则，并且相当难以滥用。
 
-Macros 103
-implementations. For tests, I often want to run the same test multiple times
-but with slightly different configurations. I might have something like what
-is shown in Listing 7-1.
+#### Declarative Macros
+
+声明式宏是使用`macro_rules!`语法定义的宏，它允许您方便地定义类似函数的宏，而无需编写专用的 crate（与过程宏不同）。一旦您定义了声明式宏，就可以使用宏的名称后跟感叹号来调用它。我喜欢将这种宏看作是一种编译器辅助的搜索和替换：它可以完成许多常规的、结构良好的转换任务，以及消除重复的样板代码。在您到目前为止对 Rust 的经验中，您认识的大多数宏可能都是声明式宏。但请注意，并非所有的函数式宏都是声明式宏；`macro_rules!` 本身就是一个例子，`format_args!` 是另一个例子。感叹号后缀只是告诉编译器，在编译时，宏调用将被替换为不同的源代码。
+
+**注意** 由于Rust的解析器专门识别和解析带有!的宏调用，因此您只能在解析器允许的位置使用它们。它们可以在大多数您期望的位置使用，比如在表达式位置或impl块中，但并非所有地方都可以。例如，在需要标识符或匹配分支的位置，您（在撰写本文时）无法调用类似函数的宏。
+
+- 或许并不立即明显为什么称呼声明式宏为声明式。毕竟，在你的程序中，你不是“声明”了一切吗？在这个上下文中，声明式指的是你不说出宏的输入应该如何转换为输出，只是说当输入为B时，你希望输出看起来像A。你声明它应该是这样的，编译器会找出所有必须发生的解析重连，使你的声明成为现实。这使得声明式宏简洁而富有表现力，尽管它们也往往变得相当晦涩，因为你只有有限的语言来表达你的声明。
+
+##### 何时使用它们
+
+声明式宏在你发现自己一遍又一遍地编写相同代码时非常有用，而你希望不再这样做。它们最适合于相对机械的替换——如果你想进行复杂的代码转换或大量的代码生成，那么过程宏可能更适合。
+
+- 我最常使用声明式宏的情况是在我发现自己编写重复且结构相似的代码时，比如在测试和特性实现中。对于测试，我经常希望以稍微不同的配置运行相同的测试多次。我可能会像清单 7-1 中所示那样编写代码。
+
+```rust
+
 fn test_inner<T>(init: T, frobnify: bool) { ... }
 
 # [test]
@@ -1804,9 +1717,12 @@ test_inner(1u8, true);
 fn test_1i128_not_frobnified() {
 test_inner(1i128, false);
 }
-Listing 7-1: Repetitive testing code
-While this works, it’s too verbose, too repetitive, and too prone to manual
-error. With macros we can do much better, as shown in Listing 7-2.
+```
+
+清单 7-1：重复的测试代码
+虽然这样可以工作，但它太冗长、太重复，而且容易出错。通过使用宏，我们可以做得更好，如清单 7-2 所示。
+
+```rust
 macro_rules! test_battery {
 ($($t:ty as $name:ident),*)) => {
 $(
@@ -1828,24 +1744,14 @@ u8 as u8_tests,
 // ...
 i128 as i128_tests
 );
-Listing 7-2: Making a macro repeat for you
-This macro expands each comma-separated directive into its own module
-that then contains two tests, one that calls test_inner with true, and one
-with false. While the macro definition isn’t trivial, it makes adding more
-tests much easier. Each type is one line in the test_battery! invocation, and
-the macro will take care of generating tests for both true and false arguments.
-We could also have it generate tests for different values for init.
-We’ve now significantly reduced the likelihood that we’ll forget to test a
-particular
-configuration!
-The story for trait implementations is similar. If you define your own
-trait, you’ll often want to implement that trait for a number of types in the
-standard library, even if those implementations are trivial. Let’s imagine
-you invented the Clone trait and want to implement it for all the Copy types
 
-104 Chapter 7
-in the standard library. Instead of manually writing an implementation for
-each one, you can use a macro like the one in Listing 7-3.
+```
+清单 7-2：让宏为您重复
+
+- 这个宏将每个逗号分隔的指令扩展为自己的模块，每个模块包含两个测试，一个调用带有true参数的test_inner，另一个调用带有false参数的test_inner。虽然宏的定义并不简单，但它使添加更多的测试变得更容易。在test_battery!调用中，每个类型占据一行，宏将负责生成针对true和false参数的测试。我们还可以让它为init的不同值生成测试。现在，我们大大降低了忘记测试特定配置的可能性！
+- 对于trait实现，情况类似。如果你定义了自己的trait，通常你会希望为标准库中的一些类型实现该trait，即使这些实现是微不足道的。假设你发明了Clone trait，并希望为标准库中的所有Copy类型实现它。而不是手动为每个类型编写实现，你可以使用像清单7-3中的宏一样的工具。
+
+```rust
 macro_rules! clone_from_copy {
 ($($t:ty),_) => {
 $(impl Clone for $t {
@@ -1854,23 +1760,14 @@ fn clone(&self) -> Self { *self }
 }
 }
 clone_from_copy![bool, f32, f64, u8, i8, /* ... */];
-Listing 7-3: Using a macro to implement a trait for many similar types in one fell swoop
-Here, we generate an implementation of Clone for each provided type
-whose body just uses * to copy out of &self. You may wonder why we don’t
-add a blanket implementation of Clone for T where T: Copy. We could do
-that, but a big reason not to is that it would force types in other crates to
-also use that same implementation of Clone for their own types that happen
-to be Copy. An experimental compiler feature called specialization could offer
-a workaround, but at the time of writing the stabilization of that feature
-is still some way off. So, for the time being, we’re better off enumerating
-the types specifically. This pattern also extends beyond simple forwarding
-implementations: for example, you could easily alter the code in Listing 7-3
-to implement an AddOne trait to all integer types!
-**NOTE** If you ever find yourself wondering if you should use generics or a declarative macro,
-you should use generics. Generics are generally more ergonomic than macros and
-integrate much better with other constructs in the language. Consider this rule of
-thumb: if your code changes based on type, use generics; otherwise, use macros.
-How They Work
+```
+清单 7-3：使用宏一次性为许多相似类型实现 trait
+
+- 在这里，我们为每个提供的类型生成了一个 Clone 的实现，其主体只是使用 * 从 &self 复制出来。你可能会想为什么我们不为 T: Copy 的类型添加一个 Clone 的通用实现。我们可以这样做，但一个很大的原因是它会强制其他 crate 中的类型也使用相同的 Clone 实现来处理它们自己的类型，而这些类型恰好是 Copy 的。一个名为 specialization 的实验性编译器特性可能提供了一种解决方法，但在撰写本文时，该特性的稳定化还有一段时间。因此，目前我们最好是具体列举这些类型。这种模式也不仅限于简单的转发实现：例如，你可以很容易地修改清单 7-3 中的代码，为所有整数类型实现一个 AddOne trait！
+**注意** 如果你曾经想知道是否应该使用泛型还是声明式宏，那么你应该使用泛型。泛型通常比宏更符合人体工程学，并且与语言中的其他结构更好地集成。考虑以下经验法则：如果你的代码基于类型而变化，使用泛型；否则，使用宏。
+
+##### How They Work
+
 Every programming language has a grammar that dictates how the individual
 characters that make up the source code can be turned into tokens.
 Tokens are the lowest-level building blocks of a language, such as numbers,
