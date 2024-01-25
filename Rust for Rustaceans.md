@@ -1154,7 +1154,7 @@ foo = { path = "../../foo" }
 **注意** 如果您有一个 crate 不应该被发布，或者只应该发布到某些特定的替代注册表（即不发布到 crates.io），您可以将 publish 指令设置为 false 或允许的注册表列表。
 您可以使用的元数据指令列表不断增长，因此请定期查看 Cargo 参考文档的 Manifest Format 页面（<https://doc.rust-lang.org/cargo/reference/manifest.html>）。
 
-#####  Build Configuration
+##### Build Configuration
 
 Cargo.toml还可以让您控制Cargo如何构建您的crate。
 最明显的工具是build参数，它允许您为您的crate编写完全自定义的构建程序（我们将在第11章中重新讨论此问题）。
@@ -1299,7 +1299,6 @@ nix = "0.17"
 
 第一个 Rust 特性是最低支持的 Rust 版本（MSRV）。在 Rust 社区中，关于项目在 MSRV 和版本控制方面应该遵循什么策略存在很多争议，而且没有一个真正好的答案。问题的核心是，一些 Rust 用户受限于使用较旧的 Rust 版本，通常是在企业环境中，他们几乎没有选择。如果我们不断利用新稳定的 API，这些用户将无法编译我们 crate 的最新版本，将被落下。
 
-
 - 有两种技术可以让创建者为处于这种情况下的用户提供一些便利。第一种是建立一个最低支持的 Rust 版本（MSRV）策略，承诺新版本的 crate 将始终与过去 X 个月内的任何稳定版本编译通过。确切的数字有所不同，但通常为 6 或 12 个月。根据 Rust 的六周发布周期，这对应于最新的四个或八个稳定版本。项目中引入的任何新代码都必须与 MSRV 编译器（通常由 CI 检查）一起编译通过，或者在 MSRV 策略允许的情况下暂时保留，直到可以合并。这有时可能会有些麻烦，因为这意味着这些 crate 无法充分利用语言的最新功能，但它将为您的用户带来便利。
 - 第二种技术是确保每当 MSRV 更改时，增加您的 crate 的次要版本号。因此，如果您发布了版本为 2.7.0 的 crate，并将其 MSRV 从 Rust 1.44 增加到 Rust 1.45，那么依赖于您的 crate 并停留在 1.44 上的项目可以使用依赖版本说明符 version = "2, <2.7" 来保持项目正常运行，直到可以迁移到 Rust 1.45。重要的是，您要增加次要版本号，而不仅仅是修订版本号，这样您仍然可以通过进行另一个修订版本的关键安全修复来为先前的 MSRV 发布提供支持，如果有必要的话。
 - 一些项目非常重视对最低支持的 Rust 版本（MSRV）的支持，将 MSRV 的更改视为破坏性更改并增加主版本号。这意味着下游项目必须明确选择接受 MSRV 的更改，而不是选择不接受，但这也意味着没有严格的 MSRV 要求的用户将无法看到未来的错误修复，除非更新其依赖项，这可能需要他们进行破坏性更改。正如我所说，这些解决方案都有缺点。
@@ -1364,6 +1363,7 @@ path = "tests/custom.rs"
 harness = false
 
 ```
+
 代码清单 6-1：选择退出标准测试harness
 
 - 没有测试harness，#[test]周围的所有魔法都不会发生。
@@ -1381,7 +1381,7 @@ harness = false
 
 当 Rust 构建测试代码时，它会设置编译器配置标志 test，您可以使用条件编译来编写代码，除非特别进行测试，否则该代码将被编译掉。表面上看，这似乎有些奇怪：难道您不想测试与生产环境中完全相同的代码吗？确实如此，但是在测试时仅有的代码可以让您编写更好、更全面的测试，有几种方式。
 
-**MOCKING** 
+**MOCKING**
 在编写测试时，您通常希望对正在测试的代码以及代码可能交互的任何其他类型具有严格的控制。例如，如果您正在测试一个网络客户端，您可能不希望在真实网络上运行单元测试，而是希望直接控制“网络”发出的字节和时间。或者，如果您正在测试一个数据结构，您希望您的测试使用的类型允许您控制每次调用时每个方法返回的内容。您还可能希望收集指标，例如给定方法被调用的频率或是否发出了给定的字节序列。
 
 - 这些“假”类型和实现被称为模拟对象（mocks），它们是任何大型单元测试套件的关键特性。虽然您通常可以手动完成获取此类控制所需的工作，但最好有一个库来为您处理大部分琐碎的细节。这就是自动模拟的作用。模拟库将提供生成具有特定属性或签名的类型（包括函数）的功能，以及在测试执行期间控制和检查这些生成的项的机制。
@@ -1389,7 +1389,7 @@ harness = false
 - 在泛型不方便或不合适的情况下，例如如果您想避免将类型的特定方面泛型化给用户，您可以将您想要模拟的状态和行为封装在一个专用的结构体中。然后，您可以生成该结构体及其方法的模拟版本，并使用条件编译根据cfg(test)或类似cfg(feature = "test_mock_foo")的测试专用功能来使用真实或模拟实现。
 - 目前，在Rust社区中还没有出现一个单一的模拟库，甚至也没有出现一个单一的模拟方法，被认为是唯一正确的答案。我所知道的最全面和详尽的模拟库是mockall crate，但它仍在积极开发中，还有许多其他竞争者。
 
-#####  Test-Only APIs
+##### Test-Only APIs
 
 首先，拥有仅供测试使用的代码可以让您向（单元）测试公开额外的方法、字段和类型，以便测试不仅可以检查公共API的行为是否正确，还可以检查内部状态是否正确。例如，考虑 hashbrown 中实现标准库 HashMap 的 HashMap 类型。HashMap 类型实际上只是围绕 RawTable 类型的包装器，而 RawTable 类型实现了大部分哈希表逻辑。假设在对空映射进行 HashMap::insert 操作后，您想要检查映射中的一个桶是否非空，如代码清单 6-2 所示。
 
@@ -1449,43 +1449,15 @@ impl<T: Write> Write for BufWriter<T> {
 
 #### Doctests
 
-Rust code snippets in documentation comments are automatically run as
-test cases. These are commonly referred to as doctests. Because doctests
-appear in the public documentation of your crate, and users are likely to
-mimic what they contain, they are run as integration tests. This means that
-the doctests don’t have access to private fields and methods, and test is not
-set on the main crate’s code. Each doctest is compiled as its own dedicated
-crate and is run in isolation, just as if the user had copy-pasted the doctest
-into their own program.
-Behind the scenes, the compiler performs some preprocessing on
-doctests
-to make them more concise. Most importantly, it automatically
-adds an fn main around your code. This allows doctests to focus only on the
-important bits that the user is likely to care about, like the parts that actually
-use types and methods from your library, without including unnecessary
-boilerplate.
-You can opt out of this auto-wrapping by defining your own fn main in
-the doctest. You may want to do this, for example, if you want to write an
+Rust代码片段在文档注释中会自动作为测试用例运行。这些通常被称为doctests。因为doctests出现在您的crate的公共文档中，并且用户很可能模仿其中的内容，所以它们被作为集成测试运行。这意味着doctests无法访问私有字段和方法，并且测试不会设置在主crate的代码上。每个doctest都被编译为独立的crate，并在隔离环境中运行，就像用户将doctest复制粘贴到自己的程序中一样。
 
-Testing 91
-asynchronous main function using something like #[tokio::main] async fn
-main, or if you want to add additional modules to the doctest.
-To use the ? operator in your doctest, you don’t normally have to use a
-custom main function as rustdoc includes some heuristics to set the return
-type to Result<(), impl Debug> if your code looks like it makes use of ? (for
-example, if it ends with Ok(())). If type inference gives you a hard time
-about the error type for the function, you can disambiguate it by changing
-the last line of the doctest to be explicitly typed, like this: Ok::<(), T>(()).
-Doctests have a number of additional features that come in handy as
-you write documentation for more complex interfaces. The first is the ability
-to hide individual lines. If you prefix a line of a doctest with a #, that line
-is included when the doctest is compiled and run, but it is not included in
-the code snippet generated in the documentation. This lets you easily hide
-details that are not important to the current example, such as implementing
-traits for dummy types or generating values. It is also useful if you wish
-to present a sequence of examples without showing the same leading code
-each time. Listing 6-5 gives an example of what a doctest with hidden lines
-might look like.
+- 在幕后，编译器对doctest进行了一些预处理，使其更简洁。最重要的是，它自动在您的代码周围添加了一个fn main。这使得doctest只关注用户可能关心的重要部分，比如实际使用您库中的类型和方法的部分，而不包含不必要的样板代码。
+- 您可以通过在doctest中定义自己的fn main来选择退出此自动包装。例如，如果您想使用#[tokio::main] async fn main编写异步主函数，或者如果您想向doctest添加其他模块，您可能希望这样做。
+- 在您的doctest中使用?运算符时，通常不需要使用自定义的main函数，因为rustdoc会根据一些启发式规则将返回类型设置为Result<(), impl Debug>，如果您的代码看起来使用了?（例如，如果以Ok(())结尾）。如果类型推断对函数的错误类型感到困惑，您可以通过将doctest的最后一行更改为显式类型来消除歧义，例如：Ok::<(), T>(())。
+- Doctests具有一些额外的功能，对于编写更复杂接口的文档非常有用。首先是隐藏单行的能力。如果您在doctest的一行前面加上#，那么该行在编译和运行doctest时会被包含，但不会在生成的文档中的代码片段中显示。这使您可以轻松隐藏对当前示例不重要的细节，例如为虚拟类型实现特性或生成值。如果您希望呈现一系列示例而不每次都显示相同的前导代码，这也很有用。清单6-5展示了一个带有隐藏行的doctest示例。
+
+```rust
+
 /// Completely frobnifies a number through I/O.
 ///
 /// In this first example we hide the value generation.
@@ -1516,222 +1488,109 @@ might look like.
 /// frobnify(i)?;
 /// ```
 fn frobnify(i: usize) -> std::io::Result<()> {
+
+```
+
 Listing 6-5: Hiding lines in a doctest with #
 
-92 Chapter 6
-**NOTE** Use this feature with care; it can be frustrating to users if they copy-paste an example
-and then it doesn’t work because of required steps that you’ve hidden.
-Much like #[test] functions, doctests also support attributes that
-modify how the doctest is run. These attributes go immediately after the
-triple-backtick used to denote a code block, and multiple attributes can be
-separated by commas.
-Like with test functions, you can specify the should_panic attribute to
-indicate that the code in a particular doctest should panic when run, or
-ignore to check the code segment only if cargo test is run with the --ignored
-flag. You can also use the no_run attribute to indicate that a given doctest
-should compile but should not be run.
-The attribute compile_fail tells rustdoc that the code in the documentation
-example should not compile. This indicates to the user that a particular
-use is not possible and serves as a useful test to remind you to update
-the documentation should the relevant aspect of your library change. You
-can also use this attribute to check that certain static properties hold for
-your types. Listing 6-6 shows an example of how you can use compile_fail to
-check that a given type does not implement Send, which may be necessary to
-uphold safety guarantees in unsafe code.
+**注意** 使用此功能时要小心；如果用户复制粘贴示例代码，然后由于您隐藏的必要步骤而无法正常工作，可能会令用户感到沮丧。
 
-```compile_fail
+- 与 #[test] 函数类似，doctest 也支持修改运行方式的属性。这些属性紧跟在用于表示代码块的三个反引号之后，多个属性可以用逗号分隔。
+- 与测试函数类似，您可以使用 should_panic 属性来指示特定的 doctest 在运行时应该发生 panic，或者使用 ignore 来仅在使用 --ignored 标志运行 cargo test 时检查代码段。您还可以使用 no_run 属性来指示给定的 doctest 应该编译但不应运行。
+- 属性 compile_fail 告诉 rustdoc 文档示例中的代码不应该编译通过。这向用户表明某个特定的用法是不可能的，并作为一个有用的测试，提醒您在库的相关方面发生变化时更新文档。您还可以使用此属性来检查某些类型的静态属性是否成立。清单 6-6 展示了如何使用 compile_fail 来检查给定类型是否不实现 Send，这在不安全代码中可能需要维护安全性保证。
+
+```rust
+
+
+compile_fail
 # struct MyNonSendType(std::rc::Rc<()>);
 fn is_send<T: Send>() {}
 is_send::<MyNonSendType>();
+
 ```
 
-Listing 6-6: Testing that code fails to compile with compile_fail
-compile_fail is a fairly crude tool in that it gives no indication of why the
-code does not compile. For example, if code doesn’t compile because of a
-missing semicolon, a compile_fail test will appear to have been successful.
-For that reason, you’ll usually want to add the attribute only after you have
-made sure that the test indeed fails to compile with the expected error.
-If you need more fine-grained tests for compilation errors, such as when
-developing macros, take a look at the trybuild crate.
-Additional Testing Tools
-There’s a lot more to testing than just running test functions and seeing that
-they produce the expected result. A thorough survey of testing techniques,
-methodologies, and tools is outside the scope of this book, but there are
-some key Rust-specific pieces that you should know about as you expand
-your testing repertoire.
-Linting
-You may not consider a linter’s checks to be tests, but in Rust they often
-can be. The Rust linter clippy categorizes a number of its lints as correctness
+清单 6-6：使用 compile_fail 测试代码无法编译
 
-Testing 93
-lints. These lints catch code patterns that compile but are almost certainly
-bugs. Some examples are a = b; b = a, which fails to swap a and b;
-std::mem::forget(t), where t is a reference; and for x in y.next(), which will
-iterate only over the first element in y. If you are not running clippy as part
-of your CI pipeline already, you probably should be.
-Clippy comes with a number of other lints that, while usually helpful,
-may be more opinionated than you’d prefer. For example, the type_complexity
-lint, which is on by default, issues a warning if you use a particularly involved
-type in your program, like Rc<Vec<Vec<Box<(u32, u32, u32, u32)>>>>. While that
-warning encourages you to write code that is easier to read, you may find it too
-pedantic to be broadly useful. If some part of your code erroneously triggers
-a particular lint, or you just want to allow a specific instance of it, you can opt
-out of the lint just for that piece of code with #[allow(clippy::name_of_lint)].
-The Rust compiler also comes with its own set of lints in the form of
-warnings, though these are usually more directed toward writing idiomatic
-code than checking for correctness. Instead, correctness lints in the compiler
-are simply treated as errors (take a look at rustc -W help for a list).
-**NOTE** Not all compiler warnings are enabled by default. Those disabled by default are usually
-still being refined, or are more about style than content. A good example of this is
-the “idiomatic Rust 2018 edition” lint, which you can enable with #![warn(rust_2018
-_idioms)]. When this lint is enabled, the compiler will tell you if you’re failing to take
-advantage of changes brought by the Rust 2018 edition. Some other lints that you may
-want to get into the habit of enabling when you start a new project are missing_docs
-and missing_debug_implementations, which warn you if you’ve forgotten to document
-any public items in your crate or add Debug implementations for any public types,
-respectively.
-Test Generation
-Writing a good test suite is a lot of work. And even when you do that work,
-the tests you write test only the particular set of behaviors you were considering
-at the time you wrote them. Luckily, you can take advantage of
-a number of test generation techniques to develop better and more thorough
-tests. These generate input for you to use to check your application’s
-correctness. Many such tools exist, each with their own strengths and
-weaknesses, so here I’ll cover only the main strategies used by these tools:
-fuzzing and property testing.
-Fuzzing
-Entire books have been written about fuzzing, but at a high level the idea is
-simple: generate random inputs to your program and see if it crashes. If the
-program crashes, that’s a bug. For example, if you’re writing a URL parsing
-library, you can fuzz-test your program by systematically generating random
-strings and throwing them at the parsing function until it panics. Done
+`compile_fail` 是一个相对简单的工具，它不会提供代码无法编译的原因。例如，如果代码由于缺少分号而无法编译，那么 `compile_fail` 测试将会被认为是成功的。因此，通常情况下，您需要在确保测试确实无法编译并出现预期错误后才添加该属性。
+如果您需要更细粒度的编译错误测试，例如在开发宏时，可以查看 trybuild crate。
 
-94 Chapter 6
-naively, this would take a while to yield results: if the fuzzer starts with a,
-then b, then c, and so on, it will take it a long time to generate a tricky URL
-like http://[:]. In practice, modern fuzzers use code coverage metrics to
-explore different paths in your code, which lets them reach higher degrees
-of coverage faster than if the inputs were truly chosen at random.
-Fuzzers are great at finding strange corner cases that your code doesn’t
-handle correctly. They require little setup on your part: you just point the
-fuzzer at a function that takes a “fuzzable” input, and off it goes. For example,
-Listing 6-7 shows an example of how you might fuzz-test a URL parser.
+#### Additional Testing Tools
+
+测试远不止于运行测试函数并验证其产生预期结果。对测试技术、方法论和工具的全面调查超出了本书的范围，但在扩展您的测试技能时，有一些关键的 Rust 特定知识需要了解。
+
+##### Linting
+
+您可能不认为代码检查工具的检查是测试，但在Rust中，它们通常可以被视为测试。Rust代码检查工具Clippy将其许多lints分类为正确性lints。这些lints可以捕获编译通过但几乎肯定是错误的代码模式。一些示例包括a = b; b = a，未能交换a和b；std::mem::forget(t)，其中t是一个引用；以及for x in y.next()，它只会迭代y的第一个元素。如果您还没有将Clippy作为CI流程的一部分运行，那么您可能应该考虑这样做。
+
+- Clippy提供了许多其他的lint，虽然通常很有帮助，但可能比您期望的更具主观性。例如，默认情况下启用的type_complexity lint会在您的程序中使用特别复杂的类型（例如Rc<Vec<Vec<Box<(u32, u32, u32, u32)>>>>）时发出警告。虽然这个警告鼓励您编写更易读的代码，但您可能会觉得它过于苛刻，不太实用。如果您的代码的某个部分错误地触发了特定的lint，或者您只想允许特定的实例，您可以使用#[allow(clippy::name_of_lint)]在该代码片段中禁用该lint。
+- Rust编译器还提供了一套自己的lints，以警告的形式存在，尽管这些lints通常更多地用于指导编写符合惯用写法的代码，而不是检查正确性。相反，编译器中的正确性lints被视为错误（可以查看rustc -W help获取列表）。
+
+**注意** 并非所有的编译器警告都是默认启用的。那些默认禁用的警告通常仍在不断完善，或者更多关注的是代码风格而非内容。一个很好的例子是“Rust 2018 edition”的惯用写法警告，您可以使用 #![warn(rust_2018_idioms)] 启用它。当启用此警告时，编译器会告诉您是否未能利用 Rust 2018 edition 带来的变化。当您开始一个新项目时，您可能还想养成启用一些其他警告的习惯，比如 missing_docs 和 missing_debug_implementations，它们会在您的 crate 中有任何公共项未被文档化或任何公共类型未添加 Debug 实现时发出警告。
+
+#### Test Generation
+
+编写一个良好的测试套件是一项很大的工作。即使在你完成了这项工作之后，你编写的测试只能测试你在编写它们时考虑到的特定行为集。幸运的是，你可以利用许多测试生成技术来开发更好、更全面的测试。这些技术为你生成输入，用于检查你的应用程序的正确性。有许多这样的工具存在，每个工具都有其自身的优点和缺点，所以在这里我只会介绍这些工具使用的主要策略：模糊测试和属性测试。
+
+##### Fuzzing
+
+整本书都可以写关于模糊测试的内容，但从高层次来看，它的思想很简单：生成随机输入到你的程序中，然后观察是否崩溃。如果程序崩溃了，那就是一个 bug。例如，如果你正在编写一个 URL 解析库，你可以通过系统地生成随机字符串并将它们传递给解析函数来进行模糊测试，直到它发生 panic。如果简单地按顺序生成输入，比如从 a 开始，然后是 b，然后是 c，等等，那么要生成一个像 http://[:]. 这样棘手的 URL 将需要很长时间。实际上，现代的模糊测试工具使用代码覆盖度指标来探索代码中的不同路径，这使得它们能够更快地达到更高的覆盖度，而不是完全随机选择输入。
+
+- Fuzzers非常擅长发现您的代码无法正确处理的奇怪边界情况。它们需要很少的设置：您只需将模糊器指向一个接受“可模糊化”输入的函数，然后它就会开始工作。例如，清单6-7展示了如何对URL解析器进行模糊测试的示例。
+
+```rust
+
 libfuzzer_sys::fuzz_target!(|data: &[u8]| {
-if let Ok(s) = std::str::from_utf8(data) {
-let_ = url::Url::parse(s);
-}
+  if let Ok(s) = std::str::from_utf8(data) {
+  let_ = url::Url::parse(s);
+  }
 });
-Listing 6-7: Fuzzing a URL parser with libfuzzer
-The fuzzer will generate semi-random inputs to the closure, and any
-that form valid UTF-8 strings will be passed to the parser. Notice that the
-code here doesn’t check whether the parsing succeeds or fails—instead, it’s
-looking for cases where the parser panics or otherwise crashes due to internal
-invariants that are violated.
-The fuzzer keeps running until you terminate it, so most fuzzing tools
-come with a built-in mechanism to stop after a certain number of test cases
-have been explored. If your input isn’t a trivially fuzzable type—something
-like a hash table—you can usually use a crate like arbitrary to turn the byte
-string that the fuzzer generates into a more complex Rust type. It feels like
-magic, but under the hood it’s actually implemented in a very straightforward
-fashion. The crate defines an Arbitrary trait with a single method,
-arbitrary, that constructs the implementing type from a source of random
-bytes. Primitive types like u32 or bool read the necessary number of bytes
-from that input to construct a valid instance of themselves, whereas more
-complex types like HashMap or BTreeSet produce one number from the input
-to dictate their length and then call Arbitrary that number of times on their
-inner types. There’s even an attribute, #[derive(Arbitrary)], that implements
-Arbitrary by just calling arbitrary on each contained type! To explore fuzzing
-further, I recommend starting with cargo-fuzz.
-Property-Based Testing
-Sometimes you want to check not only that your program doesn’t crash but
-also that it does what it’s expected to do. It’s great that your add function
-didn’t panic, but if it tells you that the result of add(1, 4) is 68, it’s probably
-still wrong. This is where property-based testing comes into play; you describe
-a number of properties your code should uphold, and then the property
-testing framework generates inputs and checks that those properties
-indeed hold.
+```
 
-Testing 95
-A common way to use property-based testing is to first write a simple
-but naive version of the code you want to test that you are confident is correct.
-Then, for a given input, you give that input to both the code you want
-to test and the simplified but naive version. If the result or output of the
-two implementations is the same, your code is good—that is the correctness
-property you’re looking for—but if it’s not, you’ve likely found a bug.
-You can also use property-based testing to check for properties not directly
-related to correctness, such as whether operations take strictly less time for
-one implementation than another. The common principle is that you want
-any difference in outcome between the real and test versions to be informative
-and actionable so that every failure allows you to make improvements.
-The naive implementation might be one from the standard library that
-you’re trying to replace or augment (like std::collections::VecDeque), or it
-might be a simpler version of an algorithm that you’re trying optimize (like
-naive versus optimized matrix multiplication).
-If this approach of generating inputs until some condition is met
-sounds a lot like fuzzing, that’s because it is—smarter people than I have
-argued that fuzzing is “ just” property-based testing where the property
-you’re testing for is “it doesn’t crash.”
-One downside of property-based testing is that it relies more heavily on
-the provided descriptions of the inputs. Whereas fuzzing will keep trying
-all possible inputs, property testing tends to be guided by developer annotations
-like “a number between 0 and 64” or “a string that contains three
-commas.” This allows property testing to more quickly reach cases that fuzzers
-may take a long time to encounter randomly, but it does require manual
-work and may miss important but niche buggy inputs. As fuzzers and property
-testers grow closer, however, fuzzers are starting to gain this kind of
-constraint-based searching capability as well.
-If you’re curious about property-based test generation, I recommend
-starting with the proptest crate.
-TESTING SEQUENCES OF OPERATIONS
-Since fuzzers and property testers allow you to generate arbitrary Rust types,
-you aren’t limited to testing a single function call in your crate. For example, say
-you want to test that some type Foo behaves correctly if you perform a particular
-sequence of operations on it. You could define an enum Operation that lists
-operations, and make your test function take a Vec<Operation>. Then you could
-instantiate a Foo and perform each operation on that Foo, one after the other.
-Most testers have support for minimizing inputs, so they will even search for
-the smallest sequence of operations that still violates a property if a propertyviolating
-input is found!
+清单 6-7：使用 libfuzzer 对 URL 解析器进行模糊测试
 
-96 Chapter 6
-Test Augmentation
-Let’s say you have a magnificent test suite all set up, and your code passes
-all the tests. It’s glorious. But then, one day, one of the normally reliable
-tests inexplicably fails or crashes with a segmentation fault. There are two
-common reasons for these kinds of nondeterministic test failures: race conditions,
-where your test might fail only if two operations occur on different
-threads in a particular order, and undefined behavior in unsafe code, such
-as if some unsafe code reads a particular value out of uninitialized memory.
-Catching these kinds of bugs with normal tests can be difficult—often
-you don’t have sufficient low-level control over thread scheduling, memory
-layout and content, or other random-ish system factors to write a reliable
-test. You could run each test many times in a loop, but even that may not
-catch the error if the bad case is sufficiently rare or unlikely. Luckily, there
-are tools that can help augment your tests to make catching these kinds of
-bugs much easier.
-The first of these is the amazing tool Miri, an interpreter for Rust’s
-mid-level intermediate representation (MIR). MIR is an internal, simplified
-representation of Rust that helps the compiler find optimizations and
-check properties without having to consider all of the syntax sugar of Rust
-itself. Running your tests through Miri is as simple as running cargo miri
-test. Miri interprets your code rather than compiling and running it like a
-normal binary, which makes the tests run a decent amount slower. But in
-return, Miri can keep track of the entire program state as each line of your
-code executes. This allows Miri to detect and report if your program ever
-exhibits certain types of undefined behavior, such as uninitialized memory
-reads, uses of values after they’ve been dropped, or out-of-bounds pointer
-accesses. Rather than having these operations yield strange program behaviors
-that may only sometimes result in observable test failures (like crashes),
-Miri detects them when they happen and tells you immediately.
-For example, consider the very unsound code in Listing 6-8, which creates
-two exclusive references to a value.
+- 模糊器将为闭包生成半随机输入，并将任何形成有效的 UTF-8 字符串的输入传递给解析器。请注意，此处的代码不检查解析是否成功或失败，而是寻找解析器由于违反内部不变量而引发 panic 或其他崩溃的情况。
+- 模糊测试工具会持续运行，直到您终止它，因此大多数模糊测试工具都配备了在探索一定数量的测试用例后停止的内置机制。如果您的输入不是一个简单的可模糊化类型，比如哈希表，您通常可以使用类似 arbitrary 的 crate 将模糊测试生成的字节字符串转换为更复杂的 Rust 类型。这感觉像是魔法，但在底层实际上是以非常直接的方式实现的。该 crate 定义了一个 Arbitrary trait，其中包含一个方法 arbitrary，该方法从随机字节源构造实现类型。原始类型如 u32 或 bool 从输入中读取所需数量的字节以构造自身的有效实例，而像 HashMap 或 BTreeSet 这样的更复杂类型则从输入中产生一个数字来指示它们的长度，然后在其内部类型上调用 Arbitrary 该数字次数。甚至还有一个属性 #[derive(Arbitrary)]，它通过在每个包含的类型上调用 arbitrary 来实现 Arbitrary！要进一步探索模糊测试，我建议从 cargo-fuzz 开始。
+
+##### Property-Based Testing
+
+有时候你不仅想检查程序是否崩溃，还想确保它按照预期工作。你的 add 函数没有发生 panic 是很好，但如果它告诉你 add(1, 4) 的结果是 68，那可能还是错的。这就是属性测试的作用；你描述了代码应该遵守的一些属性，然后属性测试框架生成输入并检查这些属性是否确实成立。
+
+- 使用属性测试的常见方法是首先编写一个简单但不太高效的代码版本，你对其正确性有信心。
+然后，对于给定的输入，将该输入分别提供给你要测试的代码和简化但不太高效的版本。
+如果两个实现的结果或输出相同，那么你的代码是正确的，这就是你要验证的正确性属性。
+但如果结果不同，那么很可能发现了一个 bug。
+你还可以使用属性测试来检查与正确性直接相关的属性以外的属性，比如某个实现的操作是否比另一个实现的操作时间更短。
+共同的原则是，你希望真实版本和测试版本之间的任何结果差异都能提供有用的信息和可操作性，以便每次失败都能让你进行改进。
+简化但不太高效的实现可以是标准库中的一个（比如std::collections::VecDeque），你想要替换或增强它，也可以是一个你试图优化的算法的简化版本（比如朴素与优化的矩阵乘法）。
+
+- 如果这种生成输入直到满足某个条件的方法听起来很像模糊测试，那是因为它确实是——比我聪明的人们认为模糊测试就是“只要不崩溃就行”的属性测试。
+- 属性测试的一个缺点是它更加依赖于提供的输入描述。而模糊测试会尝试所有可能的输入，属性测试往往会根据开发者的注释进行引导，比如“0到64之间的数字”或“包含三个逗号的字符串”。这使得属性测试能够更快地找到模糊测试可能需要很长时间才能随机遇到的情况，但它需要手动工作，并可能忽略重要但特定的错误输入。然而，随着模糊测试和属性测试越来越接近，模糊测试工具也开始获得这种基于约束的搜索能力。
+- 如果你对属性测试生成感兴趣，我推荐从 proptest crate 开始。
+  
+**测试操作序列**
+由于模糊测试工具和属性测试工具允许您生成任意的 Rust 类型，因此您不仅限于测试 crate 中的单个函数调用。例如，假设您想要测试某个类型 Foo 在执行特定操作序列时是否正确行为。您可以定义一个列出操作的枚举 Operation，并使您的测试函数接受一个 Vec<Operation>。然后，您可以实例化一个 Foo，并依次对该 Foo 执行每个操作。大多数测试工具都支持最小化输入，因此，如果找到违反属性的输入，它们甚至会搜索最小的操作序列！
+
+#### Test Augmentation
+
+假设您已经设置了一个完美的测试套件，并且您的代码通过了所有的测试。这是非常美妙的。但是，有一天，其中一个通常可靠的测试莫名其妙地失败或者由于段错误而崩溃了。这种非确定性的测试失败有两个常见原因：竞态条件，即如果两个操作以特定顺序在不同的线程上发生，您的测试可能会失败；以及不安全代码中的未定义行为，例如如果某些不安全代码从未初始化的内存中读取特定值。[]: # END: ed8c6549bwf9
+
+- 使用普通测试捕获这些类型的错误可能很困难 - 通常情况下，您无法对线程调度、内存布局和内容或其他类似随机的系统因素具有足够的低级控制，以编写可靠的测试。您可以在循环中多次运行每个测试，但即使如此，如果错误情况非常罕见或不太可能发生，也可能无法捕获错误。幸运的是，有一些工具可以帮助增强您的测试，使捕获这些类型的错误变得更容易。
+- 其中一个工具是令人惊叹的 Miri，它是 Rust 的中级中间表示（MIR）的解释器。MIR 是 Rust 的内部简化表示，它帮助编译器找到优化并检查属性，而无需考虑 Rust 本身的所有语法糖。通过 Miri 运行测试非常简单，只需运行 cargo miri test。Miri 解释执行您的代码，而不是像普通二进制文件那样编译和运行它，这使得测试运行速度较慢。但作为回报，Miri 可以在代码的每一行执行时跟踪整个程序状态。这使得 Miri 能够检测并报告程序是否出现某些类型的未定义行为，例如未初始化的内存读取、在值被丢弃后继续使用或越界指针访问。Miri 不会让这些操作产生奇怪的程序行为，可能只有在某些情况下才会导致可观察的测试失败（如崩溃），而是在发生时立即检测并告知您。
+- 例如，考虑清单 6-8 中非常不安全的代码，它创建了两个对值的独占引用。
+
+```rust
+
 let mut x = 42;
 let x: *mut i32 = &mut x;
 let (x1, x2) = unsafe { (&mut*x, &mut *x) };
 println!("{} {}", x1, x2);
-Listing 6-8: Wildly unsafe code that Miri detects is incorrect
-At the time of writing, if you run this code through Miri, you get an
-error that points out exactly what’s wrong:
+```
+
+清单 6-8：Miri 检测到不正确的极不安全代码
+
+- 在撰写本文时，如果您通过Miri运行此代码，您将收到一个指出问题所在的错误：
+
+```rust
 error: Undefined Behavior: trying to reborrow for Unique at alloc1383, but
 parent tag <2772> does not have an appropriate item in the borrow stack
 --> src/main.rs:4:6
@@ -1740,97 +1599,41 @@ parent tag <2772> does not have an appropriate item in the borrow stack
 | ^^ trying to reborrow for Unique at alloc1383, but parent tag <2772>
 does not have an appropriate item in the borrow stack
 
-Testing 97
-**NOTE** Miri is still under development, and its error messages aren’t always the easiest to
-understand. This is a problem that’s being actively worked on, so by the time you read
-this, the error output may have already gotten much better!
-Another tool worth looking at is Loom, a clever library that tries to
-ensure your tests are run with every relevant interleaving of concurrent
-operations. At a high level, Loom keeps track of all cross-thread synchronization
-points and runs your tests over and over, adjusting the order in
-which threads proceed from those synchronization points each time. So, if
-thread A and thread B both take the same Mutex, Loom will ensure that the
-test runs once with A taking it first and once with B taking it first. Loom
-also keeps track of atomic accesses, memory orderings, and accesses to
-UnsafeCell (which we’ll discuss in Chapter 9) and checks that threads do not
-access them inappropriately. If a test fails, Loom can give you an exact rundown
-of which threads executed in what order so you can determine how
-the crash happened.
-Performance Testing
-Writing performance tests is difficult because it is often hard to accurately
-model a workload that reflects real-world usage of your crate. But having
-such tests is important; if your code suddenly runs 100 times slower, that
-really should be considered a bug, yet without a performance test you may
-not spot the regression. If your code runs 100 times faster, that might also
-indicate that something is off. Both of these are good reasons to have automated
-performance tests as part of your CI—if performance changes drastically
-in either direction, you should know about it.
-Unlike with functional testing, performance tests do not have a common,
-well-defined output. A functional test will either succeed or fail,
-whereas a performance test may give you a throughput number, a latency
-profile, a number of processed samples, or any other metric that might
-be relevant to the application in question. Also, a performance test may
-require running a function in a loop a few hundred thousand times, or it
-might take hours running across a distributed network of multicore boxes.
-For that reason, it is difficult to speak about how to write performance tests
-in a general sense. Instead, in this section, we’ll look at some of the issues
-you may encounter when writing performance tests in Rust and how to mitigate
-them. Three particularly common pitfalls that are often overlooked
-are performance variance, compiler optimizations, and I/O overhead. Let’s
-explore each of these in turn.
-Performance Variance
-Performance can vary for a huge variety of reasons, and many factors affect
-how fast a particular sequence of machine instructions run. Some are obvious,
-like the CPU and memory clock speed, or how loaded the machine otherwise
-is, but many are much more subtle. For example, your kernel version may
-change paging performance, the length of your username might change the
+```
 
-98 Chapter 6
-layout of memory, and the temperature in the room might cause the CPU to
-clock down. Ultimately, it is highly unlikely that if you run a benchmark twice,
-you’ll get the same result. In fact, you may observe significant variance, even if
-you are using the same hardware. Or, viewed from another perspective, your
-code may have gotten slower or faster, but the effect may be invisible due to
-differences in the benchmarking environment.
-There are no perfect ways to eliminate all variance in your performance
-results, unless you happen to be able to run benchmarks repeatedly
-on a highly diverse fleet of machines. Even so, it’s important to try to
-handle this measurement variance as best we can to extract a signal from
-the noisy measurements benchmarks give us. In practice, our best friend in
-combating variance is to run each benchmark many times and then look
-at the distribution of measurements rather than just a single one. Rust has
-tools that can help with this. For example, rather than ask “How long did
-this function take to run on average?” crates like hdrhistogram enable us to
-look at statistics like “What range of runtime covers 95% of the samples
-we observed?” To be even more rigorous, we can use techniques like null
-hypothesis testing from statistics to build some confidence that a measured
-difference indeed corresponds to a true change and is not just noise.
-A lecture on statistical hypothesis testing is beyond the scope of this
-book, but luckily much of this work has already been done by others. The
-criterion crate, for instance, does all of this and more for you. All you
-have to do is give it a function that it can call to run one iteration of your
-benchmark, and it will run it the appropriate number of times to be fairly
-sure that the result is reliable. It then produces a benchmark report, which
-includes a summary of the results, analysis of outliers, and even graphical
-representations of trends over time. Of course, it can’t eliminate the effects
-of just testing on a particular configuration of hardware, but it at least categorizes
-the noise that is measurable across executions.
-Compiler Optimizations
-Compilers these days are really clever. They eliminate dead code, compute
-complex expressions at compile time, unroll loops, and perform other dark
-magic to squeeze every drop of performance out of our code. Normally this
-is great, but when we’re trying to measure how fast a particular piece of
-code is, the compiler’s smartness can give us invalid results. For example,
-take the code to benchmark Vec::push in Listing 6-9.
+**注意** Miri仍在开发中，其错误消息并不总是最容易理解的。这是一个正在积极解决的问题，所以当您阅读本文时，错误输出可能已经得到了很大的改进！
+
+- 另一个值得一看的工具是 Loom，这是一个聪明的库，它尝试确保您的测试在每个相关的并发操作交错中运行。在高层次上，Loom跟踪所有跨线程同步点，并一遍又一遍地运行您的测试，每次调整线程从这些同步点继续的顺序。因此，如果线程A和线程B都获取相同的Mutex，Loom将确保测试先以A先获取，然后以B先获取的方式运行。Loom还跟踪原子访问、内存顺序和对UnsafeCell的访问（我们将在第9章中讨论），并检查线程是否不适当地访问它们。如果测试失败，Loom可以给出确切的运行情况，包括哪些线程以什么顺序执行，以便您确定崩溃发生的原因。
+
+
+##### Performance Testing
+
+编写性能测试很困难，因为往往很难准确地模拟反映您的 crate 在实际使用中的工作负载。但是拥有这样的测试非常重要；如果您的代码突然运行速度变慢了100倍，那真的应该被视为一个 bug，但如果没有性能测试，您可能无法发现这个回归。如果您的代码运行速度提高了100倍，这也可能表明有些地方出了问题。这两种情况都是将自动化性能测试作为 CI 的一部分的好理由——如果性能发生了显著的变化，无论是向好的方向还是向坏的方向，您都应该知道。
+
+- 与功能测试不同，性能测试没有一个共同的、明确定义的输出。功能测试要么成功，要么失败，而性能测试可能会给出吞吐量、延迟配置文件、处理的样本数量或其他与所涉及应用程序相关的指标。此外，性能测试可能需要在循环中运行一个函数数十万次，或者可能需要在分布式多核盒子的网络上运行数小时。因此，很难以一般意义上讨论如何编写性能测试。相反，在本节中，我们将看一下在使用Rust编写性能测试时可能遇到的一些问题以及如何减轻这些问题。经常被忽视的三个常见陷阱是性能差异、编译器优化和I/O开销。让我们依次探讨每个问题。
+
+##### Performance Variance
+
+性能可能因各种原因而有所变化，许多因素会影响特定机器指令序列的运行速度。有些是显而易见的，比如CPU和内存时钟速度，或者机器的负载情况，但许多因素则更加微妙。例如，您的内核版本可能会影响分页性能，您的用户名长度可能会改变内存布局，房间的温度可能会导致CPU降频。最终，如果您运行两次基准测试，很不可能得到相同的结果。实际上，即使使用相同的硬件，您可能观察到显著的差异。或者，从另一个角度来看，您的代码可能变得更慢或更快，但由于基准测试环境的差异，这种影响可能是不可见的。
+
+- 消除性能结果中的所有差异是不可能的，除非您能够在一个高度多样化的机器群上重复运行基准测试。即使如此，我们仍然需要尽力处理测量差异，以从嘈杂的测量结果中提取出信号。在实践中，我们在对抗差异方面的最佳助手是多次运行每个基准测试，然后查看测量结果的分布，而不仅仅是单个结果。Rust 提供了一些工具来帮助我们。例如，与其问“这个函数平均运行多长时间？”，像 hdrhistogram 这样的 crate 可以让我们查看诸如“我们观察到的样本中有多少运行时间落在了 95% 的范围内？”这样的统计数据。为了更加严谨，我们可以使用统计学中的零假设检验等技术，以建立一些置信度，确保测量到的差异确实对应于真正的变化，而不仅仅是噪音。
+  
+##### 编译器优化
+
+现在的编译器非常聪明。它们消除死代码，编译时计算复杂表达式，展开循环，并进行其他黑魔法，以从我们的代码中挤取出每一点性能。通常情况下，这很好，但当我们试图测量特定代码段的速度时，编译器的聪明才智可能会给我们带来无效的结果。例如，看一下清单 6-9 中用于对 Vec::push 进行基准测试的代码。
+
+```rust
+
 let mut vs = Vec::with_capacity(4);
 let start = std::time::Instant::now();
 for i in 0..4 {
 vs.push(i);
 }
 println!("took {:?}", start.elapsed());
+```
+
 Listing 6-9: A suspiciously fast performance benchmark
 
-Testing 99
 If you were to look at the assembly output of this code compiled in
 release mode using something like the excellent godbolt.org or cargo-asm,
 you’d immediately notice that something was wrong: the calls to Vec::with
