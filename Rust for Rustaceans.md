@@ -1088,7 +1088,7 @@ optional = true
 
 - 例如，您可以编写 derive = ["syn/derive"] 来使您的 derive 特性启用 syn 依赖项的 derive 特性。
 
-#### 在您的crate中使用特性
+##### 在您的crate中使用特性
 
 在使用特性时，您需要确保您的代码仅在依赖可用时使用。如果您的特性启用了特定的组件，您需要确保如果特性未启用，则不包含该组件。
 
@@ -1112,6 +1112,7 @@ members = [
 "bar/two",
 ]
 ```
+
 清单5-4：工作区的 Cargo.toml
 
 - members 数组是一个包含工作区中每个 crate 的目录列表。这些 crate 都有自己的 Cargo.toml 文件在自己的子目录中，但它们共享一个单独的 Cargo.lock 文件和一个单独的输出目录。crate 的名称不需要与 members 中的条目匹配。通常情况下，工作区中的 crate 具有相同的名称前缀，通常选择为“主”crate 的名称。例如，在 tokio crate 中，成员被称为 tokio、tokio-test、tokio-macros 等等。
@@ -1143,7 +1144,6 @@ foo = { path = "../../foo" }
 
 #### Project Configuration
 
-
 运行 cargo new 会为您设置一个最小的 Cargo.toml，其中包含 crate 的名称、版本号、一些作者信息以及一个空的依赖项列表。这可以让您走得很远，但随着项目的发展，您可能希望在 Cargo.toml 中添加一些有用的内容。
 
 ##### Crate 元数据
@@ -1154,7 +1154,7 @@ foo = { path = "../../foo" }
 **注意** 如果您有一个 crate 不应该被发布，或者只应该发布到某些特定的替代注册表（即不发布到 crates.io），您可以将 publish 指令设置为 false 或允许的注册表列表。
 您可以使用的元数据指令列表不断增长，因此请定期查看 Cargo 参考文档的 Manifest Format 页面（<https://doc.rust-lang.org/cargo/reference/manifest.html>）。
 
-#### Build Configuration
+#####  Build Configuration
 
 Cargo.toml还可以让您控制Cargo如何构建您的crate。
 最明显的工具是build参数，它允许您为您的crate编写完全自定义的构建程序（我们将在第11章中重新讨论此问题）。
@@ -1191,6 +1191,7 @@ nom4 = { path = "/home/jon/nom4", package = "nom" }
 nom5 = { path = "/home/jon/nom5", package = "nom" }
 
 ```
+
 清单5-7：使用[patch]在Cargo.toml中覆盖同一crate的多个版本
 
 - Cargo将查看每个路径中的Cargo.toml文件，意识到/nom4包含主要版本4，/nom5包含主要版本5，并相应地修补这两个版本。package关键字告诉Cargo在这两种情况下都查找名为nom的crate，而不是像默认情况下那样使用依赖标识符（左侧部分）。您也可以在常规依赖项中使用package来重命名依赖项！
@@ -1202,121 +1203,31 @@ nom5 = { path = "/home/jon/nom5", package = "nom" }
 `**[profile]**`
 [profile]部分允许您向Rust编译器传递附加选项，以改变它编译crate的方式。这些选项主要分为三类：性能选项、调试选项和以用户定义方式改变代码行为的选项。它们在调试模式和发布模式下有不同的默认值（还有其他模式）。
 
-- The three primary performance options are opt-level, codegen-units,
-and lto. The opt-level option tweaks runtime performance by telling the
-compiler how aggressively to optimize your program (0 is “not at all,” 3 is “as
-much as you can”). The higher the setting, the more optimized your code
-will be, which may make it run faster. Extra optimization comes at the cost
-of higher compile times, though, which is why optimizations are generally
-enabled only for release builds.
-**NOTE** You can also set opt-level to "s" to optimize for binary size, which may be important
-on embedded platforms.
-- The codegen-units option is about compile-time performance. It tells the
-compiler how many independent compilation tasks (code generation units) it
-is allowed to split the compilation of a single crate into. The more pieces a
-large crate’s compilation is split into, the faster it will compile, since more
-threads can help compile the crate in parallel. Unfortunately, to achieve this
-speedup, the threads need to work more or less independently, which means
-code optimization suffers. Imagine, for example, that the segment of a crate
-compiling in one thread could benefit from inlining some code in a different
-segment—since the two segments are independent, that inlining can’t
-happen! This setting, then, is a trade-off between compile-time performance
-and runtime performance. By default, Rust uses an effectively unbounded
-number of codegen units in debug mode (basically, “compile as fast as you
-can”) and a smaller number (16 at the time of writing) in release mode.
-- The lto setting toggles link-time optimization (LTO), which enables the
-compiler (or the linker, if you want to get technical about it) to jointly
-optimize bits of your program, known as compilation units, that were originally
-compiled separately. The exact details of LTO are beyond the scope
-of this book, but the basic idea is that the output from each compilation
-unit includes information about the code that went into that unit. After all
-the units have been compiled, the linker makes another pass over all of the
-units and uses that additional information to optimize the combined compiled
-code. This extra pass adds to the compile time but recovers most of
-the runtime performance that may have been lost due to splitting the compilation
-into smaller parts. In particular, LTO can offer significant performance
-boosts to performance-
-sensitive programs that might benefit from
-cross-crate optimization. Beware, though, that cross-crate LTO can add a
-lot to your compile time.
-- Rust performs LTO across all the codegen units within each crate by
-default in an attempt to make up for the lost optimizations caused by using
-many codegen units. Since the LTO is performed only within each crate,
-rather than across crates, this extra pass isn’t too onerous, and the added
-compile time should be lower than the amount of time saved by using a lot
-of codegen units. Rust also offers a technique known as thin LTO, which
-allows the LTO pass to be mostly parallelized, at the cost of missing some
-optimizations a “full” LTO pass would have found.
+- 三个主要的性能选项是opt-level、codegen-units和lto。opt-level选项通过告诉编译器在运行时对程序进行多大程度的优化（0表示“没有优化”，3表示“尽可能多的优化”）来调整运行时性能。设置越高，代码优化的程度就越高，这可能使代码运行更快。然而，额外的优化会增加编译时间的成本，这就是为什么通常只在发布构建中启用优化的原因。
+**注意** 您还可以将 opt-level 设置为 "s"，以优化二进制文件的大小，这在嵌入式平台上可能很重要。
 
-**NOTE** LTO can be used to optimize across foreign function interface boundaries in many
-cases, too. See the linker-plugin-lto rustc flag for more details.
-- The [profile] section also supports flags that aid in debugging, such as
-debug, debug-assertions, and overflow-checks. The debug flag tells the compiler
-to include debug symbols in the compiled binary. This increases the binary
-size, but it means that you get function names and such, rather than just
-instruction addresses, in backtraces and profiles. The debug-assertions flag
-enables the debug_assert! macro and other related debug code that isn’t
-compiled otherwise (through cfg(debug_assertions)). Such code may make
-your program run slower, but it makes it easier to catch questionable behavior
-at runtime. The overflow-checks flag, as the name implies, enables overflow
-checks on integer operations. This slows them down (notice a trend
-here?) but can help you catch tricky bugs early on. By default, these are all
-enabled in debug mode and disabled in release mode.
+- codegen-units选项与编译时性能有关。它告诉编译器可以将单个crate的编译拆分成多少个独立的编译任务（代码生成单元）。将大型crate的编译拆分成更多的片段，编译速度将更快，因为可以使用更多的线程并行编译crate。不幸的是，为了实现这种加速，线程需要更多或更少独立地工作，这意味着代码优化会受到影响。例如，想象一下，在一个线程中编译的crate段可以从另一个段中内联一些代码-由于这两个段是独立的，内联无法发生！因此，这个设置是编译时性能和运行时性能之间的权衡。默认情况下，Rust在调试模式下使用无限数量的codegen units（基本上是“尽快编译”），在发布模式下使用较小的数量（在撰写本文时为16个）。
+
+- lto设置用于切换链接时优化（LTO），它使得编译器（或链接器，如果你想更加技术化）能够联合优化程序的各个编译单元，这些单元最初是分别编译的。关于LTO的详细细节超出了本书的范围，但基本思想是每个编译单元的输出都包含了该单元中的代码的信息。在所有单元编译完成后，链接器对所有单元进行另一次遍历，并使用额外的信息来优化组合编译代码。这个额外的遍历增加了编译时间，但可以恢复由于将编译拆分为较小部分而可能丢失的大部分运行时性能。特别是，LTO可以为可能受益于跨crate优化的性能敏感程序提供显著的性能提升。但要注意，跨crate的LTO可能会大大增加编译时间。
+- Rust默认情况下在每个crate内部对所有codegen单元执行LTO，以弥补使用多个codegen单元造成的优化损失。由于LTO仅在每个crate内部执行，而不是跨crate执行，因此这个额外的步骤并不太繁重，而且增加的编译时间应该比使用大量codegen单元节省的时间更少。Rust还提供了一种称为thin LTO的技术，它允许LTO过程在很大程度上并行化，但代价是可能会错过一些“完整”LTO过程发现的优化。
+
+**注意** LTO 在许多情况下也可以用于优化跨外部函数接口边界。有关更多详细信息，请参阅 linker-plugin-lto rustc 标志。
+
+- [profile] 部分还支持一些用于调试的标志，例如 debug、debug-assertions 和 overflow-checks。debug 标志告诉编译器在编译的二进制文件中包含调试符号。这会增加二进制文件的大小，但意味着在回溯和性能分析中可以获得函数名等信息，而不仅仅是指令地址。debug-assertions 标志启用 debug_assert! 宏和其他相关的调试代码，这些代码在其他情况下不会被编译（通过 cfg(debug_assertions)）。这些代码可能会使程序运行变慢，但可以更容易地在运行时捕获可疑行为。overflow-checks 标志，顾名思义，启用整数操作的溢出检查。这会减慢它们的速度（注意到一个趋势了吗？），但可以帮助您尽早发现棘手的错误。默认情况下，在调试模式下启用这些标志，在发布模式下禁用。
 
 `[profile.*.panic]`
 
-- The [profile] section has another flag that deserves its own subsection: panic.
-This option dictates what happens when code in your program calls panic!,
-either directly or indirectly through something like unwrap. You can set panic to
-either unwind (the default on most platforms) or abort. We’ll talk more about
-panics and unwinding in Chapter 9, but I’ll give a quick summary here.
-- Normally in Rust, when your program panics, the thread that panicked
-starts unwinding its stack. You can think of unwinding as forcibly returning
-recursively from the current function all the way to the bottom of that
-thread’s stack. That is, if main called foo, foo called bar, and bar called baz, a
-panic in baz would forcibly return from baz, then bar, then foo, and finally
-from main, resulting in the program exiting. A thread that unwinds will
-drop all values on the stack normally, which gives the values a chance to
-clean up resources, report errors, and so on. This gives the running system
-a chance to exit gracefully even in the case of a panic.
-- When a thread panics and unwinds, other threads continue running
-unaffected. Only when (and if) the thread that ran main exits does the
-program terminate. That is, the panic is generally isolated to the thread in
-which the panic occurred.
-- This means unwinding is a double-edged sword; the program is limping
-along with some failed components, which may cause all sorts of strange
-behaviors. For example, imagine a thread that panics halfway through updating
-the state in a Mutex. Any thread that subsequently acquires that Mutex
-must now be prepared to handle the fact that the state may be in a partially
-updated, inconsistent state. For this reason, some synchronization primitives
-(like Mutex) will remember if a panic occurred when they were last accessed
-and communicate that to any thread that tries to access the primitive subsequently.
-If a thread encounters such a state, it will normally also panic, which
-leads to a cascade that eventually terminates the entire program. But that is
-arguably better than continuing to run with corrupted state!
-- The bookkeeping needed to support unwinding is not free, and it
-often requires special support by the compiler and the target platform. For
-example, many embedded platforms cannot unwind the stack efficiently at
-all. Rust therefore supports a different panic mode: abort ensures the whole
-program simply exits immediately when a panic occurs. In this mode, no
-threads get to do any cleanup. This may seem severe, and it is, but it ensures
-that the program is never running in a half-working state and that errors are
-made visible immediately.
+- [profile] 部分还有一个值得单独讨论的标志：panic。该选项决定当程序中的代码调用 panic! 时（无论是直接调用还是通过 unwrap 等间接调用），会发生什么。您可以将 panic 设置为 unwind（在大多数平台上默认值）或 abort。我们将在第9章中更详细地讨论 panic 和 unwinding，但在这里我会简要总结一下。
+- 在 Rust 中，通常情况下，当程序发生 panic 时，引发 panic 的线程会开始进行堆栈展开（unwinding）。您可以将堆栈展开视为从当前函数递归返回到该线程堆栈的底部。也就是说，如果 main 调用了 foo，foo 调用了 bar，bar 调用了 baz，在 baz 中发生 panic 将会强制从 baz、bar、foo，最后从 main 中返回，导致程序退出。进行堆栈展开的线程将正常地丢弃堆栈上的所有值，这使得这些值有机会清理资源、报告错误等。即使发生 panic，这使得运行系统有机会以优雅的方式退出。
+- 当一个线程发生 panic 并进行堆栈展开时，其他线程继续运行，不受影响。只有当（如果）运行 main 函数的线程退出时，程序才会终止。也就是说，panic 通常只限于发生 panic 的线程。
+- 这意味着堆栈展开是一把双刃剑；程序在一些失败的组件中艰难前行，这可能导致各种奇怪的行为。例如，想象一下，在更新互斥锁中的状态时，一个线程发生了 panic。随后尝试获取该互斥锁的任何线程现在必须准备好处理状态可能处于部分更新、不一致的状态的事实。因此，一些同步原语（如互斥锁）将记住它们上次访问时是否发生了 panic，并将此信息传递给随后尝试访问该原语的任何线程。如果一个线程遇到这样的状态，通常也会发生 panic，从而导致级联，最终终止整个程序。但这可能比继续以损坏的状态运行要好！
+- 支持堆栈展开所需的记账工作是不免费的，并且通常需要编译器和目标平台的特殊支持。例如，许多嵌入式平台根本无法高效地展开堆栈。因此，Rust支持一种不同的panic模式：abort，当发生panic时，整个程序立即退出。在这种模式下，没有线程可以进行任何清理工作。这可能看起来很严重，确实如此，但它确保程序永远不会在半工作状态下运行，并且错误会立即显现出来。
 
-**WARNING** The panic setting is global—if you set it to abort, all your dependencies are also compiled
-with abort.
-- You may have noticed that when a thread panics, it tends to print a backtrace:
-the trail of function calls that led to where the panic occurred. This is
-also a form of unwinding, though it is separate from the unwinding panic
-behavior discussed here. You can have backtraces even with panic=abort by
-passing -Cforce-unwind-tables to rustc, which makes rustc include the information
-necessary to walk back up the stack while still terminating the program
-on a panic.
-**PROFILE OVERRIDES**
-You can set profile options for just a particular dependency, or a particular profile,
-using profile overrides. For example, Listing 5-8 shows how to enable aggressive
-optimizations for the serde crate and moderate optimizations for all other crates in
-debug mode, using the [profile.<profile-name>.package.<crate-name>] syntax.
+**警告** panic 设置是全局的 - 如果将其设置为 abort，则所有依赖项也将使用 abort 进行编译。
+
+- 您可能已经注意到，当一个线程发生 panic 时，它倾向于打印一个回溯：导致 panic 发生的函数调用的轨迹。这也是一种展开，尽管它与此处讨论的 panic 展开行为是分开的。即使在 panic=abort 的情况下，您也可以通过向 rustc 传递 -Cforce-unwind-tables 来获得回溯，这使得 rustc 包含了在 panic 时回溯堆栈的必要信息，同时终止程序的执行。
+**配置文件覆盖**
+您可以使用配置文件覆盖来为特定的依赖项或特定的配置文件设置配置选项。例如，清单5-8展示了如何在调试模式下为serde crate启用激进的优化，并为所有其他crate启用适度的优化，使用[profile.<profile-name>.package.<crate-name>]语法。
 
 ```toml
 
@@ -1325,21 +1236,14 @@ opt-level = 3
 [profile.dev.package."*"]
 opt-level = 2
 ```
-Listing 5-8: Overriding profile options for a specific dependency or for a
-specific mode
-- This kind of optimization override can be handy if some dependency would
-be prohibitively slow in debug mode (such as decompression or video encoding),
-and you need it optimized so that your test suite won’t take several days to
-complete. You can also specify global profile defaults using a [profile.dev] (or
-similar) section in the Cargo configuration file in ~/.cargo/config.
-- When you set optimization parameters for a specific dependency, keep in
-mind that the parameters apply only to the code compiled as part of that crate;
-if serde in this example has a generic method or type that you use in your crate,
-the code of that method or type will be monomorphized and optimized in your
-crate, and your crate’s profile settings will apply, not those in the profile override
-for serde.
+
+清单5-8：为特定依赖项或特定模式覆盖配置文件选项
+
+- 如果某个依赖项在调试模式下非常慢（例如解压缩或视频编码），而您需要对其进行优化，以便测试套件不需要花费数天的时间才能完成，那么这种优化覆盖可能非常有用。您还可以在Cargo配置文件的~/.cargo/config中使用[profile.dev]（或类似的）部分指定全局配置文件默认值。
+- 当您为特定依赖项设置优化参数时，请记住这些参数仅适用于作为该crate的一部分编译的代码；如果在此示例中的serde中有您在crate中使用的通用方法或类型，那么该方法或类型的代码将在您的crate中进行单态化和优化，并且将应用您crate的配置文件设置，而不是serde的配置文件覆盖中的设置。
 
 #### Conditional Compilation
+
 Most Rust code you write is universal—it’ll work the same regardless of
 what CPU or operating system it runs on. But sometimes you’ll have to do
 something special to get the code to work on Windows, on ARM chips, or
@@ -1350,6 +1254,7 @@ uninteresting setup code when running in a continuous integration (CI)
 environment. To cater to cases like these, Rust provides mechanisms for conditional
 compilation, in which a particular segment of code is compiled only
 if certain conditions are true of the compilation environment.
+
 - We denote conditional compilation with the cfg keyword that you saw
 earlier in the chapter in “Using Features in Your Crate.” It usually appears in
 the form of the #[cfg(condition)] attribute, which says to compile the next item
@@ -1363,13 +1268,17 @@ what you would probably expect. Options are either simple names, like unix,
 or key/value pairs like those used by feature conditions.
 - There are a number of interesting options you can make compilation
 dependent on. Let’s go through them, from most common to least common:
+
 ##### Feature options
+
 - You’ve already seen examples of these. Feature options take the form
 feature = "name-of-feature" and are considered true if the named feature
 is enabled. You can check for multiple features in a single condition
 using the combinators. For example, any(feature = "f1", feature =
 "f2") is true if either feature f1 or feature f2 is enabled.
+
 ##### Operating system options
+
 - These use key/value syntax with the key target_os and values like windows,
 macos, and linux. You can also specify a family of operating systems
 using target_family, which takes the value windows or unix. These are
@@ -1379,6 +1288,7 @@ wanted a particular code segment to be compiled only on macOS and
 Windows, you would write: #[cfg(any(windows, target_os = "macos"))].
 
 ##### Context options
+
 - These let you tailor code to a particular compilation context. The most
 common of these is the test option, which is true only when the crate
 is being compiled under the test profile. Keep in mind that test is set
@@ -1390,20 +1300,26 @@ test set). The same applies to the doc and doctest options, which are set
 only when building documentation or compiling doctests, respectively.
 There’s also the debug_assertions option, which is set in debug mode by
 default.
+
 ##### Tool options
+
 - Some tools, like clippy and Miri, set custom options (more on that
 later) that let you customize compilation when run under these tools.
 Usually, these options are named after the tool in question. For example,
 if you want a particular compute-intensive test not to run under
 Miri, you can give it the attribute #[cfg_attr(miri, ignore)].
+
 ##### Architecture options
+
 - These let you compile based on the CPU instruction set the compiler
 is targeting. You can specify a particular architecture with target_arch,
 which takes values like x86, mips, and aarch64, or you can specify a particular
 platform feature with target_feature, which takes values like avx
 or sse2. For very low-level code, you may also find the target_endian and
 target_pointer_width options useful.
+
 ##### Compiler options
+
 - These let you adapt your code to the platform ABI it is compiled against
 and are available through target_env with values like gnu, msvc, and musl.
 For historical reasons, this value is often empty, especially on GNU
@@ -1415,13 +1331,15 @@ be used to customize dependencies. For example, the dependency winrt
 usually makes sense only on Windows, and the nix crate is probably useful
 only on Unix-based platforms. Listing 5-9 gives an example of how you can
 use cfg conditions for this:
-```toml 
+
+```toml
 
 [target.'cfg(windows)'.dependencies]
 winrt = "0.7"
 [target.'cfg(unix)'.dependencies]
 nix = "0.17"
 ```
+
 Listing 5-9: Conditional dependencies
 
 - Here, we specify that winrt version 0.7 should be considered a dependency
@@ -1449,7 +1367,9 @@ where you may want to customize your test suite depending on whether it’s
 being run on CI or on a dev machine: add --cfg=ci to RUSTFLAGS in your CI
 setup, and then use cfg(ci) and cfg(not(ci)) in your code. Options set this
 way are also available in Cargo.toml dependencies.
+
 #### Versioning
+
 All Rust crates are versioned and are expected to follow Cargo’s implementation
 of semantic versioning. Semantic versioning dictates the rules for what
 kinds of changes require what kinds of version increases and for which versions
@@ -1460,12 +1380,14 @@ require a major version change; additions, which require a minor version
 change; and bug fixes, which require only a patch version change. RFC 1105
 does a decent job of outlining what constitutes a breaking change in Rust,
 and we’ve touched on some aspects of it elsewhere in this book.
+
 - I won’t go into detail here about the exact semantics of the different
 types of changes. Instead, I want to highlight some less straightforward ways
 version numbers come up in the Rust ecosystem, which you need to keep in
 mind when deciding how to version your own crates.
 
 #### Minimum Supported Rust Version
+
 The first Rust-ism is the minimum supported Rust version (MSRV). There is
 much debate in the Rust community about what policy projects should
 adhere to when it comes to their MSRV and versioning, and there’s no truly
@@ -1474,6 +1396,7 @@ using older versions of Rust, often in an enterprise setting where they have
 little choice. If we constantly take advantage of newly stabilized APIs, those
 users will not be able to compile the latest versions of our crates and will be
 left behind.
+
 - There are two techniques crate authors can use to make life a little easier
 for users in this position. The first is to establish an MSRV policy promising
 that new versions of a crate will always compile with any stable release from
@@ -1513,6 +1436,7 @@ have been proposals to build MSRV checking into Cargo itself, but nothing
 workable has been stabilized as of this writing.
 
 #### Minimal Dependency Versions
+
 When you first add a dependency, it’s not always clear what version specifier
 you should give that dependency. Programmers commonly choose the latest
 version, or just the current major version, but chances are that both of those
