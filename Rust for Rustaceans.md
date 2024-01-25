@@ -1797,17 +1797,9 @@ macro_rules! /_macro name _/ {
 
 清单 7-4：声明式宏定义组件
 
-##### Matchers
+##### 匹配器
 
-You can think of a macro matcher as a token tree that the compiler tries to
-twist and bend in predefined ways to match the input token tree it was given
-at the invocation site. As an example, consider a macro with the matcher
-$a:ident + $b:expr. That matcher will match any identifier (:ident) followed
-by a plus sign followed by any Rust expression (:expr). If the macro is invoked
-with x + 3 _5, the compiler notices that the matcher matches if it sets $a = x
-and $b = 3_ 5. Even though _never appears in the matcher, the compiler
-realizes that 3_ 5 is a valid expression and that it can therefore be matched
-with $b:expr, which accepts anything that is an expression (the :expr part).
+- 您可以将宏匹配器视为编译器尝试以预定义的方式扭曲和弯曲以匹配在调用站点给定的输入标记树的标记树。例如，考虑具有匹配器$a:ident + $b:expr的宏。该匹配器将匹配任何标识符（:ident）后跟加号，后跟任何Rust表达式（:expr）。如果使用x + 3 _5调用宏，编译器会注意到匹配器在设置$a = x和$b = 3_ 5时匹配。即使在匹配器中没有出现_，编译器也意识到3_ 5是一个有效的表达式，因此可以与接受任何表达式的$b:expr匹配（:expr部分）。
 
 - Matchers can get pretty hairy, but they have huge expressive power,
 much like regular expressions. For a not-too-hairy example, this matcher
