@@ -1753,11 +1753,11 @@ i128 as i128_tests
 
 ```rust
 macro_rules! clone_from_copy {
-($($t:ty),_) => {
-$(impl Clone for $t {
-fn clone(&self) -> Self { *self }
-})*
-}
+  ($($t:ty),_) => {
+    $(impl Clone for $t {
+      fn clone(&self) -> Self { *self }
+    })*
+  }
 }
 clone_from_copy![bool, f32, f64, u8, i8, /* ... */];
 ```
@@ -1833,9 +1833,9 @@ $(map.insert($key, $value);)+
 ```rust
 
 macro_rules! let_foo {
-($x:expr) => {
-let foo = $x;
-}
+  ($x:expr) => {
+    let foo = $x;
+  }
 }
 let foo = 1;
 // expands to let foo = 2;
@@ -1960,11 +1960,14 @@ assert_eq!(x, 2);
 ```rust
 
 macro_rules! name_as_debug {
-($t:ty) => {
-impl ::core::fmt::Debug for $t {
-fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result
-{ ::core::write!(f, ::core::stringify!($t)) }
-} }; }
+  ($t:ty) => {
+    impl ::core::fmt::Debug for $t {
+      fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result{ 
+        ::core::write!(f, ::core::stringify!($t)) 
+      }
+    } 
+  };
+}
 ```
 清单7-7：一个非常简单的用于实现Debug的宏
 
@@ -2016,8 +2019,8 @@ fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result
 ```rust
 
 enum Poll<T> {
-Ready(T),
-Pending
+  Ready(T),
+  Pending
 }
 ```
 清单8-1：异步的核心：“现在给你或稍后回来”的类型
@@ -2033,8 +2036,8 @@ Pending
 ```rust
 
 trait Future {
-type Output;
-fn poll(&mut self) -> Poll<Self::Output>;
+  type Output;
+  fn poll(&mut self) -> Poll<Self::Output>;
 }
 ```
 清单8-2：Future trait的简化视图
