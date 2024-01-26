@@ -2056,7 +2056,9 @@ async fn forward<T>(rx: Receiver<T>, tx: Sender<T>) {
   }
 }
 ```
-Listing 8-3: Implementing a channel-forwarding future using async and await
+清单8-3：使用async和await实现通道转发future
+
+- 这段使用async和await语法编写的代码与其等效的同步代码非常相似，易于阅读。我们只是在一个循环中发送接收到的每个消息，直到没有更多的消息，每个await点对应于同步变体可能阻塞的地方。现在想象一下，如果您必须通过手动实现Future trait来表达这段代码。由于每次调用poll都从函数的顶部开始，您需要打包必要的状态以从代码中上次暂停的位置继续执行。结果相当丑陋，如清单8-4所示。
 
 - This code, written using async and await syntax, looks very similar to its
 equivalent synchronous code and is easy to read. We simply send each message
