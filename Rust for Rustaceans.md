@@ -1929,87 +1929,33 @@ assert_eq!(x, 2);
 
 ###### When to Use Attribute Macros
 
-That leaves us with attribute macros. Though these are arguably the most
-general of procedural macros, they are also the hardest to know when to
-use. Over the years and time and time again, I have seen four ways in which
-attribute macros add tremendous value.
+这样我们就只剩下属性宏了。虽然可以说属性宏是过程宏中最通用的一种，但也是最难确定何时使用的。多年来，我一次又一次地看到属性宏在以下四个方面增加了巨大的价值。
 
 **Test generation**
 
-It is very common to want to run the same test under multiple different
-configurations, or many similar tests with the same bootstrapping code.
-While a declarative macro may let you express this, your code is often
-easier to read and maintain if you have an attribute like #[foo_test] that
-introduces a setup prelude and postscript in each annotated test, or a
-repeatable attribute like #[test_case(1)] #[test_case(2)] to mark that a
-given test should be repeated multiple times, once with each input.
+很常见的情况是希望在多个不同的配置下运行相同的测试，或者在相同的引导代码下运行许多类似的测试。虽然声明式宏可以让您表达这一点，但如果您有一个类似 #[foo_test] 的属性，它在每个注解测试中引入了一个设置前导和尾声，或者一个可重复的属性像 #[test_case(1)] #[test_case(2)] 来标记一个给定的测试应该重复多次，每次都有不同的输入，那么您的代码通常更易于阅读和维护。
 
 ###### Framework annotations
 
-Libraries like rocket use attribute macros to augment functions and
-types with additional information that the framework then uses without
-the user having to do a lot of manual configuration. It’s so much more
-convenient to be able to write #[get("/<name>")] fn hello(name: String)
-than to have to set up a configuration struct with function pointers and
-the like. Essentially, the attributes make up a miniature domain-specific
-language (DSL) that hides a lot of boilerplate that’d otherwise be necessary.
-Similarly, the asynchronous I/O framework tokio lets you use # [tokio::main] async fn main() to automatically set up a runtime and run
-your asynchronous code, thereby saving you from writing the same runtime
-setup in every asynchronous application’s main function.
+像 rocket 这样的库使用属性宏来增强函数和类型，为框架提供额外的信息，而无需用户进行大量手动配置。使用 #[get("/<name>")] fn hello(name: String) 比设置一个包含函数指针等内容的配置结构要方便得多。实质上，这些属性构成了一个迷你领域特定语言（DSL），隐藏了许多必要的样板代码。
+类似地，异步 I/O 框架 tokio 允许您使用 #[tokio::main] async fn main() 来自动设置运行时并运行您的异步代码，从而避免在每个异步应用程序的主函数中编写相同的运行时设置。
 
 ###### Transparent middleware
 
-Some libraries want to inject themselves into your application in unobtrusive
-ways to provide added value that does not change the application’s
-functionality. For example, tracing and logging libraries like tracing and
-metric collection libraries like metered allow you to transparently instrument
-a function by adding an attribute to it, and then every call to that
-function will run some additional code dictated by the library.
+有些库希望以不显眼的方式注入到您的应用程序中，以提供不改变应用程序功能的附加价值。例如，tracing和logging库（如tracing）以及度量收集库（如metered）允许您通过向函数添加属性来透明地对其进行仪器化，然后每次调用该函数时，都会运行由库指定的一些额外代码。
 
 ###### Type transformers
 
-Sometimes you want to go beyond merely deriving traits for a type and
-actually change the type’s definition in some fundamental way. In these
-cases, attribute macros are the way to go. The pin_project crate is a great
-example of this: its primary purpose is not to implement a particular
-trait but rather to ensure that all pinned access to fields of a given type
-happens according to the strict rules that are set forth by Rust’s Pin type
-and the Unpin trait (we’ll talk more about those types in Chapter 8).
-It does this by generating additional helper types, adding methods to
-the annotated type, and introducing static safety checks to ensure that
-users don’t accidentally shoot themselves in the foot. While pin_project
-could have been implemented with a procedural derive macro, that
-derived trait implementation would likely not have been obvious, which
-violates one of our rules for when to use procedural macros.
+有时候，你想要超越仅仅为类型派生trait，而是在某种根本的方式上改变类型的定义。在这种情况下，属性宏是一个很好的选择。pin_project crate就是一个很好的例子：它的主要目的不是实现特定的trait，而是确保对给定类型的字段进行固定访问时，按照Rust的Pin类型和Unpin trait所规定的严格规则进行操作（我们将在第8章中详细讨论这些类型）。它通过生成额外的辅助类型，为注解类型添加方法，并引入静态安全检查来确保用户不会意外地自找麻烦。虽然pin_project可以使用过程宏来实现，但派生的trait实现可能不够明显，这违反了我们在何时使用过程宏的规则之一。
 
 #### How Do They Work?
 
-At the heart of all procedural macros is the TokenStream type, which can be
-iterated over to get the individual TokenTree items that make up that token
-stream. A TokenTree is either a single token—like an identifier, punctuation,
-or a literal—or another TokenStream enclosed in a delimiter like () or {}. By
-walking a TokenStream, you can parse out whatever syntax you wish as long as
-the individual tokens are valid Rust tokens. If you want to parse your input
-specifically as Rust code, you will likely want to use the syn crate, which
-implements a complete Rust parser and can turn a TokenStream into an easyto-
-traverse Rust AST.
-- With most procedural macros, you want to not only parse a TokenStream
-but also produce Rust code to be injected into the program that invokes the
-procedural macro. There are two main ways to do so. The first is to manually
-construct a TokenStream and extend it one TokenTree at a time. The second is to
-use TokenStream’s implementation of FromStr, which lets you parse a string that
-contains Rust code into a TokenStream with "".parse::<TokenStream>(). You can
-also mix and match these; if you want to prepend some code to your macro’s
-input, just construct a TokenStream for the prologue, and then use the Extend
-trait to append the original input.
-**NOTE** TokenStream also implements Display, which pretty-prints the tokens in the stream.
-This comes in super handy for debugging!
-Tokens are very slightly more magical than I’ve described so far in that
-every token, and indeed every TokenTree, also has a span. Spans are how the
-compiler ties generated code back to the source code that generated it.
-Every token’s span marks where that token originated. For example, consider
-a (declarative) macro like the one in Listing 7-7, which generates a
-trivial Debug implementation for the provided type.
+在所有过程宏的核心是 TokenStream 类型，可以迭代它以获取组成该令牌流的单个 TokenTree 项。TokenTree 可以是单个令牌，如标识符、标点符号或字面量，也可以是另一个由括号（()）或大括号（{}）括起来的 TokenStream。通过遍历 TokenStream，您可以解析出任何您希望的语法，只要单个令牌是有效的 Rust 令牌。如果您希望将输入解析为 Rust 代码，您可能需要使用 syn crate，它实现了一个完整的 Rust 解析器，并可以将 TokenStream 转换为易于遍历的 Rust AST。
+- 对于大多数过程宏，你不仅需要解析 TokenStream，还需要生成要注入到调用过程宏的程序中的 Rust 代码。有两种主要的方法可以实现这一点。第一种方法是手动构建一个 TokenStream，并逐个 TokenTree 扩展它。第二种方法是使用 TokenStream 的 FromStr 实现，它允许你将包含 Rust 代码的字符串解析为 TokenStream，例如 "".parse::<TokenStream>()。你也可以混合使用这两种方法；如果你想在宏的输入之前添加一些代码，只需构建一个用于前言的 TokenStream，然后使用 Extend trait 将原始输入追加到其中。
+**注意**，TokenStream还实现了Display，可以将流中的令牌漂亮地打印出来。
+这对于调试非常有用！
+令牌比我之前描述的稍微神奇一些，因为每个令牌，实际上每个TokenTree，都有一个范围。范围是编译器将生成的代码与生成它的源代码关联起来的方式。
+每个令牌的范围标记了该令牌的起源位置。例如，考虑列表7-7中的（声明式）宏，它为提供的类型生成了一个简单的Debug实现。
 
 ```rust
 
@@ -2020,237 +1966,80 @@ fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result
 { ::core::write!(f, ::core::stringify!($t)) }
 } }; }
 ```
-Listing 7-7: A very simple macro for implementing Debug
-- Now let’s imagine that someone invokes this macro with name_as_debug!
-(u31). Technically, the compiler error occurs inside the macro, specifically
-where we write for $t (the other use of $t can handle an invalid type). But
-we’d like the compiler to point the user at the u31 in their code—and indeed,
-that’s what spans let us do.
-- The span of the $t in the generated code is the code mapped to $t in
-the macro invocation. That information is then carried through the compiler
-and associated with the eventual compiler error. When that compiler
-error is eventually printed, the compiler will print the error from inside the
-macro saying that the type u31 does not exist but will highlight the u31 argument
-in the macro invocation, since that’s the error’s associated span!
-- Spans are quite flexible, and they enable you to write procedural
-macros that can produce sophisticated error messages if you use the
-compile_error! macro. As its name implies, compile_error! causes the compiler
-to emit an error wherever it is placed with the provided string as the
-message. This may not seem very useful, until you pair it with a span. By
-setting the span of the TokenTree you generate for the compile_error! invocation
-to be equal to the span of some subset of the input, you are effectively
-telling the compiler to emit this compiler error and point the user to this
-part of the source. Together, these two mechanisms let a macro produce
-errors that seem to stem from the relevant part of the code, even though
-the actual compiler error is somewhere in the generated code that the
-user never even sees!
+清单7-7：一个非常简单的用于实现Debug的宏
 
-**NOTE** If you’ve ever been curious how syn’s error handling works, its Error type implements
-an Error::to_compile_error method, which turns it into a TokenStream that
-holds only a compile_error! directive. What’s particularly neat with syn’s Error type
-is that it internally holds a collection of errors, each of which produces a distinct
-compile_error! directive with its own span so that you can easily produce multiple
-independent errors from your procedural macro.
-- The power of spans doesn’t end there; spans are also how Rust’s macro
-hygiene is implemented. When you construct an Ident token, you also give
-the span for that identifier, and that span dictates the scope of that identifier.
-If you set the identifier’s span to be Span::call_site(), the identifier
-is resolved where the macro was called from and will thus not be isolated
-from the surrounding scope. If, on the other hand, you set it to Span::mixed
-_site() then (variable) identifiers are resolved at the macro definition site,
-and so will be completely hygienic with respect to similarly named variables
-at the call site. Span::mixed_site is so called because it matches the rules
-around identifier hygiene for macro_rules!, which, as we discussed earlier,
-“mixes” identifier resolution between using the macro definition site for
-variables and using the call site for types, modules, and everything else.
+- 现在让我们假设有人使用 name_as_debug!(u31) 调用这个宏。从技术上讲，编译器错误发生在宏内部，具体来说是在我们为 $t 编写的地方（$t 的另一个用法可以处理无效的类型）。但是我们希望编译器将用户指向他们代码中的 u31，并且确实，这就是范围让我们能够做到的。
+- 在生成的代码中，$t 的范围是映射到宏调用中的 $t 的代码。这些信息会通过编译器传递，并与最终的编译器错误关联起来。当编译器最终打印出该错误时，它会从宏内部打印错误，指出类型 u31 不存在，但会在宏调用中突出显示 u31 参数，因为这是错误的关联范围！
+
+- 范围非常灵活，它使您能够编写可以生成复杂错误消息的过程宏，如果您使用 compile_error! 宏。正如其名称所示，compile_error! 会导致编译器在其所放置的位置发出错误，提供的字符串作为消息。这可能看起来并不是很有用，直到您将其与范围配对。通过将生成的 TokenTree 的范围设置为与输入的某个子集的范围相等，您实际上是告诉编译器发出此编译器错误，并将用户指向源代码的这部分。通过这两种机制，宏可以产生看起来源自代码相关部分的错误，即使实际的编译器错误在用户甚至从未看到的生成代码中！
+
+**注意** 如果您曾经对syn的错误处理方式感到好奇，它的Error类型实现了Error::to_compile_error方法，将其转换为仅包含compile_error!指令的TokenStream。特别有趣的是，syn的Error类型内部保存了一组错误，每个错误都产生一个具有自己范围的独立compile_error!指令，因此您可以轻松地从您的过程宏中产生多个独立的错误。
+- 跨度的威力不止于此；跨度也是 Rust 宏卫生的实现方式。当你构造一个 Ident 令牌时，你还要给出该标识符的跨度，而该跨度决定了该标识符的作用域。如果你将标识符的跨度设置为 Span::call_site()，则该标识符将在调用宏的地方解析，并且不会与周围的作用域隔离。另一方面，如果你将其设置为 Span::mixed_site()，那么（变量）标识符将在宏定义的地方解析，因此在调用点处与同名变量完全卫生。Span::mixed_site 之所以被称为这样，是因为它符合 macro_rules! 的标识符卫生规则，正如我们之前讨论的那样，它在变量上“混合”了标识符解析，使用宏定义的地方解析变量，使用调用点解析类型、模块和其他所有内容。
 
 #### Summary
 
-In this chapter we covered both declarative and procedural macros, and
-looked at when you might find each of them useful in your own code. We
-also took a deeper dive into the mechanisms that underpin each type of
-macro and some of the features and gotchas to be aware of when you write
-your own macros. In the next chapter, we’ll start our journey into asynchronous
-programming and the Future trait. I promise—it’s just on
-the next page.
+在本章中，我们介绍了声明式宏和过程宏，并讨论了在编写自己的宏时需要注意的一些机制、特性和注意事项。在下一章中，我们将开始探索异步编程和Future trait。我保证，它就在下一页上。
 
-### 8.ASYNCHRONOUS PROGRAMMING
+### 8.异步编程
 
-Asynchronous programming is, as the
-name implies, programming that is not
-synchronous.
-At a high level, an asynchronous
-operation is one that executes in the
-background—the program won’t wait for the asynchronous
-operation to complete but will instead
-continue
-to the next line of code immediately.
-If you’re not already familiar with asynchronous programming, that definition
-may feel insufficient as it doesn’t actually explain what asynchronous
-programming is. To really understand the asynchronous programming
-model and how it works in Rust, we have to first dig into what the alternative
-is. That is, we need to understand the synchronous programming
-model before we can understand the asynchronous one. This is important
-in both clarifying the concepts and demonstrating the trade-offs of using
-asynchronous programming: an asynchronous solution is not always the
-right one! We’ll start this chapter by taking a quick journey through what
+在深入了解异步编程模型的细节之前，我们首先需要了解一下替代方案是什么。也就是说，我们需要先了解同步编程模型。这对于澄清概念并展示使用异步编程的权衡是很重要的：异步解决方案并不总是正确的选择！我们将从快速了解异步编程的动机开始，然后深入探讨Rust中异步的实际工作原理。
 
-118 Chapter 8
-motivates asynchronous programming as a concept in the first place; then
-we’ll dig into how asynchrony in Rust actually works under the hood.
-What’s the Deal with Asynchrony?
-Before we get to the details of the synchronous and asynchronous programming
-models, we first need to take a quick look at what your computer is
-actually doing when it runs your programs.
-Computers are fast. Really fast. So fast, in fact, that they spend most of
-their time waiting for things to happen. Unless you’re decompressing files,
-encoding audio, or crunching numbers, chances are that your CPU mostly
-sits idle, waiting for operations to complete. It’s waiting for a network packet
-to arrive, for the mouse to move, for the disk to finish writing some bytes, or
-maybe even just for a read from main memory to complete. From the CPU’s
-perspective, eons go by between most such events. When one does occur, the
-CPU runs a few more instructions, then goes back to waiting again. Take a
-look at your CPU utilization—it’s probably somewhere in the low single digits,
-and that’s likely where it hovers the majority of the time.
-Synchronous Interfaces
-Synchronous interfaces allow your program (or rather, a single thread in
-your program) to execute only a single operation at a time; each operation
-has to wait for the previous synchronous operation to finish before it gets
-to run. Most interfaces you see in the wild are synchronous: you call them,
-they go do some stuff, and eventually they return when the operation has
-completed and your program can continue from there. The reason for this,
-as we’ll see later in this chapter, is that making an operation asynchronous
-takes a fair bit of extra machinery. Unless you need the benefits of asynchrony,
-sticking to the synchronous model requires much less pomp and
-circumstance.
-Synchronous interfaces hide all this waiting; the application calls a
-function that says “write these bytes to this file,” and some time later, that
-function completes and the next line of code executes. Behind the scenes,
-what really happens is that the operating system queues up a write operation
-to the disk and then puts the application to sleep until the disk reports
-that it has finished the write. The application experiences this as the function
-taking a long time to execute, but in reality it isn’t really executing at
-all, just waiting.
-An interface that performs operations sequentially in this way is also
-often referred to as blocking, since the operation in the interface that has
-to wait for some external event to happen in order for it to make progress
-blocks further execution until that event happens. Whether you refer to an
-interface as synchronous or blocking, the basic idea is the same: the application
-does not move on until the current operation finishes. While the
-operation is waiting, so is the application.
-Synchronous interfaces are usually considered to be easy to work with
-and simple to reason about, since your code executes just one line at a time.
+#### What’s the Deal with Asynchrony?
 
-Asynchronous Programming 119
-But they also allow the application to do only one thing at a time. That
-means if you want your program to wait for either user input or a network
-packet, you’re out of luck unless your operating system provides an operation
-specifically for that. Similarly, even if your application could do some
-other useful work while the disk is writing a file, it doesn’t have that option
-as the file write operation blocks the execution!
-Multithreading
-By far the most common solution to allowing concurrent execution is to use
-multithreading. In a multithreaded program, each thread is responsible for
-executing a particular independent sequence of blocking operations, and
-the operating system multiplexes among the threads so that if any thread can
-make progress, progress is made. If one thread blocks, some other thread
-may still be runnable, and so the application can continue to do useful
-work.
-Usually, these threads communicate with each other using a synchronization
-primitive like a lock or a channel so that the application can still coordinate
-their efforts. For example, you might have one thread that waits for
-user input, one thread that waits for network packets, and another thread
-that waits for either of those threads to send a message on a channel shared
-between all three threads.
-Multithreading gives you concurrency—the ability to have multiple independent
-operations that can be executed at any one time. It’s up to the system
-running the application (in this case, the operating system) to choose
-among the threads that aren’t blocked and decide which to execute next.
-If one thread is blocked, it can choose to run another one that can make
-progress instead.
-Multithreading combined with blocking interfaces gets you quite far,
-and large swaths of production-ready software are built in this way. But this
-approach is not without its shortcomings. First, keeping track of all these
-threads quickly gets cumbersome; if you have to spin up a thread for every
-concurrent task, including simple ones like waiting for keyboard input, the
-threads add up fast, and so does the additional complexity needed to keep
-track of how all those threads interact, communicate, and coordinate.
-Second, switching between threads gets costly the more of them there
-are. Every time one thread stops running and another one starts back up
-in its place, you need to do a round-trip to the operating system scheduler,
-and that’s not free. On some platforms, spawning new threads is also a fairly
-heavyweight process. Applications with high performance needs often mitigate
-this cost by reusing threads and using operating system calls that allow
-you to block on many related operations, but ultimately you are left with the
-same problem: blocking interfaces require that you have as many threads as
-the number of blocking calls you want to make.
-Finally, threads introduce parallelism into your program. The distinction
-between concurrency and parallelism is subtle, but important: concurrency
-means that the execution of your tasks is interleaved, whereas
-parallelism means that multiple tasks are executing at the same time. If you
-have two tasks, their execution expressed in ASCII might look like _-_-_
+在深入了解同步和异步编程模型的细节之前，我们首先需要快速了解一下当计算机运行程序时实际发生的情况。
 
-120 Chapter 8
-(concurrency) versus ===== (parallelism). Multithreading does not necessarily
-imply parallelism—even though you have many threads, you might have
-only a single core, so only one thread is executing at a given time—but the
-two usually go hand in hand. You can make two threads mutually exclusive
-in their execution by using a Mutex or other synchronization primitive, but
-that introduces additional complexity—threads want to run in parallel.
-And while parallelism is often a good thing—who doesn’t want their program
-to run faster on more cores—it also means that your program must
-handle truly simultaneous access to shared data structures. This means
-moving from Rc, Cell, and RefCell to the more powerful but also slower Arc
-and Mutex. While you may want to use the latter types in your concurrent
-program to enable parallelism, threading forces you to use them. We’ll look
-at multithreading in much greater detail in Chapter 10.
-Asynchronous Interfaces
-Now that we’ve explored synchronous interfaces, we can look at the alternative:
-asynchronous or nonblocking interfaces. An asynchronous interface
-is one that may not yield a result straightaway, and may instead indicate
-that the result will be available at some later time. This gives the caller the
-opportunity to do something else in the meantime rather than having to go
-to sleep until that particular operation completes. In Rust parlance, an asynchronous
-interface is a method that returns a Poll, as defined in Listing 8-1.
+- 计算机速度非常快。真的非常快。事实上，它们大部分时间都在等待事情发生。除非你在解压文件、编码音频或进行数值计算，否则你的CPU大部分时间都处于空闲状态，等待操作完成。它在等待网络数据包到达，等待鼠标移动，等待磁盘完成写入一些字节，甚至只是等待从主内存读取完成。从CPU的角度来看，这些事件之间经过了漫长的时间。当一个事件发生时，CPU会运行几条指令，然后再次进入等待状态。看一下你的CPU利用率，可能只有个位数的低水平，这很可能是大部分时间的情况。
+
+##### 同步接口
+
+同步接口允许你的程序（或者说，程序中的一个线程）一次只执行一个操作；每个操作都必须等待前一个同步操作完成后才能运行。大多数你在实际开发中见到的接口都是同步的：你调用它们，它们会执行一些操作，最终在操作完成后返回，你的程序可以从那里继续执行。之所以如此，我们将在本章后面看到，是因为使操作异步化需要额外的机制。除非你需要异步的好处，否则坚持同步模型需要更少的繁文缛节。
+
+- 同步接口隐藏了所有这些等待过程；应用程序调用一个函数，该函数说“将这些字节写入这个文件”，然后一段时间后，该函数完成，下一行代码执行。在幕后，真正发生的是操作系统将写操作排队到磁盘，然后将应用程序置于休眠状态，直到磁盘报告写操作已完成。应用程序将此视为函数执行时间很长，但实际上它根本没有执行，只是在等待。
+- 以这种方式按顺序执行操作的接口通常也被称为阻塞接口，因为在接口中，等待某个外部事件发生以使操作继续进行的操作会阻塞进一步的执行，直到该事件发生。无论您将接口称为同步还是阻塞，基本思想都是一样的：应用程序在当前操作完成之前不会继续执行。当操作等待时，应用程序也会等待。
+同步接口通常被认为易于使用和简单推理，因为您的代码一次只执行一行。但它们也只允许应用程序一次只能做一件事。这意味着如果您希望程序等待用户输入或网络数据包，除非您的操作系统提供了专门用于此目的的操作，否则您将无法实现。同样地，即使您的应用程序在磁盘写入文件时可以执行其他有用的工作，但由于文件写入操作会阻塞执行，它也无法选择这个选项！
+
+##### Multithreading
+
+
+到目前为止，允许并发执行的最常见解决方案是使用多线程。在多线程程序中，每个线程负责执行特定的独立的阻塞操作序列，操作系统通过多路复用来在线程之间切换，以便如果任何一个线程可以取得进展，就会有进展。如果一个线程被阻塞，可能仍然有其他线程可运行，因此应用程序可以继续进行有用的工作。
+
+- 通常，这些线程使用锁或通道等同步原语进行通信，以便应用程序仍然可以协调它们的工作。例如，您可能有一个线程等待用户输入，一个线程等待网络数据包，另一个线程等待这两个线程之一在所有三个线程之间共享的通道上发送消息。
+- 多线程提供了并发性，即能够同时执行多个独立的操作。由运行应用程序的系统（在本例中为操作系统）选择未被阻塞的线程，并决定下一个要执行的线程。如果一个线程被阻塞，它可以选择运行另一个可以取得进展的线程。
+- 多线程结合阻塞接口可以让你走得很远，很多生产级软件都是这样构建的。但是这种方法也有其缺点。首先，跟踪所有这些线程很快变得繁琐；如果你必须为每个并发任务启动一个线程，包括等待键盘输入这样简单的任务，线程数量会迅速增加，需要额外的复杂性来跟踪所有这些线程的交互、通信和协调。
+- 其次，随着线程数量的增加，线程之间的切换成本也会增加。每当一个线程停止运行，另一个线程开始运行时，您需要进行一次往返到操作系统调度程序，这是不免费的。在某些平台上，创建新线程也是一个相当重量级的过程。具有高性能需求的应用程序通常通过重用线程并使用允许您在许多相关操作上阻塞的操作系统调用来减轻这个成本，但最终您仍然面临同样的问题：阻塞接口要求您拥有与要进行阻塞调用数量相同的线程。
+- 最后，线程将并行性引入到您的程序中。并发和并行的区别微妙但重要：并发意味着任务的执行是交错的，而并行意味着多个任务同时执行。如果您有两个任务，它们的执行在ASCII中可能看起来像 _-_-_（并发）与=====（并行）。多线程不一定意味着并行性——即使您有多个线程，您可能只有一个核心，因此在给定时间只有一个线程在执行——但这两者通常是相辅相成的。您可以通过使用Mutex或其他同步原语使两个线程在执行上互斥，但这会引入额外的复杂性——线程希望并行运行。虽然并行通常是一件好事——谁不希望他们的程序在更多的核心上运行得更快——但这也意味着您的程序必须处理对共享数据结构的真正同时访问。这意味着从Rc、Cell和RefCell转移到更强大但也更慢的Arc和Mutex。虽然您可能希望在并发程序中使用后者类型以实现并行性，但线程强制您使用它们。我们将在第10章中更详细地讨论多线程。
+
+##### Asynchronous Interfaces
+
+现在我们已经探索了同步接口，我们可以看看另一种选择：异步或非阻塞接口。异步接口是一种可能不会立即产生结果的接口，而是可能指示结果将在稍后的某个时间可用。这使调用者有机会在此期间做其他事情，而不必一直等待直到特定操作完成。在Rust中，异步接口是一个返回Poll的方法，如清单8-1所定义。
+
+```rust
+
 enum Poll<T> {
 Ready(T),
 Pending
 }
-Listing 8-1: The core of asynchrony: the “here you are or come back later” type
-Poll usually shows up in the return type of functions whose names start
-with poll—these are methods that signal they can attempt an operation
-without blocking. We’ll get into how exactly they do that later in this chapter,
-but in general they attempt to perform as much as they can of the operation
-before they would normally block, and then return. And crucially,
-they remember where they left off so that they can resume execution later
-when additional progress can again be made.
-These nonblocking functions allow us to easily perform multiple tasks
-concurrently. For example, if you want to read from either the network or
-the user’s keyboard, whichever has an event available first, all you have to
-do is poll both in a loop until one of them returns Poll::Ready. No need for
-any additional threads or synchronization!
-The word loop here should make you a little nervous. You don’t want your
-program to burn through a loop three billion times a second when it may
-be minutes until the next input occurs. In the world of blocking interfaces,
-this wasn’t a problem since the operating system simply put the thread to
-sleep and then took care of waking it up when a relevant event occurred, but
-how do we avoid burning cycles while waiting in this brave new nonblocking
-world? That’s what much of the remainder of this chapter will be about.
+```
+清单8-1：异步的核心：“现在给你或稍后回来”的类型
 
-Asynchronous Programming 121
-Standardized Polling
-To get to a world where every library can be used in a nonblocking fashion,
-we could have every library author cook up their own poll methods, all with
-slightly different names, signatures, and return types—but that would quickly
-get unwieldy. Instead, in Rust, polling is standardized through the Future
-trait. A simplified version of Future is shown in Listing 8-2 (we’ll get back to
-the real one later in this chapter).
+- Poll通常出现在以poll开头的函数的返回类型中，这些函数是指它们可以尝试执行操作而不阻塞的方法。我们将在本章后面详细介绍它们是如何做到这一点的，但总的来说，它们会尝试在通常会阻塞之前尽可能多地执行操作，然后返回。关键是，它们会记住它们离开的位置，以便在以后可以再次进行额外的进展时恢复执行。
+- 这些非阻塞函数使我们能够轻松地同时执行多个任务。例如，如果您想从网络或用户的键盘读取数据，只需在循环中轮询两者，直到其中一个返回 Poll::Ready。无需额外的线程或同步！
+- 这里的循环一词可能会让你有些紧张。当可能需要几分钟才能发生下一次输入时，你不希望程序每秒循环三十亿次。在阻塞接口的世界中，这不是一个问题，因为操作系统会将线程置于休眠状态，并在发生相关事件时唤醒它，但在这个新的非阻塞世界中，我们如何避免在等待时消耗计算资源？这就是本章剩余部分将要讨论的内容。
+
+#### 标准化的轮询
+
+为了实现每个库都可以以非阻塞的方式使用，我们可以让每个库的作者自己编写自己的轮询方法，这些方法的名称、签名和返回类型都略有不同，但这很快就会变得难以管理。相反，在Rust中，通过Future trait来标准化轮询。清单8-2展示了Future的简化版本（我们稍后会回到真正的版本）。
+
+```rust
+
 trait Future {
 type Output;
 fn poll(&mut self) -> Poll<Self::Output>;
 }
-Listing 8-2: A simplified view of the Future trait
-Types that implement the Future trait are known as futures and represent
+```
+清单8-2：Future trait的简化视图
+
+- Types that implement the Future trait are known as futures and represent
 values that may not be available yet. A future could represent the next
 time a network packet comes in, the next time the mouse cursor moves,
 or just the point at which some amount of time has elapsed. You can read
@@ -2258,30 +2047,37 @@ Future<Output = Foo> as “a type that will produce a Foo in the future.” Type
 like this are often referred to in other languages as promises—they promise
 that they will eventually yield the indicated type. When a future eventually
 returns Poll::Ready(T), we say that the future resolves into a T.
-With this trait in place, we can generalize the pattern of providing poll
+
+- With this trait in place, we can generalize the pattern of providing poll
 methods. Instead of having methods like poll_recv and poll_keypress, we can
 have methods like recv and keypress that both return impl Future with an
 appropriate Output type. This doesn’t change the fact that you have to poll
 them—we’ll deal with that later—but it does mean that at least there is a
 standardized interface to these kinds of pending values, and we don’t need
 to use the poll_ prefix everywhere.
+
 **NOTE** In general, you should not poll a future again after it has returned Poll::Ready. If
 you do, the future is well within its rights to panic. A future that is safe to poll after it
 has returned Ready is sometimes referred to as a fused future.
-Ergonomic Futures
+
+#### Ergonomic Futures
+
 Writing a type that implements Future in the way I’ve described so far is
 quite a pain. To see why, first take a look at the fairly straightforward asynchronous
 code block in Listing 8-3 that simply tries to forward messages
 from the input channel rx to the output channel tx.
+
+```rust
+
 async fn forward<T>(rx: Receiver<T>, tx: Sender<T>) {
 while let Some(t) = rx.next().await {
 tx.send(t).await;
 }
 }
+```
 Listing 8-3: Implementing a channel-forwarding future using async and await
 
-122 Chapter 8
-This code, written using async and await syntax, looks very similar to its
+- This code, written using async and await syntax, looks very similar to its
 equivalent synchronous code and is easy to read. We simply send each message
 we receive in a loop until there are no more messages, and each await
 point corresponds to a place where a synchronous variant might block. Now
@@ -2289,49 +2085,51 @@ think about if you instead had to express this code by manually implementing
 the Future trait. Since each call to poll starts at the top of the function,
 you’d need to package the necessary state to continue from the last place
 the code yielded. The result is fairly grotesque, as Listing 8-4 demonstrates.
+
+```rust
+
 enum Forward<T> { 1
-WaitingForReceive(ReceiveFuture<T>, Option<Sender<T>>),
-WaitingForSend(SendFuture<T>, Option<Receiver<T>>),
+  WaitingForReceive(ReceiveFuture<T>, Option<Sender<T>>),
+  WaitingForSend(SendFuture<T>, Option<Receiver<T>>),
 }
 impl<T> Future for Forward<T> {
-type Output = (); 2
-fn poll(&mut self) -> Poll<Self::Output> {
-match self { 3
-Forward::WaitingForReceive(recv, tx) => {
-if let Poll::Ready((rx, v)) = recv.poll() {
-if let Some(v) = v {
-let tx = tx.take().unwrap(); 4
-*self = Forward::WaitingForSend(tx.send(v), Some(rx)); 5
+  type Output = (); 2
+  fn poll(&mut self) -> Poll<Self::Output> {
+    match self { 3
+      Forward::WaitingForReceive(recv, tx) => {
+      if let Poll::Ready((rx, v)) = recv.poll() {
+        if let Some(v) = v {
+          let tx = tx.take().unwrap(); 4
+          *self = Forward::WaitingForSend(tx.send(v), Some(rx)); 5
 // Try to make progress on sending.
-return self.poll(); 6
-} else {
+          return self.poll(); 6
+        } else {
 // No more items.
-Poll::Ready(())
+        Poll::Ready(())
+      }
+    } else {
+      Poll::Pending
+    }
+  }
+  Forward::WaitingForSend(send, rx) => {
+    if let Poll::Ready(tx) = send.poll() {
+      let rx = rx.take().unwrap();
+      *self = Forward::WaitingForReceive(rx.receive(), Some(tx));
+  // Try to make progress on receiving.
+      return self.poll();
+    } else {
+      Poll::Pending
+    }
+  }
+  }
 }
-} else {
-Poll::Pending
 }
-}
-Forward::WaitingForSend(send, rx) => {
-if let Poll::Ready(tx) = send.poll() {
-let rx = rx.take().unwrap();
-*self = Forward::WaitingForReceive(rx.receive(), Some(tx));
-// Try to make progress on receiving.
-return self.poll();
-} else {
-Poll::Pending
-}
-}
-}
-}
-}
+```
 Listing 8-4: Manually implementing a channel-forwarding future
 You’ll rarely have to write code like this in Rust anymore, but it gives
 important insight into how things work under the hood, so let’s walk through
 it. First, we define our future type as an enum 1, which we’ll use to keep track
 of what we’re currently waiting on. This is a consequence of the fact that
-
-Asynchronous Programming 123
 when we return Poll::Pending, the next call to poll will start at the top of the
 function again. We need some way to know what we were in the middle of so
 that we know which operation to continue on. Furthermore, we need to keep
@@ -2340,7 +2138,7 @@ for a receive to finish, we need to keep that ReceiveFuture (the definition
 of which is not shown in this example) so that we can poll it the next time we
 are polled ourselves, and the same goes for SendFuture. The Options here might
 strike you as weird too; we’ll get back to those shortly.
-When we implement Future for Forward, we declare its output type as
+- When we implement Future for Forward, we declare its output type as
 () 2 because this future doesn’t actually return anything. Instead, the
 future resolves (with no result) when it has finished forwarding everything
 from the input channel to the output channel. In a more complete example,
@@ -2348,7 +2146,7 @@ the Output of our forwarding type might be a Result so that it could communicate
 errors from receive() and send() back up the stack to the function
 that’s polling for the completion of the forwarding. But this code is complicated
 enough already, so we’ll leave that for another day.
-When Forward is polled, it needs to resume wherever it last left off,
+- When Forward is polled, it needs to resume wherever it last left off,
 which we find out by matching on the enum variant currently held in
 self 3. For whichever branch we go into, the first step is to poll the future
 that blocks progress for the current operation; if we’re trying to receive, we
@@ -2356,7 +2154,7 @@ poll the ReceiveFuture, and if we’re trying to send, we poll the SendFuture. I
 that call to poll returns Poll::Pending, then we can make no progress, and
 we return Poll::Pending ourselves. But if the current future resolves, we
 have work to do!
-When one of the inner futures resolves, we need to update what the
+- When one of the inner futures resolves, we need to update what the
 current operation is by switching which enum variant is stored in self.
 In order to do so, we have to move out of self to call Receiver::receive or
 Sender::send—but we can’t do that because all we have is &mut self. So, we
@@ -2364,31 +2162,31 @@ store the state we have to move in an Option, which we move out of with
 Option::take 4. This is silly since we’re about to overwrite self anyway 5,
 and hence the Options will always be Some, but sometimes tricks are needed
 to make the borrow checker happy.
-Finally, if we do make progress, we then poll self again 6 so that if
+- Finally, if we do make progress, we then poll self again 6 so that if
 we can immediately make progress on the pending send or receive, we do
 so. This is actually necessary for correctness when implementing the real
 Future trait, which we’ll get back to later, but for now think of this as an
 optimization.
-We just hand-wrote a state machine: a type that has a number of possible
+- We just hand-wrote a state machine: a type that has a number of possible
 states and moves between them in response to particular events. This was a
 fairly simple state machine, at that. Imagine having to write code like this for
 more complicated use cases where you have additional intermediate steps!
-Beyond writing the unwieldy state machine, we have to know the types
+- Beyond writing the unwieldy state machine, we have to know the types
 of the futures that Sender::send and Receiver::receive return so that we can
 store them in our type. If those methods instead returned impl Future, we’d
 have no way to write out the types for our variants. The send and receive
 methods also have to take ownership of the sender and the receiver; if they
 did not, the lifetimes of the futures they returned would be tied to the
-
-124 Chapter 8
 borrow of self, which would end when we return from poll. But that would
 not work, since we’re trying to store those futures in self.
+
 **NOTE** You may have noticed that Receiver looks a lot like an asynchronous version of
 Iterator. Others have noticed the same thing, and the standard library is on its way
 to adding a trait specifically for types that can meaningfully implement poll_next.
 Down the line, these asynchronous iterators (often referred to as streams) may end up
 with first-class language support, such as the ability to loop over them directly!
-Ultimately, this code is hard to write, hard to read, and hard to change. If
+
+- Ultimately, this code is hard to write, hard to read, and hard to change. If
 we wanted to add error handling, for example, the code complexity would
 increase significantly. Luckily, there’s a better way!
 async/await
@@ -2397,14 +2195,19 @@ operator, which we used in the original example in Listing 8-3. Together,
 they provide a much more convenient mechanism for writing asynchronous
 state machines like the one in Listing 8-5. Specifically, they let you write the
 code in such a way that it doesn’t even look like a state machine!
+
+```rust 
+
 async fn forward<T>(rx: Receiver<T>, tx: Sender<T>) {
-while let Some(t) = rx.next().await {
-tx.send(t).await;
+  while let Some(t) = rx.next().await {
+    tx.send(t).await;
+  }
 }
-}
+```
 Listing 8-5: Implementing a channel-forwarding future using async and await, repeated
 from Listing 8-3
-If you don’t have much experience with async and await, the difference
+
+- If you don’t have much experience with async and await, the difference
 between Listing 8-4 and Listing 8-5 might give you an idea of why the Rust
 community was so excited to see them land. But since this is an intermediate
 book, let’s dive a little deeper to understand just how this short segment
