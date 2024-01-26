@@ -2039,40 +2039,21 @@ fn poll(&mut self) -> Poll<Self::Output>;
 ```
 清单8-2：Future trait的简化视图
 
-- Types that implement the Future trait are known as futures and represent
-values that may not be available yet. A future could represent the next
-time a network packet comes in, the next time the mouse cursor moves,
-or just the point at which some amount of time has elapsed. You can read
-Future<Output = Foo> as “a type that will produce a Foo in the future.” Types
-like this are often referred to in other languages as promises—they promise
-that they will eventually yield the indicated type. When a future eventually
-returns Poll::Ready(T), we say that the future resolves into a T.
+- 实现Future trait的类型被称为futures，表示可能尚不可用的值。一个future可以表示下一个网络数据包到达的时间、鼠标光标移动的时间，或者只是某个时间段已经过去的时间点。您可以将Future<Output = Foo>理解为“将在未来产生一个Foo类型的值的类型”。在其他语言中，这样的类型通常被称为promises，它们承诺最终会产生指定的类型。当一个future最终返回Poll::Ready(T)时，我们说该future解析为T类型。
 
-- With this trait in place, we can generalize the pattern of providing poll
-methods. Instead of having methods like poll_recv and poll_keypress, we can
-have methods like recv and keypress that both return impl Future with an
-appropriate Output type. This doesn’t change the fact that you have to poll
-them—we’ll deal with that later—but it does mean that at least there is a
-standardized interface to these kinds of pending values, and we don’t need
-to use the poll_ prefix everywhere.
+- 有了这个trait，我们可以将提供poll方法的模式泛化。不再需要像poll_recv和poll_keypress这样的方法，而是可以使用像recv和keypress这样的方法，它们都返回具有适当Output类型的impl Future。这并不改变您必须对它们进行轮询的事实——我们稍后会处理这个问题——但至少意味着这些待处理值有了一个标准化的接口，我们不需要在每个地方都使用poll_前缀。
 
-**NOTE** In general, you should not poll a future again after it has returned Poll::Ready. If
-you do, the future is well within its rights to panic. A future that is safe to poll after it
-has returned Ready is sometimes referred to as a fused future.
+**注意** 通常情况下，在一个future返回了Poll::Ready之后，不应该再次对其进行轮询。如果这样做，future有权抛出panic。一个在返回Ready后仍然安全进行轮询的future有时被称为融合的future。
 
 #### Ergonomic Futures
 
-Writing a type that implements Future in the way I’ve described so far is
-quite a pain. To see why, first take a look at the fairly straightforward asynchronous
-code block in Listing 8-3 that simply tries to forward messages
-from the input channel rx to the output channel tx.
+按照我之前描述的方式编写实现Future的类型非常麻烦。为了理解原因，首先看一下清单8-3中的相当直观的异步代码块，它只是尝试将输入通道rx中的消息转发到输出通道tx。
 
 ```rust
-
 async fn forward<T>(rx: Receiver<T>, tx: Sender<T>) {
-while let Some(t) = rx.next().await {
-tx.send(t).await;
-}
+  while let Some(t) = rx.next().await {
+    tx.send(t).await;
+  }
 }
 ```
 Listing 8-3: Implementing a channel-forwarding future using async and await
