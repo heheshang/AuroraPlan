@@ -2109,6 +2109,7 @@ impl<T> Future for Forward<T> {
 }
 ```
 Listing 8-4: Manually implementing a channel-forwarding future
+
 You’ll rarely have to write code like this in Rust anymore, but it gives
 important insight into how things work under the hood, so let’s walk through
 it. First, we define our future type as an enum 1, which we’ll use to keep track
