@@ -2111,77 +2111,23 @@ impl<T> Future for Forward<T> {
 }
 }
 ```
-Listing 8-4: Manually implementing a channel-forwarding future
+清单8-4：手动实现通道转发future
 
-You’ll rarely have to write code like this in Rust anymore, but it gives
-important insight into how things work under the hood, so let’s walk through
-it. First, we define our future type as an enum 1, which we’ll use to keep track
-of what we’re currently waiting on. This is a consequence of the fact that
-when we return Poll::Pending, the next call to poll will start at the top of the
-function again. We need some way to know what we were in the middle of so
-that we know which operation to continue on. Furthermore, we need to keep
-track of different information depending on what we’re doing: if we’re waiting
-for a receive to finish, we need to keep that ReceiveFuture (the definition
-of which is not shown in this example) so that we can poll it the next time we
-are polled ourselves, and the same goes for SendFuture. The Options here might
-strike you as weird too; we’ll get back to those shortly.
-- When we implement Future for Forward, we declare its output type as
-() 2 because this future doesn’t actually return anything. Instead, the
-future resolves (with no result) when it has finished forwarding everything
-from the input channel to the output channel. In a more complete example,
-the Output of our forwarding type might be a Result so that it could communicate
-errors from receive() and send() back up the stack to the function
-that’s polling for the completion of the forwarding. But this code is complicated
-enough already, so we’ll leave that for another day.
-- When Forward is polled, it needs to resume wherever it last left off,
-which we find out by matching on the enum variant currently held in
-self 3. For whichever branch we go into, the first step is to poll the future
-that blocks progress for the current operation; if we’re trying to receive, we
-poll the ReceiveFuture, and if we’re trying to send, we poll the SendFuture. If
-that call to poll returns Poll::Pending, then we can make no progress, and
-we return Poll::Pending ourselves. But if the current future resolves, we
-have work to do!
-- When one of the inner futures resolves, we need to update what the
-current operation is by switching which enum variant is stored in self.
-In order to do so, we have to move out of self to call Receiver::receive or
-Sender::send—but we can’t do that because all we have is &mut self. So, we
-store the state we have to move in an Option, which we move out of with
-Option::take 4. This is silly since we’re about to overwrite self anyway 5,
-and hence the Options will always be Some, but sometimes tricks are needed
-to make the borrow checker happy.
-- Finally, if we do make progress, we then poll self again 6 so that if
-we can immediately make progress on the pending send or receive, we do
-so. This is actually necessary for correctness when implementing the real
-Future trait, which we’ll get back to later, but for now think of this as an
-optimization.
-- We just hand-wrote a state machine: a type that has a number of possible
-states and moves between them in response to particular events. This was a
-fairly simple state machine, at that. Imagine having to write code like this for
-more complicated use cases where you have additional intermediate steps!
-- Beyond writing the unwieldy state machine, we have to know the types
-of the futures that Sender::send and Receiver::receive return so that we can
-store them in our type. If those methods instead returned impl Future, we’d
-have no way to write out the types for our variants. The send and receive
-methods also have to take ownership of the sender and the receiver; if they
-did not, the lifetimes of the futures they returned would be tied to the
-borrow of self, which would end when we return from poll. But that would
-not work, since we’re trying to store those futures in self.
+在 Rust 中，您很少需要编写这样的代码，但它能够深入了解底层工作原理，因此让我们一起来看看。首先，我们将未来类型定义为一个枚举 1，我们将使用它来跟踪当前正在等待的操作。这是因为当我们返回 Poll::Pending 时，下一次调用 poll 将再次从函数顶部开始。我们需要一种方式来知道我们中途停下来的位置，以便知道要继续哪个操作。此外，根据我们的操作不同，我们需要跟踪不同的信息：如果我们正在等待接收完成，我们需要保留 ReceiveFuture（此示例中未显示其定义），以便在下次自己被轮询时对其进行轮询；对于 SendFuture 也是如此。这里的 Option 可能让您感到奇怪；我们稍后会详细解释。
+- 当我们为Forward实现Future时，将其输出类型声明为() 2，因为这个future实际上不返回任何东西。相反，当它完成从输入通道到输出通道的所有转发时，该future解析（没有结果）。在一个更完整的示例中，我们的转发类型的Output可能是一个Result，以便它可以将receive()和send()的错误传递回堆栈，以便轮询转发完成的函数。但是这段代码已经足够复杂了，所以我们将把它留到以后再说。
+- 当对Forward进行轮询时，它需要从上次离开的地方继续执行，我们可以通过匹配当前存储在self中的枚举变体来找到 3。对于我们进入的任何分支，第一步是对阻止当前操作进展的未来进行轮询；如果我们尝试接收，我们轮询ReceiveFuture，如果我们尝试发送，我们轮询SendFuture。如果轮询调用返回Poll::Pending，则我们无法取得任何进展，我们自己返回Poll::Pending。但是如果当前的未来解析了，我们就有工作要做！
+- 当内部的某个future解析时，我们需要通过切换存储在self中的枚举变体来更新当前操作。为了做到这一点，我们必须移出self以调用Receiver::receive或Sender::send，但我们不能这样做，因为我们只有&mut self。因此，我们将需要移动的状态存储在Option中，并使用Option::take来移出 4。这有点愚蠢，因为我们马上就要覆盖self 5，因此Options总是Some，但有时需要一些技巧来让借用检查器满意。
+- 最后，如果我们取得了进展，我们再次对self进行轮询 6，以便如果我们可以立即在挂起的发送或接收上取得进展，我们就这样做。实际上，这在实现真正的Future trait时是必要的，我们稍后会回到这个问题，但现在将其视为一种优化。
+- 我们刚刚手写了一个状态机：一个具有多个可能状态并根据特定事件在这些状态之间转换的类型。这个状态机相当简单。想象一下，如果您需要为具有额外中间步骤的更复杂用例编写这样的代码，那将是多么困难！
+- 除了编写笨重的状态机之外，我们还必须知道Sender::send和Receiver::receive返回的未来类型，以便将它们存储在我们的类型中。如果这些方法返回的是impl Future，我们将无法为我们的变体编写类型。send和receive方法还必须获取发送器和接收器的所有权；如果它们没有这样做，返回的未来的生命周期将与self的借用相关联，而当我们从poll返回时，这个借用将结束。但这样做是行不通的，因为我们试图将这些未来存储在self中。
 
-**NOTE** You may have noticed that Receiver looks a lot like an asynchronous version of
-Iterator. Others have noticed the same thing, and the standard library is on its way
-to adding a trait specifically for types that can meaningfully implement poll_next.
-Down the line, these asynchronous iterators (often referred to as streams) may end up
-with first-class language support, such as the ability to loop over them directly!
+**注意** 您可能已经注意到，Receiver 很像是 Iterator 的异步版本。其他人也注意到了这一点，标准库正在逐步添加一个专门用于可以有意义地实现 poll_next 的类型的 trait。在未来，这些异步迭代器（通常称为流）可能会获得一流的语言支持，例如直接在它们上面进行循环！
 
-- Ultimately, this code is hard to write, hard to read, and hard to change. If
-we wanted to add error handling, for example, the code complexity would
-increase significantly. Luckily, there’s a better way!
-async/await
-Rust 1.39 gave us the async keyword and the closely related await postfix
-operator, which we used in the original example in Listing 8-3. Together,
-they provide a much more convenient mechanism for writing asynchronous
-state machines like the one in Listing 8-5. Specifically, they let you write the
-code in such a way that it doesn’t even look like a state machine!
+- 最终，这段代码很难编写、难以阅读和难以修改。例如，如果我们想要添加错误处理，代码的复杂性将显著增加。幸运的是，有一种更好的方法！
+
+##### async/await
+
+Rust 1.39 引入了 async 关键字和紧密相关的 await 后缀运算符，我们在清单 8-3 的原始示例中使用了它们。它们一起为我们提供了一种更方便的机制来编写像清单 8-5 中的异步状态机。具体来说，它们让您以一种看起来甚至不像状态机的方式编写代码！
 
 ```rust 
 
@@ -2191,45 +2137,19 @@ async fn forward<T>(rx: Receiver<T>, tx: Sender<T>) {
   }
 }
 ```
-Listing 8-5: Implementing a channel-forwarding future using async and await, repeated
-from Listing 8-3
+清单8-5：使用async和await实现通道转发future，与清单8-3中的代码重复
 
-- If you don’t have much experience with async and await, the difference
-between Listing 8-4 and Listing 8-5 might give you an idea of why the Rust
-community was so excited to see them land. But since this is an intermediate
-book, let’s dive a little deeper to understand just how this short segment
-of code can replace the much longer manual implementation. To do that,
-we first need to talk about generators—the mechanism by which async and
-await are implemented.
-Generators
-Briefly described, a generator is a chunk of code with some extra compilergenerated
-bits that enables it to stop, or yield, its execution midway through
-and then resume from where it last yielded later on. Take the forward function
-in Listing 8-3, for example. Imagine that it gets to the call to send, but
-the channel is currently full. The function can’t make any more progress,
-but it also cannot block (this is nonblocking code, after all), so it needs to
-return. Now suppose the channel eventually clears and we want to proceed
-with the send. If we call forward again from the top, it’ll call next again and
-the item we previously tried to send will be lost, so that’s no good. Instead,
-we turn forward into a generator.
+- 如果您对async和await没有太多经验，那么清单8-4和清单8-5之间的区别可能会让您对为什么Rust社区对它们的到来如此兴奋有所了解。但由于这是一本中级书籍，让我们深入了解一下这段代码是如何替代更长的手动实现的。为了做到这一点，我们首先需要讨论生成器——实现async和await的机制。
 
-Asynchronous Programming 125
-Whenever the forward generator cannot make progress anymore, it
-needs to store its current state somewhere so that when its execution eventually
-resumes, it resumes in the right place with the right state. It saves the
-state through an associated data structure that’s generated by the compiler,
-which contains all the state of the generator at a given point in time. A
-method on that data structure (also generated) then allows the generator
-to resume from its current state, stored in &mut self, and updates the state
-again when the generator again cannot make progress.
-This “return but allow me to resume later” operation is called yielding,
-which effectively means it returns while keeping some extra state on the
-side. When we later want to resume a call to forward, we invoke the known
-entry point into the generator (the resume method, which is poll for async
-generators), and the generator inspects the previously stored state in self
-to decide what to do next. This is exactly the same thing we did manually in
-Listing 8-4! In other words, the code in Listing 8-5 loosely desugars to the
-hypothetical code shown in Listing 8-6.
+##### Generators
+
+简单来说，生成器是一段代码，带有一些额外的由编译器生成的部分，使其能够在执行过程中停止或暂停，并在稍后从上次暂停的位置继续执行。以清单8-3中的forward函数为例。想象一下，它到达了send的调用，但通道当前已满。函数无法再取得进展，但也不能阻塞（毕竟这是非阻塞代码），因此需要返回。现在假设通道最终清空，我们想要继续进行发送。如果我们从头再次调用forward，它将再次调用next，我们之前尝试发送的项目将丢失，这样不好。相反，我们将forward转换为生成器。
+
+- 每当forward生成器无法再取得进展时，它需要将当前状态存储在某个地方，以便在最终恢复执行时，能够在正确的位置和正确的状态下继续执行。它通过编译器生成的关联数据结构来保存状态，该数据结构包含生成器在给定时间点的所有状态。该数据结构上的一个方法（也是由编译器生成的）允许生成器从存储在&mut self中的当前状态恢复，并在生成器再次无法取得进展时再次更新状态。
+- 这种“返回但允许我稍后恢复”的操作被称为yielding，它实际上意味着在返回的同时保留一些额外的状态。当我们稍后想要恢复对forward的调用时，我们调用生成器的已知入口点（resume方法，对于async生成器来说是poll），生成器会检查之前存储在self中的状态来决定下一步该做什么。这与我们在清单8-4中手动完成的工作完全相同！换句话说，清单8-5中的代码大致转换为清单8-6中显示的假设代码。
+
+```rust
+
 generator fn forward<T>(rx: Receiver<T>, tx: Sender<T>) {
 loop {
 let mut f = rx.next();
@@ -2240,44 +2160,22 @@ let _ = if let Poll::Ready(r) = f.poll() { r } else { yield };
 } else { break Poll::Ready(()); }
 }
 }
-Listing 8-6: Desugaring async/await into a generator
-At the time of writing, generators are not actually usable in Rust—they
-are only used internally by the compiler to implement async/await—but that
-may change in the future. Generators come in handy in a number of cases,
-such as to implement iterators without having to carry around a struct or to
-implement an impl Iterator that figures out how to yield items one at a time.
-If you look closely at Listings 8-5 and 8-6, they may seem a little magical
-once you know that every await or yield is really a return from the function.
-After all, there are several local variables in the function, and it’s not clear
-how they’re restored when we resume later on. This is where the compilergenerated
-part of generators comes into play. The compiler transparently
-injects code to persist those variables into and read them from the generator’s
-associated data structure, rather than the stack, at the time of execution.
-So if you declare, write to, or read from some local variable a, you are
-really operating on something akin to self.a. Problem solved! It’s all really
-quite marvelous.
-One subtle but important difference between the manual forward implementation
-and the async/await version is that the latter can hold references
-across yield points. This enables functions like Receiver::next and Sender::send
-in Listing 8-5 to take &mut self rather than the self they took in Listing 8-4.
-If we tried to use a &mut self receiver for these methods in the manual state
 
-126 Chapter 8
-machine implementation, the borrow checker would have no way to enforce
-that the Receiver stored inside Forward cannot be referenced between when
-Receiver::next is called and when the future it returns resolves, and so it would
-reject the code. Only by moving the Receiver into the future can we convince
-the compiler that the Receiver is not otherwise accessible. Meanwhile, with
-async/await, the borrow checker can inspect the code before the compiler
-turns it into a state machine and verify that rx is indeed not accessed again
-until after the future is dropped, when the await on it returns.
-THE SIZE OF GENERATORS
+
+```
+
+清单8-6：将async/await转换为生成器
+
+- 在撰写本文时，生成器实际上在Rust中无法使用——它们只是编译器内部用于实现async/await的工具——但这可能会在将来发生变化。生成器在许多情况下非常有用，例如在不必携带结构体的情况下实现迭代器，或者实现一个impl Iterator，该迭代器可以逐个生成项目。
+- 如果您仔细观察清单8-5和清单8-6，一旦您知道每个await或yield实际上都是函数的返回，它们可能看起来有点神奇。毕竟，函数中有几个局部变量，不清楚在稍后恢复时如何恢复它们。这就是生成器的编译器生成部分发挥作用的地方。编译器会透明地注入代码，将这些变量持久化到生成器的关联数据结构中，并在执行时从中读取，而不是从堆栈中读取。因此，如果您声明、写入或读取某个局部变量a，实际上是在操作类似于self.a的东西。问题解决了！这真是太神奇了。
+- 手动转发实现和async/await版本之间一个微妙但重要的区别是后者可以在yield点之间保持引用。这使得像清单8-5中的Receiver::next和Sender::send这样的函数可以接受&mut self，而不是清单8-4中的self。如果我们尝试在手动状态机实现中使用&mut self接收器来实现这些方法，借用检查器将无法强制执行在调用Receiver::next时和返回的future解析之间，不能引用Forward内部存储的Receiver的规则，因此它会拒绝该代码。只有通过将Receiver移动到future中，我们才能说服编译器Receiver在其他地方不可访问。与此同时，使用async/await，借用检查器可以在编译器将代码转换为状态机之前检查代码，并验证在future被丢弃（即await返回）之后，rx确实不会再次被访问。
+**THE SIZE OF GENERATORS**
 The data structure used to back a generator’s state must be able to hold the combined
 state at any one yield point. If your async fn contains, say, a [u8; 8192],
 those 8KiB must be stored in the generator itself. Even if your async fn contains
 only smaller local variables, it must also contain any future that it awaits, since it
 needs to be able to poll such a future later, when poll is invoked.
-This nesting means that generators, and thus futures based on async
+- This nesting means that generators, and thus futures based on async
 functions and blocks, can get quite large without any visible indicator of that
 increased size in your code. This can in turn impact your program’s runtime
 performance, since those giant generators may have to be copied across function
@@ -2285,7 +2183,7 @@ calls and in and out of data structures, which amounts to a fair amount of
 memory copying. In fact, you can usually identify when the size of your generator-
 based futures is affecting performance by looking for excessive amounts of
 time spent in the memcpy function in your application’s performance profiles!
-Finding these large futures isn’t always easy, however, and often requires
+- Finding these large futures isn’t always easy, however, and often requires
 manually identifying long or complex chains of async functions. Clippy may
 be able to help with this in the future, but at the time of writing, you’re on your
 own. When you do find a particularly large future, you have two options: you
@@ -2295,7 +2193,9 @@ requires moving the pointer to it. The latter is by far the easiest way to go, b
 it also introduces an extra allocation and a pointer indirection. Your best bet is
 usually to put the problematic future on the heap, measure your performance,
 and then use your performance benchmarks to guide you from there.
-Pin and Unpin
+
+##### Pin and Unpin
+
 We’re not quite done. While generators are neat, a challenge arises from
 the technique as I’ve described it so far. In particular, it’s not clear what
 happens if the code in the generator (or, equivalently, the async block) takes
@@ -2304,23 +2204,26 @@ rx.next() returns must necessarily hold a reference to rx if a next message
 is not immediately available so that it knows where to try again when the
 generator next resumes. When the generator yields, the future and the reference
 the future contains get stashed away inside the generator. But what
-
-Asynchronous Programming 127
 now happens if the generator is moved? Specifically, look at the code in
 Listing 8-7, which calls forward.
+
+```rust
+
 async fn try_forward<T>(rx: Receiver<T>, tx: Sender<T>) -> Option<impl Future>
 {
 let mut f = forward(rx, tx);
 if f.poll().is_pending() { Some(f) } else { None }
 }
+```
 Listing 8-7: Moving a future after polling it
+
 The try_forward function polls forward only once, to forward as many
 messages as possible without blocking. If the receiver may still produce more
 messages (that is, if it returned Poll::Pending instead of Poll::Ready(None)),
 those messages are deferred to be forwarded at some later time by returning
 the forwarding future to the caller, which may choose to poll again at a time
 when it sees fit.
-Let’s work through what happens here with what we know about async
+- Let’s work through what happens here with what we know about async
 and await so far. When we poll the forward generator, it goes through the
 while loop some unknown number of times and eventually returns either
 Poll::Ready(()) if the receiver ended, or Poll::Pending otherwise. If it returns
@@ -2331,7 +2234,7 @@ be stored in the generator. But when try_forward returns the entire generator,
 the fields of the generator also move. Thus, rx and tx no longer reside
 at the same locations in memory, and the references stored in the stashedaway
 future are no longer pointing to the right data!
-What we’ve run into here is a case of a self-referential data structure: one
+- What we’ve run into here is a case of a self-referential data structure: one
 that holds both data and references to that data. With generators, these selfreferential
 structures are very easy to construct, and being unable to support
 them would be a significant blow to ergonomics because it would mean you
@@ -2340,28 +2243,37 @@ solution for supporting self-referential data structures in Rust comes in the
 form of the Pin type and the Unpin trait. Very briefly, Pin is a wrapper type that
 prevents the wrapped type from being (safely) moved, and Unpin is a marker
 trait that says the implementing type can be removed safely from a Pin.
-Pin
+
+##### Pin
+
 There’s a lot of nuance to cover here, so let’s start with a concrete use of
 the Pin wrapper. Listing 8-2 gave you a simplified version of the Future trait,
 but we’re now ready to peel back one part of the simplification. Listing 8-8
 shows the Future trait somewhat closer to its final form.
+
+```rust
+
 trait Future {
 type Output;
 fn poll(self: Pin<&mut Self>) -> Poll<Self::Output>;
 }
+```
 Listing 8-8: A less simplified view of the Future trait with Pin
 
-128 Chapter 8
-In particular, this definition requires that you call poll on Pin<&mut Self>.
+- In particular, this definition requires that you call poll on Pin<&mut Self>.
 Once you have a value behind a Pin, that constitutes a contract that that value
 will never move again. This means that you can construct self-references
 internally to your heart’s delight, exactly as you want for generators.
 **NOTE** While Future makes use of Pin, Pin is not tied to the Future trait—you can use Pin for
 any self-referential data structure.
-But how do you get a Pin to call poll? And how can Pin ensure that
+
+- But how do you get a Pin to call poll? And how can Pin ensure that
 the contained value won’t move? To see how this magic works, let’s look
 at the definition of std::pin::Pin and some of its key methods, shown in
 Listing 8-9.
+
+```rust 
+
 struct Pin<P> { pointer: P }
 impl<P> Pin<P> where P: Deref {
 pub unsafe fn new_unchecked(pointer: P) -> Self;
@@ -2373,11 +2285,13 @@ impl<P> Deref for Pin<P> where P: Deref {
 type Target = P::Target;
 fn deref(&self) -> &Self::Target;
 }
+```
 Listing 8-9: std::pin::Pin and its key methods
-There’s a lot to unpack here, and we’re going to have to go over the
+
+- There’s a lot to unpack here, and we’re going to have to go over the
 definition in Listing 8-9 a few times before all the bits make sense, so please
 bear with me.
-First, you’ll notice that Pin holds a pointer type. That is, rather than hold
+- First, you’ll notice that Pin holds a pointer type. That is, rather than hold
 some T directly, it holds a type P that dereferences through Deref into T. This
 means that rather than have a Pin<MyType>, you’ll have a Pin<Box<MyType>> or
 Pin<Rc<MyType>> or Pin<&mut MyType>. The reason for this design is simple—
@@ -2386,7 +2300,7 @@ T won’t move, as doing so might invalidate self-references stored in the T. If
 the Pin just held a T directly, then simply moving the Pin would be enough to
 invalidate that invariant! In the remainder of this section, I’ll refer to P as
 the pointer type and T as the target type.
-Next, notice that Pin’s constructor, new_unchecked, is unsafe. This is
+- Next, notice that Pin’s constructor, new_unchecked, is unsafe. This is
 because the compiler has no way to actually check that the pointer type
 indeed promises that the pointed-to (target) type won’t move again. Consider,
 for example, a variable foo on the stack. If Pin’s constructor were safe,
@@ -2397,8 +2311,7 @@ borrowed—including moving it! We could then pin it again and call the
 same method, which would be none the wiser that any self-referential pointers
 it may have constructed the first time around would now be invalid.
 
-Asynchronous Programming 129
-PIN CONSTRUCTOR SAFETY
+**PIN CONSTRUCTOR SAFETY**
 The other reason the constructor for Pin is unsafe is that its safety depends on
 the implementation of traits that are themselves safe. For example, the way
 that Pin<P> implements get_unchecked_mut is to use the implementation of
@@ -2409,7 +2322,8 @@ requirement for Pin::new_unchecked is therefore not only that the pointer type
 will not let the target type be moved again (like in the Pin<&mut T> example),
 but also that its Deref, DerefMut, and Drop implementations do not move the
 pointed-to value behind the &mut self they receive.
-We then get to the get_unchecked_mut method, which gives you a mutable
+
+- We then get to the get_unchecked_mut method, which gives you a mutable
 reference to the T behind the Pin’s pointer type. This method is also unsafe,
 because once we give out a &mut T, the caller has to promise it won’t use
 that &mut T to move the T or otherwise invalidate its memory, lest any selfreferences
@@ -2419,7 +2333,7 @@ get_unchecked_mut on two Pin<&mut _>s, then use mem::swap to swap the values
 behind the Pin. If we were to then call a method that takes Pin<&mut Self>
 again on either Pin, its assumption that the Self hasn’t moved would be violated,
 and any internal references it stored would be invalid!
-Perhaps surprisingly, Pin<P> always implements Deref<Target = T>, and
+- Perhaps surprisingly, Pin<P> always implements Deref<Target = T>, and
 that is entirely safe. The reason for this is that a &T does not let you move T
 without writing other unsafe code (UnsafeCell, for example, as we’ll discuss
 in Chapter 9). This is a good example of why the scope of an unsafe block
@@ -2435,11 +2349,11 @@ safely changes the value behind the Pin. This is possible because set does not r
 the value that was previously pinned—it simply drops it in place and stores the new
 value there instead. Therefore, it does not violate the pinning invariants: the old
 value was never accessed outside of a Pin after it was placed there.
-Unpin: The Key to Safe Pinning
+
+##### Unpin: The Key to Safe Pinning
+
 At this point you might ask: given that getting a mutable reference is unsafe
 anyway, why not have Pin hold a T directly? That is, rather than require an
-
-130 Chapter 8
 indirection through a pointer type, you could instead make the contract
 for get_unchecked_mut that it is only safe to call if you haven’t moved the Pin.
 The answer to that question lies in a neat safe use of Pin that the pointer
@@ -2452,7 +2366,8 @@ with the design so far, Pin is very unwieldy to work with. This is because it
 always requires unsafe code, even if you are working with a target type that
 doesn’t contain any self-references, and so doesn’t care whether it’s been
 moved or not.
-This is where the marker trait Unpin comes into play. An implementation
+
+- This is where the marker trait Unpin comes into play. An implementation
 of Unpin for a type simply asserts that the type is safe to move out of a Pin
 when used as a target type. That is, the type promises that it will never use
 any of Pin’s guarantees about the referent not moving again when used as a
@@ -2460,16 +2375,21 @@ target type, and thus those guarantees may be broken. Unpin is an auto-trait,
 like Send and Sync, and so is auto-implemented by the compiler for any type
 that contains only Unpin members. Only types that explicitly opt out of Unpin
 (like generators) and types that contain those types are !Unpin.
-For target types that are Unpin, we can provide a much simpler safe
+- For target types that are Unpin, we can provide a much simpler safe
 interface to Pin, as shown in Listing 8-10.
+
+```rust 
+
 impl<P> Pin<P> where P: Deref, P::Target: Unpin {
 pub fn new(pointer: P) -> Self;
 }
 impl<P> DerefMut for Pin<P> where P: DerefMut, P::Target: Unpin {
 fn deref_mut(&mut self) -> &mut Self::Target;
 }
+```
 Listing 8-10: The safe API to Pin for Unpin target types
-To make sense of the safe API in Listing 8-10, think about the safety
+
+- To make sense of the safe API in Listing 8-10, think about the safety
 requirements of the unsafe methods from Listing 8-9: the function
 Pin::new_unchecked is unsafe because the caller must promise that the referent
 cannot be moved outside of the Pin, and that the implementations
@@ -2479,7 +2399,7 @@ ensure that once we give out a Pin to a T, we never move that T again. But
 if the T is Unpin, it has declared that it does not care if it is moved even if it
 was previously pinned, so it’s fine if the caller does not satisfy any of those
 requirements!
-Similarly, get_unchecked_mut is unsafe because the caller must guarantee
+- Similarly, get_unchecked_mut is unsafe because the caller must guarantee
 that it doesn’t move the T out of the &mut T—but with T: Unpin, T has declared
 that it’s fine being moved even after being pinned, so that safety requirement
 is no longer important. This means that for Pin<P> where P::Target:
@@ -2488,15 +2408,16 @@ being the safe version of get_unchecked_mut). In fact, we can even provide a
 Pin::into_inner that simply gives back the owned P if the target type is Unpin,
 since the Pin is essentially irrelevant!
 
-Asynchronous Programming 131
-Ways of Obtaining a Pin
+##### Ways of Obtaining a Pin
+
 With our new understanding of Pin and Unpin, we can now make progress
 toward using the new Future definition from Listing 8-8 that requires
 Pin<&mut Self>. The first step is to construct the required type. If the future
 type is Unpin, that step is easy—we just use Pin::new(&mut future). If it is not
 Unpin, we can pin the future in one of two main ways: by pinning to the
 heap or pinning to the stack.
-Let’s start with pinning to the heap. The primary contract of Pin is that
+
+- Let’s start with pinning to the heap. The primary contract of Pin is that
 once something has been pinned, it cannot move. The pinning API takes
 care of honoring that contract for all methods and traits on Pin, so the main
 role of any function that constructs a Pin is to ensure that if the Pin itself
@@ -2506,7 +2427,8 @@ in the Pin. You can then move the Pin to your heart’s delight, but the target
 will remain where it was. This is the rationale behind the (safe) method
 Box::pin, which takes a T and returns a Pin<Box<T>>. There’s no magic to it; it
 simply asserts that Box follows the Pin constructor, Deref, and Drop contracts.
-UNPIN BOX
+
+**UNPIN BOX**
 While we’re on the topic of Box, take a look at the implementation of Unpin for
 Box. The Box type unconditionally implements Unpin for any T, even if that T is
 not Unpin. This might strike you as odd, given the earlier assertion that Unpin
@@ -2516,22 +2438,25 @@ can provide a safe Pin constructor: if you move a Box<T>, you do not move the
 T. In other words, the unconditional implementation asserts that you can move a
 Box<T> out of a Pin even if T cannot be moved out of a Pin. Note, however, that
 this does not enable you to move a T that is !Unpin out of a Pin<Box<T>>.
-The other option, pinning to the stack, is a little more involved, and at
+- The other option, pinning to the stack, is a little more involved, and at
 the time of writing requires a smidgen of unsafe code. We have to ensure
 that the pinned value cannot be accessed after the Pin with a &mut to it has
 been dropped. We accomplish that by shadowing the value as shown in the
 macro in Listing 8-11 or by using one of the crates that provide exactly this
 macro. One day it may even make it into the standard library!
+
+```rust
+
 macro_rules! pin_mut {
 ($var:ident) => {
 let mut $var = $var;
 let mut $var = unsafe { Pin::new_unchecked(&mut $var) };
 }
 }
+```
 Listing 8-11: Macro for pinning to the stack
 
-132 Chapter 8
-By taking the name of the variable to pin to the stack, the macro
+- By taking the name of the variable to pin to the stack, the macro
 ensures that the caller has the value it wants to pin somewhere on the
 stack already. The shadowing of $var ensures that the caller cannot drop
 the Pin and continue to use the unpinned value (which would breach the
@@ -2540,25 +2465,36 @@ for any target type that’s !Unpin). By moving the value stored
 in $var, the macro also ensures that the caller cannot drop the $var binding
 the macro declarations without also dropping the original variable.
 Specifically, without that line, the caller could write (note the extra scope):
+
+```rust
+
 let foo = /**/; { pin_mut!(foo); foo.poll() }; foo.mut_self_method();
-Here, we give a pinned instance of foo to poll, but then we later use a
+```
+- Here, we give a pinned instance of foo to poll, but then we later use a
 &mut to foo without a Pin, which violates the Pin contract. With the extra reassignment,
 on the other hand, that code would also move foo into the new
 scope, rendering it unusable after the scope ends.
-Pinning on the stack therefore requires unsafe code, unlike Box::pin,
+- Pinning on the stack therefore requires unsafe code, unlike Box::pin,
 but avoids the extra allocation that Box introduces and also works in no_std
 environments.
-Back to the Future
+##### Back to the Future
 We now have our pinned future, and we know what that means. But you
 may have noticed that none of this important pinning stuff shows up in
 most asynchronous code you write with async and await. And that’s because
 the compiler hides it from you.
-Think back to when we discussed Listing 8-5, when I told you that
+- Think back to when we discussed Listing 8-5, when I told you that
 <expr>.await desugars into something like:
+
+```rust
+
 loop { if let Poll::Ready(r) = expr.poll() { break r } else { yield } }
-That was an ever-so-slight simplification because, as we’ve seen, you can
+```
+- That was an ever-so-slight simplification because, as we’ve seen, you can
 call Future::poll only if you have a Pin<&mut Self> for the future. The desugaring
 is actually a bit more sophisticated, as shown in Listing 8-12.
+
+```rust
+
 1 match expr {
 mut pinned => loop {
 2 match unsafe { Pin::new_unchecked(&mut pinned) }.poll() {
@@ -2568,21 +2504,23 @@ Poll::Pending => yield,
 }
 }
 Listing 8-12: A more accurate desugaring of <expr>.await
-The match 1 is a neat shorthand to not only ensure that the expansion
+
+```
+- The match 1 is a neat shorthand to not only ensure that the expansion
 remains a valid expression, but also move the expression result into
 a variable that we can then pin on the stack. Beyond that, the main new
 addition is the call to Pin::new_unchecked 2. That call is safe because for the
 containing async block to be polled, it must already be pinned due to the
 signature of Future::poll. And the async block was polled for us to reach
-
-Asynchronous Programming 133
 the call to Pin::new_unchecked, so the generator state is pinned. Since pinned
 is stored in the generator that corresponds to the async block (it must be so
 that yield will resume correctly), we know that pinned will not move again.
 Furthermore, pinned is not accessible except through a Pin once we’re in the
 loop, so no code is able to move out of the value in pinned. Thus, we meet all
 the safety requirements of Pin::new_unchecked, and the code is safe.
-Going to Sleep
+
+#### Going to Sleep
+
 We went pretty deep into the weeds with Pin, but now that we’re out the
 other side, there is another issue around futures that may have been making
 your brain itch. If a call to Future::poll returns Poll::Pending, you need
@@ -2595,7 +2533,9 @@ web browser. Instead, we want the executor to do whatever useful work it
 can do, and then go to sleep. It should stay asleep until one of the futures
 can make progress, and only then wake up to do another pass, before going
 to sleep again.
-Waking Up
+
+##### Waking Up
+
 The condition that determines when to check back with a given future varies
 widely. It might be “when a network packet arrives on this port,” “when
 the mouse cursor moves,” “when someone sends on this channel,” “when
@@ -2603,24 +2543,27 @@ the CPU receives a particular interrupt,” or even “after this much time has
 passed.” On top of that, developers can write their own futures that wrap
 multiple other futures, and thus, they may have several wake-up conditions.
 Some futures may even introduce their own entirely custom wake events.
-To accommodate these many use cases, Rust introduces the notion of
+- To accommodate these many use cases, Rust introduces the notion of
 a Waker: a way to wake the executor to signal that progress can be made. The
 Waker is what makes the whole machinery around futures work. The executor
 constructs a Waker that integrates with the mechanism the executor uses to
 go to sleep, and passes the Waker in to any Future it polls. How? With the additional
 parameter to Future::poll that I’ve hidden from you so far. Sorry about
 that. Listing 8-13 gives the final and true definition for Future—no more lies!
+
+```rust 
+
 trait Future {
 type Output;
 fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output>;
 }
+```
 Listing 8-13: The actual Future trait with Context
-The &mut Context contains the Waker. The argument is a Context, not a
+
+- The &mut Context contains the Waker. The argument is a Context, not a
 Waker directly, so that we can augment the asynchronous ecosystem with
 additional context for futures should that be deemed necessary.
-
-134 Chapter 8
-The primary method on Waker is wake (and the by-reference variant wake
+- The primary method on Waker is wake (and the by-reference variant wake
 _by_ref), which should be called when the future can again make progress.
 The wake method takes no arguments, and its effects are entirely defined
 by the executor that constructed the Waker. You see, Waker is secretly generic
@@ -2629,7 +2572,7 @@ dictate what happens when Waker::wake is called, when a Waker is cloned, and
 when a Waker is dropped. This all happens through a manually implemented
 vtable, which functions similarly to the dynamic dispatch we discussed way
 back in Chapter 2.
-It’s a somewhat involved process to construct a Waker, and the mechanics
+- It’s a somewhat involved process to construct a Waker, and the mechanics
 of it aren’t all that important for using one, but you can see the building
 blocks in the RawWakerVTable type in the standard library. It has a constructor
 that takes the function pointers for wake and wake_by_ref as well as Clone and
@@ -2638,7 +2581,9 @@ wakers, is bundled up with a raw pointer intended to hold data specific to
 each Waker instance (like which future it’s for) and is turned into a RawWaker.
 That is in turn passed to Waker::from_raw to produce a safe Waker that can be
 passed to Future::poll.
-Fulfilling the Poll Contract
+
+##### Fulfilling the Poll Contract
+
 So far we’ve skirted around what a future actually does with a Waker. The
 idea is fairly simple: if Future::poll returns Poll::Pending, it is the future’s
 responsibility to ensure that something calls wake on the provided Waker
@@ -2651,9 +2596,11 @@ futures but instead does something like write to a network socket or attempt
 to receive on a channel. These are commonly referred to as leaf futures since
 they have no children. A leaf future has no inner future but instead directly
 represents some resource that may not yet be ready to return a result.
+
 **NOTE** The poll contract is the reason why the recursive poll call 6 back in Listing 8-4 is
 necessary for correctness.
-Leaf futures typically come in one of two shapes: those that wait for
+
+- Leaf futures typically come in one of two shapes: those that wait for
 events that originate within the same process (like a channel receiver), and
 those that wait for events external to the process (like a TCP packet read).
 Those that wait for internal events all tend to follow the same pattern: store
