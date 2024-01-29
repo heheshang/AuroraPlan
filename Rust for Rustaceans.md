@@ -2207,6 +2207,8 @@ try_forward函数只对forward进行一次轮询，尽可能多地转发消息�
 
 - 让我们根据我们目前对async和await的了解来分析这里发生的情况。当我们轮询forward生成器时，它会通过while循环进行一些未知次数的迭代，最终返回Poll::Ready(())（如果接收器结束）或Poll::Pending（否则）。如果返回Poll::Pending，生成器中包含从rx.next()或tx.send(t)返回的future。这些future都包含对forward最初提供的参数（分别是rx和tx）的引用，这些参数也必须存储在生成器中。但是当try_forward返回整个生成器时，生成器的字段也会移动。因此，rx和tx不再位于内存中的相同位置，而存储在生成器中的引用也不再指向正确的数据！
 
+- 我们在这里遇到的是一个自引用的数据结构的情况：它既包含数据，又包含对该数据的引用。对于生成器来说，构建这种自引用结构非常容易，而无法支持它们将对人体工程学产生重大影响，因为这意味着您将无法在任何yield点上保持引用。在Rust中，支持自引用数据结构的（巧妙的）解决方案是Pin类型和Unpin trait。简单来说，Pin是一个包装类型，阻止被包装类型被（安全地）移动，而Unpin是一个标记trait，表示实现该trait的类型可以安全地从Pin中移除。
+
 - What we’ve run into here is a case of a self-referential data structure: one
 that holds both data and references to that data. With generators, these selfreferential
 structures are very easy to construct, and being unable to support
@@ -2219,10 +2221,7 @@ trait that says the implementing type can be removed safely from a Pin.
 
 ##### Pin
 
-There’s a lot of nuance to cover here, so let’s start with a concrete use of
-the Pin wrapper. Listing 8-2 gave you a simplified version of the Future trait,
-but we’re now ready to peel back one part of the simplification. Listing 8-8
-shows the Future trait somewhat closer to its final form.
+这里有很多细节需要讲解，所以让我们从一个具体的Pin包装器的使用开始。清单8-2给出了Future trait的简化版本，但现在我们准备揭开其中的一部分简化。清单8-8展示了Future trait更接近最终形式的样子。
 
 ```rust
 
@@ -2232,24 +2231,20 @@ fn poll(self: Pin<&mut Self>) -> Poll<Self::Output>;
 }
 ```
 
-Listing 8-8: A less simplified view of the Future trait with Pin
+清单8-8：带有Pin的Future trait的更详细视图
 
-- In particular, this definition requires that you call poll on Pin<&mut Self>.
-Once you have a value behind a Pin, that constitutes a contract that that value
-will never move again. This means that you can construct self-references
-internally to your heart’s delight, exactly as you want for generators.
+- 特别是，这个定义要求您在Pin<&mut Self>上调用poll。
+一旦您有了一个Pin后面的值，这就构成了一个合同，即该值将不再移动。
+这意味着您可以在内部构建自引用，就像生成器一样。
 
-**NOTE** While Future makes use of Pin, Pin is not tied to the Future trait—you can use Pin for
-any self-referential data structure.
+**注意** 虽然Future使用了Pin，但Pin并不局限于Future trait - 您可以将Pin用于任何自引用的数据结构。
 
-- But how do you get a Pin to call poll? And how can Pin ensure that
-the contained value won’t move? To see how this magic works, let’s look
-at the definition of std::pin::Pin and some of its key methods, shown in
-Listing 8-9.
+- 但是如何获取一个Pin来调用poll呢？Pin又如何确保包含的值不会移动呢？为了了解这个魔法是如何工作的，让我们看一下std::pin::Pin的定义以及其中一些关键方法，如清单8-9所示。
 
 ```rust
 
 struct Pin<P> { pointer: P }
+
 impl<P> Pin<P> where P: Deref {
   pub unsafe fn new_unchecked(pointer: P) -> Self;
 }
@@ -2262,187 +2257,73 @@ impl<P> Deref for Pin<P> where P: Deref {
 }
 ```
 
-Listing 8-9: std::pin::Pin and its key methods
+清单8-9：std::pin::Pin及其关键方法
 
-- There’s a lot to unpack here, and we’re going to have to go over the
-definition in Listing 8-9 a few times before all the bits make sense, so please
-bear with me.
+- 这里有很多细节需要讲解，我们需要多次查看清单8-9中的定义，直到所有部分都变得清晰明了，请耐心等待。
 
-- First, you’ll notice that Pin holds a pointer type. That is, rather than hold
-some T directly, it holds a type P that dereferences through Deref into T. This
-means that rather than have a Pin<MyType>, you’ll have a Pin<Box<MyType>> or
-Pin<Rc<MyType>> or Pin<&mut MyType>. The reason for this design is simple—
-Pin’s primary goal is to make sure that once you place a T behind a Pin, that
-T won’t move, as doing so might invalidate self-references stored in the T. If
-the Pin just held a T directly, then simply moving the Pin would be enough to
-invalidate that invariant! In the remainder of this section, I’ll refer to P as
-the pointer type and T as the target type.
+- 首先，您会注意到Pin持有一个指针类型。也就是说，它不直接持有某个T类型的值，而是持有一个通过Deref解引用到T的类型P。这意味着，您将拥有的是`Pin<Box<MyType>>、Pin<Rc<MyType>>`或`Pin<&mut MyType>`，而不是简单的`Pin<MyType>`。这种设计的原因很简单 - Pin的主要目标是确保一旦将T放在Pin后面，T就不会移动，因为这样做可能会使存储在T中的自引用失效。如果Pin直接持有T，那么仅仅移动Pin就足以使这个不变量失效！在本节的其余部分，我将将P称为指针类型，将T称为目标类型。
 
-- Next, notice that Pin’s constructor, new_unchecked, is unsafe. This is
-because the compiler has no way to actually check that the pointer type
-indeed promises that the pointed-to (target) type won’t move again. Consider,
-for example, a variable foo on the stack. If Pin’s constructor were safe,
-we could do Pin::new(&mut foo), call a method that requires Pin<&mut Self>
-(and thus assumes that Self won’t move again), and then drop the Pin. At
-this point, we could modify foo as much as we liked, since it is no longer
-borrowed—including moving it! We could then pin it again and call the
-same method, which would be none the wiser that any self-referential pointers
-it may have constructed the first time around would now be invalid.
+- 接下来，请注意Pin的构造函数new_unchecked是不安全的。这是因为编译器无法实际检查指针类型是否确实承诺指向的目标类型不会再次移动。例如，考虑一个位于堆栈上的变量foo。如果Pin的构造函数是安全的，我们可以使用Pin::new(&mut foo)，调用一个需要Pin<&mut Self>的方法（因此假设Self不会再次移动），然后丢弃Pin。此时，我们可以随意修改foo，因为它不再被借用 - 包括移动它！然后，我们可以再次固定它并调用相同的方法，而该方法不会意识到第一次构造时可能构建的任何自引用指针现在都是无效的。
 
 **PIN CONSTRUCTOR SAFETY**
-The other reason the constructor for Pin is unsafe is that its safety depends on
-the implementation of traits that are themselves safe. For example, the way
-that Pin<P> implements get_unchecked_mut is to use the implementation of
-DerefMut::deref_mut for P. While the call to get_unchecked_mut is unsafe, the
-impl DerefMut for P is not. Yet it receives a &mut self, and can thus freely (and
-without unsafe code) move the T. The same thing applies to Drop. The safety
-requirement for Pin::new_unchecked is therefore not only that the pointer type
-will not let the target type be moved again (like in the Pin<&mut T> example),
-but also that its Deref, DerefMut, and Drop implementations do not move the
-pointed-to value behind the &mut self they receive.
+构造Pin的另一个不安全的原因是它的安全性取决于一些本身是安全的trait的实现。例如，`Pin<P>`实现get_unchecked_mut的方式是使用P的DerefMut::deref_mut的实现。虽然对get_unchecked_mut的调用是不安全的，但对于P的impl DerefMut来说是安全的。然而，它接收一个&mut self，并且可以自由地（无需使用不安全的代码）移动T。Drop也是同样的情况。因此，Pin::new_unchecked的安全要求不仅是指针类型不会再次移动目标类型（就像Pin<&mut T>的例子中那样），还要求它的Deref、DerefMut和Drop实现不会移动接收到的&mut self后面的指向的值。
 
-- We then get to the get_unchecked_mut method, which gives you a mutable
-reference to the T behind the Pin’s pointer type. This method is also unsafe,
-because once we give out a &mut T, the caller has to promise it won’t use
-that &mut T to move the T or otherwise invalidate its memory, lest any selfreferences
-be invalidated. If this method weren’t unsafe, a caller could
-call a method that takes Pin<&mut Self> and then call the safe variant of
-get_unchecked_mut on two Pin<&mut _>s, then use mem::swap to swap the values
-behind the Pin. If we were to then call a method that takes Pin<&mut Self>
-again on either Pin, its assumption that the Self hasn’t moved would be violated,
-and any internal references it stored would be invalid!
-- Perhaps surprisingly, Pin<P> always implements Deref<Target = T>, and
-that is entirely safe. The reason for this is that a &T does not let you move T
-without writing other unsafe code (UnsafeCell, for example, as we’ll discuss
-in Chapter 9). This is a good example of why the scope of an unsafe block
-extends beyond just the code it contains. If you wrote some code in one part
-of the application that (unsafely) replaced a T behind an & using UnsafeCell,
-then it could be that that &T initially came from a Pin<&mut T>, and that you
-have now violated the invariant that the T behind the Pin may never move,
-even though the place where you unsafely replaced the &T did not even mention
-Pin!
-**NOTE** If you’ve browsed through the Pin documentation while reading this chapter, you may
-have noticed Pin::set, which takes a &mut self and a <P as Deref>::Target and
-safely changes the value behind the Pin. This is possible because set does not return
-the value that was previously pinned—it simply drops it in place and stores the new
-value there instead. Therefore, it does not violate the pinning invariants: the old
-value was never accessed outside of a Pin after it was placed there.
+- 然后我们来到了get_unchecked_mut方法，它给出了对Pin指针类型后面的T的可变引用。这个方法也是不安全的，因为一旦我们给出了一个&mut T，调用者必须承诺不会使用该&mut T来移动T或以其他方式使其内存无效，以免任何自引用失效。如果这个方法不是不安全的，调用者可以在两个Pin<&mut _>上调用一个接受Pin<&mut Self>的方法，然后调用get_unchecked_mut的安全变体，然后使用mem::swap交换Pin后面的值。如果我们再次在任何一个Pin上调用一个接受Pin<&mut Self>的方法，它对Self没有移动的假设将被违反，并且它存储的任何内部引用都将无效！
+- 令人惊讶的是，`Pin<P>`总是实现了`Deref<Target = T>`，而且这是完全安全的。原因是，通过&T，您无法移动T，除非编写其他不安全的代码（例如，UnsafeCell，我们将在第9章中讨论）。这是为什么不安全块的范围超出了它包含的代码的一个很好的例子。如果您在应用程序的某个部分中编写了一些代码（不安全地）使用UnsafeCell替换&T后面的T，那么可能是该&T最初来自Pin<&mut T>，而您现在已经违反了Pin后面的T永远不会移动的不变量，即使您不安全地替换&T的地方甚至没有提到Pin！
+**注意** 如果您在阅读本章时浏览了Pin文档，可能会注意到Pin::set方法，它接受一个`&mut self和<P as Deref>::Target`，并安全地更改Pin后面的值。这是可能的，因为set方法不返回先前固定的值 - 它只是在原地丢弃它，并将新值存储在那里。因此，它不违反固定不变量：旧值在放置在Pin后面后从未在Pin之外访问过。
 
 ##### Unpin: The Key to Safe Pinning
 
-At this point you might ask: given that getting a mutable reference is unsafe
-anyway, why not have Pin hold a T directly? That is, rather than require an
-indirection through a pointer type, you could instead make the contract
-for get_unchecked_mut that it is only safe to call if you haven’t moved the Pin.
-The answer to that question lies in a neat safe use of Pin that the pointer
-design enables. Recall that the whole reason we want Pin in the first place is
-so we can have target types that may contain references to themselves (like
-a generator) and give their methods a guarantee that the target type hasn’t
-moved and thus that internal self-references remain valid. Pin lets us use the
-type system to enforce that guarantee, which is great. But unfortunately,
-with the design so far, Pin is very unwieldy to work with. This is because it
-always requires unsafe code, even if you are working with a target type that
-doesn’t contain any self-references, and so doesn’t care whether it’s been
-moved or not.
+此时，您可能会问：既然获取可变引用本身就是不安全的，为什么不直接让Pin持有T呢？也就是说，不需要通过指针类型进行间接引用，而是可以使get_unchecked_mut的约定是只有在未移动Pin的情况下才能安全调用。对于这个问题的答案在于指针设计所实现的一种巧妙的安全使用方式。回想一下，我们之所以需要Pin，是因为我们希望有可能包含对自身的引用的目标类型（比如生成器），并给它们的方法提供一个保证，即目标类型没有移动，因此内部的自引用仍然有效。Pin让我们可以使用类型系统来强制执行这个保证，这非常好。但不幸的是，到目前为止，使用Pin非常不方便。这是因为它总是需要使用不安全的代码，即使您正在处理一个不包含任何自引用的目标类型，因此无论它是否被移动都无关紧要。
 
-- This is where the marker trait Unpin comes into play. An implementation
-of Unpin for a type simply asserts that the type is safe to move out of a Pin
-when used as a target type. That is, the type promises that it will never use
-any of Pin’s guarantees about the referent not moving again when used as a
-target type, and thus those guarantees may be broken. Unpin is an auto-trait,
-like Send and Sync, and so is auto-implemented by the compiler for any type
-that contains only Unpin members. Only types that explicitly opt out of Unpin
-(like generators) and types that contain those types are !Unpin.
-- For target types that are Unpin, we can provide a much simpler safe
-interface to Pin, as shown in Listing 8-10.
+- 这就是标记trait Unpin发挥作用的地方。对于一个类型的Unpin实现，它只是断言该类型在用作目标类型时可以安全地从Pin中移动出来。也就是说，该类型承诺在用作目标类型时不会使用Pin关于引用对象不再移动的任何保证，因此这些保证可能会被打破。Unpin是一个自动trait，类似于Send和Sync，因此编译器会自动为仅包含Unpin成员的任何类型实现Unpin。只有显式选择不使用Unpin的类型（比如生成器）和包含这些类型的类型才是!Unpin。
+- 对于Unpin的目标类型，我们可以提供一个更简单的安全接口给Pin，如清单8-10所示。
 
 ```rust
 
 impl<P> Pin<P> where P: Deref, P::Target: Unpin {
-pub fn new(pointer: P) -> Self;
+  pub fn new(pointer: P) -> Self;
 }
 impl<P> DerefMut for Pin<P> where P: DerefMut, P::Target: Unpin {
-fn deref_mut(&mut self) -> &mut Self::Target;
+  fn deref_mut(&mut self) -> &mut Self::Target;
 }
 ```
 
-Listing 8-10: The safe API to Pin for Unpin target types
+清单8-10：针对Unpin目标类型的Pin的安全API
 
-- To make sense of the safe API in Listing 8-10, think about the safety
-requirements of the unsafe methods from Listing 8-9: the function
-Pin::new_unchecked is unsafe because the caller must promise that the referent
-cannot be moved outside of the Pin, and that the implementations
-of Deref, DerefMut, and Drop for the pointer type do not move the referent
-through the reference they receive. Those requirements are there to
-ensure that once we give out a Pin to a T, we never move that T again. But
-if the T is Unpin, it has declared that it does not care if it is moved even if it
-was previously pinned, so it’s fine if the caller does not satisfy any of those
-requirements!
-- Similarly, get_unchecked_mut is unsafe because the caller must guarantee
-that it doesn’t move the T out of the &mut T—but with T: Unpin, T has declared
-that it’s fine being moved even after being pinned, so that safety requirement
-is no longer important. This means that for Pin<P> where P::Target:
-Unpin, we can simply provide safe variants of both those methods (DerefMut
-being the safe version of get_unchecked_mut). In fact, we can even provide a
-Pin::into_inner that simply gives back the owned P if the target type is Unpin,
-since the Pin is essentially irrelevant!
+- 要理解清单8-10中的安全API，我们需要考虑清单8-9中的不安全方法的安全要求：Pin::new_unchecked函数是不安全的，因为调用者必须承诺引用对象不能在Pin之外移动，并且指针类型的Deref、DerefMut和Drop的实现不会通过接收到的引用移动引用对象。这些要求的目的是确保一旦我们给出一个Pin到T，我们就不会再移动该T。但是，如果T是Unpin的，它声明了即使之前被固定，它也不在乎是否被移动，所以如果调用者不满足这些要求，那也没关系！
+- 类似地，get_unchecked_mut是不安全的，因为调用者必须保证不会将T从&mut T中移出，但是对于T: Unpin，T声明了即使被固定后也可以移动，因此这个安全要求不再重要。这意味着对于Pin<P>，其中P::Target: Unpin，我们可以简单地提供这两个方法的安全变体（DerefMut是get_unchecked_mut的安全版本）。实际上，如果目标类型是Unpin，我们甚至可以提供一个简单的Pin::into_inner，它只是返回拥有的P，因为Pin本身基本上是无关紧要的！
 
 ##### Ways of Obtaining a Pin
 
-With our new understanding of Pin and Unpin, we can now make progress
-toward using the new Future definition from Listing 8-8 that requires
-Pin<&mut Self>. The first step is to construct the required type. If the future
-type is Unpin, that step is easy—we just use Pin::new(&mut future). If it is not
-Unpin, we can pin the future in one of two main ways: by pinning to the
-heap or pinning to the stack.
+有了对Pin和Unpin的新理解，我们现在可以朝着使用清单8-8中要求Pin<&mut Self>的新Future定义取得进展。第一步是构造所需的类型。如果future类型是Unpin的，那么这一步很容易 - 我们只需使用Pin::new(&mut future)。如果它不是Unpin的，我们可以通过两种主要方式之一将future固定在堆上或堆栈上。
 
-- Let’s start with pinning to the heap. The primary contract of Pin is that
-once something has been pinned, it cannot move. The pinning API takes
-care of honoring that contract for all methods and traits on Pin, so the main
-role of any function that constructs a Pin is to ensure that if the Pin itself
-moves, the referent value does not move too. The easiest way to ensure that is
-to place the referent on the heap, and then place just a pointer to the referent
-in the Pin. You can then move the Pin to your heart’s delight, but the target
-will remain where it was. This is the rationale behind the (safe) method
-Box::pin, which takes a T and returns a Pin<Box<T>>. There’s no magic to it; it
-simply asserts that Box follows the Pin constructor, Deref, and Drop contracts.
+- 让我们从固定到堆上开始。Pin的主要约定是一旦某个对象被固定，它就不能移动。固定API负责在Pin上的所有方法和特性中遵守这个约定，因此构造Pin的任何函数的主要作用是确保如果Pin本身移动了，被引用的值也不会移动。最简单的方法是将被引用的值放在堆上，然后在Pin中只放置一个指向被引用值的指针。然后，您可以随意移动Pin，但目标值将保持在原地。这就是（安全的）Box::pin方法的原理，它接受一个T并返回一个`Pin<Box<T>>`。这没有什么神奇的，它只是断言Box遵循Pin构造函数、Deref和Drop的约定。
 
 **UNPIN BOX**
-While we’re on the topic of Box, take a look at the implementation of Unpin for
-Box. The Box type unconditionally implements Unpin for any T, even if that T is
-not Unpin. This might strike you as odd, given the earlier assertion that Unpin
-is an auto-trait that is generally implemented for a type only if all of the type’s
-members are also Unpin. Box is an exception to this for the same reason that it
-can provide a safe Pin constructor: if you move a Box<T>, you do not move the
-T. In other words, the unconditional implementation asserts that you can move a
-Box<T> out of a Pin even if T cannot be moved out of a Pin. Note, however, that
-this does not enable you to move a T that is !Unpin out of a Pin<Box<T>>.
+在我们讨论Box的同时，让我们看一下Box对于Unpin的实现。Box类型无条件地为任何T实现Unpin，即使T本身不是Unpin。这可能让您感到奇怪，因为前面断言Unpin是一个自动trait，通常只有当类型的所有成员也都是Unpin时才会为该类型实现Unpin。Box是一个例外，原因与它可以提供安全的Pin构造函数相同：如果移动了一个`Box<T>`，并不会移动T。换句话说，无条件的实现断言您可以从Pin中移动出一个`Box<T>`，即使T不能从Pin中移动出来。然而，请注意，这并不意味着您可以从`Pin<Box<T>>`中移动一个!Unpin的T。
 
-- The other option, pinning to the stack, is a little more involved, and at
-the time of writing requires a smidgen of unsafe code. We have to ensure
-that the pinned value cannot be accessed after the Pin with a &mut to it has
-been dropped. We accomplish that by shadowing the value as shown in the
-macro in Listing 8-11 or by using one of the crates that provide exactly this
-macro. One day it may even make it into the standard library!
+- 另一种选择是将值固定到堆栈上，这需要一些不安全的代码。我们必须确保在使用&mut引用它的Pin被丢弃后，无法再访问固定的值。我们通过在宏中显示阴影值来实现这一点，如清单8-11所示，或者使用提供此宏的某个crate。也许有一天它甚至会进入标准库！
 
 ```rust
 
 macro_rules! pin_mut {
-($var:ident) => {
-let mut $var = $var;
-let mut $var = unsafe { Pin::new_unchecked(&mut $var) };
-}
+  ($var:ident) => {
+    let mut $var = $var;
+    let mut $var = unsafe { Pin::new_unchecked(&mut $var) };
+  }
 }
 ```
 
-Listing 8-11: Macro for pinning to the stack
+清单8-11：将值固定到堆栈的宏
+
+- 通过接收要固定到堆栈的变量的名称，该宏确保调用者已经在堆栈上有了要固定的值。对$var的阴影处理确保调用者无法丢弃Pin并继续使用未固定的值（这将违反任何!Unpin目标类型的Pin约定）。通过移动$var中存储的值，该宏还确保调用者无法在不丢弃原始变量的情况下丢弃宏声明的$var绑定。具体来说，如果没有这一行，调用者可以编写以下代码（注意额外的作用域）：
 
 - By taking the name of the variable to pin to the stack, the macro
 ensures that the caller has the value it wants to pin somewhere on the
 stack already. The shadowing of $var ensures that the caller cannot drop
 the Pin and continue to use the unpinned value (which would breach the
-Pin contract
-for any target type that’s !Unpin). By moving the value stored
+Pin contract for any target type that’s !Unpin). By moving the value stored
 in $var, the macro also ensures that the caller cannot drop the $var binding
 the macro declarations without also dropping the original variable.
 Specifically, without that line, the caller could write (note the extra scope):
@@ -2452,59 +2333,38 @@ Specifically, without that line, the caller could write (note the extra scope):
 let foo = /**/; { pin_mut!(foo); foo.poll() }; foo.mut_self_method();
 ```
 
-- Here, we give a pinned instance of foo to poll, but then we later use a
-&mut to foo without a Pin, which violates the Pin contract. With the extra reassignment,
-on the other hand, that code would also move foo into the new
-scope, rendering it unusable after the scope ends.
-- Pinning on the stack therefore requires unsafe code, unlike Box::pin,
-but avoids the extra allocation that Box introduces and also works in no_std
-environments.
+- 在这里，我们将一个固定的foo实例传递给poll，但后来我们又在没有Pin的情况下使用了一个对foo的&mut引用，这违反了Pin的约定。另一方面，如果有额外的重新赋值，那么该代码也会将foo移动到新的作用域中，在作用域结束后无法再使用它。
+- 在堆栈上固定值因此需要使用不安全的代码，与Box::pin不同，但避免了Box引入的额外分配，并且在no_std环境中也适用。
 
 ##### Back to the Future
 
-We now have our pinned future, and we know what that means. But you
-may have noticed that none of this important pinning stuff shows up in
-most asynchronous code you write with async and await. And that’s because
-the compiler hides it from you.
+现在我们有了固定的future，并且我们知道这意味着什么。但是您可能已经注意到，在使用async和await编写的大多数异步代码中，没有出现任何重要的固定相关内容。这是因为编译器将其隐藏起来。
 
-- Think back to when we discussed Listing 8-5, when I told you that
-<expr>.await desugars into something like:
+- 回想一下我们讨论清单8-5时，我告诉您<expr>.await会被展开成类似以下的代码：
 
 ```rust
 
 loop { if let Poll::Ready(r) = expr.poll() { break r } else { yield } }
 ```
 
-- That was an ever-so-slight simplification because, as we’ve seen, you can
-call Future::poll only if you have a Pin<&mut Self> for the future. The desugaring
-is actually a bit more sophisticated, as shown in Listing 8-12.
+- 这是一个微小的简化，因为正如我们所见，只有当您拥有一个Pin<&mut Self>用于future时，才能调用Future::poll。实际上，展开的代码更加复杂，如清单8-12所示。
 
 ```rust
 
 1 match expr {
-mut pinned => loop {
-2 match unsafe { Pin::new_unchecked(&mut pinned) }.poll() {
-Poll::Ready(r) => break r,
-Poll::Pending => yield,
+  mut pinned => loop {
+    2 match unsafe { Pin::new_unchecked(&mut pinned) }.poll() {
+      Poll::Ready(r) => break r,
+      Poll::Pending => yield,
+    }
+  }
 }
-}
-}
-Listing 8-12: A more accurate desugaring of <expr>.await
 
 ```
 
-- The match 1 is a neat shorthand to not only ensure that the expansion
-remains a valid expression, but also move the expression result into
-a variable that we can then pin on the stack. Beyond that, the main new
-addition is the call to Pin::new_unchecked 2. That call is safe because for the
-containing async block to be polled, it must already be pinned due to the
-signature of Future::poll. And the async block was polled for us to reach
-the call to Pin::new_unchecked, so the generator state is pinned. Since pinned
-is stored in the generator that corresponds to the async block (it must be so
-that yield will resume correctly), we know that pinned will not move again.
-Furthermore, pinned is not accessible except through a Pin once we’re in the
-loop, so no code is able to move out of the value in pinned. Thus, we meet all
-the safety requirements of Pin::new_unchecked, and the code is safe.
+清单8-12：更准确的<expr>.await展开
+
+- match 1是一种简洁的写法，不仅可以确保展开后仍然是有效的表达式，还可以将表达式结果移动到一个变量中，然后我们可以将其固定在堆栈上。除此之外，主要的新添加是对Pin::new_unchecked的调用2。这个调用是安全的，因为为了对包含的异步块进行轮询，它必须已经被固定，这是由于Future::poll的签名。而且，我们已经对异步块进行了轮询，以达到对Pin::new_unchecked的调用，所以生成器状态是固定的。由于固定存储在对应于异步块的生成器中（必须如此才能正确恢复yield），我们知道固定将不会再次移动。此外，在循环中，除了通过Pin访问固定之外，无法访问固定，因此没有代码能够从固定的值中移动出来。因此，我们满足了Pin::new_unchecked的所有安全要求，代码是安全的。
 
 #### Going to Sleep
 
