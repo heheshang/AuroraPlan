@@ -2931,7 +2931,9 @@ early drop before the MaybeUninit<T> has been fully initialized, you’ll have t
 take care to drop only the parts of T that are now valid, if any. You can just drop the
 MaybeUninit and have the backing memory forgotten, but if it holds, say, a Box, you
 might end up with a memory leak!
+
 ###### Panics
+
 - An important and often overlooked aspect of ensuring that code using
 unsafe operations is safe is that the code must also be prepared to handle
 panics. In particular, as we discussed briefly in Chapter 5, Rust’s default
