@@ -2368,6 +2368,7 @@ loop { if let Poll::Ready(r) = expr.poll() { break r } else { yield } }
 
 #### Going to Sleep
 
+
 We went pretty deep into the weeds with Pin, but now that we’re out the
 other side, there is another issue around futures that may have been making
 your brain itch. If a call to Future::poll returns Poll::Pending, you need
@@ -2381,168 +2382,55 @@ can do, and then go to sleep. It should stay asleep until one of the futures
 can make progress, and only then wake up to do another pass, before going
 to sleep again.
 
+我们对Pin进行了深入的探讨，但是现在我们已经解决了另一个与future相关的问题，这可能让你感到困惑。如果对Future::poll的调用返回Poll::Pending，你需要在稍后的时间再次调用poll来检查是否可以取得进展。通常，这个任务被称为执行器（executor）。你的执行器可以是一个简单的循环，它轮询所有你正在等待的future，直到它们都返回Poll::Ready。但是这样做会消耗大量的CPU周期，你可能本可以用于其他更有用的事情，比如运行你的网页浏览器。相反，我们希望执行器尽可能地完成有用的工作，然后进入休眠状态。它应该保持休眠，直到其中一个future可以取得进展，然后再次唤醒执行下一轮，然后再次进入休眠状态。
+
 ##### Waking Up
 
-The condition that determines when to check back with a given future varies
-widely. It might be “when a network packet arrives on this port,” “when
-the mouse cursor moves,” “when someone sends on this channel,” “when
-the CPU receives a particular interrupt,” or even “after this much time has
-passed.” On top of that, developers can write their own futures that wrap
-multiple other futures, and thus, they may have several wake-up conditions.
-Some futures may even introduce their own entirely custom wake events.
+决定何时重新检查给定的future的条件各不相同。它可能是“当网络数据包到达此端口时”，“当鼠标光标移动时”，“当有人在此通道上发送消息时”，“当CPU接收到特定中断时”，甚至是“经过了这么长时间”。除此之外，开发人员可以编写自己的包装多个其他future的future，因此可能有多个唤醒条件。有些future甚至可能引入自己完全定制的唤醒事件。
 
-- To accommodate these many use cases, Rust introduces the notion of
-a Waker: a way to wake the executor to signal that progress can be made. The
-Waker is what makes the whole machinery around futures work. The executor
-constructs a Waker that integrates with the mechanism the executor uses to
-go to sleep, and passes the Waker in to any Future it polls. How? With the additional
-parameter to Future::poll that I’ve hidden from you so far. Sorry about
-that. Listing 8-13 gives the final and true definition for Future—no more lies!
+- 为了适应这些多种用例，Rust引入了Waker的概念：一种唤醒执行器以表示可以进行进展的方式。Waker是使整个与future相关的机制工作的关键。执行器构造一个与执行器进入休眠机制集成的Waker，并将Waker传递给它轮询的任何Future。如何实现呢？通过Future::poll的额外参数，这是我迄今为止对你隐藏的。对此我感到抱歉。清单8-13给出了Future的最终和真实的定义-不再有谎言！
 
 ```rust
 
 trait Future {
-type Output;
-fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output>;
+  type Output;
+  fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output>;
 }
 ```
 
-Listing 8-13: The actual Future trait with Context
+清单8-13：具有Context的实际Future trait
 
-- The &mut Context contains the Waker. The argument is a Context, not a
-Waker directly, so that we can augment the asynchronous ecosystem with
-additional context for futures should that be deemed necessary.
-- The primary method on Waker is wake (and the by-reference variant wake
-_by_ref), which should be called when the future can again make progress.
-The wake method takes no arguments, and its effects are entirely defined
-by the executor that constructed the Waker. You see, Waker is secretly generic
-over the executor. Or, more precisely, whatever constructed the Waker gets to
-dictate what happens when Waker::wake is called, when a Waker is cloned, and
-when a Waker is dropped. This all happens through a manually implemented
-vtable, which functions similarly to the dynamic dispatch we discussed way
-back in Chapter 2.
-- It’s a somewhat involved process to construct a Waker, and the mechanics
-of it aren’t all that important for using one, but you can see the building
-blocks in the RawWakerVTable type in the standard library. It has a constructor
-that takes the function pointers for wake and wake_by_ref as well as Clone and
-Drop. The RawWakerVTable, which is usually shared among all of an executor’s
-wakers, is bundled up with a raw pointer intended to hold data specific to
-each Waker instance (like which future it’s for) and is turned into a RawWaker.
-That is in turn passed to Waker::from_raw to produce a safe Waker that can be
-passed to Future::poll.
+- &mut Context包含Waker。参数是一个Context，而不是直接的Waker，这样我们就可以在需要时为futures增加额外的上下文。
+- Waker的主要方法是wake（以及引用变体wake_by_ref），当future可以再次取得进展时应该调用它。wake方法不接受任何参数，其效果完全由构造Waker的执行器定义。你看，Waker在执行器上是秘密泛型的。更准确地说，构造Waker的对象可以决定在调用Waker::wake时发生什么，当克隆Waker时发生什么，以及当丢弃Waker时发生什么。所有这些都是通过手动实现的虚函数表来实现的，它的功能类似于我们在第2章中讨论的动态分派。
+- 构建一个Waker是一个相对复杂的过程，对于使用一个Waker来说，其机制并不是非常重要，但是你可以在标准库的RawWakerVTable类型中看到构建块。它有一个构造函数，接受wake和wake_by_ref的函数指针，以及Clone和Drop。RawWakerVTable通常在所有执行器的Waker之间共享，它与一个原始指针捆绑在一起，用于保存每个Waker实例的特定数据（比如它所属的future），并转换为RawWaker。然后将其传递给Waker::from_raw，以生成一个安全的Waker，可以传递给Future::poll。
 
 ##### Fulfilling the Poll Contract
 
-So far we’ve skirted around what a future actually does with a Waker. The
-idea is fairly simple: if Future::poll returns Poll::Pending, it is the future’s
-responsibility to ensure that something calls wake on the provided Waker
-when the future is next able to make progress. Most futures uphold this
-property by returning Poll::Pending only if some other future also returned
-Poll::Pending; in this way, it trivially fulfills the contract of poll since the
-inner future must follow that same contract. But there can’t be turtles all
-the way down. At some point, you reach a future that does not poll other
-futures but instead does something like write to a network socket or attempt
-to receive on a channel. These are commonly referred to as leaf futures since
-they have no children. A leaf future has no inner future but instead directly
-represents some resource that may not yet be ready to return a result.
+到目前为止，我们已经绕过了future在Waker上的实际操作。这个想法相当简单：如果Future::poll返回Poll::Pending，那么在future下次能够取得进展时，它的责任是确保有某个东西调用提供的Waker上的wake方法。大多数futures通过仅在其他future也返回Poll::Pending时返回Poll::Pending来履行这个属性；通过这种方式，它可以轻松地满足poll的约定，因为内部future必须遵循相同的约定。但是不能一直这样下去。在某个点上，你会遇到一个不轮询其他futures而是执行诸如写入网络套接字或尝试在通道上接收等操作的future。这些通常被称为Leaf futures，因为它们没有子级。Leaf future没有内部future，而是直接表示可能尚未准备好返回结果的某些资源。
 
-**NOTE** The poll contract is the reason why the recursive poll call 6 back in Listing 8-4 is
-necessary for correctness.
+**注意**，poll约定是为了正确性而需要在清单8-4中进行递归调用6。
 
-- Leaf futures typically come in one of two shapes: those that wait for
-events that originate within the same process (like a channel receiver), and
-those that wait for events external to the process (like a TCP packet read).
-Those that wait for internal events all tend to follow the same pattern: store
-the Waker where the code that will wake you up can find it, and have that
-code call wake on the Waker when it generates the relevant event. For example,
-consider a leaf future that has to wait for a message on an in-memory channel.
-It stores its Waker inside the part of the channel that is shared between
-the sender and the receiver and then returns Poll::Pending. When a sender
-later comes along and injects a message into the channel, it notices the Waker
-left there by the waiting receiver and calls wake on the Waker before returning
-from send. Now the receiver is awoken, and the poll contract is upheld.
+- Leaf future通常有两种形式：一种是等待在同一进程内发生的事件（比如通道接收器），另一种是等待在进程外部发生的事件（比如TCP数据包读取）。等待内部事件的Leaf future通常遵循相同的模式：将Waker存储在代码可以找到的位置，并在生成相关事件时调用Waker的wake方法。例如，考虑一个必须等待内存通道上的消息的Leaf future。它将其Waker存储在发送方和接收方之间共享的通道部分中，然后返回Poll::Pending。当发送方稍后向通道中注入消息时，它会注意到等待接收方留下的Waker，并在从发送中返回之前调用Waker的wake方法。现在接收方被唤醒，poll约定得到了遵守。
 
-Asynchronous Programming 135
-Leaf futures that deal with external events are more involved, as the
-code that generates the event they’re waiting for knows nothing of futures
-or wakers. Most often the generating code is the operating system kernel,
-which knows when a disk is ready or a timer expires, but it could also be
-a C library that invokes a callback into Rust when an operation completes
-or some other such external entity. A leaf future wrapping an external
-resource like this could spin up a thread that executes a blocking system
-call (or waits for the C callback) and then use the internal waking mechanism,
-but that would be wasteful; you would spin up a thread every time
-an operation had to wait and be left with lots of single-use threads sitting
-around waiting for things.
-Instead, executors tend to provide implementations of leaf futures
-that communicate behind the scenes with the executor to arrange for
-the appropriate interaction with the operating system. How exactly this
-is orchestrated depends on the executor and the operating system, but
-roughly speaking the executor keeps track of all the event sources that it
-should listen for the next time it goes to sleep. When a leaf future realizes
-it must wait for an external event, it updates that executor’s state (which it
-knows about since it’s provided by the executor crate) to include that external
-event source alongside its Waker. When the executor can no longer make
-progress, it gathers all of the event sources the various pending leaf futures
-are waiting for and does a big blocking call to the operating system, telling
-it to return when any of the resources the leaf futures are waiting on have
-a new event. On Linux, this is usually achieved with the epoll system call;
-Windows, the BSDs, macOS, and pretty much every other operating system
-provide similar mechanisms. When that call returns, the executor calls wake
-on all the wakers associated with event sources that the operating system
-reported events for, and thus the poll contract is fulfilled.
-**NOTE** A reactor is the part of an executor that leaf futures register event sources with and
-that the executor waits on when it has no more useful work to do. It is possible to
-separate the executor and the reactor, though bundling them together often improves
-performance as the two can be co-optimized more readily.
-A knock-on effect of the tight integration between leaf futures and
-the executor is that leaf futures from one executor crate often cannot be
-used with a different executor. Or at least, they cannot be used unless the
-leaf future’s executor is also running. When the leaf future goes to store
-its Waker and register the event source it’s waiting for, the executor it was
-built against needs to have that state set up and needs to be running so
-that the event source will actually be monitored and wake eventually called.
-There are ways around this, such as having leaf futures spawn an executor
-if one is not already running, but this is not always advisable as it means
-that an application can transparently end up with multiple executors running
-at the same time, which can reduce performance and mean you must
-inspect the state of multiple executors when debugging.
-Library crates that wish to support multiple executors have to be generic
-over their leaf resources. For example, instead of using a particular executor’s
+- 处理外部事件的Leaf future更加复杂，因为生成事件的代码对future和waker一无所知。最常见的情况是生成代码是操作系统内核，它知道磁盘何时准备好或计时器何时到期，但也可能是调用Rust回调的C库或其他外部实体。一个包装外部资源的Leaf future可以启动一个执行阻塞系统调用（或等待C回调）的线程，然后使用内部唤醒机制，但这样做是浪费的；每次操作需要等待时都会启动一个线程，并且会有很多单次使用的线程闲置等待。
 
-136 Chapter 8
-TcpStream or File future type, a library can store a generic T: AsyncRead +
-AsyncWrite. However, the ecosystem has yet to settle on exactly what these traits
-should look like and which traits are needed, so for the moment it’s fairly difficult
-to make code truly generic over the executor. For example, while AsyncRead
-and AsyncWrite are somewhat common across the ecosystem (or can be easily
-adapted if necessary), no traits currently exist for running a future in the
-background (spawning, which we’ll discuss later) or for representing a timer.
-Waking Is a Misnomer
-You may already have realized that Waker::wake doesn’t necessarily seem to
-wake anything. For example, for external events (as described in the previous
-section), the executor is already awake, and it might seem silly for it to
-then call wake on a Waker that belongs to that executor anyway! The reality is
-that Waker::wake is a bit of a misnomer—in reality, it signals that a particular
-future is runnable. That is, it tells the executor that it should make sure to
-poll this particular future when it gets around to it rather than go to sleep
-again, since this future can make progress. This might wake the executor if
-it is currently sleeping so it will go poll that future, but that’s more of a side
-effect than its primary purpose.
-It is important for the executor to know which futures are runnable
-for two reasons. First, it needs to know when it can stop polling a future
-and go to sleep; it’s not sufficient to just poll each future until it returns
-Poll::Pending, since polling a later future might make it possible to progress
-an earlier future. Consider the case where two futures bounce messages
-back and forth on channels to one another. When you poll one, the other
-becomes ready, and vice versa. In this case, the executor should never go to
-sleep, as there is always more work to do.
-Second, knowing which futures are runnable lets the executor avoid
-polling futures unnecessarily. If an executor manages thousands of pending
-futures, it shouldn’t poll all of them just because an event made one of them
-runnable. If it did, executing asynchronous code would get very slow indeed.
-Tasks and Subexecutors
-The futures in an asynchronous program form a tree: a future may contain
+- 相反，执行器往往提供了与执行器在后台进行通信的Leaf future的实现，以安排与操作系统的适当交互。具体如何协调取决于执行器和操作系统，但大致上来说，执行器会跟踪它下次进入休眠时应该监听的所有事件源。当Leaf future意识到它必须等待外部事件时，它会更新该执行器的状态（因为它是由执行器创建提供的）以包括该外部事件源和它自己的Waker。当执行器无法再取得进展时，它会收集所有待处理的Leaf future等待的事件源，并对操作系统进行一个大的阻塞调用，告诉操作系统在任何Leaf future等待的资源有新事件时返回。在Linux上，通常使用epoll系统调用来实现；Windows、BSD、macOS和几乎所有其他操作系统都提供类似的机制。当该调用返回时，执行器会对所有与操作系统报告的事件相关的Waker调用wake方法，从而履行了poll约定。
+
+**注意** Reactor是执行器的一部分，Leaf future在其中注册事件源，并且当执行器没有更多有用的工作要做时，它会等待Reactor。虽然可以将执行器和Reactor分开，但将它们捆绑在一起通常会提高性能，因为两者可以更容易地进行协同优化。
+
+- 紧密集成的Leaf future和执行器之间的关系的一个连锁效应是，来自一个执行器crate的Leaf future通常不能与不同的执行器一起使用。或者至少，除非Leaf future的执行器也在运行，否则它们不能被使用。当Leaf future存储其Waker并注册其等待的事件源时，它构建时所使用的执行器需要设置该状态并且需要运行，以便实际监视事件源并最终调用wake。有一些解决方法，比如如果没有正在运行的执行器，Leaf future可以生成一个执行器，但这并不总是可取的，因为这意味着应用程序可能在同一时间内透明地运行多个执行器，这可能会降低性能并且在调试时必须检查多个执行器的状态。
+- 希望支持多个执行器的库crate必须对其Leaf 资源进行泛型化。例如，一个库可以存储一个泛型的T: AsyncRead + AsyncWrite，而不是使用特定执行器的TcpStream或File future类型。然而，目前尚未就这些特性的具体形式和所需的特性达成一致，因此目前要使代码真正泛型化执行器相对困难。例如，虽然AsyncRead和AsyncWrite在生态系统中有些常见（或者在必要时可以轻松适应），但目前还没有用于在后台运行future（我们稍后将讨论的spawning）或表示计时器的特性。
+
+##### Waking Is a Misnomer
+
+- 你可能已经意识到，Waker::wake似乎并不一定会唤醒任何东西。例如，对于外部事件（如前一节所述），执行器已经是唤醒状态，它似乎没有必要再调用属于该执行器的Waker的wake方法！实际上，Waker::wake有点名不副实——它实际上是在告诉执行器某个特定的future是可运行的。也就是说，它告诉执行器在适当的时候一定要轮询这个特定的future，而不是再次进入休眠状态，因为这个future可以取得进展。如果执行器当前正在休眠，这可能会唤醒执行器，使其去轮询该future，但这更像是一个副作用，而不是它的主要目的。
+
+- 对于执行器来说，知道哪些future是可运行的有两个原因。首先，它需要知道何时可以停止轮询一个future并进入休眠状态；仅仅轮询每个future直到返回Poll::Pending是不够的，因为轮询后面的future可能会使之前的future能够取得进展。考虑一种情况，两个future通过通道相互传递消息。当你轮询其中一个时，另一个变为就绪状态，反之亦然。在这种情况下，执行器永远不应该进入休眠状态，因为总是有更多的工作要做。
+- 其次，知道哪些future是可运行的可以让执行器避免不必要地轮询futures。如果执行器管理着成千上万个待处理的futures，它不应该只因为一个事件使其中一个可运行而轮询所有的futures。如果这样做，执行异步代码的速度将变得非常慢。
+
+##### Tasks and Subexecutors
+
+- The futures in an asynchronous program form a tree: a future may contain
 any number of other futures, which in turn may contain other futures, all the
 way down to the leaf futures that interact with wakers. The root of each tree is
 the future you give to whatever the executor’s main “run” function is. These
@@ -2556,13 +2444,11 @@ and can mark it as such. That is what the raw pointer in RawWaker is for—to di
 between tasks while sharing the code for the various Waker methods.
 When the executor eventually polls a task, that task starts running from
 the top of its implementation of Future::poll and must decide from there how
-
-Asynchronous Programming 137
 to get to the future deeper down that can now make progress. Since each
 future knows only about its own fields, and nothing about the whole tree, this
 all happens through calls to poll that each traverse one edge in the tree.
-The choice of which inner future to poll is often obvious, but not always.
-In the case of async/await, the future to poll is the one we’re blocked waiting
+- The choice of which inner future to poll is often obvious, but not always.
+I the case of async/await, the future to poll is the one we’re blocked waiting
 for. But in a future that waits for the first of several futures to make progress
 (often called a select), or for all of a set of futures (often called a join),
 there are many options. A future that has to make such a choice is basically
@@ -2574,7 +2460,7 @@ runnable in their own state before they call wake on the original Waker. That
 way, when the executor eventually polls the subexecutor future again, the
 subexecutor can consult its own internal state to figure out which of its inner
 futures caused the current call to poll, and then only poll those.
-BLOCKING IN ASYNC CODE
+**LOCKING IN ASYNC CODE**
 You must be careful about calling synchronous code from asynchronous code,
 since any time an executor thread spends executing the current task is time it’s
 not spending running other tasks. If a task occupies the current thread for a
@@ -2585,12 +2471,12 @@ awaits, then other tasks the current executor thread is responsible for won’t 
 to run during that time. Usually, this manifests as long delays between when
 certain tasks can make progress (such as when a client connects) and when
 they actually get to execute.
-Some multithreaded executors implement work-stealing techniques, where
+- Some multithreaded executors implement work-stealing techniques, where
 idle executor threads steal tasks from busy executor threads, but this is more of
 a mitigation than a solution. Ultimately, you could end up in a situation where
 all the executor threads are blocked, and thus no tasks get run until one of the
 blocking operations completes.
-In general, you should be very careful with executing compute-intensive
+- In general, you should be very careful with executing compute-intensive
 operations or calling functions that could block in an asynchronous context.
 Such operations should either be converted to asynchronous operations where
 possible or executed on dedicated threads that then communicate using a
@@ -2601,12 +2487,15 @@ otherwise not yield, which can compose part of the solution. A good rule of
 thumb is that no future should be able to run for more than 1 ms without returning
 Poll::Pending.
 
-138 Chapter 8
-Tying It All Together with spawn
+#### Tying It All Together with spawn
+
 When working with asynchronous executors, you may come across an
 operation that spawns a future. We’re now in a position to explore what
 that means! Let’s do so by way of example. First, consider the simple server
 implementation in Listing 8-14.
+
+```rust
+
 async fn handle_client(socket: TcpStream) -> Result<()> {
 // Interact with the client over the given socket.
 }
@@ -2615,40 +2504,48 @@ while let Some(stream) = socket.accept().await? {
 handle_client(stream).await?;
 }
 }
+```
+
 Listing 8-14: Handling connections sequentially
-The top-level server function is essentially one big future that listens
+
+- The top-level server function is essentially one big future that listens
 for new connections and does something when a new connection arrives.
 You hand that future to the executor and say “run this,” and since you don’t
 want your program to then exit immediately, you’ll probably have the executor
 block on that future. That is, the call to the executor to run the server
 future will not return until the server future resolves, which may be never
 (another client could always arrive later).
-Now, every time a new client connection comes in, the code in
+- Now, every time a new client connection comes in, the code in
 Listing 8-14 makes a new future (by calling handle_client) to handle that
 connection. Since the handling is itself a future, we await it and then move
 on to the next client connection.
-The downside of this approach is that we only ever handle one connection
+- The downside of this approach is that we only ever handle one connection
 at a time—there is no concurrency. Once the server accepts a connection,
 the handle_client function is called, and since we await it, we don’t go
 around the loop again until handle_client’s return future resolves (presumably
 when that client has left).
-We could improve on this by keeping a set of all the client futures and
+- We could improve on this by keeping a set of all the client futures and
 having the loop in which the server accepts new connections also check all
 the client futures to see if any can make progress. Listing 8-15 shows what
 that might look like.
+
+```rust
+
+
 async fn server(socket: TcpListener) -> Result<()> {
-let mut clients = Vec::new();
-loop {
-poll_client_futures(&mut clients)?;
-if let Some(stream) = socket.try_accept()? {
-clients.push(handle_client(stream));
+  let mut clients = Vec::new();
+    loop {
+    poll_client_futures(&mut clients)?;
+    if let Some(stream) = socket.try_accept()? {
+      clients.push(handle_client(stream));
+    }
+  }
 }
-}
-}
+
+```
 Listing 8-15: Handling connections with a manual executor
 
-Asynchronous Programming 139
-This at least handles many connections concurrently, but it’s quite
+- This at least handles many connections concurrently, but it’s quite
 convoluted. It’s also not very efficient because the code now busy-loops,
 switching between handling the connections we already have and accepting
 new ones. And it has to check each connection each time, since it won’t
@@ -2657,12 +2554,12 @@ since that would prevent the other futures from making progress. You could
 implement your own wakers to ensure that the code polls only the futures
 that can make progress, but ultimately this is going down the path of developing
 your own mini-executor.
-Another downside of sticking with just the one task for the server that
+- Another downside of sticking with just the one task for the server that
 internally contains the futures for all of the client connections is that the
 server ends up being single-threaded. There is just the one task and to poll
 it the code must hold an exclusive reference to the task’s future (poll takes
 Pin<&mut Self>), which only one thread can hold at a time.
-The solution is to make each client future its own task and leave it to
+- The solution is to make each client future its own task and leave it to
 the executor to multiplex among all the tasks. Which, you guessed it, you
 do by spawning the future. The executor will continue to block on the
 server future, but if it cannot make progress on that future, it will use its
@@ -2671,16 +2568,22 @@ behind the scenes. And best of all, if the executor is multithreaded and
 your client futures are Send, it can run them in parallel since it can hold
 &muts to the separate tasks concurrently. Listing 8-16 gives an example of
 what this might look like.
+
+```rust 
+
 async fn server(socket: TcpListener) -> Result<()> {
-while let Some(stream) = socket.accept().await? {
-// Spawn a new task with the Future that represents this client.
-// The current task will continue to just poll for more connections
-// and will run concurrently (and possibly in parallel) with handle_client.
-spawn(handle_client(stream));
+  while let Some(stream) = socket.accept().await? {
+    // Spawn a new task with the Future that represents this client.
+    // The current task will continue to just poll for more connections
+    // and will run concurrently (and possibly in parallel) with handle_client.
+    spawn(handle_client(stream));
+  }
 }
-}
+
+```
 Listing 8-16: Spawning futures to create more tasks that can be polled concurrently
-When you spawn a future and thus make it a task, it’s sort of like spawning
+
+- When you spawn a future and thus make it a task, it’s sort of like spawning
 a thread. The future continues running in the background and is multiplexed
 concurrently with any other tasks given to the executor. However,
 unlike a spawned thread, spawned tasks still depend on being polled by
@@ -2694,8 +2597,8 @@ continue to poll tasks even if the executor yields control back to the user’s
 code, but not all executors do this, so check your executor before you rely
 on that behavior!
 
-140 Chapter 8
-Summary
+#### Summary
+
 In this chapter, we’ve taken a look behind the scenes of the asynchronous
 constructs available in Rust. We’ve seen how the compiler implements generators
 and self-referential types, and why that work was necessary to support
@@ -2720,13 +2623,14 @@ are still being determined, and even if they were all nailed down, the complete
 description would be beyond the scope of this book. Instead, I’ll do
 my best to arm you with the building blocks, intuition, and tooling you’ll
 need to navigate your way through most unsafe code.
-Your main takeaway from this chapter should be this: unsafe code is the
+
+- Your main takeaway from this chapter should be this: unsafe code is the
 mechanism Rust gives developers for taking advantage of invariants that,
 for whatever reason, the compiler cannot check. We’ll look at the ways in
 which unsafe does that, what those invariants may be, and what we can do
 with it as a result.
-142 Chapter 9
-INVARIANTS
+
+**INVARIANTS**
 Throughout this chapter, I’ll be talking a lot about invariants. Invariant is just a
 fancy way of saying “something that must be true for your program to be correct.”
 For example, in Rust, one invariant is that references, using & and &mut,
@@ -2736,7 +2640,7 @@ tail pointer” or “the capacity is always a power of two.” Ultimately, inva
 represent all the assumptions required for your code to be correct. However,
 you may not always be aware of all the invariants that your code uses, and
 that’s where bugs creep in.
-Crucially, unsafe code is not a way to skirt the various rules of Rust, like
+- Crucially, unsafe code is not a way to skirt the various rules of Rust, like
 borrow checking, but rather a way to enforce those rules using reasoning
 that is beyond the compiler. When you write unsafe code, the onus is on
 you to ensure that the resulting code is safe. In a way, unsafe is misleading
@@ -2744,12 +2648,14 @@ as a keyword when it is used to allow unsafe operations through unsafe {};
 it’s not that the contained code is unsafe, it’s that the code is allowed to perform
 otherwise unsafe operations because in this particular context, those
 operations are safe.
-The rest of this chapter is split into four sections. We’ll start with a brief
+- The rest of this chapter is split into four sections. We’ll start with a brief
 examination of how the keyword itself is used, then explore what unsafe
 allows you to do. Next, we’ll look at the rules you must follow in order to
 write safe unsafe code. Finally, I’ll give you some advice about how to actually
 go about writing unsafe code safely.
-The unsafe Keyword
+
+##### The unsafe Keyword
+
 Before we discuss the powers that unsafe grants you, we need to talk about
 its two different meanings. The unsafe keyword serves a dual purpose in
 Rust: it marks a particular function as unsafe to call and it enables you to
@@ -2758,22 +2664,33 @@ method in Listing 9-1 is marked as unsafe, even though it contains no
 unsafe code. Here, the unsafe keyword serves as a warning to the caller that
 there are additional guarantees that someone who writes code that invokes
 decr must manually check.
+
+```rust
+
 impl<T> SomeType<T> {
-pub unsafe fn decr(&self) {
-self.some_usize -= 1;
+  pub unsafe fn decr(&self) {
+    self.some_usize -= 1;
+  }
 }
-}
+
+```
+
 Listing 9-1: An unsafe method that contains only safe code
-Unsafe Code 143
+
 Listing 9-2 illustrates the second usage. Here, the method itself is not
 marked as unsafe, even though it contains unsafe code.
+
+```rust
+
 impl<T> SomeType<T> {
-pub fn as_ref(&self) -> &T {
-unsafe { &*self.ptr }
+  pub fn as_ref(&self) -> &T {
+    unsafe { &*self.ptr }
+  }
 }
-}
+```
 Listing 9-2: A safe method that contains unsafe code
-These two listings differ in their use of unsafe because they embody
+
+- These two listings differ in their use of unsafe because they embody
 different contracts. decr requires the caller to be careful when they call the
 method, whereas as_ref assumes that the caller was careful when invoking
 other unsafe methods (like decr). To see why, imagine that SomeType is really
@@ -2787,13 +2704,13 @@ reference.
 of the language at runtime. In general, if a program triggers undefined behavior,
 the outcome is entirely unpredictable. We’ll cover undefined behavior in greater
 detail later in this chapter.
-Conversely, as long as there is no way to corrupt the Rc reference count
+- Conversely, as long as there is no way to corrupt the Rc reference count
 using safe code, it is always safe to dereference the pointer inside the Rc
 the way the code for as_ref does—the fact that &self exists is proof that the
 pointer must still be valid. We can use this to give the caller a safe API to
 an otherwise unsafe operation, which is a core piece of how to use unsafe
 responsibly.
-For historical reasons, every unsafe fn contains an implicit unsafe block
+- For historical reasons, every unsafe fn contains an implicit unsafe block
 in Rust today. That is, if you declare an unsafe fn, you can always invoke any
 unsafe methods or primitive operations inside that fn. However, that decision
 is now considered a mistake, and it’s currently being reverted through
@@ -2805,37 +2722,40 @@ fn is one giant unsafe block, then you might accidentally perform unsafe
 operations without realizing it! For example, in decr in Listing 9-1, under
 the current rules you could also have added*std::ptr::null() without any
 unsafe annotation.
-The distinction between unsafe as a marker and unsafe blocks as a
+- The distinction between unsafe as a marker and unsafe blocks as a
 mechanism to enable unsafe operations is important, because you must
 think about them differently. An unsafe fn indicates to the caller that
 they have to be careful when calling the fn in question and that they must
 ensure that the function’s documented safety invariants hold.
-144 Chapter 9
-Meanwhile, an unsafe block implies that whoever wrote that block carefully
+- Meanwhile, an unsafe block implies that whoever wrote that block carefully
 checked that the safety invariants for any unsafe operations performed
 inside it hold. If you want an approximate real-world analogy, unsafe fn is an
 unsigned contract that asks the author of calling code to “solemnly swear X,
 Y, and Z.” Meanwhile, unsafe {} is the calling code’s author signing off on all
 the unsafe contracts contained within the block. Keep that in mind as we
 go through the rest of this chapter.
-Great Power
-So, once you sign the unsafe contract with unsafe {}, what are you allowed
+
+#### Great Power
+
+- So, once you sign the unsafe contract with unsafe {}, what are you allowed
 to do? Honestly, not that much. Or rather, it doesn’t enable that many new
 features. Inside an unsafe block, you are allowed to dereference raw pointers
 and call unsafe fns.
-That’s it. Technically, there are a few other things you can do, like
+- That’s it. Technically, there are a few other things you can do, like
 accessing mutable and external static variables and accessing fields of
 unions, but those don’t change the discussion much. And honestly, that’s
 enough. Together, these powers allow you to wreak all sorts of havoc, like
 turning types into one another with mem::transmute, dereferencing raw pointers
 that point to who knows where, casting &'a to &'static, or making types
 shareable across thread boundaries even though they’re not thread-safe.
-In this section, we won’t worry too much about what can go wrong with
+- In this section, we won’t worry too much about what can go wrong with
 these powers. We’ll leave that for the boring, responsible, grown-up section
 that comes after. Instead, we’ll look at these neat shiny new toys and what
 we can do with them.
-Juggling Raw Pointers
-One of the most fundamental reasons to use unsafe is to deal with Rust’s raw
+
+##### Juggling Raw Pointers
+
+- One of the most fundamental reasons to use unsafe is to deal with Rust’s raw
 pointer types: *const T and*mut T. You should think of these as more or less
 analogous to &T and &mut T, except that they don’t have lifetimes and are not
 subject to the same validity rules as their & counterparts, which we’ll discuss
@@ -2843,7 +2763,7 @@ later in the chapter. These types are interchangeably referred to as pointers
 and raw pointers, mostly because many developers instinctively refer to
 references as pointers, and calling them raw pointers makes the distinction
 clearer.
-Since fewer rules apply to *than &, you can cast a reference to a pointer
+- Since fewer rules apply to *than &, you can cast a reference to a pointer
 even outside an unsafe block. Only if you want to go the other way, from*
 to &, do you need unsafe. You’ll generally turn a pointer back into a reference
 to do useful things with the pointed-to data, such as reading or modifying
@@ -2853,8 +2773,8 @@ constructing a reference, not dereferencing the pointer, but it makes sense
 if you look at the types; if you have a*mut T and want a &mut T, then &mut ptr
 would just give you a &mut _mut T. You need the_ to indicate that you want
 the mutable reference to what ptr is a pointer to.
-Unsafe Code 145
-POINTER TYPES
+
+**POINTER TYPES**
 You may be wondering what the difference is between *mut T and*const T
 and std::ptr::NonNull<T>. Well, the exact specification is still being worked
 out, but the primary practical difference between *mut T and*const T/
@@ -2862,7 +2782,8 @@ NonNull<T> is that *mut T is invariant in T (see “Lifetime Variance” in Chap
 whereas the other two are covariant. As the names imply,*const T and
 NonNull<T> differ primarily in that NonNull<T> is not allowed to be a null pointer,
 whereas *const T is.
-My best advice in choosing among these types is to use your intuition
+
+- My best advice in choosing among these types is to use your intuition
 about whether you would have written &mut or & if you were able to name the
 relevant lifetime. If you would have written &, and you know that the pointer is
 never null, use NonNull<T>. It benefits from a cool optimization called the niche
@@ -2872,7 +2793,9 @@ any extra overhead, since the None case can be represented by setting the
 NonNull to be a null pointer! The null pointer value is a niche in the NonNull<T>
 type. If the pointer might be null, use*const T. And if you would have written
 &mut T, use *mut T.
-Unrepresentable Lifetimes
+
+##### Unrepresentable Lifetimes
+
 As raw pointers do not have lifetimes, they can be used in circumstances
 where the liveness of the value being pointed to cannot be expressed statically
 within Rust’s lifetime system, such as a self-pointer in a self-referential
@@ -2884,6 +2807,9 @@ were static, then even if you gave away that pointer to someone else, they
 could continue to use it forever, even after self was gone! Take the type in
 Listing 9-3 as an example; here we attempt to store the raw bytes that make
 up a value alongside its stored representation.
+
+```rust
+
 struct Person<'a> {
 name: &'a str,
 age: usize,
@@ -2892,19 +2818,21 @@ struct Parsed {
 bytes: [u8; 1024],
 parsed: Person<'???>,
 }
+```
+
 Listing 9-3: Trying, and failing, to name the lifetime of a self-referential reference
-146 Chapter 9
-The reference inside Person wants to refer to data stored in bytes in
+
+- The reference inside Person wants to refer to data stored in bytes in
 Parsed, but there is no lifetime we can assign to that reference from Parsed.
 It’s not 'static or something like 'self (which doesn’t exist), because if
 Parsed is moved, the reference is no longer valid.
-Since pointers do not have lifetimes, they circumvent this problem
+- Since pointers do not have lifetimes, they circumvent this problem
 because you don’t have to be able to name the lifetime. Instead, you just have
 to make sure that when you do use the pointer, it’s still valid, which is what you
 sign off on when you write unsafe { &*ptr }. In the example in Listing 9-3,
 Person would instead store a *const str and then unsafely turn that into a &str
 at the appropriate times when it can guarantee that the pointer is still valid.
-A similar issue arises with a type like Arc, which has a pointer to a value
+- A similar issue arises with a type like Arc, which has a pointer to a value
 that’s shared for some duration, but that duration is known only at runtime
 when the last Arc is dropped. The pointer is kind-of, sort-of 'static, but not
 really—like in the self-referential case, the pointer is no longer valid when
@@ -2912,8 +2840,10 @@ the last Arc reference goes away, so the lifetime is more like 'self. In Arc’s
 cousin, Weak, the lifetime is also “when the last Arc goes away,” but since a
 Weak isn’t an Arc, the lifetime isn’t even tied to self. So, Arc and Weak both
 use raw pointers internally.
-Pointer Arithmetic
-With raw pointers, you can do arbitrary pointer arithmetic, just like you
+
+##### Pointer Arithmetic
+
+- With raw pointers, you can do arbitrary pointer arithmetic, just like you
 can in C, by using .offset(), .add(), and .sub() to move the pointer to any
 byte that lives within the same allocation. This is most often used in highly
 space-optimized data structures, like hash tables, where storing an extra
@@ -2922,7 +2852,7 @@ isn’t possible. Those are fairly niche use cases, and we won’t be talking
 more about them in this book, but I encourage you to read the code for
 hashbrown::RawTable (<https://github.com/rust-lang/hashbrown/>) if you want to
 learn more!
-The pointer arithmetic methods are unsafe to call even if you don’t
+- The pointer arithmetic methods are unsafe to call even if you don’t
 want to turn the pointer into a reference afterwards. There are a couple
 of reasons for this, but the main one is that it is illegal to make a pointer
 point beyond the end of the allocation that it originally pointed to. Doing
@@ -2930,7 +2860,9 @@ so triggers undefined behavior, and the compiler is allowed to decide to
 eat your code and replace it with arbitrary nonsense that only a compiler
 could understand. If you do use these methods, read the documentation
 carefully!
-To Pointer and Back Again
+
+##### To Pointer and Back Again
+
 Often when you need to use pointers, it’s because you have some normal
 Rust type, like a reference, a slice, or a string, and you have to move to the
 world of pointers for a bit and then go back to the original normal type.
@@ -2939,42 +2871,48 @@ turn them into their raw constituent parts, such as a pointer and a length
 for a slice, and a way to turn them back into the whole using those same
 parts. For example, you can get a slice’s data pointer with as_ptr and its
 length with []::len. You can then reconstruct the slice by providing those
-Unsafe Code 147
 same values to std::slice::from_raw_parts. Vec, Arc, and String have similar
 methods that return a raw pointer to the underlying allocation, and Box has
 Box::into_raw and Box::from_raw, which do the same thing.
-Playing Fast and Loose with Types
+
+##### Playing Fast and Loose with Types
+
 Sometimes, you have a type T and want to treat it as some other type U.
 Whether that’s because you need to do lightning-fast zero-copy parsing
 or because you need to fiddle with some lifetimes, Rust provides you with
 some (very unsafe) tools to do so.
-The first and by far most widely used of these is pointer casting: you can
+
+- The first and by far most widely used of these is pointer casting: you can
 cast a*const T to any other *const U (and the same for mut), and you don’t
 even need unsafe to do it. The unsafety comes into play only when you later
 try to use the cast pointer as a reference, as you have to assert that the raw
 pointer can in fact be used as a reference to the type it’s pointing to.
-This kind of pointer type casting comes in particularly handy when working
+- This kind of pointer type casting comes in particularly handy when working
 with foreign function interfaces (FFI)—you can cast any Rust pointer to a
 *const std::ffi::c_void or *mut std::ffi::c_void, and then pass that to a C function
 that expects a void pointer. Similarly, if you get a void pointer from C that
 you previously passed in, you can trivially cast it back into its original type.
-Pointer casts are also useful when you want to interpret a sequence
+- Pointer casts are also useful when you want to interpret a sequence
 of bytes as plain old data—types like integers, Booleans, characters, and
 arrays, or #[repr(C)] structs of these—or write such types directly out as a
 byte stream without serialization. There are a lot of safety invariants to keep
 in mind if you want to try to do that, but we’ll leave that for later.
-Calling Unsafe Functions
-Arguably unsafe’s most commonly used feature is that it enables you to
+
+##### Calling Unsafe Functions
+
+- Arguably unsafe’s most commonly used feature is that it enables you to
 call unsafe functions. Deeper down the stack, most of those functions are
 unsafe because they operate on raw pointers at some fundamental level, but
 higher up the stack you tend to interact with unsafety primarily through
 function calls.
-There’s really no limit to what calling an unsafe function might enable,
+- There’s really no limit to what calling an unsafe function might enable,
 as it is entirely up to the libraries you interact with. But in general, unsafe
 functions can be divided into three camps: those that interact with non-
 Rust interfaces, those that skip safety checks, and those that have custom
 invariants.
-Foreign Function Interfaces
+
+##### Foreign Function Interfaces
+
 Rust lets you declare functions and static variables that are defined in a
 language other than Rust using extern blocks (which we’ll discuss at length
 in Chapter 11). When you declare such a block, you’re telling Rust that the
@@ -2983,15 +2921,16 @@ the final program binary is linked, such as a C library you are integrating
 with. Since externs exist outside of Rust’s control, they are inherently unsafe
 to access. If you call a C function from Rust, all bets are off—it might overwrite
 your entire memory contents and clobber all your neatly arranged
-148 Chapter 9
 references into random pointers into the kernel somewhere. Similarly, an
 extern static variable could be modified by external code at any time, and
 could be filled with all sorts of bad bytes that don’t reflect its declared type
 at all. In an unsafe block, though, you can access externs to your heart’s
 delight, as long as you’re willing to vouch for the other side of the extern
 behaving according to Rust’s rules.
-I’ll Pass on Safety Checks
-Some unsafe operations can be made entirely safe by introducing additional
+
+##### I’ll Pass on Safety Checks
+
+- Some unsafe operations can be made entirely safe by introducing additional
 runtime checks. For example, accessing an item in a slice is unsafe
 since you might try to access an item beyond the length of the slice. But,
 given how common the operation is, it’d be unfortunate if indexing into a
@@ -3002,7 +2941,7 @@ undefined behavior even if you pass in an index beyond the slice’s length.
 Another example is in hash tables, which hash the key you provide rather
 than letting you provide the hash yourself; this ensures that you’ll never try
 to access a key using the wrong hash.
-However, in the endless pursuit of ultimate performance, some developers
+- However, in the endless pursuit of ultimate performance, some developers
 may find these safety checks add just a little too much overhead in their
 tightest loops. To cater to situations where peak performance is paramount
 and the caller knows that the indexes are in bounds, many data structures
@@ -3012,23 +2951,26 @@ indicate that they blindly trust the provided arguments to be safe and that
 they do not do any of those pesky, slow safety checks. Some examples are
 NonNull::new_unchecked, slice::get_unchecked, NonZero::new_unchecked, Arc::get
 _mut_unchecked, and str::from_utf8_unchecked.
-In practice, the safety and performance trade-off for unchecked methods
+- In practice, the safety and performance trade-off for unchecked methods
 is rarely worth it. As always with performance optimization, measure
 first, then optimize.
-Custom Invariants
+
+##### Custom Invariants
+
 Most uses of unsafe rely on custom invariants to some degree. That is, they
 rely on invariants beyond those provided by Rust itself, which are specific to
 the particular application or library. Since so many functions fall into this
 category, it’s hard to give a good general summary of this class of unsafe
 functions. Instead, I’ll give some examples of unsafe functions with custom
 invariants that you may come across in practice and want to use:
-MaybeUninit::assume_init
-The MaybeUninit type is one of the few ways in which you can store
+
+###### MaybeUninit::assume_init
+
+- The MaybeUninit type is one of the few ways in which you can store
 values that are not valid for their type in Rust. You can think of a
 MaybeUninit<T> as a T that may not be legal to use as a T at the moment.
 For example, a MaybeUninit<NonNull> is allowed to hold a null pointer,
 a MaybeUninit<Box> is allowed to hold a dangling heap pointer, and a
-Unsafe Code 149
 MaybeUninit<bool> is allowed to hold the bit pattern for the number 3
 (normally it must be 0 or 1). This comes in handy if you are constructing
 a value bit by bit or are dealing with zeroed or uninitialized memory
@@ -3036,7 +2978,9 @@ that will eventually be made valid (such as by being filled through
 a call to std::io::Read::read). The assume_init function asserts that the
 MaybeUninit now holds a valid value for the type T and can therefore be
 used as a T.
-ManuallyDrop::drop
+
+##### ManuallyDrop::drop
+
 The ManuallyDrop type is a wrapper type around a type T that does not
 drop that T when the ManuallyDrop is dropped. Or, phrased differently, it
 decouples the dropping of the outer type (ManuallyDrop) from the dropping
@@ -3049,14 +2993,18 @@ handy if you have to explicitly drop a value that you cannot move, such
 as in implementations of the Drop trait. Once that value is dropped, it
 is no longer safe to try to access the T, which is why the call to drop is
 unsafe—it asserts that the T will never be accessed again.
-std::ptr::drop_in_place
+
+##### std::ptr::drop_in_place
+
 drop_in_place lets you call a value’s destructor directly through a pointer
 to that value. This is unsafe because the pointee will be left behind
 after the call, so if some code then tries to dereference the pointer, it’ll
 be in for a bad time! This method is particularly useful when you may
 want to reuse memory, such as in an arena allocator, and need to drop
 an old value in place without reclaiming the surrounding memory.
-Waker::from_raw
+
+##### Waker::from_raw
+
 In Chapter 8 we talked about the Waker type and how it is made up of a
 data pointer and a RawWaker that holds a manually implemented vtable.
 Once a Waker has been constructed, the raw function pointers in the
@@ -3065,20 +3013,23 @@ Waker::wake and drop(waker), respectively). Waker::from_raw is where the
 asynchronous executor asserts that all the pointers in its vtable are
 in fact valid function pointers that follow the contract set forth in the
 documentation of RawWakerVTable.
-std::hint::unreachable_unchecked
+
+##### std::hint::unreachable_unchecked
+
 The hint module holds functions that give hints to the compiler about
 the surrounding code but do not actually produce any machine code.
 The unreachable_unchecked function in particular tells the compiler that it
 is impossible for the program to reach a section of the code at runtime.
 This in turn allows the compiler to make optimizations based on that
-150 Chapter 9
 knowledge, such as eliminating conditional branches to that location.
 Unlike the unreachable! macro, which panics if the code does reach the
 line in question, the effects of an erroneous unreachable_unchecked are
 hard to predict. The compiler optimizations may cause peculiar and
 hard-to-debug behavior, not to mention that your program will continue
 running when something it believed to be true was not!
-std::ptr::{read,write}_{unaligned,volatile}
+
+##### std::ptr::{read,write}_{unaligned,volatile}
+
 The ptr module holds a number of functions that let you work with odd
 pointers—those that do not meet the assumptions that Rust generally
 makes about pointers. The first of these functions are read_unaligned and
@@ -3097,7 +3048,9 @@ by normal DRAM memory—we’ll discuss this further in Chapter 11.
 Ultimately, these methods are unsafe because they dereference the
 given pointer (and to an owned T, at that), so you as the caller need to
 sign off on all the contracts associated with doing so.
-std::thread::Builder::spawn_unchecked
+
+##### std::thread::Builder::spawn_unchecked
+
 The normal thread::spawn that we know and love requires that the
 provided closure is 'static. That bound stems from the fact that the
 spawned thread might run for an indeterminate amount of time; if
@@ -3113,11 +3066,13 @@ long as you’re willing to sign the contract saying that no unsafe accesses
 will happen as a result. Be careful of panics, though; if the caller panics,
 it might drop values earlier than you planned and cause undefined
 behavior in the spawned thread!
-Note that all of these methods (and indeed all unsafe methods in the
+
+- Note that all of these methods (and indeed all unsafe methods in the
 standard library) provide explicit documentation for their safety invariants,
 as should be the case for any unsafe method.
-Unsafe Code 151
-Implementing Unsafe Traits
+
+###### Implementing Unsafe Traits
+
 Unsafe traits aren’t unsafe to use, but unsafe to implement. This is because
 unsafe code is allowed to rely on the correctness (defined by the trait’s documentation)
 of the implementation of unsafe traits. For example, to implement
@@ -3126,7 +3081,7 @@ unsafe functions, unsafe traits generally have custom invariants that are (or
 at least should be) specified in the documentation for the trait. Thus, it’s
 difficult to cover unsafe traits as a group, so here too I’ll give some common
 examples from the standard library that are worth going over.
-Send and Sync
+###### Send and Sync
 The Send and Sync traits denote that a type is safe to send or share across
 thread boundaries, respectively. We’ll talk more about these traits in
 Chapter 10, but for now what you need to know is that they are auto-traits,
@@ -3134,7 +3089,8 @@ and so they’ll usually be implemented for most types for you by the compiler.
 But, as tends to be the case with auto-traits, Send and Sync will not be
 implemented if any members of the type in question are not themselves Send
 or Sync.
-In the context of unsafe code, this problem occurs primarily due to
+
+- In the context of unsafe code, this problem occurs primarily due to
 raw pointers, which are neither Send nor Sync. At first glance, this might
 seem reasonable: the compiler has no way to know who else may have a raw
 pointer to the same value or how they may be using it at the moment, so
@@ -3142,7 +3098,8 @@ how can the type be safe to send across threads? Now that we’re seasoned
 unsafe developers though, that argument seems weak—after all, dereferencing
 a raw pointer is already unsafe, so why should handling the invariants of
 Send and Sync be any different?
-Strictly speaking, raw pointers could be both Send and Sync. The problem
+
+- Strictly speaking, raw pointers could be both Send and Sync. The problem
 is that if they were, the types that contain raw pointers would automatically
 be Send and Sync themselves, even though their author might not
 realize that was the case. The developer might then unsafely dereference
@@ -3152,25 +3109,33 @@ introduce undefined behavior. Instead, the raw pointer types block these
 automatic implementations as an additional safeguard to unsafe code to
 make authors explicitly sign the contract that they have also followed the
 Send and Sync invariants.
+
 **NOTE** A common mistake with unsafe implementations of Send and Sync is to forget to add
 bounds to generic parameters: unsafe impl<T: Send> Send for MyUnsafeType<T> {}.
-GlobalAlloc
+
+##### GlobalAlloc
+
 The GlobalAlloc trait is how you implement a custom memory allocator
 in Rust. We won’t talk too much about that topic in this book, but the
 trait itself is interesting. Listing 9-4 gives the required methods for the
 GlobalAlloc trait.
-152 Chapter 9
+
+```rust
+
 pub unsafe trait GlobalAlloc {
-pub unsafe fn alloc(&self, layout: Layout) ->*mut u8;
-pub unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout);
+  pub unsafe fn alloc(&self, layout: Layout) ->*mut u8;
+  pub unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout);
+
 }
+```
 Listing 9-4: The GlobalAlloc trait with its required methods
-At its core, the trait has one method for allocating a new chunk of
+
+- At its core, the trait has one method for allocating a new chunk of
 memory, alloc, and one for deallocating a chunk of memory, dealloc. The
 Layout argument describes the type’s size and alignment, as we discussed in
 Chapter 2. Each of those methods is unsafe and carries a number of safety
 invariants that its callers must uphold.
-GlobalAlloc itself is also unsafe because it places restrictions on the
+- GlobalAlloc itself is also unsafe because it places restrictions on the
 implementer of the trait, not the caller of its methods. Only the unsafety
 of the trait ensures that implementers agree to uphold the invariants that
 Rust itself assumes of its memory allocator, such as in the standard library’s
@@ -3180,14 +3145,16 @@ incorrectly sized allocations, which would trigger unsafety in otherwise safe
 code that assumes that allocations are sane. This would break the rule that
 safe code should not be able to trigger memory unsafety in other safe code,
 and thus cause all sorts of mayhem.
-Surprisingly Not Unpin
-The Unpin trait is not unsafe, which comes as a surprise to many Rust developers.
+
+##### Surprisingly Not Unpin
+
+- The Unpin trait is not unsafe, which comes as a surprise to many Rust developers.
 It may even come as a surprise to you after reading Chapter 8. After
 all, the trait is supposed to ensure that self-referential types aren’t invalidated
 if they’re moved after they have established internal pointers (that is,
 after they’ve been placed in a Pin). It seems strange, then, that Unpin can be
 used to safely remove a type from a Pin.
-There are two main reasons why Unpin isn’t an unsafe trait. First, it’s
+- There are two main reasons why Unpin isn’t an unsafe trait. First, it’s
 unnecessary. Implementing Unpin for a type that you control does not grant
 you the ability to safely pin or unpin a !Unpin type; that still requires unsafety
 in the form of a call to Pin::new_unchecked or Pin::get_unchecked_mut. Second,
@@ -3196,19 +3163,20 @@ When you implement Drop for a type, you’re passed &mut self, even if your
 type was previously stored in a Pin and is !Unpin, all without any unsafety. That
 potential for unsafety is covered by the invariants of Pin::new_unchecked, which
 must be upheld to create a Pin of such an !Unpin type in the first place.
-When to Make a Trait Unsafe
-Few traits in the wild are unsafe, but those that are all follow the same pattern.
+
+##### When to Make a Trait Unsafe
+
+- Few traits in the wild are unsafe, but those that are all follow the same pattern.
 A trait should be unsafe if safe code that assumes that trait is implemented
 correctly can exhibit memory unsafety if the trait is not implemented
 correctly.
-The Send trait is a good example to keep in mind here—safe code can
+- The Send trait is a good example to keep in mind here—safe code can
 easily spawn a thread and pass a value to that spawned thread, but if Rc were
-Unsafe Code 153
 Send, that sequence of operations could trivially lead to memory unsafety.
 Consider what would happen if you cloned an Rc<Box> and sent it to another
 thread: the two threads could easily both try to deallocate the Box since they
 do not correctly synchronize access to the Rc’s reference count.
-The Unpin trait is a good counterexample. While it is possible to write
+- The Unpin trait is a good counterexample. While it is possible to write
 unsafe code that triggers memory unsafety if Unpin is implemented incorrectly,
 no entirely safe code can trigger memory unsafety due to an implementation
 of Unpin. It’s not always easy to determine that a trait can be safe
@@ -3216,7 +3184,7 @@ of Unpin. It’s not always easy to determine that a trait can be safe
 but you can always err on the side of making the trait unsafe, and then
 make it safe later on if you realize that is the case! Just keep in mind that
 that is a backward incompatible change.
-Also keep in mind that just because it feels like an incorrect (or even
+- Also keep in mind that just because it feels like an incorrect (or even
 malicious) implementation of a trait would cause a lot of havoc, that’s not
 necessarily a good reason to make it unsafe. The unsafe marker should first
 and foremost be used to highlight cases of memory unsafety, not just something
@@ -3232,64 +3200,120 @@ The same is true for an implementation of Deref that dereferenced to a different
 contract of Hash or Deref that does not actually hold; Hash never claimed that
 it was deterministic, and neither did Deref. Or rather, the authors of those
 implementations never used the unsafe keyword to make that claim!
+
 **NOTE** An important implication of traits like Eq, Hash, and Deref being safe is that unsafe
 code can rely only on the safety of safe code, not its correctness. This applies not only
 to traits, but to all unsafe/safe code interactions.
-Great Responsibility
-So far, we’ve looked mainly at the various things that you are allowed to do
+
+#### Great Responsibility
+
+- So far, we’ve looked mainly at the various things that you are allowed to do
 with unsafe code. But unsafe code is allowed to do those things only if it
 does so safely. Even though unsafe code can, say, dereference a raw pointer,
 it must do so only if it knows that pointer is valid as a reference to its pointee
 at that moment in time, subject to all of Rust’s normal requirements of
 references. In other words, unsafe code is given access to tools that could be
 used to do unsafe things, but it must do only safe things using those tools.
-That, then, raises the question of what safe even means in the first
+- That, then, raises the question of what safe even means in the first
 place. When is it safe to dereference a pointer? When is it safe to transmute
 between two different types? In this section, we’ll explore some of the key
-Unsafe Code 155
+invariants to keep in mind when wielding the power of unsafe, look at some
+common gotchas, and get familiar with some of the tools that help you
+write safer unsafe code.
+- The exact rules around what it means for Rust code to be safe are still
+being worked out. At the time of writing, the Unsafe Code Guidelines
+Working Group is hard at work nailing down all the dos and don’ts, but
+many questions remain unanswered. Most of the advice in this section is
+more or less settled, but I’ll make sure to call out any that isn’t. If anything,
+I’m hoping that this section will teach you to be careful about making
+assumptions when you write unsafe code, and prompt you to double-check
+the Rust reference before you declare your code production-ready.
+
+##### What Can Go Wrong?
+
+- We can’t really get into the rules unsafe code must abide by without talking
+about what happens if you violate those rules. Let’s say you do mutably
+access a value from multiple threads concurrently, construct an unaligned
+reference, or dereference a dangling pointer—now what?
+- Unsafe code that is not ultimately safe is referred to as having undefined
+behavior. Undefined behavior generally manifests in one of three ways: not
+at all, through visible errors, or through invisible corruption. The first is the
+happy case—you wrote some code that is truly not safe, but the compiler
+generated sane code that the computer you’re running the code on executes
+in a sane way. Unfortunately, the happiness here is very brittle. Should
+a new and slightly smarter version of the compiler come along, or some surrounding
+code cause the compiler to apply another optimization, the code
+may no longer do something sane and tip over into one of the worse cases.
+Even if the same code is compiled by the same compiler, if it runs on a different
+platform or host, the program might act differently! This is why it is
+important to avoid undefined behavior even if everything currently seems
+to work fine. Not to do so is like playing a second round of Russian roulette
+just because you survived the first.
+- Visible errors are the easiest undefined behavior to catch. If you dereference
+a null pointer, for example, your program will (in all likelihood)
+crash with an error, which you can then debug back to the root cause. That
+debugging may itself be difficult, but at least you have a notification that
+something is wrong. Visible errors can also manifest in less severe ways,
+such as deadlocks, garbled output, or panics that are printed but don’t trigger
+a program exit, all of which tell you that there is a bug in your code that
+you have to go fix.
+- The worst manifestation of undefined behavior is when there is no
+immediate visible effect, but the program state is invisibly corrupted.
+Transaction amounts might be slightly off from what they should be, backups
+might be silently corrupted, or random bits of internal memory could
+be exposed to external clients. The undefined behavior could cause ongoing
+corruption, or extremely infrequent outages. Part of the challenge with
+undefined behavior is that, as the name implies, the behavior of the nonsafe
+unsafe code is not defined—the compiler might eliminate it entirely,
 dramatically change the semantics of the code, or even miscompile surrounding
 code. What that does to your program is entirely dependent on
 what the code in question does. The unpredictable impact of undefined
 behavior is the reason why all undefined behavior should be considered a
 serious bug, no matter how it currently manifests.
-WHY UNDEFINED BEHAVIOR?
+
+**WHY UNDEFINED BEHAVIOR?**
 An argument that often comes up in conversations about undefined behavior
 is that the compiler should emit an error if code exhibits undefined behavior
 instead of doing something weird and unpredictable. That way, it would be
 near-impossible to write bad unsafe code!
-Unfortunately, that would be impossible because undefined behavior is
+
+- Unfortunately, that would be impossible because undefined behavior is
 rarely explicit or obvious. Instead, what usually happens is that the compiler
 simply applies optimizations under the assumption that the code follows the
 specification. Should that turn out to not be the case—which is rarely clear until
 runtime—it’s difficult to predict what the effect might be. Maybe the optimization
 is still valid, and nothing bad happens; but maybe it’s not, and the semantics
 of the code end up slightly different from that of the unoptimized version.
-If we were to tell compiler developers that they aren’t allowed to assume
+- If we were to tell compiler developers that they aren’t allowed to assume
 anything about the underlying code, what we’d really be telling them is that
 they cannot perform a wide range of the optimizations that they implement with
 great success today. Nearly all sophisticated optimizations make assumptions
 about what the code in question can and cannot do according to the language
 specification.
-If you want a good illustration of how specifications and compiler optimizations
+- If you want a good illustration of how specifications and compiler optimizations
 interact in strange ways where it’s hard to assign blame, I recommend
 reading through Ralf Jung’s blog post “We Need Better Language Specs”
 (<https://www.ralfj.de/blog/2020/12/14/provenance.html>).
-Validity
+
+##### Validity
+
 Perhaps the most important concept to understand before writing unsafe
 code is validity, which dictates the rules for what values inhabit a given
 type—or, less formally, the rules for a type’s values. The concept is simpler
 than it sounds, so let’s dive into some concrete examples.
-Reference Types
+
+###### Reference Types
+
 Rust is very strict about what values its reference types can hold. Specifically,
 references must never dangle, must always be aligned, and must always
 point to a valid value for their target type. In addition, a shared and an
 exclusive reference to a given memory location can never exist at the same
 time, and neither can multiple exclusive references to a location. These
-156 Chapter 9
 rules apply regardless of whether your code uses the references or not—you
 are not allowed to create a null reference even if you then immediately discard
 it!
-Shared references have the additional constraint that the pointee is
+
+- Shared references have the additional constraint that the pointee is
 not allowed to change during the reference’s lifetime. That is, any value
 the pointee contains must remain exactly the same over its lifetime. This
 applies transitively, so if you have an & to a type that contains a*mut T, you
@@ -3297,7 +3321,7 @@ are not allowed to ever mutate the T through that *mut even though you
 could write code to do so using unsafe. The only exception to this rule is a
 value wrapped by the UnsafeCell type. All other types that provide interior
 mutability, like Cell, RefCell, and Mutex, internally use an UnsafeCell.
-An interesting result of Rust’s strict rules for references is that for many
+- An interesting result of Rust’s strict rules for references is that for many
 years, it was impossible to safely take a reference to a field of a packed or
 partially uninitialized struct that used repr(Rust). Since repr(Rust) leaves
 a type’s layout undefined, the only way to get the address of a field was by
@@ -3311,7 +3335,9 @@ it is implemented using something called raw references (not to be confused
 with raw pointers), which directly create pointers to their operands rather
 than going via a reference. Raw references were introduced in RFC 2582
 but haven’t been stabilized themselves yet at the time of writing.
-Primitive Types
+
+###### Primitive Types
+
 Some of Rust’s primitive types have restrictions on what values they can
 hold. For example, a bool is defined as being 1 byte large but is only allowed
 to hold the value 0x00 or the value 0x01, and a char is not allowed to hold
@@ -3319,7 +3345,8 @@ a surrogate or a value above char::MAX. Most of Rust’s primitive types, and
 indeed most of Rust’s types overall, also cannot be constructed from uninitialized
 memory. These restrictions may seem arbitrary, but again often stem
 from the need to enable optimizations that wouldn’t be possible otherwise.
-A good illustration of this is the niche optimization, which we discussed
+
+- A good illustration of this is the niche optimization, which we discussed
 briefly when talking about pointer types earlier in this chapter. To recap,
 the niche optimization tucks away the enum discriminant value in the
 wrapped type in certain cases. For example, since a reference cannot ever
@@ -3332,12 +3359,13 @@ Some(None) and 0x03 to represent None. Very nice and tidy! But if someone
 were to come along and treat the byte 0x03 as a bool, and then place that
 value in an Option<Option<bool>> optimized in this way, bad things would
 happen.
-Unsafe Code 157
-It bears repeating that it’s not important whether the Rust compiler currently
+- It bears repeating that it’s not important whether the Rust compiler currently
 implements this optimization or not. The point is that it is allowed to,
 and therefore any unsafe code you write must conform to that contract or
 risk hitting a bug later on should the behavior change.
-Owned Pointer Types
+
+###### Owned Pointer Types
+
 Types that point to memory they own, like Box and Vec, are generally subject
 to the same optimizations as if they held an exclusive reference to the
 pointed-to memory unless they’re explicitly accessed through a shared
