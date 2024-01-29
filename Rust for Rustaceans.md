@@ -2430,69 +2430,17 @@ trait Future {
 
 ##### Tasks and Subexecutors
 
-- The futures in an asynchronous program form a tree: a future may contain
-any number of other futures, which in turn may contain other futures, all the
-way down to the leaf futures that interact with wakers. The root of each tree is
-the future you give to whatever the executor’s main “run” function is. These
-root futures are called tasks, and they are the only point of contact between
-the executor and the futures tree. The executor calls poll on the task, and
-from that point forward the code of each contained future must figure out
-which inner future(s) to poll in response, all the way down to the relevant leaf.
-Executors generally construct a separate Waker for each task they poll so
-that when wake is later called, they know which task was just made runnable
-and can mark it as such. That is what the raw pointer in RawWaker is for—to differentiate
-between tasks while sharing the code for the various Waker methods.
-When the executor eventually polls a task, that task starts running from
-the top of its implementation of Future::poll and must decide from there how
-to get to the future deeper down that can now make progress. Since each
-future knows only about its own fields, and nothing about the whole tree, this
-all happens through calls to poll that each traverse one edge in the tree.
-- The choice of which inner future to poll is often obvious, but not always.
-I the case of async/await, the future to poll is the one we’re blocked waiting
-for. But in a future that waits for the first of several futures to make progress
-(often called a select), or for all of a set of futures (often called a join),
-there are many options. A future that has to make such a choice is basically
-a subexecutor. It could poll all of its inner futures, but doing so could be
-quite wasteful. Instead, these subexecutors often wrap the Waker they receive
-in poll’s Context with their own Waker type before they invoke poll on any
-inner future. In the wrapping code, they mark the future they just polled as
-runnable in their own state before they call wake on the original Waker. That
-way, when the executor eventually polls the subexecutor future again, the
-subexecutor can consult its own internal state to figure out which of its inner
-futures caused the current call to poll, and then only poll those.
-**LOCKING IN ASYNC CODE**
-You must be careful about calling synchronous code from asynchronous code,
-since any time an executor thread spends executing the current task is time it’s
-not spending running other tasks. If a task occupies the current thread for a
-prolonged period of time without yielding back to the executor, which might
-happen when executing a blocking system call (like std::sync::sleep), running
-a subexecutor that doesn’t yield occasionally, or running in a tight loop with no
-awaits, then other tasks the current executor thread is responsible for won’t get
-to run during that time. Usually, this manifests as long delays between when
-certain tasks can make progress (such as when a client connects) and when
-they actually get to execute.
-- Some multithreaded executors implement work-stealing techniques, where
-idle executor threads steal tasks from busy executor threads, but this is more of
-a mitigation than a solution. Ultimately, you could end up in a situation where
-all the executor threads are blocked, and thus no tasks get run until one of the
-blocking operations completes.
-- In general, you should be very careful with executing compute-intensive
-operations or calling functions that could block in an asynchronous context.
-Such operations should either be converted to asynchronous operations where
-possible or executed on dedicated threads that then communicate using a
-primitive that does support asynchrony, like a channel. Some executors also
-provide mechanisms for indicating that a particular segment of asynchronous
-code might block or for yielding voluntarily in the context of loops that might
-otherwise not yield, which can compose part of the solution. A good rule of
-thumb is that no future should be able to run for more than 1 ms without returning
-Poll::Pending.
+- 异步程序中的future形成了一棵树：一个future可以包含任意数量的其他future，这些future又可以包含其他future，一直到与waker交互的叶子future。每棵树的根是您提供给执行器的主要“运行”函数的future。这些根future被称为任务（tasks），它们是执行器和future树之间的唯一接触点。执行器在任务上调用poll，并且从那时起，每个包含的future的代码必须确定要轮询哪个内部future，一直到相关的叶子future。
+执行器通常为它们轮询的每个任务构造一个单独的Waker，以便在稍后调用wake时，它们知道哪个任务刚刚变为可运行，并可以将其标记为可运行。这就是RawWaker中的原始指针的作用——在共享各种Waker方法的代码的同时区分任务之间的区别。当执行器最终轮询一个任务时，该任务从Future::poll的顶部开始运行，并从那里决定如何到达更深层的可以取得进展的future。由于每个future只知道自己的字段，而不知道整个树，所以所有这些都是通过调用poll来实现的，每个调用都遍历树中的一条边。
+- 选择要轮询的内部future的选择通常是显而易见的，但并非总是如此。在async/await中，要轮询的future是我们正在等待的那个。但是在等待多个future中的第一个取得进展（通常称为select），或者等待一组future中的所有future（通常称为join）的情况下，有很多选择。必须做出这种选择的future基本上是一个子执行器。它可以轮询所有的内部future，但这样做可能非常浪费。相反，这些子执行器通常在调用任何内部future的poll之前，将它们收到的Waker与poll的Context一起包装在自己的Waker类型中。在包装代码中，它们在调用原始Waker的wake之前，将刚刚轮询的future标记为自己状态中的可运行状态。这样，当执行器最终再次轮询子执行器的future时，子执行器可以查看自己的内部状态，找出是哪个内部future导致了当前的poll调用，然后只轮询那些内部future。
+**在异步代码中的锁定**
+在异步代码中调用同步代码时，你必须小心，因为执行器线程执行当前任务的时间是不会用于运行其他任务的时间。如果一个任务在没有返回给执行器的情况下占用当前线程的时间很长，这可能发生在执行阻塞系统调用（如std::sync::sleep）、运行不会偶尔让出执行权的子执行器，或者在没有await的紧密循环中运行时，那么当前执行器线程负责的其他任务在此期间将无法运行。通常，这会导致某些任务能够取得进展（例如客户端连接）和实际执行之间的长时间延迟。
+- 一些多线程执行器实现了工作窃取技术，空闲的执行器线程从繁忙的执行器线程中窃取任务，但这只是一种缓解措施，而不是解决方案。最终，你可能会遇到所有执行器线程都被阻塞的情况，因此在一个阻塞操作完成之前，没有任务会被执行。
+- 通常情况下，在异步上下文中执行计算密集型操作或调用可能阻塞的函数时，应该非常小心。这些操作应该在可能的情况下转换为异步操作，或者在专用线程上执行，然后使用支持异步的原语进行通信，比如通道。一些执行器还提供了机制，用于指示异步代码的特定部分可能会阻塞，或者在可能不会主动让出的循环上下文中主动让出，这可以成为解决方案的一部分。一个好的经验法则是，没有任何一个future应该在超过1毫秒的时间内运行而不返回Poll::Pending。
 
 #### Tying It All Together with spawn
 
-When working with asynchronous executors, you may come across an
-operation that spawns a future. We’re now in a position to explore what
-that means! Let’s do so by way of example. First, consider the simple server
-implementation in Listing 8-14.
+当使用异步执行器时，您可能会遇到一个生成future的操作。现在我们有能力通过示例来探索这意味着什么！首先，考虑清单8-14中的简单服务器实现。
 
 ```rust
 
@@ -2500,34 +2448,20 @@ async fn handle_client(socket: TcpStream) -> Result<()> {
 // Interact with the client over the given socket.
 }
 async fn server(socket: TcpListener) -> Result<()> {
-while let Some(stream) = socket.accept().await? {
-handle_client(stream).await?;
+  while let Some(stream) = socket.accept().await? {
+    handle_client(stream).await?;
 }
 }
 ```
 
-Listing 8-14: Handling connections sequentially
+清单8-14：顺序处理连接
 
-- The top-level server function is essentially one big future that listens
-for new connections and does something when a new connection arrives.
-You hand that future to the executor and say “run this,” and since you don’t
-want your program to then exit immediately, you’ll probably have the executor
-block on that future. That is, the call to the executor to run the server
-future will not return until the server future resolves, which may be never
-(another client could always arrive later).
-- Now, every time a new client connection comes in, the code in
-Listing 8-14 makes a new future (by calling handle_client) to handle that
-connection. Since the handling is itself a future, we await it and then move
-on to the next client connection.
-- The downside of this approach is that we only ever handle one connection
-at a time—there is no concurrency. Once the server accepts a connection,
-the handle_client function is called, and since we await it, we don’t go
-around the loop again until handle_client’s return future resolves (presumably
-when that client has left).
-- We could improve on this by keeping a set of all the client futures and
-having the loop in which the server accepts new connections also check all
-the client futures to see if any can make progress. Listing 8-15 shows what
-that might look like.
+- 顶层的server函数本质上是一个大的future，它监听新的连接并在有新连接到达时执行某些操作。
+您将该future交给执行器并说“运行这个”，由于您不希望程序立即退出，您可能会让执行器在该future上阻塞。
+也就是说，对执行器运行服务器future的调用将不会返回，直到服务器future解析，这可能永远不会发生（可能会有另一个客户端稍后到达）。
+- 现在，每当有一个新的客户端连接进来时，清单8-14中的代码会创建一个新的future（通过调用handle_client）来处理该连接。由于处理本身也是一个future，我们等待它然后继续处理下一个客户端连接。
+- 这种方法的缺点是我们一次只处理一个连接，没有并发性。一旦服务器接受了一个连接，就会调用handle_client函数，由于我们使用了await，直到handle_client的返回future解析（可能是当客户端离开时），我们才会再次进入循环。
+- 我们可以通过保持所有客户端future的集合，并在服务器接受新连接的循环中检查所有客户端future是否可以取得进展来改进这一点。清单8-15展示了可能的实现方式。
 
 ```rust
 
@@ -2535,39 +2469,19 @@ that might look like.
 async fn server(socket: TcpListener) -> Result<()> {
   let mut clients = Vec::new();
     loop {
-    poll_client_futures(&mut clients)?;
-    if let Some(stream) = socket.try_accept()? {
-      clients.push(handle_client(stream));
+      poll_client_futures(&mut clients)?;
+      if let Some(stream) = socket.try_accept()? {
+        clients.push(handle_client(stream));
     }
   }
 }
 
 ```
-Listing 8-15: Handling connections with a manual executor
+清单8-15：使用手动执行器处理连接
 
-- This at least handles many connections concurrently, but it’s quite
-convoluted. It’s also not very efficient because the code now busy-loops,
-switching between handling the connections we already have and accepting
-new ones. And it has to check each connection each time, since it won’t
-know which ones can make progress (if any). It also can’t await at any point,
-since that would prevent the other futures from making progress. You could
-implement your own wakers to ensure that the code polls only the futures
-that can make progress, but ultimately this is going down the path of developing
-your own mini-executor.
-- Another downside of sticking with just the one task for the server that
-internally contains the futures for all of the client connections is that the
-server ends up being single-threaded. There is just the one task and to poll
-it the code must hold an exclusive reference to the task’s future (poll takes
-Pin<&mut Self>), which only one thread can hold at a time.
-- The solution is to make each client future its own task and leave it to
-the executor to multiplex among all the tasks. Which, you guessed it, you
-do by spawning the future. The executor will continue to block on the
-server future, but if it cannot make progress on that future, it will use its
-execution machinery to make progress on the other tasks in the meantime
-behind the scenes. And best of all, if the executor is multithreaded and
-your client futures are Send, it can run them in parallel since it can hold
-&muts to the separate tasks concurrently. Listing 8-16 gives an example of
-what this might look like.
+- 这至少可以同时处理多个连接，但是它非常复杂。而且效率不高，因为现在的代码在已有连接和接受新连接之间来回切换。它必须每次都检查每个连接，因为它不知道哪些连接可以取得进展（如果有的话）。它也不能在任何时候等待，因为那样会阻止其他future取得进展。你可以实现自己的唤醒器，以确保代码只轮询可以取得进展的future，但最终这将走向开发自己的迷你执行器的道路。
+- 只使用一个任务来处理服务器的所有客户端连接的另一个缺点是服务器最终变成了单线程。只有一个任务，并且为了轮询它，代码必须持有对任务的未来的独占引用（poll接受Pin<&mut Self>），这只能由一个线程持有。
+- 解决方案是将每个客户端future作为自己的任务，并由执行器在任务之间进行多路复用。你可以通过生成future来实现这一点。执行器将继续在服务器future上阻塞，但如果无法在该future上取得进展，它将在后台使用执行机制来在其他任务上取得进展。最重要的是，如果执行器是多线程的，并且你的客户端futures是Send的，它可以并行运行它们，因为它可以同时持有对不同任务的&muts。清单8-16展示了这可能是什么样子。
 
 ```rust 
 
@@ -2581,89 +2495,29 @@ async fn server(socket: TcpListener) -> Result<()> {
 }
 
 ```
-Listing 8-16: Spawning futures to create more tasks that can be polled concurrently
+清单8-16：生成未来以创建更多可以同时轮询的任务
 
-- When you spawn a future and thus make it a task, it’s sort of like spawning
-a thread. The future continues running in the background and is multiplexed
-concurrently with any other tasks given to the executor. However,
-unlike a spawned thread, spawned tasks still depend on being polled by
-the executor. If the executor stops running, either because you drop it or
-because your code no longer runs the executor’s code, those spawned tasks
-will stop making progress. In the server example, imagine what will happen
-if the main server future resolves for some reason. Since the executor
-has returned control back to your code, it cannot continue doing, well,
-anything. Multi-threaded executors often spawn background threads that
-continue to poll tasks even if the executor yields control back to the user’s
-code, but not all executors do this, so check your executor before you rely
-on that behavior!
+- 当你生成一个未来并将其作为任务时，它有点像生成一个线程。未来在后台继续运行，并与执行器给定的任何其他任务并发地进行多路复用。然而，与生成的线程不同，生成的任务仍然依赖于执行器的轮询。如果执行器停止运行，要么因为你放弃了它，要么因为你的代码不再运行执行器的代码，那些生成的任务将停止取得进展。在服务器示例中，想象一下，如果主服务器未来由于某种原因解析。由于执行器已经将控制权返回给你的代码，它无法继续做任何事情。多线程执行器通常会生成后台线程，即使执行器将控制权返回给用户的代码，它们仍然会继续轮询任务，但并非所有执行器都会这样做，所以在依赖这种行为之前，请检查你的执行器！
 
 #### Summary
 
-In this chapter, we’ve taken a look behind the scenes of the asynchronous
-constructs available in Rust. We’ve seen how the compiler implements generators
-and self-referential types, and why that work was necessary to support
-what we now know as async/await. We’ve also explored how futures are
-executed, and how wakers allow executors to multiplex among tasks when
-only some of them can make progress at any given moment. In the next
-chapter, we’ll tackle what is perhaps the deepest and most discussed area
-of Rust: unsafe code. Take a deep breath, and then turn the page.
+在本章中，我们深入了解了Rust中可用的异步构造的内部情况。我们看到了编译器如何实现生成器和自引用类型，以及为什么这项工作对支持我们现在所知的async/await是必要的。我们还探讨了future如何执行，以及唤醒器如何允许执行器在任何给定时刻只有一些任务可以取得进展时进行多路复用。在下一章中，我们将处理Rust中可能是最深入和最受讨论的领域：不安全代码。深呼吸，然后翻开下一页。
 
 ### 9.UNSAFE CODE
 
-The mere mention of unsafe code often
-elicits strong responses from many in the
-Rust community, and from many of those
-watching Rust from the sidelines. While some
-maintain it’s “no big deal,” others decry it as “the reason
-all of Rust’s promises are a lie.” In this chapter,
-I hope to pull back the curtain a bit to explain what unsafe is, what it isn’t,
-and how you should go about using it safely. At the time of writing, and
-likely also when you read this, Rust’s precise requirements for unsafe code
-are still being determined, and even if they were all nailed down, the complete
-description would be beyond the scope of this book. Instead, I’ll do
-my best to arm you with the building blocks, intuition, and tooling you’ll
-need to navigate your way through most unsafe code.
+提到不安全代码往往会引起Rust社区中许多人的强烈反应，也会引起许多旁观者的强烈反应。有些人认为这“没什么大不了”，而其他人则谴责它是“Rust所有承诺的谎言的原因”。在本章中，我希望能够揭开一些不安全代码的面纱，解释什么是不安全代码，什么不是，以及如何安全地使用它。在撰写本文时，以及在您阅读本文时，Rust对不安全代码的精确要求仍在确定中，即使它们都被确定下来，完整的描述也超出了本书的范围。相反，我将尽力为您提供构建块、直觉和工具，以帮助您在大多数不安全代码中进行导航。
 
-- Your main takeaway from this chapter should be this: unsafe code is the
-mechanism Rust gives developers for taking advantage of invariants that,
-for whatever reason, the compiler cannot check. We’ll look at the ways in
-which unsafe does that, what those invariants may be, and what we can do
-with it as a result.
+- 你从本章中应该得出的主要结论是：不安全代码是Rust为开发者提供的一种机制，用于利用编译器无法检查的不变量。我们将探讨不安全代码是如何实现这一点的，这些不变量可能是什么，以及我们可以通过它做些什么。
 
-**INVARIANTS**
-Throughout this chapter, I’ll be talking a lot about invariants. Invariant is just a
-fancy way of saying “something that must be true for your program to be correct.”
-For example, in Rust, one invariant is that references, using & and &mut,
-do not dangle—they always point to valid values. You can also have application-
-or library-specific invariants, like “the head pointer is always ahead of the
-tail pointer” or “the capacity is always a power of two.” Ultimately, invariants
-represent all the assumptions required for your code to be correct. However,
-you may not always be aware of all the invariants that your code uses, and
-that’s where bugs creep in.
-- Crucially, unsafe code is not a way to skirt the various rules of Rust, like
-borrow checking, but rather a way to enforce those rules using reasoning
-that is beyond the compiler. When you write unsafe code, the onus is on
-you to ensure that the resulting code is safe. In a way, unsafe is misleading
-as a keyword when it is used to allow unsafe operations through unsafe {};
-it’s not that the contained code is unsafe, it’s that the code is allowed to perform
-otherwise unsafe operations because in this particular context, those
-operations are safe.
-- The rest of this chapter is split into four sections. We’ll start with a brief
-examination of how the keyword itself is used, then explore what unsafe
-allows you to do. Next, we’ll look at the rules you must follow in order to
-write safe unsafe code. Finally, I’ll give you some advice about how to actually
-go about writing unsafe code safely.
+**不变量**
+在本章中，我将大量讨论不变量。不变量只是一种说法，意味着“你的程序必须正确的东西”。例如，在Rust中，一个不变量是引用（使用&和&mut）不会悬空 - 它们总是指向有效的值。您还可以有特定于应用程序或库的不变量，比如“头指针始终在尾指针之前”或“容量始终是2的幂”。最终，不变量代表了代码正确性所需的所有假设。然而，您可能并不总是意识到代码使用的所有不变量，这就是错误产生的地方。
+
+- 关键是，不安全代码不是绕过Rust的各种规则（如借用检查）的方法，而是一种使用超出编译器能力的推理来强制执行这些规则的方法。当您编写不安全代码时，您有责任确保生成的代码是安全的。在某种程度上，当使用unsafe {}允许不安全操作时，unsafe作为关键字是具有误导性的；它并不意味着包含的代码是不安全的，而是在这个特定的上下文中，该代码被允许执行其他情况下不安全的操作，因为这些操作是安全的。
+- 本章的其余部分分为四个部分。我们将首先简要介绍关键字本身的使用方式，然后探讨不安全代码允许您做什么。接下来，我们将查看编写安全的不安全代码时必须遵循的规则。最后，我将给出一些建议，关于如何安全地编写不安全代码。
 
 ##### The unsafe Keyword
 
-Before we discuss the powers that unsafe grants you, we need to talk about
-its two different meanings. The unsafe keyword serves a dual purpose in
-Rust: it marks a particular function as unsafe to call and it enables you to
-invoke unsafe functionality in a particular code block. For example, the
-method in Listing 9-1 is marked as unsafe, even though it contains no
-unsafe code. Here, the unsafe keyword serves as a warning to the caller that
-there are additional guarantees that someone who writes code that invokes
-decr must manually check.
+- 在我们讨论unsafe赋予您的权限之前，我们需要谈谈它的两个不同含义。在Rust中，unsafe关键字具有双重作用：它标记特定的函数为不安全调用，并允许您在特定的代码块中调用不安全功能。例如，清单9-1中的方法被标记为不安全，即使它不包含不安全代码。在这里，unsafe关键字作为对调用者的警告，告诉他们有额外的保证，调用decr的代码必须手动检查。
 
 ```rust
 
@@ -2675,10 +2529,9 @@ impl<T> SomeType<T> {
 
 ```
 
-Listing 9-1: An unsafe method that contains only safe code
+清单9-1：一个只包含安全代码的不安全方法
 
-Listing 9-2 illustrates the second usage. Here, the method itself is not
-marked as unsafe, even though it contains unsafe code.
+清单9-2展示了第二种用法。在这里，即使方法包含不安全代码，它本身也没有标记为不安全。
 
 ```rust
 
@@ -2688,437 +2541,144 @@ impl<T> SomeType<T> {
   }
 }
 ```
-Listing 9-2: A safe method that contains unsafe code
+清单9-2：包含不安全代码的安全方法
 
-- These two listings differ in their use of unsafe because they embody
-different contracts. decr requires the caller to be careful when they call the
-method, whereas as_ref assumes that the caller was careful when invoking
-other unsafe methods (like decr). To see why, imagine that SomeType is really
-a reference-counted type like Rc. Even though decr only decrements a number,
-that decrement may in turn trigger undefined behavior through the
-safe method as_ref. If you call decr and then drop the second-to-last Rc of a
-given T, the reference count drops to zero and the T will be dropped—but
-the program might still call as_ref on the last Rc, and end up with a dangling
-reference.
-**NOTE** Undefined behavior describes the consequences of a program that violates invariants
-of the language at runtime. In general, if a program triggers undefined behavior,
-the outcome is entirely unpredictable. We’ll cover undefined behavior in greater
-detail later in this chapter.
-- Conversely, as long as there is no way to corrupt the Rc reference count
-using safe code, it is always safe to dereference the pointer inside the Rc
-the way the code for as_ref does—the fact that &self exists is proof that the
-pointer must still be valid. We can use this to give the caller a safe API to
-an otherwise unsafe operation, which is a core piece of how to use unsafe
-responsibly.
-- For historical reasons, every unsafe fn contains an implicit unsafe block
-in Rust today. That is, if you declare an unsafe fn, you can always invoke any
-unsafe methods or primitive operations inside that fn. However, that decision
-is now considered a mistake, and it’s currently being reverted through
-the already accepted and implemented RFC 2585. This RFC warns about
-having an unsafe fn that performs unsafe operations without an explicit
-unsafe block inside it. The lint will also likely become a hard error in future
-editions of Rust. The idea is to reduce the “footgun radius”—if every unsafe
-fn is one giant unsafe block, then you might accidentally perform unsafe
-operations without realizing it! For example, in decr in Listing 9-1, under
-the current rules you could also have added*std::ptr::null() without any
-unsafe annotation.
-- The distinction between unsafe as a marker and unsafe blocks as a
-mechanism to enable unsafe operations is important, because you must
-think about them differently. An unsafe fn indicates to the caller that
-they have to be careful when calling the fn in question and that they must
-ensure that the function’s documented safety invariants hold.
-- Meanwhile, an unsafe block implies that whoever wrote that block carefully
-checked that the safety invariants for any unsafe operations performed
-inside it hold. If you want an approximate real-world analogy, unsafe fn is an
-unsigned contract that asks the author of calling code to “solemnly swear X,
-Y, and Z.” Meanwhile, unsafe {} is the calling code’s author signing off on all
-the unsafe contracts contained within the block. Keep that in mind as we
-go through the rest of this chapter.
+- 这两个清单在使用unsafe方面有所不同，因为它们体现了不同的约定。decr要求调用者在调用该方法时要小心，而as_ref则假设调用者在调用其他不安全方法（如decr）时已经小心了。为了理解这一点，想象一下SomeType实际上是一个类似Rc的引用计数类型。尽管decr只是减少一个数字，但这个减少可能通过安全方法as_ref触发未定义行为。如果你调用decr，然后丢弃给定T的倒数第二个Rc，引用计数将降为零，T将被丢弃 - 但程序可能仍然在最后一个Rc上调用as_ref，并得到一个悬空引用。
+**注意** 未定义行为描述了在运行时违反语言不变量的程序的后果。一般来说，如果一个程序触发了未定义行为，其结果是完全不可预测的。我们将在本章后面更详细地讨论未定义行为。
+- 相反，只要没有办法使用安全代码破坏Rc的引用计数，就可以安全地解引用Rc内部的指针，就像as_ref的代码所做的那样——&self的存在证明指针仍然有效。我们可以利用这一点，为调用者提供一个安全的API，让其访问一个本来是不安全操作的核心部分，这是如何负责地使用不安全代码的关键。
+- 由于历史原因，每个不安全函数在 Rust 中都包含一个隐式的不安全块。也就是说，如果你声明了一个不安全函数，你可以在该函数内部调用任何不安全的方法或原始操作。然而，这个决定现在被认为是一个错误，并且正在通过已经被接受和实施的 RFC 2585 进行撤销。这个 RFC 警告说，如果一个不安全函数在内部执行不安全操作而没有显式的不安全块，那么这是一个错误。这个 lint 在 Rust 的未来版本中也可能成为一个硬错误。这个想法是为了减少“脚枪半径”——如果每个不安全函数都是一个巨大的不安全块，那么你可能会在不知情的情况下执行不安全操作！例如，在清单9-1中的decr函数中，根据当前的规则，你也可以添加*std::ptr::null()而不需要任何不安全的注释。
+- 作为标记的unsafe和作为启用不安全操作机制的unsafe块之间的区别很重要，因为你必须以不同的方式思考它们。一个unsafe fn向调用者表示，在调用该函数时必须小心，并且必须确保函数的文档中所述的安全不变量成立。
+- 与此同时，一个不安全块意味着编写该块的人仔细检查了其中执行的任何不安全操作的安全不变量是否成立。如果你想要一个近似于现实世界的类比，不安全函数是一个无符号合同，要求调用代码的作者“郑重承诺 X、Y 和 Z”。与此同时，unsafe {} 是调用代码的作者对块中包含的所有不安全合同的签署。在我们继续阅读本章的过程中，请记住这一点。
 
 #### Great Power
 
-- So, once you sign the unsafe contract with unsafe {}, what are you allowed
-to do? Honestly, not that much. Or rather, it doesn’t enable that many new
-features. Inside an unsafe block, you are allowed to dereference raw pointers
-and call unsafe fns.
-- That’s it. Technically, there are a few other things you can do, like
-accessing mutable and external static variables and accessing fields of
-unions, but those don’t change the discussion much. And honestly, that’s
-enough. Together, these powers allow you to wreak all sorts of havoc, like
-turning types into one another with mem::transmute, dereferencing raw pointers
-that point to who knows where, casting &'a to &'static, or making types
-shareable across thread boundaries even though they’re not thread-safe.
-- In this section, we won’t worry too much about what can go wrong with
-these powers. We’ll leave that for the boring, responsible, grown-up section
-that comes after. Instead, we’ll look at these neat shiny new toys and what
-we can do with them.
+- 那么，一旦你与 unsafe {} 签署了不安全合同，你可以做什么呢？老实说，并不是很多。或者说，它并没有启用很多新功能。在不安全块内部，你可以解引用原始指针并调用不安全函数。
+- 就是这样。从技术上讲，还有一些其他的事情可以做，比如访问可变和外部静态变量，访问联合体的字段，但这些并没有改变讨论的内容。而且，老实说，这已经足够了。这些能力一起让你能够制造各种混乱，比如使用mem::transmute将类型转换为另一个类型，解引用指向不知道哪里的原始指针，将&'a转换为&'static，或者使类型在线程边界上可共享，即使它们不是线程安全的。
+- 在这一节中，我们不会过多关注这些能力可能出现的问题。我们将把这些问题留给接下来的无聊、负责任、成熟的部分。相反，我们将看看这些漂亮的新玩具以及我们可以用它们做什么。
 
 ##### Juggling Raw Pointers
 
-- One of the most fundamental reasons to use unsafe is to deal with Rust’s raw
-pointer types: *const T and*mut T. You should think of these as more or less
-analogous to &T and &mut T, except that they don’t have lifetimes and are not
-subject to the same validity rules as their & counterparts, which we’ll discuss
-later in the chapter. These types are interchangeably referred to as pointers
-and raw pointers, mostly because many developers instinctively refer to
-references as pointers, and calling them raw pointers makes the distinction
-clearer.
-- Since fewer rules apply to *than &, you can cast a reference to a pointer
-even outside an unsafe block. Only if you want to go the other way, from*
-to &, do you need unsafe. You’ll generally turn a pointer back into a reference
-to do useful things with the pointed-to data, such as reading or modifying
-its value. For that reason, a common operation to use on pointers is
-unsafe { &_ptr } (or &mut_). The *there may look strange as the code is just
-constructing a reference, not dereferencing the pointer, but it makes sense
-if you look at the types; if you have a*mut T and want a &mut T, then &mut ptr
-would just give you a &mut _mut T. You need the_ to indicate that you want
-the mutable reference to what ptr is a pointer to.
+- 使用unsafe的最基本的原因之一是处理Rust的原始指针类型：*const T和*mut T。你应该将它们视为与&T和&mut T更或多或少相似，只是它们没有生命周期，并且不受与其&对应的相同有效性规则的约束，我们将在本章后面讨论。这些类型通常被称为指针和原始指针，主要是因为许多开发人员本能地将引用称为指针，并且将它们称为原始指针可以更清楚地区分。
+- 由于*比&适用的规则较少，即使在不安全块之外，您也可以将引用转换为指针。只有当您想要从*转换为&时，才需要使用不安全块。通常，您会将指针转换回引用，以便对指向的数据进行有用的操作，例如读取或修改其值。因此，常用于指针的操作是unsafe { &_ptr }（或 &mut_）。代码中的*可能看起来很奇怪，因为代码只是构造一个引用，而不是解引用指针，但如果您查看类型，它就有意义；如果您有一个*mut T并且想要一个&mut T，那么&mut ptr只会给您一个&mut _mut T。您需要_来指示您想要的是指针ptr所指向的可变引用。
 
 **POINTER TYPES**
-You may be wondering what the difference is between *mut T and*const T
-and std::ptr::NonNull<T>. Well, the exact specification is still being worked
-out, but the primary practical difference between *mut T and*const T/
-NonNull<T> is that *mut T is invariant in T (see “Lifetime Variance” in Chapter 1),
-whereas the other two are covariant. As the names imply,*const T and
-NonNull<T> differ primarily in that NonNull<T> is not allowed to be a null pointer,
-whereas *const T is.
+你可能想知道*mut T、*const T和std::ptr::NonNull<T>之间的区别是什么。嗯，确切的规范还在制定中，但*mut T和*const T/NonNull<T>之间的主要实际区别是*mut T在T上是不变的（参见第1章的“生命周期的变化”），而另外两个是协变的。正如名称所示，*const T和NonNull<T>主要的区别在于NonNull<T>不允许是空指针，而*const T允许。
 
-- My best advice in choosing among these types is to use your intuition
-about whether you would have written &mut or & if you were able to name the
-relevant lifetime. If you would have written &, and you know that the pointer is
-never null, use NonNull<T>. It benefits from a cool optimization called the niche
-optimization: basically, since the compiler knows that the type can never be
-null, it can use that information to represent types like Option<NonNull<T>> without
-any extra overhead, since the None case can be represented by setting the
-NonNull to be a null pointer! The null pointer value is a niche in the NonNull<T>
-type. If the pointer might be null, use*const T. And if you would have written
-&mut T, use *mut T.
+- 在选择这些类型之间时，我给出的最佳建议是根据直觉选择，如果你能够命名相关的生命周期，你会选择使用&mut还是&。如果你会选择使用&，并且你知道指针永远不会为空，那么使用NonNull<T>。它受益于一种称为niche优化的酷炫优化：基本上，由于编译器知道该类型永远不会为空，它可以利用这个信息来表示像Option<NonNull<T>>这样的类型，而不需要额外的开销，因为None情况可以通过将NonNull设置为null指针来表示！空指针值是NonNull<T>类型中的一个niche。如果指针可能为空，使用*const T。如果你会选择使用&mut T，使用*mut T。
 
 ##### Unrepresentable Lifetimes
 
-As raw pointers do not have lifetimes, they can be used in circumstances
-where the liveness of the value being pointed to cannot be expressed statically
-within Rust’s lifetime system, such as a self-pointer in a self-referential
-struct like the generators we discussed in Chapter 8. A pointer that points
-into self is valid for as long as self is around (and doesn’t move, which is
-what Pin is for), but that isn’t a lifetime you can generally name. And while
-the entire self-referential type may be 'static, the self-pointer isn’t—if it
-were static, then even if you gave away that pointer to someone else, they
-could continue to use it forever, even after self was gone! Take the type in
-Listing 9-3 as an example; here we attempt to store the raw bytes that make
-up a value alongside its stored representation.
+由于原始指针没有生命周期，它们可以在无法在Rust的生命周期系统中静态地表达指向值的存活性的情况下使用，例如在我们在第8章中讨论的生成器中的自指结构中。指向self的指针在self存在的时间内是有效的（并且不移动，这就是Pin的作用），但这不是您通常可以命名的生命周期。虽然整个自指类型可能是'static的，但self指针不是——如果它是静态的，那么即使您将该指针交给其他人，他们也可以在self消失后继续永远使用它！以清单9-3中的类型为例；在这里，我们尝试将组成一个值的原始字节与其存储的表示一起存储。
 
 ```rust
 
 struct Person<'a> {
-name: &'a str,
-age: usize,
+  name: &'a str,
+  age: usize,
 }
+
 struct Parsed {
-bytes: [u8; 1024],
-parsed: Person<'???>,
+  bytes: [u8; 1024],
+  parsed: Person<'???>,
 }
 ```
 
-Listing 9-3: Trying, and failing, to name the lifetime of a self-referential reference
+清单9-3：尝试命名自引用引用的生命周期，但失败了
 
-- The reference inside Person wants to refer to data stored in bytes in
-Parsed, but there is no lifetime we can assign to that reference from Parsed.
-It’s not 'static or something like 'self (which doesn’t exist), because if
-Parsed is moved, the reference is no longer valid.
-- Since pointers do not have lifetimes, they circumvent this problem
-because you don’t have to be able to name the lifetime. Instead, you just have
-to make sure that when you do use the pointer, it’s still valid, which is what you
-sign off on when you write unsafe { &*ptr }. In the example in Listing 9-3,
-Person would instead store a *const str and then unsafely turn that into a &str
-at the appropriate times when it can guarantee that the pointer is still valid.
-- A similar issue arises with a type like Arc, which has a pointer to a value
-that’s shared for some duration, but that duration is known only at runtime
-when the last Arc is dropped. The pointer is kind-of, sort-of 'static, but not
-really—like in the self-referential case, the pointer is no longer valid when
-the last Arc reference goes away, so the lifetime is more like 'self. In Arc’s
-cousin, Weak, the lifetime is also “when the last Arc goes away,” but since a
-Weak isn’t an Arc, the lifetime isn’t even tied to self. So, Arc and Weak both
-use raw pointers internally.
+- Person内部的引用希望引用存储在Parsed中的字节数据，但我们无法为该引用从Parsed中分配生命周期。它既不是'static，也不是类似'self（不存在的），因为如果移动Parsed，引用将不再有效。
+- 由于指针没有生命周期，它们可以绕过这个问题，因为您不需要能够命名生命周期。相反，您只需要确保在使用指针时它仍然有效，这就是当您编写 unsafe { &*ptr } 时所做的。在清单9-3的示例中，Person将存储一个 *const str，然后在适当的时候将其不安全地转换为 &str，以确保指针仍然有效。
+- 类似的问题也出现在像Arc这样的类型中，它具有指向某个值的指针，该值在某个时期内被多个引用共享，但该时期只有在运行时最后一个Arc被丢弃时才知道。这个指针有点像'static，但实际上并不是——就像在自引用的情况下一样，当最后一个Arc引用消失时，指针将不再有效，因此生命周期更像是'self。在Arc的近亲Weak中，生命周期也是“当最后一个Arc消失时”，但由于Weak不是Arc，生命周期甚至与'self都没有关联。因此，Arc和Weak都在内部使用原始指针。
 
-##### Pointer Arithmetic
+##### 指针算术
 
-- With raw pointers, you can do arbitrary pointer arithmetic, just like you
-can in C, by using .offset(), .add(), and .sub() to move the pointer to any
-byte that lives within the same allocation. This is most often used in highly
-space-optimized data structures, like hash tables, where storing an extra
-pointer for each element would add too much overhead and using slices
-isn’t possible. Those are fairly niche use cases, and we won’t be talking
-more about them in this book, but I encourage you to read the code for
-hashbrown::RawTable (<https://github.com/rust-lang/hashbrown/>) if you want to
-learn more!
-- The pointer arithmetic methods are unsafe to call even if you don’t
-want to turn the pointer into a reference afterwards. There are a couple
-of reasons for this, but the main one is that it is illegal to make a pointer
-point beyond the end of the allocation that it originally pointed to. Doing
-so triggers undefined behavior, and the compiler is allowed to decide to
-eat your code and replace it with arbitrary nonsense that only a compiler
-could understand. If you do use these methods, read the documentation
-carefully!
+- 使用原始指针，您可以进行任意的指针算术，就像在C语言中一样，通过使用.offset()、.add()和.sub()将指针移动到同一分配内的任何字节位置。这在高度优化的数据结构（如哈希表）中最常用，其中为每个元素存储额外的指针会增加太多开销，并且无法使用切片。这些是相当特殊的用例，在本书中我们不会进一步讨论它们，但我鼓励您阅读hashbrown::RawTable的代码（<https://github.com/rust-lang/hashbrown/>）以了解更多信息！
+- 即使您不打算将指针转换为引用，调用指针算术方法也是不安全的。这样做的原因有几个，但主要原因是将指针指向超出其最初指向的分配末尾是非法的。这样做会触发未定义行为，编译器可以决定吞噬您的代码，并将其替换为只有编译器能理解的任意荒谬代码。如果您确实使用这些方法，请仔细阅读文档！
 
 ##### To Pointer and Back Again
 
-Often when you need to use pointers, it’s because you have some normal
-Rust type, like a reference, a slice, or a string, and you have to move to the
-world of pointers for a bit and then go back to the original normal type.
-Some of the key standard library types therefore provide you with a way to
-turn them into their raw constituent parts, such as a pointer and a length
-for a slice, and a way to turn them back into the whole using those same
-parts. For example, you can get a slice’s data pointer with as_ptr and its
-length with []::len. You can then reconstruct the slice by providing those
-same values to std::slice::from_raw_parts. Vec, Arc, and String have similar
-methods that return a raw pointer to the underlying allocation, and Box has
-Box::into_raw and Box::from_raw, which do the same thing.
+通常情况下，当你需要使用指针时，是因为你有一些普通的Rust类型，比如引用、切片或字符串，你需要暂时转换为指针的世界，然后再回到原始的普通类型。因此，一些关键的标准库类型提供了一种将它们转换为原始组成部分的方法，例如切片的指针和长度，以及使用这些部分将它们重新构建回整体的方法。例如，你可以使用as_ptr获取切片的数据指针，使用.len获取切片的长度。然后，你可以使用这些值来调用std::slice::from_raw_parts来重建切片。Vec、Arc和String也有类似的方法，返回底层分配的原始指针，而Box则有Box::into_raw和Box::from_raw，它们执行相同的操作。
 
 ##### Playing Fast and Loose with Types
 
-Sometimes, you have a type T and want to treat it as some other type U.
-Whether that’s because you need to do lightning-fast zero-copy parsing
-or because you need to fiddle with some lifetimes, Rust provides you with
-some (very unsafe) tools to do so.
+有时，你有一个类型T，并希望将其视为其他类型U。无论是因为你需要进行快速的零拷贝解析，还是因为你需要处理一些生命周期，Rust为你提供了一些（非常不安全的）工具来实现这一点。
 
-- The first and by far most widely used of these is pointer casting: you can
-cast a*const T to any other *const U (and the same for mut), and you don’t
-even need unsafe to do it. The unsafety comes into play only when you later
-try to use the cast pointer as a reference, as you have to assert that the raw
-pointer can in fact be used as a reference to the type it’s pointing to.
-- This kind of pointer type casting comes in particularly handy when working
-with foreign function interfaces (FFI)—you can cast any Rust pointer to a
-*const std::ffi::c_void or *mut std::ffi::c_void, and then pass that to a C function
-that expects a void pointer. Similarly, if you get a void pointer from C that
-you previously passed in, you can trivially cast it back into its original type.
-- Pointer casts are also useful when you want to interpret a sequence
-of bytes as plain old data—types like integers, Booleans, characters, and
-arrays, or #[repr(C)] structs of these—or write such types directly out as a
-byte stream without serialization. There are a lot of safety invariants to keep
-in mind if you want to try to do that, but we’ll leave that for later.
+- 这些中第一个也是最常用的是指针类型转换：你可以将*const T转换为任何其他*const U（mut也是如此），而且你甚至不需要使用unsafe来进行转换。只有当你稍后尝试将转换后的指针用作引用时，不安全性才会发挥作用，因为你必须断言原始指针实际上可以用作指向它所指向的类型的引用。
+- 当与外部函数接口（FFI）一起工作时，这种类型的指针转换特别方便——您可以将任何Rust指针转换为*const std::ffi::c_void或*mut std::ffi::c_void，然后将其传递给期望void指针的C函数。同样，如果您从C中获得了一个之前传递的void指针，您可以轻松地将其转换回原始类型。
+- 当你想将一系列字节解释为普通数据时，指针转换也很有用——比如整数、布尔值、字符和数组，或者#[repr(C)]结构体等这些类型，或者直接将这些类型写入字节流而不进行序列化。如果你想尝试这样做，需要记住很多安全不变量，但我们将在以后讨论这个问题。
 
 ##### Calling Unsafe Functions
 
-- Arguably unsafe’s most commonly used feature is that it enables you to
-call unsafe functions. Deeper down the stack, most of those functions are
-unsafe because they operate on raw pointers at some fundamental level, but
-higher up the stack you tend to interact with unsafety primarily through
-function calls.
-- There’s really no limit to what calling an unsafe function might enable,
-as it is entirely up to the libraries you interact with. But in general, unsafe
-functions can be divided into three camps: those that interact with non-
-Rust interfaces, those that skip safety checks, and those that have custom
-invariants.
+- 可以说，unsafe最常用的功能是它使您能够调用不安全函数。在堆栈的更深层次，大多数这些函数之所以不安全，是因为它们在某个基本层次上操作原始指针，但在堆栈的较高层次，您主要通过函数调用与不安全交互。
+- 调用不安全函数可能会带来无限的可能性，这完全取决于你所交互的库。但一般来说，不安全函数可以分为三类：与非Rust接口交互的函数、跳过安全检查的函数和具有自定义不变量的函数。
 
 ##### Foreign Function Interfaces
 
-Rust lets you declare functions and static variables that are defined in a
-language other than Rust using extern blocks (which we’ll discuss at length
-in Chapter 11). When you declare such a block, you’re telling Rust that the
-items appearing within it will be implemented by some external source when
-the final program binary is linked, such as a C library you are integrating
-with. Since externs exist outside of Rust’s control, they are inherently unsafe
-to access. If you call a C function from Rust, all bets are off—it might overwrite
-your entire memory contents and clobber all your neatly arranged
-references into random pointers into the kernel somewhere. Similarly, an
-extern static variable could be modified by external code at any time, and
-could be filled with all sorts of bad bytes that don’t reflect its declared type
-at all. In an unsafe block, though, you can access externs to your heart’s
-delight, as long as you’re willing to vouch for the other side of the extern
-behaving according to Rust’s rules.
+- Rust允许您使用extern块声明由Rust以外的语言定义的函数和静态变量（我们将在第11章中详细讨论）。当您声明这样一个块时，您告诉Rust在最终的程序二进制链接时，其中的项将由某个外部源实现，比如您正在集成的C库。由于extern存在于Rust的控制之外，它们本质上是不安全的。如果您从Rust调用C函数，一切都不确定——它可能覆盖整个内存内容，并破坏您整齐排列的所有引用，使其成为指向内核中随机指针的引用。同样，extern静态变量可以随时被外部代码修改，并且可能被填充有与其声明类型完全不符的坏字节。然而，在不安全块中，只要您愿意为extern的另一侧遵守Rust的规则，您就可以尽情访问它们。
 
 ##### I’ll Pass on Safety Checks
 
-- Some unsafe operations can be made entirely safe by introducing additional
-runtime checks. For example, accessing an item in a slice is unsafe
-since you might try to access an item beyond the length of the slice. But,
-given how common the operation is, it’d be unfortunate if indexing into a
-slice was unsafe. Instead, the safe implementation includes bounds checks
-that (depending on the method you use) either panic or return an Option if
-the index you provide is out of bounds. That way, there is no way to cause
-undefined behavior even if you pass in an index beyond the slice’s length.
-Another example is in hash tables, which hash the key you provide rather
-than letting you provide the hash yourself; this ensures that you’ll never try
-to access a key using the wrong hash.
-- However, in the endless pursuit of ultimate performance, some developers
-may find these safety checks add just a little too much overhead in their
-tightest loops. To cater to situations where peak performance is paramount
-and the caller knows that the indexes are in bounds, many data structures
-provide alternate versions of particular methods without these safety
-checks. Such methods usually include the word unchecked in the name to
-indicate that they blindly trust the provided arguments to be safe and that
-they do not do any of those pesky, slow safety checks. Some examples are
-NonNull::new_unchecked, slice::get_unchecked, NonZero::new_unchecked, Arc::get
-_mut_unchecked, and str::from_utf8_unchecked.
-- In practice, the safety and performance trade-off for unchecked methods
-is rarely worth it. As always with performance optimization, measure
-first, then optimize.
+- 通过引入额外的运行时检查，一些不安全操作可以完全变为安全。例如，访问切片中的项是不安全的，因为您可能尝试访问超出切片长度的项。但是，考虑到这个操作是多么常见，如果索引到一个切片是不安全的，那将是不幸的。相反，安全的实现包括边界检查，如果您提供的索引超出了切片的范围，它们要么引发 panic，要么返回一个 Option。这样，即使您传入超出切片长度的索引，也不会导致未定义行为。另一个例子是哈希表，在哈希表中，它会对您提供的键进行哈希，而不是让您自己提供哈希；这确保您永远不会使用错误的哈希来访问键。
+- 然而，在追求终极性能的过程中，一些开发者可能会发现这些安全检查在最紧密的循环中增加了一些额外的开销。为了满足对性能要求极高的情况，并且调用者知道索引在范围内，许多数据结构提供了特定方法的替代版本，这些方法没有这些安全检查。这些方法通常在名称中包含unchecked一词，以表示它们盲目地相信提供的参数是安全的，并且不执行任何繁琐、缓慢的安全检查。一些例子包括NonNull::new_unchecked、slice::get_unchecked、NonZero::new_unchecked、Arc::get_mut_unchecked和str::from_utf8_unchecked。
+- 在实践中，不安全方法的安全性和性能的权衡很少值得。与性能优化一样，先进行测量，然后再进行优化。
 
 ##### Custom Invariants
 
-Most uses of unsafe rely on custom invariants to some degree. That is, they
-rely on invariants beyond those provided by Rust itself, which are specific to
-the particular application or library. Since so many functions fall into this
-category, it’s hard to give a good general summary of this class of unsafe
-functions. Instead, I’ll give some examples of unsafe functions with custom
-invariants that you may come across in practice and want to use:
+大多数使用不安全的操作都依赖于自定义不变量。也就是说，它们依赖于 Rust 本身提供的不变量之外的不变量，这些不变量特定于特定的应用程序或库。由于如此多的函数属于这个类别，很难给出一个好的一般性总结。相反，我将给出一些在实践中可能遇到并希望使用的具有自定义不变量的不安全函数的示例：
 
 ###### MaybeUninit::assume_init
 
-- The MaybeUninit type is one of the few ways in which you can store
-values that are not valid for their type in Rust. You can think of a
-MaybeUninit<T> as a T that may not be legal to use as a T at the moment.
-For example, a MaybeUninit<NonNull> is allowed to hold a null pointer,
-a MaybeUninit<Box> is allowed to hold a dangling heap pointer, and a
-MaybeUninit<bool> is allowed to hold the bit pattern for the number 3
-(normally it must be 0 or 1). This comes in handy if you are constructing
-a value bit by bit or are dealing with zeroed or uninitialized memory
-that will eventually be made valid (such as by being filled through
-a call to std::io::Read::read). The assume_init function asserts that the
-MaybeUninit now holds a valid value for the type T and can therefore be
-used as a T.
+- MaybeUninit类型是在Rust中存储不合法值的几种方式之一。您可以将MaybeUninit<T>视为一个可能在当前时刻不合法使用的T。例如，MaybeUninit<NonNull>允许持有空指针，MaybeUninit<Box>允许持有悬空的堆指针，MaybeUninit<bool>允许持有数字3的位模式（通常应为0或1）。如果您逐位构造一个值或处理将最终变为有效值的零值或未初始化内存（例如通过调用std::io::Read::read进行填充），这将非常有用。assume_init函数断言MaybeUninit现在持有类型T的有效值，因此可以将其用作T。
 
 ##### ManuallyDrop::drop
 
-The ManuallyDrop type is a wrapper type around a type T that does not
-drop that T when the ManuallyDrop is dropped. Or, phrased differently, it
-decouples the dropping of the outer type (ManuallyDrop) from the dropping
-of the inner type (T). It implements safe access to the T through
-DerefMut<Target = T> but also provides a drop method (separately from
-the drop method of the Drop trait) to drop the wrapped T without dropping
-the ManuallyDrop. That is, the drop function takes &mut self despite
-dropping the T, and so leaves the ManuallyDrop behind. This comes in
-handy if you have to explicitly drop a value that you cannot move, such
-as in implementations of the Drop trait. Once that value is dropped, it
-is no longer safe to try to access the T, which is why the call to drop is
-unsafe—it asserts that the T will never be accessed again.
+
+ManuallyDrop类型是围绕类型T的包装类型，当ManuallyDrop被丢弃时，不会丢弃T。换句话说，它将外部类型（ManuallyDrop）的丢弃与内部类型（T）的丢弃分离开来。它通过DerefMut<Target = T>实现对T的安全访问，但也提供了一个drop方法（与Drop trait的drop方法分开），用于丢弃包装的T而不丢弃ManuallyDrop。也就是说，尽管丢弃了T，但drop函数采用&mut self的形式，因此将ManuallyDrop留在原地。如果您必须显式丢弃一个无法移动的值，例如在Drop trait的实现中，这将非常有用。一旦该值被丢弃，再次尝试访问T将不再安全，这就是为什么调用drop是不安全的原因——它断言T将永远不会再次被访问。
+
 
 ##### std::ptr::drop_in_place
 
-drop_in_place lets you call a value’s destructor directly through a pointer
-to that value. This is unsafe because the pointee will be left behind
-after the call, so if some code then tries to dereference the pointer, it’ll
-be in for a bad time! This method is particularly useful when you may
-want to reuse memory, such as in an arena allocator, and need to drop
-an old value in place without reclaiming the surrounding memory.
+drop_in_place允许您通过指向该值的指针直接调用值的析构函数。这是不安全的，因为在调用后，指针指向的对象将被留在原地，所以如果某些代码尝试解引用该指针，将会出现问题！这种方法在您可能希望重用内存（例如在区块分配器中）并且需要在原地丢弃旧值而不回收周围内存时特别有用。
 
 ##### Waker::from_raw
 
-In Chapter 8 we talked about the Waker type and how it is made up of a
-data pointer and a RawWaker that holds a manually implemented vtable.
-Once a Waker has been constructed, the raw function pointers in the
-vtable, such as wake and drop, can be called from safe code (through
-Waker::wake and drop(waker), respectively). Waker::from_raw is where the
-asynchronous executor asserts that all the pointers in its vtable are
-in fact valid function pointers that follow the contract set forth in the
-documentation of RawWakerVTable.
+在第8章中，我们讨论了Waker类型以及它由数据指针和一个包含手动实现的vtable的RawWaker组成。一旦构建了Waker，vtable中的原始函数指针（如wake和drop）可以从安全代码中调用（分别通过Waker::wake和drop(waker)）。Waker::from_raw是异步执行器断言其vtable中的所有指针实际上都是有效的函数指针，并遵循RawWakerVTable文档中设定的约定。
 
 ##### std::hint::unreachable_unchecked
 
-The hint module holds functions that give hints to the compiler about
-the surrounding code but do not actually produce any machine code.
-The unreachable_unchecked function in particular tells the compiler that it
-is impossible for the program to reach a section of the code at runtime.
-This in turn allows the compiler to make optimizations based on that
-knowledge, such as eliminating conditional branches to that location.
-Unlike the unreachable! macro, which panics if the code does reach the
-line in question, the effects of an erroneous unreachable_unchecked are
-hard to predict. The compiler optimizations may cause peculiar and
-hard-to-debug behavior, not to mention that your program will continue
-running when something it believed to be true was not!
+hint模块包含一些向编译器提供关于周围代码的提示的函数，但实际上不会生成任何机器代码。
+特别是，unreachable_unchecked函数告诉编译器在运行时不可能到达代码的某个部分。
+这反过来允许编译器基于这个知识进行优化，比如消除到该位置的条件分支。
+与unreachable!宏不同，如果代码确实到达了相应的行，它会引发panic，而错误的unreachable_unchecked的影响很难预测。
+编译器优化可能会导致奇怪和难以调试的行为，更不用说你的程序将在它认为是真实的情况下继续运行，而实际上并非如此！
 
 ##### std::ptr::{read,write}_{unaligned,volatile}
 
-The ptr module holds a number of functions that let you work with odd
-pointers—those that do not meet the assumptions that Rust generally
-makes about pointers. The first of these functions are read_unaligned and
-write_unaligned, which let you access pointers that point to a T even if
-that T is not stored according to T’s alignment (see the section on alignment
-in Chapter 2). This might happen if the T is contained directly in
-a byte array or is otherwise packed in with other values without proper
-padding. The second notable pair of functions is read_volatile and
-write_volatile, which let you operate on pointers that don’t point to
-normal memory. Concretely, these functions will always access the given
-pointer (they won’t be cached in a register, for example, even if you
-read the same pointer twice in a row), and the compiler won’t reorder
-the volatile accesses relative to other volatile accesses. Volatile operations
-come in handy when working with pointers that aren’t backed
-by normal DRAM memory—we’ll discuss this further in Chapter 11.
-Ultimately, these methods are unsafe because they dereference the
-given pointer (and to an owned T, at that), so you as the caller need to
-sign off on all the contracts associated with doing so.
+- ptr模块包含一些函数，让您可以使用不符合Rust对指针的一般假设的奇怪指针。其中第一对函数是read_unaligned和write_unaligned，它们允许您访问指向T的指针，即使T的存储方式不符合T的对齐方式（请参见第2章中关于对齐的部分）。如果T直接包含在字节数组中或以其他方式与其他值一起紧密打包而没有适当的填充，可能会发生这种情况。第二对值得注意的函数是read_volatile和write_volatile，它们允许您操作指向非正常内存的指针。具体来说，这些函数总是访问给定的指针（即使连续两次读取相同的指针，它们也不会被缓存在寄存器中），并且编译器不会重新排序与其他volatile访问相关的访问。在处理不由正常DRAM内存支持的指针时，volatile操作非常有用，我们将在第11章中进一步讨论这个问题。
+- 最终，这些方法是不安全的，因为它们解引用给定的指针（而且是对拥有的T进行解引用），所以作为调用者，您需要对与此操作相关的所有合同进行签署。
 
 ##### std::thread::Builder::spawn_unchecked
 
-The normal thread::spawn that we know and love requires that the
-provided closure is 'static. That bound stems from the fact that the
-spawned thread might run for an indeterminate amount of time; if
-we were allowed to use a reference to, say, the caller’s stack, the caller
-might return well before the spawned thread exits, rendering the reference
-invalid. Sometimes, however, you know that some non-'static
-value in the caller will outlive the spawned thread. This might happen
-if you join the thread before dropping the value in question, or if the
-value is dropped only strictly after you know the spawned thread will
-no longer use it. That’s where spawn_unchecked comes in—it does not
-have the 'static bound and thus lets you implement those use cases as
-long as you’re willing to sign the contract saying that no unsafe accesses
-will happen as a result. Be careful of panics, though; if the caller panics,
-it might drop values earlier than you planned and cause undefined
-behavior in the spawned thread!
+我们熟悉并喜爱的普通 thread::spawn 要求提供的闭包是 'static 的。这个限制源于这样一个事实：被创建的线程可能运行的时间不确定；如果我们被允许使用对调用者栈的引用，调用者可能在被创建的线程退出之前就返回了，使得引用无效。然而，有时候你知道调用者中的某个非 'static 值将会在被创建的线程之后继续存在。这可能发生在你在丢弃相关值之前加入线程，或者在你知道被创建的线程不再使用该值之后严格地丢弃该值。这就是 spawn_unchecked 的用武之地——它没有 'static 限制，因此只要你愿意签署合同，保证不会发生任何不安全的访问，就可以实现这些用例。但要小心 panic；如果调用者发生 panic，它可能会提前丢弃值，导致被创建的线程中出现未定义行为！
 
-- Note that all of these methods (and indeed all unsafe methods in the
-standard library) provide explicit documentation for their safety invariants,
-as should be the case for any unsafe method.
+- 需要注意的是，所有这些方法（实际上是标准库中的所有不安全方法）都提供了明确的文档，说明它们的安全不变量，这对于任何不安全方法都应该是这样的。
 
 ###### Implementing Unsafe Traits
 
-Unsafe traits aren’t unsafe to use, but unsafe to implement. This is because
-unsafe code is allowed to rely on the correctness (defined by the trait’s documentation)
-of the implementation of unsafe traits. For example, to implement
-the unsafe trait Send, you need to write unsafe impl Send for .... Like
-unsafe functions, unsafe traits generally have custom invariants that are (or
-at least should be) specified in the documentation for the trait. Thus, it’s
-difficult to cover unsafe traits as a group, so here too I’ll give some common
-examples from the standard library that are worth going over.
+不安全特性不是使用不安全，而是实现不安全。这是因为不安全代码允许依赖于不安全特性实现的正确性（由特性文档定义）。例如，要实现不安全特性Send，您需要编写unsafe impl Send for .... 像不安全函数一样，不安全特性通常具有在特性文档中指定的自定义不变量。因此，很难将不安全特性作为一个整体进行讨论，因此在这里我将给出一些值得介绍的标准库中的常见示例。
+
 ###### Send and Sync
-The Send and Sync traits denote that a type is safe to send or share across
-thread boundaries, respectively. We’ll talk more about these traits in
-Chapter 10, but for now what you need to know is that they are auto-traits,
-and so they’ll usually be implemented for most types for you by the compiler.
-But, as tends to be the case with auto-traits, Send and Sync will not be
-implemented if any members of the type in question are not themselves Send
-or Sync.
 
-- In the context of unsafe code, this problem occurs primarily due to
-raw pointers, which are neither Send nor Sync. At first glance, this might
-seem reasonable: the compiler has no way to know who else may have a raw
-pointer to the same value or how they may be using it at the moment, so
-how can the type be safe to send across threads? Now that we’re seasoned
-unsafe developers though, that argument seems weak—after all, dereferencing
-a raw pointer is already unsafe, so why should handling the invariants of
-Send and Sync be any different?
+Send和Sync特性表示类型在跨线程边界发送或共享是安全的。我们将在第10章中更详细地讨论这些特性，但现在你需要知道的是它们是自动特性，所以编译器通常会为大多数类型自动实现它们。但是，与自动特性一样，如果类型中的任何成员本身不是Send或Sync，那么Send和Sync将不会被实现。
 
-- Strictly speaking, raw pointers could be both Send and Sync. The problem
-is that if they were, the types that contain raw pointers would automatically
-be Send and Sync themselves, even though their author might not
-realize that was the case. The developer might then unsafely dereference
-the raw pointers without ever thinking about what would happen if those
-types were sent or shared across thread boundaries, and thus inadvertently
-introduce undefined behavior. Instead, the raw pointer types block these
-automatic implementations as an additional safeguard to unsafe code to
-make authors explicitly sign the contract that they have also followed the
-Send and Sync invariants.
+- 在不安全代码的上下文中，这个问题主要是由于原始指针引起的，原始指针既不是Send也不是Sync。乍一看，这似乎是合理的：编译器无法知道谁还可能拥有对同一值的原始指针，以及他们可能在此刻如何使用它，所以这种类型如何安全地跨线程发送呢？然而，作为经验丰富的不安全开发者，这个论点似乎是脆弱的——毕竟，解引用原始指针已经是不安全的，那么处理Send和Sync的不变量为什么会有所不同呢？
 
-**NOTE** A common mistake with unsafe implementations of Send and Sync is to forget to add
-bounds to generic parameters: unsafe impl<T: Send> Send for MyUnsafeType<T> {}.
+- 严格来说，裸指针可以同时是Send和Sync。问题在于，如果它们是Send和Sync，那么包含裸指针的类型也会自动成为Send和Sync，即使其作者可能没有意识到这一点。开发者可能会不安全地解引用裸指针，而从未考虑过如果这些类型在线程边界上被发送或共享会发生什么，从而无意中引入未定义行为。相反，裸指针类型阻止了这些自动实现，作为对不安全代码的额外保护，要求作者明确地签署合同，表示他们也遵循了Send和Sync的不变量。
+
+**注意** 在实现Send和Sync的不安全代码中，常见的错误是忘记为泛型参数添加约束：unsafe impl<T: Send> Send for MyUnsafeType<T> {}。
 
 ##### GlobalAlloc
 
-The GlobalAlloc trait is how you implement a custom memory allocator
-in Rust. We won’t talk too much about that topic in this book, but the
-trait itself is interesting. Listing 9-4 gives the required methods for the
-GlobalAlloc trait.
+GlobalAlloc trait 是在 Rust 中实现自定义内存分配器的方式。在本书中我们不会过多讨论这个主题，但这个 trait 本身是很有趣的。列表 9-4 给出了 GlobalAlloc trait 的必需方法。
 
 ```rust
 
@@ -3128,106 +2688,35 @@ pub unsafe trait GlobalAlloc {
 
 }
 ```
-Listing 9-4: The GlobalAlloc trait with its required methods
 
-- At its core, the trait has one method for allocating a new chunk of
-memory, alloc, and one for deallocating a chunk of memory, dealloc. The
-Layout argument describes the type’s size and alignment, as we discussed in
-Chapter 2. Each of those methods is unsafe and carries a number of safety
-invariants that its callers must uphold.
-- GlobalAlloc itself is also unsafe because it places restrictions on the
-implementer of the trait, not the caller of its methods. Only the unsafety
-of the trait ensures that implementers agree to uphold the invariants that
-Rust itself assumes of its memory allocator, such as in the standard library’s
-implementation of Box. If the trait was not unsafe, an implementer could
-safely implement GlobalAlloc in a way that produced unaligned pointers or
-incorrectly sized allocations, which would trigger unsafety in otherwise safe
-code that assumes that allocations are sane. This would break the rule that
-safe code should not be able to trigger memory unsafety in other safe code,
-and thus cause all sorts of mayhem.
+清单 9-4：具有必需方法的 GlobalAlloc trait
+
+- 在其核心，GlobalAlloc trait 有一个用于分配新内存块的方法 alloc，和一个用于释放内存块的方法 dealloc。Layout 参数描述了类型的大小和对齐方式，正如我们在第2章中讨论的那样。这些方法都是不安全的，并且需要调用者遵守一些安全不变量。
+- GlobalAlloc 本身也是不安全的，因为它对 trait 的实现者施加了限制，而不是对方法的调用者。只有 trait 的不安全性才能确保实现者同意遵守 Rust 自身对其内存分配器的不变量的假设，例如标准库中 Box 的实现。如果该 trait 不是不安全的，实现者可以以一种安全的方式实现 GlobalAlloc，从而产生不对齐的指针或错误大小的分配，这将在其他假设分配是合理的安全代码中触发不安全性。这将违反安全代码不应该能够触发其他安全代码中的内存不安全的规则，从而引发各种混乱。
 
 ##### Surprisingly Not Unpin
 
-- The Unpin trait is not unsafe, which comes as a surprise to many Rust developers.
-It may even come as a surprise to you after reading Chapter 8. After
-all, the trait is supposed to ensure that self-referential types aren’t invalidated
-if they’re moved after they have established internal pointers (that is,
-after they’ve been placed in a Pin). It seems strange, then, that Unpin can be
-used to safely remove a type from a Pin.
-- There are two main reasons why Unpin isn’t an unsafe trait. First, it’s
-unnecessary. Implementing Unpin for a type that you control does not grant
-you the ability to safely pin or unpin a !Unpin type; that still requires unsafety
-in the form of a call to Pin::new_unchecked or Pin::get_unchecked_mut. Second,
-there is already a safe way for you to unpin any type you control: the Drop trait!
-When you implement Drop for a type, you’re passed &mut self, even if your
-type was previously stored in a Pin and is !Unpin, all without any unsafety. That
-potential for unsafety is covered by the invariants of Pin::new_unchecked, which
-must be upheld to create a Pin of such an !Unpin type in the first place.
+
+- Unpin特性并不是不安全的，这让许多Rust开发者感到惊讶。即使在阅读第8章之后，这可能对你来说也是个惊喜。毕竟，该特性应该确保自引用类型在被移动后不会失效（也就是在它们被放入Pin之后）。因此，Unpin可以安全地从Pin中移除类型，这似乎有些奇怪。
+- Unpin不是不安全特性的主要原因有两个。首先，这是不必要的。为你控制的类型实现Unpin并不意味着你可以安全地固定或解固一个!Unpin类型；这仍然需要通过调用Pin::new_unchecked或Pin::get_unchecked_mut来进行不安全操作。其次，对于你控制的任何类型，已经有一种安全的方法可以解固它：Drop特性！当你为一个类型实现Drop时，即使你的类型之前存储在一个Pin中并且是!Unpin的，你仍然可以通过&mut self来访问它，而不需要任何不安全操作。Pin::new_unchecked的不变量必须得到维护，以便首先创建这样一个!Unpin类型的Pin。
 
 ##### When to Make a Trait Unsafe
 
-- Few traits in the wild are unsafe, but those that are all follow the same pattern.
-A trait should be unsafe if safe code that assumes that trait is implemented
-correctly can exhibit memory unsafety if the trait is not implemented
-correctly.
-- The Send trait is a good example to keep in mind here—safe code can
-easily spawn a thread and pass a value to that spawned thread, but if Rc were
-Send, that sequence of operations could trivially lead to memory unsafety.
-Consider what would happen if you cloned an Rc<Box> and sent it to another
-thread: the two threads could easily both try to deallocate the Box since they
-do not correctly synchronize access to the Rc’s reference count.
-- The Unpin trait is a good counterexample. While it is possible to write
-unsafe code that triggers memory unsafety if Unpin is implemented incorrectly,
-no entirely safe code can trigger memory unsafety due to an implementation
-of Unpin. It’s not always easy to determine that a trait can be safe
-(indeed, the Unpin trait was unsafe throughout most of the RFC process),
-but you can always err on the side of making the trait unsafe, and then
-make it safe later on if you realize that is the case! Just keep in mind that
-that is a backward incompatible change.
-- Also keep in mind that just because it feels like an incorrect (or even
-malicious) implementation of a trait would cause a lot of havoc, that’s not
-necessarily a good reason to make it unsafe. The unsafe marker should first
-and foremost be used to highlight cases of memory unsafety, not just something
-that can trigger errors in business logic. For example, the Eq, Ord,
-Deref, and Hash traits are all safe, even though there is likely much code out
-in the world that would go haywire if faced with a malicious implementation
-of, say, Hash that returned a different random hash each time it was
-called. This extends to unsafe code too—there is almost certainly unsafe
-code out there that would be memory-unsafe in the presence of such an
-implementation of Hash—but that does not mean Hash should be unsafe.
-The same is true for an implementation of Deref that dereferenced to a different
-(but valid) target each time. Such unsafe code would be relying on a
-contract of Hash or Deref that does not actually hold; Hash never claimed that
-it was deterministic, and neither did Deref. Or rather, the authors of those
-implementations never used the unsafe keyword to make that claim!
+- 在实际应用中，很少有不安全的特性，但所有不安全的特性都遵循相同的模式。
+如果一个安全代码假设该特性被正确实现，但实际上没有正确实现，那么它可能会导致内存不安全，那么这个特性应该是不安全的。
+- 在这里，Send特性是一个很好的例子 - 安全代码可以轻松地生成一个线程并将值传递给该生成的线程，但如果Rc是Send的话，这个操作序列可能会导致内存不安全。考虑一下如果您克隆了一个Rc<Box>并将其发送到另一个线程会发生什么：两个线程可能会同时尝试释放Box，因为它们没有正确地同步对Rc的引用计数的访问。
 
-**NOTE** An important implication of traits like Eq, Hash, and Deref being safe is that unsafe
-code can rely only on the safety of safe code, not its correctness. This applies not only
-to traits, but to all unsafe/safe code interactions.
+- Unpin特性是一个很好的反例。虽然可能编写不安全的代码，如果Unpin的实现不正确，会触发内存不安全，但没有完全安全的代码会因为Unpin的实现而触发内存不安全。确定一个特性是否可以是安全的并不总是容易的（实际上，在RFC过程的大部分时间里，Unpin特性都是不安全的），但你总是可以在特性上采取保守的方式，将其标记为不安全，然后在后面的过程中将其标记为安全，如果你意识到这是正确的情况！只需记住，这是一种不兼容的变化。
+
+- 还要记住，仅仅因为一个trait的不正确（甚至是恶意）实现可能会造成很多混乱，并不意味着将其标记为不安全是一个好的理由。不安全标记首先应该用于突出内存不安全的情况，而不仅仅是可能触发业务逻辑错误的情况。例如，Eq、Ord、Deref和Hash traits都是安全的，即使世界上可能存在很多代码，如果面对一个恶意实现，比如每次调用都返回不同的随机哈希值的Hash，那么这些代码可能会出现混乱。这也适用于不安全代码——几乎肯定存在不安全的代码，如果存在这样的Hash实现，它将在内存上不安全——但这并不意味着Hash应该是不安全的。对于每次解引用都指向不同（但有效）目标的Deref实现也是如此。这样的不安全代码依赖于Hash或Deref的一个合同，而这个合同实际上并不成立；Hash从未声称它是确定性的，Deref也没有。或者更准确地说，这些实现的作者从未使用不安全关键字来做出这样的声明！
+
+**注意** Eq、Hash和Deref等特性的一个重要含义是，不安全代码只能依赖于安全代码的安全性，而不是其正确性。这不仅适用于特性，还适用于所有不安全/安全代码的交互。
 
 #### Great Responsibility
 
-- So far, we’ve looked mainly at the various things that you are allowed to do
-with unsafe code. But unsafe code is allowed to do those things only if it
-does so safely. Even though unsafe code can, say, dereference a raw pointer,
-it must do so only if it knows that pointer is valid as a reference to its pointee
-at that moment in time, subject to all of Rust’s normal requirements of
-references. In other words, unsafe code is given access to tools that could be
-used to do unsafe things, but it must do only safe things using those tools.
-- That, then, raises the question of what safe even means in the first
-place. When is it safe to dereference a pointer? When is it safe to transmute
-between two different types? In this section, we’ll explore some of the key
-invariants to keep in mind when wielding the power of unsafe, look at some
-common gotchas, and get familiar with some of the tools that help you
-write safer unsafe code.
-- The exact rules around what it means for Rust code to be safe are still
-being worked out. At the time of writing, the Unsafe Code Guidelines
-Working Group is hard at work nailing down all the dos and don’ts, but
-many questions remain unanswered. Most of the advice in this section is
-more or less settled, but I’ll make sure to call out any that isn’t. If anything,
-I’m hoping that this section will teach you to be careful about making
-assumptions when you write unsafe code, and prompt you to double-check
-the Rust reference before you declare your code production-ready.
+- 到目前为止，我们主要关注的是您可以使用不安全代码做的各种事情。但是，只有在安全的情况下，不安全的代码才能够这样做。即使不安全的代码可以解引用原始指针，它也必须只在它知道该指针在那个时刻作为指向其指针的引用是有效的，并且符合Rust对引用的所有正常要求的情况下才能这样做。换句话说，不安全的代码被赋予了可以用于执行不安全操作的工具，但它必须只使用这些工具来执行安全操作。
+- 这就引出了一个问题，首先，什么是安全的？何时可以安全地解引用指针？何时可以安全地转换两种不同的类型？在本节中，我们将探讨在使用不安全代码的强大功能时需要牢记的一些关键不变量，了解一些常见的陷阱，并熟悉一些帮助您编写更安全的不安全代码的工具。
+- 关于Rust代码安全性的确切规则仍在制定中。在撰写本文时，不安全代码指南工作组正在努力确定所有的可行和不可行之处，但仍有许多问题没有得到解答。本节中的大部分建议已经基本确定，但我会确保指出任何不确定的地方。如果有什么问题，我希望本节能教会你在编写不安全代码时要小心做出假设，并在将代码声明为生产就绪之前仔细检查Rust参考文档。
 
 ##### What Can Go Wrong?
 
@@ -3366,7 +2855,7 @@ risk hitting a bug later on should the behavior change.
 
 ###### Owned Pointer Types
 
-Types that point to memory they own, like Box and Vec, are generally subject
+- Types that point to memory they own, like Box and Vec, are generally subject
 to the same optimizations as if they held an exclusive reference to the
 pointed-to memory unless they’re explicitly accessed through a shared
 reference. Specifically, the compiler assumes that the pointed-to memory
@@ -3377,15 +2866,17 @@ ManuallyDrop to prevent a double-free, you’d likely be entering undefined
 behavior territory. That’s the case even if you only ever access the inner
 type through shared references. (I say “likely” because this isn’t fully settled
 in the language reference yet, but a rough consensus has arisen.)
-Storing Invalid Values
-Sometimes you need to store a value that isn’t currently valid for its type.
+
+###### Storing Invalid Values
+
+- Sometimes you need to store a value that isn’t currently valid for its type.
 The most common example of this is if you want to allocate a chunk of
 memory for some type T and then read in the bytes from, say, the network.
 Until all the bytes have been read in, the memory isn’t going to be a valid T.
 Even if you just tried to read the bytes into a slice of u8, you would have to
 zero those u8s first, because constructing a u8 from uninitialized memory is
 also undefined behavior.
-The MaybeUninit<T> type is Rust’s mechanism for working with values
+- The MaybeUninit<T> type is Rust’s mechanism for working with values
 that aren’t valid. A MaybeUninit<T> stores exactly a T (it is #[repr(transparent)]),
 but the compiler knows to make no assumptions about the validity of that T.
 It won’t assume that references are non-null, that a Box<T> isn’t dangling, or
@@ -3397,7 +2888,7 @@ or stash a char surrogate for a second—MaybeUninit is your friend.
 You will generally do only three things with a MaybeUninit: create it using
 the MaybeUninit::uninit method, write to its contents using MaybeUninit::as
 _mut_ptr, or take the inner T once it is valid again with MaybeUninit::assume_init.
-As its name implies, uninit creates a new MaybeUninit<T> of the same size as
+- As its name implies, uninit creates a new MaybeUninit<T> of the same size as
 a T that initially holds uninitialized memory. The as_mut_ptr method gives
 you a raw pointer to the inner T that you can then write to; nothing stops
 you from reading from it, but reading from any of the uninitialized bits is
@@ -3406,35 +2897,42 @@ the MaybeUninit<T> and returns its contents as a T following the assertion that
 the backing memory now makes up a valid T.
 Listing 9-5 shows an example of how we might use MaybeUninit to safely
 initialize a byte array without explicitly zeroing it.
-158 Chapter 9
+
+```rust
+
+
 fn fill(gen: impl FnMut() -> Option<u8>) {
-let mut buf = [MaybeUninit::<u8>::uninit(); 4096];
-let mut last = 0;
-for (i, g) in std::iter::from_fn(gen).take(4096).enumerate() {
-buf[i] = MaybeUninit::new(g);
-last = i + 1;
-}
-// Safety: all the u8s up to last are initialized.
-let init: &[u8] = unsafe {
-MaybeUninit::slice_assume_init_ref(&buf[..last])
-};
+  let mut buf = [MaybeUninit::<u8>::uninit(); 4096];
+  let mut last = 0;
+  for (i, g) in std::iter::from_fn(gen).take(4096).enumerate() {
+    buf[i] = MaybeUninit::new(g);
+    last = i + 1;
+  }
+  // Safety: all the u8s up to last are initialized.
+  let init: &[u8] = unsafe {
+  MaybeUninit::slice_assume_init_ref(&buf[..last])
+  };
 // ... do something with init ...
 }
+```
+
 Listing 9-5: Using MaybeUninit to safely initialize an array
-While we could have declared buf as [0; 4096] instead, that would
+
+- While we could have declared buf as [0; 4096] instead, that would
 require the function to first write out all those zeros to the stack before
 executing, even if it’s going to overwrite them all again shortly thereafter.
 Normally that wouldn’t have a noticeable impact on performance, but if
 this was in a sufficiently hot loop, it might! Here, we instead allow the array
 to keep whatever values happened to be on the stack when the function was
 called, and then overwrite only what we end up needing.
+
 **NOTE** Be careful with dropping partially initialized memory. If a panic causes an unexpected
 early drop before the MaybeUninit<T> has been fully initialized, you’ll have to
 take care to drop only the parts of T that are now valid, if any. You can just drop the
 MaybeUninit and have the backing memory forgotten, but if it holds, say, a Box, you
 might end up with a memory leak!
-Panics
-An important and often overlooked aspect of ensuring that code using
+###### Panics
+- An important and often overlooked aspect of ensuring that code using
 unsafe operations is safe is that the code must also be prepared to handle
 panics. In particular, as we discussed briefly in Chapter 5, Rust’s default
 panic handler on most platforms will not crash your program on a panic
@@ -3445,22 +2943,27 @@ all the way down the stack until it hits the first stack frame for the current
 thread. If you don’t take unwinding into account in your unsafe code, you
 may be in for trouble. For example, consider the code in Listing 9-6, which
 tries to efficiently push many values into a Vec at once.
+
+```rust 
+
+
 impl<T: Default> Vec<T> {
-pub fn fill_default(&mut self) {
-let fill = self.capacity() - self.len();
-if fill == 0 { return; }
-let start = self.len();
-unsafe {
-self.set_len(start + n);
-Unsafe Code 159
-for i in 0..fill {
-*self.get_unchecked_mut(start + i) = T::default();
+  pub fn fill_default(&mut self) {
+    let fill = self.capacity() - self.len();
+    if fill == 0 { return; }
+    let start = self.len();
+    unsafe {
+    self.set_len(start + n);
+    for i in 0..fill {
+      *self.get_unchecked_mut(start + i) = T::default();
+      }
+    }
+  }
 }
-}
-}
-}
+```
 Listing 9-6: A seemingly safe method for filling a vector with Default values
-Consider what happens to this code if a call to T::default panics. First,
+
+- Consider what happens to this code if a call to T::default panics. First,
 fill_default will drop all its local values (which are just integers) and then
 return. The caller will then do the same. At some point up the stack, we
 get to the owner of the Vec. When the owner drops the vector, we have a
@@ -3469,22 +2972,24 @@ we actually produced due to the call to set_len. For example, if the very
 first call to T::default panicked when we aimed to fill eight elements, that
 means Vec::drop will call drop on eight Ts that actually contain uninitialized
 memory!
-The fix in this case is simple: the code must update the length after writing
+- The fix in this case is simple: the code must update the length after writing
 all the elements. We wouldn’t have realized there was a problem if we
 didn’t carefully consider the effect of unwinding panics on the correctness
 of our unsafe code.
-When you’re combing through your code for these kinds of problems,
+- When you’re combing through your code for these kinds of problems,
 you’ll want to look out for any statements that may panic, and consider
 whether your code is safe if they do. Alternatively, check whether you can
 convince yourself that the code in question will never panic. Pay particular
 attention to anything that calls user-provided code—in those cases, you have
 no control over the panics and should assume that the user code will panic.
-A similar situation arises when you use the ? operator to return early
+- A similar situation arises when you use the ? operator to return early
 from a function. If you do this, make sure that your code is still safe if it
 does not execute the remainder of the code in the function. It’s rarer for ?
 to catch you off guard since you opted into it explicitly, but it’s worth keeping
 an eye out for.
-Casting
+
+###### Casting
+
 As we discussed in Chapter 2, two different types that are both #[repr(Rust)]
 may be represented differently in memory even if they have fields of the
 same type and in the same order. This in turn means that it’s not always
@@ -3493,24 +2998,30 @@ doesn’t even guarantee that two instances of a single type with generic
 arguments that are themselves laid out the same way are represented the
 same way. For example, in Listing 9-7, A and B are not guaranteed to have
 the same in-memory representation.
+
+```rust 
+
 struct Foo<T> {
 one: bool,
 two: PhantomData<T>,
 }
 struct Bar;
 struct Baz;
-160 Chapter 9
-type A = Foo<Bar>;
+
 type B = Foo<Baz>;
+type A = Foo<Bar>;
+
+```
 Listing 9-7: Type layout is not predictable.
-The lack of guarantees for repr(Rust) is important to keep in mind
+
+- The lack of guarantees for repr(Rust) is important to keep in mind
 when you do type casting in unsafe code—just because two types feel like
 they should be interchangeable, that is not necessarily the case. Casting
 between two types that have different representations is a quick path to
 undefined behavior. At the time of writing, the Rust community is actively
 working out the exact rules for how types are represented, but for now, very
 few guarantees are given, so that’s what we have to work with.
-Even if identical types were guaranteed to have the same in-memory
+- Even if identical types were guaranteed to have the same in-memory
 representation, you’d still run into the same problem when types are
 nested. For example, while UnsafeCell<T>, MaybeUninit<T>, and T all really
 just hold a T, and you can cast between them to your heart’s delight, that
@@ -3519,33 +3030,39 @@ Though Option<T> may be able to take advantage of the niche optimization
 (using some invalid value of T to represent None for the Option), MaybeUninit<T>
 can hold any bit pattern, so that optimization does not apply, and an extra
 byte must be kept for the Option discriminator.
-It’s not just optimizations that can cause layouts to diverge once wrapper
+- It’s not just optimizations that can cause layouts to diverge once wrapper
 types come into play. As an example, take the code in Listing 9-8; here,
 the layout of Wrapper<PhantomData<u8>> and Wrapper<PhantomData<i8>> is completely
 different even though the provided types are both empty!
+
+```rust
+
 struct Wrapper<T: SneakyTrait> {
-item: T::Sneaky,
-iter: PhantomData<T>,
+  item: T::Sneaky,
+  iter: PhantomData<T>,
 }
 trait SneakyTrait {
-type Sneaky;
+  type Sneaky;
 }
 impl SneakyTrait for PhantomData<u8> {
-type Sneaky = ();
+  type Sneaky = ();
 }
 impl SneakyTrait for PhantomData<i8> {
-type Sneaky = [u8; 1024];
+  type Sneaky = [u8; 1024];
 }
+```
 Listing 9-8: Wrapper types make casting hard to get right.
-All of this isn’t to say that you can never cast types in Rust. Things get a
+
+- All of this isn’t to say that you can never cast types in Rust. Things get a
 lot easier, for example, when you control all of the types involved and their
 trait implementations, or if types are #[repr(C)]. You just need to be aware
 that Rust gives very few guarantees about in-memory representations, and
 write your code accordingly!
-The Drop Check
+
+##### The Drop Check
+
 The Rust borrow checker is, in essence, a sophisticated tool for ensuring
 the soundness of code at compile time, which is in turn what gives Rust a
-Unsafe Code 161
 way to express code being “safe.” How exactly the borrow checker does its
 job is beyond the scope of this book, but one check, the drop check, is worth
 going through in some detail since it has some direct implications for
@@ -3553,11 +3070,16 @@ unsafe code. To understand drop checking, let’s put ourselves in the Rust
 compiler’s shoes for a second and look at two code snippets. First, take a
 look at the little three-liner in Listing 9-9 that takes a mutable reference to
 a variable and then mutates that same variable right after.
+
+```rust
+
 let mut x = true;
 let foo = Foo(&mut x);
 x = false;
+```
 Listing 9-9: The implementation of Foo dictates whether this code should compile
-Without knowing the definition of Foo, can you say whether this code
+
+- Without knowing the definition of Foo, can you say whether this code
 should compile or not? When we set x = false, there is still a foo hanging
 around that will be dropped at the end of the scope. We know that foo contains
 a mutable borrow of x, which would indicate that the mutable borrow
@@ -3568,15 +3090,22 @@ touch the reference to x after its last use. Since that last use is before we
 need the exclusive reference for the assignment, we can allow the code! On
 the other hand, if Foo does implement Drop, we can’t allow this code, since
 the Drop implementation may use the reference to x.
-Now that you’re warmed up, take a look at Listing 9-10. In this not-sostraightforward
+- Now that you’re warmed up, take a look at Listing 9-10. In this not-sostraightforward
 code snippet, the mutable reference is buried even deeper.
+
+```rust
+
 fn barify<’a>(_: &’a mut i32) -> Bar<Foo<’a>> { .. }
 let mut x = true;
 let foo = barify(&mut x);
 x = false;
+
+```
+
 Listing 9-10: The implementations of both Foo and Bar dictate whether this code should
 compile
-Again, without knowing the definitions of Foo and Bar, can you say
+
+- Again, without knowing the definitions of Foo and Bar, can you say
 whether this code should compile or not? Let’s consider what happens if
 Foo implements Drop but Bar does not, since that’s the most interesting case.
 Usually, when a Bar goes out of scope, or otherwise gets dropped, it’ll still
@@ -3588,10 +3117,9 @@ the Bar is dropped, Foo::drop is never invoked, and the reference to x is never
 accessed. This is the kind of code we want the compiler to accept because a
 human will be able to identify that it’s okay, even if the compiler finds it difficult
 to detect that this is the case.
-The logic we’ve just walked through is the drop check. Normally it
+- The logic we’ve just walked through is the drop check. Normally it
 doesn’t affect unsafe code too much as its default behavior matches user
 expectations, with one major exception: dangling generic parameters.
-162 Chapter 9
 Imagine that you’re implementing your own Box<T> type, and someone
 places a &mut x into it as we did in Listing 9-9. Your Box type needs to implement
 Drop to free memory, but it doesn’t access T beyond dropping it. Since
@@ -3605,8 +3133,13 @@ adds a #[may_dangle] attribute, which you can add as a prefix for generic
 lifetimes and types in a type’s Drop implementation to tell the drop check
 machinery that you won’t use the annotated lifetime or type beyond dropping
 it. You use it by writing:
+
+```rust
+
 unsafe impl<#[may_dangle] T> Drop for ..
-This escape hatch allows a type to declare that a given generic parameter
+```
+
+- This escape hatch allows a type to declare that a given generic parameter
 isn’t used in Drop, which enables use cases like Box<&mut T>. However,
 it also introduces a new problem if your Box<T> holds a raw heap pointer,
 *mut T, and allows T to dangle using #[may_dangle]. Specifically, the*mut T
@@ -3620,23 +3153,32 @@ Luckily, the fix is simple: we add a PhantomData<T> to tell the drop check
 that even though the Box<T> doesn’t hold any T, and won’t access T on drop,
 it does still own a T and will drop one when the Box is dropped. Listing 9-11
 shows what our hypothetical Box type would look like.
+
+```rust
+
 struct Box<T> {
 t: NonNull<T>, // NonNull not _mut for covariance (Chapter 1)
 _owned: PhantomData<T>, // For drop check to realize we drop a T
 }
 unsafe impl<#[may_dangle] T> for Box<T> { /_ ... _/ }
+
+```
+
 Listing 9-11: A definition for Box that is maximally flexible in terms of the drop check
-This interaction is subtle and easy to miss, but it arises only when you
+
+- This interaction is subtle and easy to miss, but it arises only when you
 use the unstable #[may_dangle] attribute. Hopefully this subsection will serve
 as a warning so that when you see unsafe impl Drop in the wild in the future,
 you’ll know to look for a PhantomData<T> as well!
+
 **NOTE** Another consideration for unsafe code concerning Drop is to make sure that you have
 a Type<T> that lets T continue to live after self is dropped. For example, if you’re
 implementing delayed garbage collection, you need to also add T: 'static. Otherwise,
 if T = WriteOnDrop<&mut U>, the later access or drop of T could trigger undefined
 behavior!
-Unsafe Code 163
-Coping with Fear
+
+#### Coping with Fear
+
 With this chapter mostly behind you, you may now be more afraid of unsafe
 code than you were before you started. While that is understandable, it’s
 important to stress that it’s not only possible to write safe unsafe code, but
@@ -3647,7 +3189,9 @@ to unsafe.
 In the remainder of this chapter, we’ll look at some techniques and
 tools that can help you be more confident in the correctness of your unsafe
 code when there’s no way around it.
-Manage Unsafe Boundaries
+
+##### Manage Unsafe Boundaries
+
 It’s tempting to reason about unsafety locally; that is, to consider whether
 the code in the unsafe block you just wrote is safe without thinking too
 much about its interaction with the rest of the codebase. Unfortunately,
