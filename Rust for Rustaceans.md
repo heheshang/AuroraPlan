@@ -2720,183 +2720,47 @@ pub unsafe trait GlobalAlloc {
 
 ##### What Can Go Wrong?
 
-- We can’t really get into the rules unsafe code must abide by without talking
-about what happens if you violate those rules. Let’s say you do mutably
-access a value from multiple threads concurrently, construct an unaligned
-reference, or dereference a dangling pointer—now what?
-- Unsafe code that is not ultimately safe is referred to as having undefined
-behavior. Undefined behavior generally manifests in one of three ways: not
-at all, through visible errors, or through invisible corruption. The first is the
-happy case—you wrote some code that is truly not safe, but the compiler
-generated sane code that the computer you’re running the code on executes
-in a sane way. Unfortunately, the happiness here is very brittle. Should
-a new and slightly smarter version of the compiler come along, or some surrounding
-code cause the compiler to apply another optimization, the code
-may no longer do something sane and tip over into one of the worse cases.
-Even if the same code is compiled by the same compiler, if it runs on a different
-platform or host, the program might act differently! This is why it is
-important to avoid undefined behavior even if everything currently seems
-to work fine. Not to do so is like playing a second round of Russian roulette
-just because you survived the first.
-- Visible errors are the easiest undefined behavior to catch. If you dereference
-a null pointer, for example, your program will (in all likelihood)
-crash with an error, which you can then debug back to the root cause. That
-debugging may itself be difficult, but at least you have a notification that
-something is wrong. Visible errors can also manifest in less severe ways,
-such as deadlocks, garbled output, or panics that are printed but don’t trigger
-a program exit, all of which tell you that there is a bug in your code that
-you have to go fix.
-- The worst manifestation of undefined behavior is when there is no
-immediate visible effect, but the program state is invisibly corrupted.
-Transaction amounts might be slightly off from what they should be, backups
-might be silently corrupted, or random bits of internal memory could
-be exposed to external clients. The undefined behavior could cause ongoing
-corruption, or extremely infrequent outages. Part of the challenge with
-undefined behavior is that, as the name implies, the behavior of the nonsafe
-unsafe code is not defined—the compiler might eliminate it entirely,
-dramatically change the semantics of the code, or even miscompile surrounding
-code. What that does to your program is entirely dependent on
-what the code in question does. The unpredictable impact of undefined
-behavior is the reason why all undefined behavior should be considered a
-serious bug, no matter how it currently manifests.
+- 如果违反了不安全代码必须遵守的规则，我们就无法详细讨论会发生什么。假设您同时从多个线程对一个值进行可变访问，构造一个不对齐的引用，或者解引用一个悬空指针，那么现在会发生什么呢？
+- 不是最终安全的不安全代码被称为具有未定义行为。未定义行为通常以以下三种方式之一显现：完全不显现、通过可见错误或通过不可见的损坏。第一种情况是幸运的情况——您编写了一些真正不安全的代码，但编译器生成了一段在您运行代码的计算机上以合理方式执行的代码。不幸的是，这种幸福是非常脆弱的。如果一个新的、稍微聪明一点的编译器版本出现，或者一些周围的代码导致编译器应用另一种优化，那么代码可能不再执行合理的操作，而转变为更糟糕的情况之一。即使相同的代码由相同的编译器编译，如果在不同的平台或主机上运行，程序可能会表现出不同的行为！这就是为什么即使一切看起来都正常，也要避免未定义行为的重要性。不这样做就像是因为你在第一次中幸存下来，所以要玩第二轮俄罗斯轮盘赌一样。
+- 显式错误是最容易捕捉到的未定义行为。例如，如果您解引用空指针，您的程序很可能会崩溃并显示错误，然后您可以调试并找到根本原因。这种调试可能本身很困难，但至少您会收到一个通知，告诉您出现了问题。显式错误也可以以较轻微的方式表现出来，例如死锁、输出混乱或打印但不触发程序退出的恐慌，所有这些都告诉您代码中存在错误，您需要去修复它。
+- 最糟糕的未定义行为的表现是没有立即可见的效果，但程序状态被隐式地损坏。交易金额可能与应该的金额略有偏差，备份可能被悄无声息地损坏，或者内部内存的随机位可能暴露给外部客户端。未定义行为可能导致持续的损坏或极少发生的中断。未定义行为的挑战之一是，正如其名称所示，非安全的不安全代码的行为未定义 - 编译器可能完全消除它，极大地改变代码的语义，甚至错误地编译周围的代码。这对您的程序产生的影响完全取决于相关代码的行为。未定义行为的不可预测影响是为什么所有未定义行为都应被视为严重错误的原因，无论它当前如何表现。
 
-**WHY UNDEFINED BEHAVIOR?**
-An argument that often comes up in conversations about undefined behavior
-is that the compiler should emit an error if code exhibits undefined behavior
-instead of doing something weird and unpredictable. That way, it would be
-near-impossible to write bad unsafe code!
+**为什么会有未定义行为？**
+在关于未定义行为的讨论中，经常会提到一个观点，即编译器应该在代码出现未定义行为时发出错误，而不是执行奇怪和不可预测的操作。这样一来，编写不良的不安全代码几乎是不可能的！
 
-- Unfortunately, that would be impossible because undefined behavior is
-rarely explicit or obvious. Instead, what usually happens is that the compiler
-simply applies optimizations under the assumption that the code follows the
-specification. Should that turn out to not be the case—which is rarely clear until
-runtime—it’s difficult to predict what the effect might be. Maybe the optimization
-is still valid, and nothing bad happens; but maybe it’s not, and the semantics
-of the code end up slightly different from that of the unoptimized version.
-- If we were to tell compiler developers that they aren’t allowed to assume
-anything about the underlying code, what we’d really be telling them is that
-they cannot perform a wide range of the optimizations that they implement with
-great success today. Nearly all sophisticated optimizations make assumptions
-about what the code in question can and cannot do according to the language
-specification.
-- If you want a good illustration of how specifications and compiler optimizations
-interact in strange ways where it’s hard to assign blame, I recommend
-reading through Ralf Jung’s blog post “We Need Better Language Specs”
-(<https://www.ralfj.de/blog/2020/12/14/provenance.html>).
+- 不幸的是，这是不可能的，因为未定义行为很少是明确或明显的。相反，通常情况下，编译器会在假设代码遵循规范的情况下应用优化。直到运行时才能确定这是否成立，很难预测其效果。也许优化仍然有效，没有发生任何问题；但也可能不是这样，代码的语义与未优化版本略有不同。
+- 如果我们告诉编译器开发者他们不允许对底层代码做任何假设，实际上我们告诉他们不能执行他们目前非常成功实现的广泛优化范围。几乎所有复杂的优化都对所涉及的代码根据语言规范做出了假设。
+- 如果你想要一个很好的例子，展示了规范和编译器优化在奇怪的方式下如何相互作用，很难归咎于谁，我推荐阅读Ralf Jung的博文“We Need Better Language Specs”（<https://www.ralfj.de/blog/2020/12/14/provenance.html>）。
 
 ##### Validity
 
-Perhaps the most important concept to understand before writing unsafe
-code is validity, which dictates the rules for what values inhabit a given
-type—or, less formally, the rules for a type’s values. The concept is simpler
-than it sounds, so let’s dive into some concrete examples.
+在编写不安全代码之前，理解有效性的概念可能是最重要的，它规定了给定类型中哪些值是有效的，或者更不正式地说，类型的值的规则。这个概念比听起来的要简单，让我们深入一些具体的例子。
 
 ###### Reference Types
 
-Rust is very strict about what values its reference types can hold. Specifically,
-references must never dangle, must always be aligned, and must always
-point to a valid value for their target type. In addition, a shared and an
-exclusive reference to a given memory location can never exist at the same
-time, and neither can multiple exclusive references to a location. These
-rules apply regardless of whether your code uses the references or not—you
-are not allowed to create a null reference even if you then immediately discard
-it!
+Rust对其引用类型可以持有的值非常严格。具体来说，引用不能悬空，必须对齐，并且必须始终指向其目标类型的有效值。此外，对于给定内存位置，共享引用和独占引用不能同时存在，多个独占引用也不能同时存在。无论您的代码是否使用这些引用，这些规则都适用——即使您立即丢弃它，也不允许创建空引用！
 
-- Shared references have the additional constraint that the pointee is
-not allowed to change during the reference’s lifetime. That is, any value
-the pointee contains must remain exactly the same over its lifetime. This
-applies transitively, so if you have an & to a type that contains a*mut T, you
-are not allowed to ever mutate the T through that *mut even though you
-could write code to do so using unsafe. The only exception to this rule is a
-value wrapped by the UnsafeCell type. All other types that provide interior
-mutability, like Cell, RefCell, and Mutex, internally use an UnsafeCell.
-- An interesting result of Rust’s strict rules for references is that for many
-years, it was impossible to safely take a reference to a field of a packed or
-partially uninitialized struct that used repr(Rust). Since repr(Rust) leaves
-a type’s layout undefined, the only way to get the address of a field was by
-writing &some_struct.field as*const_. However, if some_struct is packed,
-then some_struct.field may not be aligned, and thus creating an & to it is
-illegal! Further, if some_struct isn’t fully initialized, then the some_struct reference
-itself cannot exist! In Rust 1.51.0, the ptr::addr_of! macro was stabilized,
-which added a mechanism for directly obtaining a reference to a field
-without first creating a reference, fixing this particular problem. Internally,
-it is implemented using something called raw references (not to be confused
-with raw pointers), which directly create pointers to their operands rather
-than going via a reference. Raw references were introduced in RFC 2582
-but haven’t been stabilized themselves yet at the time of writing.
+- 共享引用还有一个额外的约束，即在引用的生命周期内，被引用的值不允许发生变化。也就是说，被引用的值在其生命周期内必须保持完全相同。这适用于传递性，因此如果您有一个对包含*mut T的类型的&，即使您可以使用unsafe编写代码来通过该*mut对T进行变异，也不允许这样做。唯一的例外是由UnsafeCell类型包装的值。所有其他提供内部可变性的类型，如Cell、RefCell和Mutex，内部都使用UnsafeCell。
+- Rust对引用的严格规则的一个有趣结果是，在很多年里，无法安全地对使用repr(Rust)的紧凑或部分未初始化的结构体的字段取引用。由于repr(Rust)使类型的布局未定义，获取字段的地址的唯一方法是写成&some_struct.field as*const_。然而，如果some_struct是紧凑的，那么some_struct.field可能不对齐，因此创建对它的&是非法的！此外，如果some_struct没有完全初始化，那么some_struct引用本身也无法存在！在Rust 1.51.0中，稳定了ptr::addr_of!宏，它添加了一种直接获取字段引用的机制，而无需先创建引用，从而解决了这个特定的问题。在内部，它使用了称为原始引用（不要与原始指针混淆）的东西，它直接创建指向操作数的指针，而不是通过引用进行中转。原始引用在RFC 2582中引入，但在撰写本文时尚未稳定。
 
 ###### Primitive Types
 
-Some of Rust’s primitive types have restrictions on what values they can
-hold. For example, a bool is defined as being 1 byte large but is only allowed
-to hold the value 0x00 or the value 0x01, and a char is not allowed to hold
-a surrogate or a value above char::MAX. Most of Rust’s primitive types, and
-indeed most of Rust’s types overall, also cannot be constructed from uninitialized
-memory. These restrictions may seem arbitrary, but again often stem
-from the need to enable optimizations that wouldn’t be possible otherwise.
+Rust的一些原始类型对其可以持有的值有限制。例如，bool被定义为1字节大小，但只允许持有值0x00或0x01，而char不允许持有代理项或大于char::MAX的值。大多数Rust的原始类型，事实上大多数Rust的类型，也不能从未初始化的内存构造出来。这些限制可能看起来是任意的，但实际上往往源于需要启用否则不可能的优化。
 
-- A good illustration of this is the niche optimization, which we discussed
-briefly when talking about pointer types earlier in this chapter. To recap,
-the niche optimization tucks away the enum discriminant value in the
-wrapped type in certain cases. For example, since a reference cannot ever
-be all zeros, an Option<&T> can use all zeros to represent None, and thus avoid
-spending an extra byte (plus padding) to store the discriminator byte. The
-compiler can optimize Booleans in the same way and potentially take it
-even further. Consider the type Option<Option<bool>>>. Since the compiler
-knows that the bool is either 0x00 or 0x01, it’s free to use 0x02 to represent
-Some(None) and 0x03 to represent None. Very nice and tidy! But if someone
-were to come along and treat the byte 0x03 as a bool, and then place that
-value in an Option<Option<bool>> optimized in this way, bad things would
-happen.
-- It bears repeating that it’s not important whether the Rust compiler currently
-implements this optimization or not. The point is that it is allowed to,
-and therefore any unsafe code you write must conform to that contract or
-risk hitting a bug later on should the behavior change.
+- 这一点在我们之前讨论指针类型时简要提到的niche优化是一个很好的例子。简而言之，niche优化在某些情况下将枚举的鉴别值隐藏在封装类型中。例如，由于引用永远不可能是全零，Option<&T>可以使用全零表示None，从而避免额外的字节（加上填充）来存储鉴别字节。编译器可以以相同的方式优化布尔值，并且可能进一步优化。考虑类型Option<Option<bool>>。由于编译器知道bool只能是0x00或0x01，它可以自由地使用0x02表示Some(None)，并使用0x03表示None。非常好和整洁！但是，如果有人将字节0x03视为布尔值，并将该值放入以这种方式优化的Option<Option<bool>>中，将会发生糟糕的事情。
+- 值得重申的是，Rust编译器当前是否实现了这种优化并不重要。重要的是它是允许的，因此您编写的任何不安全代码必须符合该约定，否则如果行为发生变化，可能会在以后遇到错误。
 
 ###### Owned Pointer Types
 
-- Types that point to memory they own, like Box and Vec, are generally subject
-to the same optimizations as if they held an exclusive reference to the
-pointed-to memory unless they’re explicitly accessed through a shared
-reference. Specifically, the compiler assumes that the pointed-to memory
-is not shared or aliased elsewhere, and makes optimizations based on
-that assumption. For example, if you extracted the pointer from a Box and
-then constructed two Boxes from that same pointer and wrapped them in
-ManuallyDrop to prevent a double-free, you’d likely be entering undefined
-behavior territory. That’s the case even if you only ever access the inner
-type through shared references. (I say “likely” because this isn’t fully settled
-in the language reference yet, but a rough consensus has arisen.)
+- 拥有内存的类型，如Box和Vec，通常会受到与独占引用指向的内存相同的优化，除非它们通过共享引用明确地访问。具体而言，编译器假设指向的内存不会在其他地方共享或别名，并基于该假设进行优化。例如，如果你从一个Box中提取指针，然后使用相同的指针构造两个Box，并将它们包装在ManuallyDrop中以防止双重释放，那么你很可能会进入未定义行为的领域。即使你只通过共享引用访问内部类型，情况也是如此。（我说“很可能”是因为这在语言参考中尚未完全解决，但已经形成了一个大致的共识。）
 
 ###### Storing Invalid Values
 
-- Sometimes you need to store a value that isn’t currently valid for its type.
-The most common example of this is if you want to allocate a chunk of
-memory for some type T and then read in the bytes from, say, the network.
-Until all the bytes have been read in, the memory isn’t going to be a valid T.
-Even if you just tried to read the bytes into a slice of u8, you would have to
-zero those u8s first, because constructing a u8 from uninitialized memory is
-also undefined behavior.
-- The MaybeUninit<T> type is Rust’s mechanism for working with values
-that aren’t valid. A MaybeUninit<T> stores exactly a T (it is #[repr(transparent)]),
-but the compiler knows to make no assumptions about the validity of that T.
-It won’t assume that references are non-null, that a Box<T> isn’t dangling, or
-that a bool is either 0 or 1. This means it’s safe to hold a T backed by uninitialized
-memory inside a MaybeUninit (as the name implies). MaybeUninit is
-also a very useful tool in other unsafe code where you have to temporarily
-store a value that may be invalid. Maybe you have to store an aliased Box<T>
-or stash a char surrogate for a second—MaybeUninit is your friend.
-You will generally do only three things with a MaybeUninit: create it using
-the MaybeUninit::uninit method, write to its contents using MaybeUninit::as
-_mut_ptr, or take the inner T once it is valid again with MaybeUninit::assume_init.
-- As its name implies, uninit creates a new MaybeUninit<T> of the same size as
-a T that initially holds uninitialized memory. The as_mut_ptr method gives
-you a raw pointer to the inner T that you can then write to; nothing stops
-you from reading from it, but reading from any of the uninitialized bits is
-undefined behavior. And finally, the unsafe assume_init method consumes
-the MaybeUninit<T> and returns its contents as a T following the assertion that
-the backing memory now makes up a valid T.
-Listing 9-5 shows an example of how we might use MaybeUninit to safely
-initialize a byte array without explicitly zeroing it.
+- 有时候你需要存储一个当前类型无效的值。最常见的例子是，如果你想为某种类型T分配一块内存，然后从网络中读取字节。在所有字节都被读取之前，内存不会成为一个有效的T。即使你只是尝试将字节读入一个u8的切片中，你也必须先将这些u8清零，因为从未初始化的内存构造一个u8也是未定义的行为。
+- MaybeUninit<T> 类型是 Rust 处理无效值的机制。MaybeUninit<T> 精确地存储一个 T（它是 #[repr(transparent)]），但编译器不会对该 T 的有效性做任何假设。它不会假设引用是非空的，Box<T> 不会悬空，或者 bool 只能是 0 或 1。这意味着在 MaybeUninit 中持有由未初始化内存支持的 T 是安全的（正如其名称所示）。MaybeUninit 在其他不安全代码中也是一个非常有用的工具，用于临时存储可能无效的值。也许你需要存储一个别名的 Box<T>，或者暂时存储一个 char 的代理项，MaybeUninit 就是你的朋友。
+你通常只会对 MaybeUninit 做三件事情：使用 MaybeUninit::uninit 方法创建它，使用 MaybeUninit::as_mut_ptr 写入其内容，或者在其再次有效时使用 MaybeUninit::assume_init 获取内部的 T。
+- 如其名称所示，uninit 创建一个与 T 大小相同的 MaybeUninit<T>，最初包含未初始化的内存。as_mut_ptr 方法为您提供了一个指向内部 T 的原始指针，您可以对其进行写入；没有任何限制阻止您从中读取，但从任何未初始化的位读取是未定义行为。最后，unsafe 的 assume_init 方法消耗 MaybeUninit<T> 并将其内容作为 T 返回，前提是后备内存现在组成一个有效的 T。
+清单 9-5 展示了我们如何使用 MaybeUninit 安全地初始化一个字节数组，而无需显式地将其清零。
 
 ```rust
 
@@ -2916,35 +2780,15 @@ fn fill(gen: impl FnMut() -> Option<u8>) {
 }
 ```
 
-Listing 9-5: Using MaybeUninit to safely initialize an array
+清单 9-5：使用 MaybeUninit 安全地初始化数组
 
-- While we could have declared buf as [0; 4096] instead, that would
-require the function to first write out all those zeros to the stack before
-executing, even if it’s going to overwrite them all again shortly thereafter.
-Normally that wouldn’t have a noticeable impact on performance, but if
-this was in a sufficiently hot loop, it might! Here, we instead allow the array
-to keep whatever values happened to be on the stack when the function was
-called, and then overwrite only what we end up needing.
+- 虽然我们可以将buf声明为[0; 4096]，但这将要求函数在执行之前先将所有这些零写入堆栈，即使它很快就会再次覆盖它们。通常情况下，这不会对性能产生明显影响，但如果这是在一个非常热的循环中，可能会有影响！在这里，我们允许数组保留在调用函数时堆栈上存在的任何值，然后只覆盖我们最终需要的部分。
 
-**NOTE** Be careful with dropping partially initialized memory. If a panic causes an unexpected
-early drop before the MaybeUninit<T> has been fully initialized, you’ll have to
-take care to drop only the parts of T that are now valid, if any. You can just drop the
-MaybeUninit and have the backing memory forgotten, but if it holds, say, a Box, you
-might end up with a memory leak!
+**注意** 要小心部分初始化内存的丢弃。如果恰好在 MaybeUninit<T> 完全初始化之前发生 panic，你需要小心只丢弃现在有效的部分 T（如果有的话）。你可以简单地丢弃 MaybeUninit 并忘记后备内存，但如果它持有一个 Box，你可能会导致内存泄漏！
 
 ###### Panics
 
-- An important and often overlooked aspect of ensuring that code using
-unsafe operations is safe is that the code must also be prepared to handle
-panics. In particular, as we discussed briefly in Chapter 5, Rust’s default
-panic handler on most platforms will not crash your program on a panic
-but will instead unwind the current thread. An unwinding panic effectively
-drops everything in the current scope, returns from the current function,
-drops everything in the scope that enclosed the function, and so on,
-all the way down the stack until it hits the first stack frame for the current
-thread. If you don’t take unwinding into account in your unsafe code, you
-may be in for trouble. For example, consider the code in Listing 9-6, which
-tries to efficiently push many values into a Vec at once.
+- 确保使用不安全操作的代码是安全的一个重要但经常被忽视的方面是，代码必须准备好处理 panic。特别是，正如我们在第5章中简要讨论过的那样，Rust在大多数平台上的默认 panic 处理程序不会在 panic 时崩溃程序，而是会展开当前线程。展开 panic 会有效地丢弃当前作用域中的所有内容，从当前函数返回，丢弃包围函数作用域中的所有内容，依此类推，一直到当前线程的第一个栈帧为止。如果您在不安全代码中没有考虑到展开，可能会遇到麻烦。例如，考虑清单 9-6 中的代码，它试图一次性高效地将多个值推入 Vec 中。
 
 ```rust 
 
@@ -2963,43 +2807,16 @@ impl<T: Default> Vec<T> {
   }
 }
 ```
-Listing 9-6: A seemingly safe method for filling a vector with Default values
+清单 9-6：使用默认值填充向量的看似安全的方法
 
-- Consider what happens to this code if a call to T::default panics. First,
-fill_default will drop all its local values (which are just integers) and then
-return. The caller will then do the same. At some point up the stack, we
-get to the owner of the Vec. When the owner drops the vector, we have a
-problem: the length of the vector now indicates that we own more Ts than
-we actually produced due to the call to set_len. For example, if the very
-first call to T::default panicked when we aimed to fill eight elements, that
-means Vec::drop will call drop on eight Ts that actually contain uninitialized
-memory!
-- The fix in this case is simple: the code must update the length after writing
-all the elements. We wouldn’t have realized there was a problem if we
-didn’t carefully consider the effect of unwinding panics on the correctness
-of our unsafe code.
-- When you’re combing through your code for these kinds of problems,
-you’ll want to look out for any statements that may panic, and consider
-whether your code is safe if they do. Alternatively, check whether you can
-convince yourself that the code in question will never panic. Pay particular
-attention to anything that calls user-provided code—in those cases, you have
-no control over the panics and should assume that the user code will panic.
-- A similar situation arises when you use the ? operator to return early
-from a function. If you do this, make sure that your code is still safe if it
-does not execute the remainder of the code in the function. It’s rarer for ?
-to catch you off guard since you opted into it explicitly, but it’s worth keeping
-an eye out for.
+- 如果调用 T::default 引发 panic，那么这段代码会发生什么呢？首先，fill_default 将丢弃所有的局部值（只是整数），然后返回。调用者也会做同样的操作。在堆栈的某个位置，我们到达了 Vec 的所有者。当所有者丢弃向量时，我们就有了一个问题：向量的长度现在表示我们拥有比实际生成的 T 更多的 T，这是由于调用 set_len 导致的。例如，如果第一次调用 T::default 在我们打算填充八个元素时引发 panic，那么 Vec::drop 将在实际包含未初始化内存的八个 T 上调用 drop！
+- 在这种情况下，修复方法很简单：代码在写入所有元素后必须更新长度。如果我们没有仔细考虑非安全代码在展开 panic 时对正确性的影响，我们可能不会意识到存在问题。
+- 当你检查代码时，要注意可能引发 panic 的语句，并考虑如果发生 panic，你的代码是否安全。或者，检查是否可以确信所讨论的代码永远不会发生 panic。特别注意调用用户提供的代码的任何情况，在这些情况下，你无法控制 panic，并且应该假设用户代码会发生 panic。
+- 当你使用 ? 运算符从函数中提前返回时，也会出现类似的情况。如果这样做，请确保即使不执行函数中的其余代码，你的代码仍然是安全的。? 运算符很少会让你措手不及，因为你明确选择了它，但还是值得注意。
 
 ###### Casting
 
-As we discussed in Chapter 2, two different types that are both #[repr(Rust)]
-may be represented differently in memory even if they have fields of the
-same type and in the same order. This in turn means that it’s not always
-obvious whether it is safe to cast between two different types. In fact, Rust
-doesn’t even guarantee that two instances of a single type with generic
-arguments that are themselves laid out the same way are represented the
-same way. For example, in Listing 9-7, A and B are not guaranteed to have
-the same in-memory representation.
+正如我们在第2章中讨论的那样，即使两个不同的类型都是#[repr(Rust)]，它们在内存中的表示方式可能也不同，即使它们具有相同类型和相同顺序的字段。这意味着在两个不同类型之间进行类型转换是否安全并不总是明显的。事实上，Rust甚至不能保证具有相同布局的泛型参数的单个类型的两个实例在内存中的表示方式相同。例如，在清单9-7中，A和B不能保证具有相同的内存表示。
 
 ```rust 
 
@@ -3014,28 +2831,12 @@ type B = Foo<Baz>;
 type A = Foo<Bar>;
 
 ```
-Listing 9-7: Type layout is not predictable.
 
-- The lack of guarantees for repr(Rust) is important to keep in mind
-when you do type casting in unsafe code—just because two types feel like
-they should be interchangeable, that is not necessarily the case. Casting
-between two types that have different representations is a quick path to
-undefined behavior. At the time of writing, the Rust community is actively
-working out the exact rules for how types are represented, but for now, very
-few guarantees are given, so that’s what we have to work with.
-- Even if identical types were guaranteed to have the same in-memory
-representation, you’d still run into the same problem when types are
-nested. For example, while UnsafeCell<T>, MaybeUninit<T>, and T all really
-just hold a T, and you can cast between them to your heart’s delight, that
-goes out the window once you have, for example, an Option<MaybeUninit<T>>.
-Though Option<T> may be able to take advantage of the niche optimization
-(using some invalid value of T to represent None for the Option), MaybeUninit<T>
-can hold any bit pattern, so that optimization does not apply, and an extra
-byte must be kept for the Option discriminator.
-- It’s not just optimizations that can cause layouts to diverge once wrapper
-types come into play. As an example, take the code in Listing 9-8; here,
-the layout of Wrapper<PhantomData<u8>> and Wrapper<PhantomData<i8>> is completely
-different even though the provided types are both empty!
+清单 9-7：类型布局是不可预测的。
+
+- 在不安全代码中进行类型转换时，repr(Rust)的不确定性是需要牢记的重要因素——即使两个类型感觉上应该是可以互换的，实际上并不一定如此。在具有不同表示的两个类型之间进行转换很容易导致未定义行为。在撰写本文时，Rust社区正在积极解决类型表示的确切规则，但目前很少提供保证，所以我们必须根据这些规则编写代码。
+- 即使相同的类型被保证具有相同的内存表示，当类型被嵌套时，仍然会遇到相同的问题。例如，虽然UnsafeCell<T>、MaybeUninit<T>和T实际上只是持有一个T，你可以自由地在它们之间进行转换，但一旦你有一个Option<MaybeUninit<T>>，情况就不同了。尽管Option<T>可以利用niche优化（使用某个无效的T值来表示Option的None），但MaybeUninit<T>可以持有任何位模式，因此该优化不适用，并且必须保留一个额外的字节用于Option的鉴别器。
+- 带有包装类型时，不仅仅是优化可能导致布局发散。以清单9-8中的代码为例；在这里，Wrapper<PhantomData<u8>>和Wrapper<PhantomData<i8>>的布局完全不同，尽管提供的类型都是空的！
 
 ```rust
 
@@ -3053,25 +2854,13 @@ impl SneakyTrait for PhantomData<i8> {
   type Sneaky = [u8; 1024];
 }
 ```
-Listing 9-8: Wrapper types make casting hard to get right.
+清单 9-8：包装类型使得类型转换变得困难。
 
-- All of this isn’t to say that you can never cast types in Rust. Things get a
-lot easier, for example, when you control all of the types involved and their
-trait implementations, or if types are #[repr(C)]. You just need to be aware
-that Rust gives very few guarantees about in-memory representations, and
-write your code accordingly!
+- 这并不意味着在 Rust 中你永远不能进行类型转换。当你控制涉及的所有类型及其 trait 实现时，或者类型是 #[repr(C)] 时，情况会变得更容易。你只需要意识到 Rust 对内存表示几乎没有提供任何保证，并相应地编写代码！
 
 ##### The Drop Check
 
-The Rust borrow checker is, in essence, a sophisticated tool for ensuring
-the soundness of code at compile time, which is in turn what gives Rust a
-way to express code being “safe.” How exactly the borrow checker does its
-job is beyond the scope of this book, but one check, the drop check, is worth
-going through in some detail since it has some direct implications for
-unsafe code. To understand drop checking, let’s put ourselves in the Rust
-compiler’s shoes for a second and look at two code snippets. First, take a
-look at the little three-liner in Listing 9-9 that takes a mutable reference to
-a variable and then mutates that same variable right after.
+Rust借用检查器本质上是一种复杂的工具，用于在编译时确保代码的安全性，这也是Rust能够表达代码“安全性”的方式。借用检查器如何工作超出了本书的范围，但是其中一个检查，即drop检查，在某些细节上值得详细介绍，因为它对不安全代码有一些直接的影响。为了理解drop检查，让我们暂时站在Rust编译器的角度，看一下两个代码片段。首先，看一下清单9-9中的三行代码，它获取一个可变引用并在之后立即对同一个变量进行修改。
 
 ```rust
 
@@ -3079,21 +2868,10 @@ let mut x = true;
 let foo = Foo(&mut x);
 x = false;
 ```
-Listing 9-9: The implementation of Foo dictates whether this code should compile
+清单 9-9：Foo的实现决定了这段代码是否应该编译
 
-- Without knowing the definition of Foo, can you say whether this code
-should compile or not? When we set x = false, there is still a foo hanging
-around that will be dropped at the end of the scope. We know that foo contains
-a mutable borrow of x, which would indicate that the mutable borrow
-that’s necessary to modify x is illegal. But what’s the harm in allowing it? It
-turns out that allowing the mutation of x is problematic only if Foo implements
-Drop—if Foo doesn’t implement Drop, then we know that Foo won’t
-touch the reference to x after its last use. Since that last use is before we
-need the exclusive reference for the assignment, we can allow the code! On
-the other hand, if Foo does implement Drop, we can’t allow this code, since
-the Drop implementation may use the reference to x.
-- Now that you’re warmed up, take a look at Listing 9-10. In this not-sostraightforward
-code snippet, the mutable reference is buried even deeper.
+- 在不知道Foo的定义的情况下，你能否判断这段代码是否应该编译？当我们设置x = false时，仍然有一个foo挂在那里，它将在作用域结束时被丢弃。我们知道foo包含了对x的可变借用，这意味着修改x所需的可变借用是非法的。但是允许它有什么问题呢？事实证明，只有当Foo实现了Drop时，允许修改x才会有问题——如果Foo没有实现Drop，那么我们知道Foo在最后一次使用后不会再触及对x的引用。由于最后一次使用在我们需要独占引用进行赋值之前，我们可以允许这段代码！另一方面，如果Foo实现了Drop，我们不能允许这段代码，因为Drop实现可能使用对x的引用。
+- 现在你已经热身了，看一下清单9-10。在这个不那么直观的代码片段中，可变引用被深埋了起来。
 
 ```rust
 
@@ -3104,37 +2882,10 @@ x = false;
 
 ```
 
-Listing 9-10: The implementations of both Foo and Bar dictate whether this code should
-compile
+清单 9-10：Foo和Bar的实现决定了这段代码是否应该编译
 
-- Again, without knowing the definitions of Foo and Bar, can you say
-whether this code should compile or not? Let’s consider what happens if
-Foo implements Drop but Bar does not, since that’s the most interesting case.
-Usually, when a Bar goes out of scope, or otherwise gets dropped, it’ll still
-have to drop Foo, which in turn means that the code should be rejected for
-the same reason as before: Foo::drop might access the reference to x. However,
-Bar may not contain a Foo directly at all, but instead just a PhantomData<Foo<'a>>
-or a &'static Foo<'a>, in which case the code is actually okay—even though
-the Bar is dropped, Foo::drop is never invoked, and the reference to x is never
-accessed. This is the kind of code we want the compiler to accept because a
-human will be able to identify that it’s okay, even if the compiler finds it difficult
-to detect that this is the case.
-- The logic we’ve just walked through is the drop check. Normally it
-doesn’t affect unsafe code too much as its default behavior matches user
-expectations, with one major exception: dangling generic parameters.
-Imagine that you’re implementing your own Box<T> type, and someone
-places a &mut x into it as we did in Listing 9-9. Your Box type needs to implement
-Drop to free memory, but it doesn’t access T beyond dropping it. Since
-dropping a &mut does nothing, it should be entirely fine for code to access
-&mut x again after the last time the Box is accessed but before it’s dropped!
-To support types like this, Rust has an unstable feature called dropck_eyepatch
-(because it makes the drop check partially blind). The feature is likely
-to remain unstable forever and is intended to serve only as a temporary
-escape hatch until a proper mechanism is devised. The dropck_eyepatch feature
-adds a #[may_dangle] attribute, which you can add as a prefix for generic
-lifetimes and types in a type’s Drop implementation to tell the drop check
-machinery that you won’t use the annotated lifetime or type beyond dropping
-it. You use it by writing:
+- 再次，在不知道Foo和Bar的定义的情况下，你能否判断这段代码是否应该编译？让我们考虑一下如果Foo实现了Drop但Bar没有实现Drop的情况，因为这是最有趣的情况。通常情况下，当一个Bar超出作用域或被丢弃时，它仍然需要丢弃Foo，这意味着代码应该被拒绝，原因与之前相同：Foo::drop可能会访问对x的引用。然而，Bar可能根本不直接包含Foo，而是只包含一个PhantomData<Foo<'a>>或者一个&'static Foo<'a>，在这种情况下，代码实际上是可以的——即使Bar被丢弃，Foo::drop也不会被调用，对x的引用也不会被访问。这是我们希望编译器接受的代码，因为人类可以确定这是可以的，即使编译器很难检测到这一点。
+- 我们刚刚讨论的逻辑就是drop检查。通常情况下，它不会对不安全代码产生太大影响，因为其默认行为与用户的期望相符，但有一个重要的例外：悬垂的泛型参数。想象一下，你正在实现自己的Box<T>类型，并且有人像我们在清单9-9中所做的那样将一个&mut x放入其中。你的Box类型需要实现Drop来释放内存，但它在除了丢弃之外不会访问T。由于丢弃一个&mut不会做任何事情，所以在最后一次访问Box之后但在其被丢弃之前，代码可以完全放心地再次访问&mut x！为了支持这样的类型，Rust有一个不稳定的功能叫做dropck_eyepatch（因为它使得drop检查部分失效）。这个功能很可能永远保持不稳定，并且只作为一个临时的逃生通道，直到找到一个合适的机制。dropck_eyepatch功能添加了一个#[may_dangle]属性，你可以在类型的Drop实现中为泛型生命周期和类型添加作为前缀，告诉drop检查机制在丢弃之后不会再使用注解的生命周期或类型。你可以这样使用它：
 
 ```rust
 
