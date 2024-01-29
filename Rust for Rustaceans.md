@@ -3002,8 +3002,8 @@ the same in-memory representation.
 ```rust 
 
 struct Foo<T> {
-one: bool,
-two: PhantomData<T>,
+  one: bool,
+  two: PhantomData<T>,
 }
 struct Bar;
 struct Baz;
