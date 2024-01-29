@@ -34,7 +34,7 @@
   - 第11章《外部函数接口》教你如何使Rust与其他语言良好地协作，以及extern关键字等FFI原语的实际作用。
   - 第12章《无标准库的Rust》介绍了在无法使用完整标准库的情况下使用Rust的情况，例如在嵌入式设备或其他受限平台上，您只能使用核心和alloc模块提供的功能。
   - 第13章《Rust生态系统》不涵盖特定的Rust主题，而是旨在提供关于在Rust生态系统中工作的更广泛指导。它包含常见设计模式的描述，关于保持对语言添加和最佳实践的最新信息的建议，有用工具的提示以及我多年来积累的其他有用的琐事，这些信息在任何单一地方都没有描述。
-该书有一个网站，网址为<https://rust-for-rustaceans.com，其中包含书中的资源链接、未来的勘误等。您还可以在No> Starch Press网站上的该书页面<https://nostarch.com/rust-rustaceans/找到这些信息。>
+该书有一个网站，网址为<https://rust-for-rustaceans.com，其中包含书中的资源链接、Future的勘误等。您还可以在No> Starch Press网站上的该书页面<https://nostarch.com/rust-rustaceans/找到这些信息。>
 现在，所有这些都已经解释清楚了，只剩下一件事要做：
 
     ```rust
@@ -599,7 +599,7 @@ f.debug_list().entries(self).finish()
 - 并非所有的impl Trait实例都使用存在类型。如果您在函数的参数位置使用impl Trait，它实际上只是该函数的未命名泛型参数的简写。例如，fn foo(s: impl ToString)在大多数情况下只是fn foo<S: ToString>(s: S)的语法糖。
 - 存在类型在实现具有关联类型的特质时特别有用。例如，想象一下，您正在实现IntoIterator特质。它有一个关联类型IntoIter，它保存了可以将所讨论的类型转换为的迭代器的类型。使用存在类型，您不需要定义一个单独的迭代器类型来用于IntoIter。相反，您可以将关联类型指定为impl Iterator<Item = Self::Item>，并在fn into_iter(self)中编写一个求值为迭代器的表达式，例如通过对某个现有迭代器类型进行映射和过滤。
 
-- 存在类型不仅提供了方便，还提供了一个超越方便的功能：它们允许您执行零成本的类型擦除。您可以使用存在类型隐藏底层具体类型，而不是仅仅因为它们出现在公共签名中而导出辅助类型 - 迭代器和futures是常见的例子。您的接口的用户只会看到相关类型实现的特质，而具体类型则作为实现细节留下。这不仅简化了接口，而且还使您可以随意更改该实现，而不会破坏未来的下游代码。
+- 存在类型不仅提供了方便，还提供了一个超越方便的功能：它们允许您执行零成本的类型擦除。您可以使用存在类型隐藏底层具体类型，而不是仅仅因为它们出现在公共签名中而导出辅助类型 - 迭代器和futures是常见的例子。您的接口的用户只会看到相关类型实现的特质，而具体类型则作为实现细节留下。这不仅简化了接口，而且还使您可以随意更改该实现，而不会破坏Future的下游代码。
 
 #### `总结`
 
@@ -710,7 +710,7 @@ fn frobnicate3(s: impl AsRef<str>) -> impl AsRef<str>
 
 以I/O为中心的类型在被丢弃时通常需要执行清理操作。这可能包括将写入刷新到磁盘、关闭文件或优雅地终止与远程主机的连接。执行这些清理操作的自然位置是类型的Drop实现。不幸的是，一旦一个值被丢弃，我们就没有办法向用户传达错误，除非通过panic。在异步代码中也会出现类似的问题，我们希望在有待处理的工作时完成。当调用drop时，执行器可能正在关闭，我们无法再做更多的工作。我们可以尝试启动另一个执行器，但这会带来一系列问题，比如在异步代码中阻塞，正如我们将在第8章中看到的那样。
 
-- 对于这些问题，没有完美的解决方案，无论我们做什么，一些应用程序都不可避免地会回退到我们的Drop实现。因此，我们需要通过Drop提供尽力而为的清理。如果清理出现错误，至少我们尝试过-我们会忽略错误并继续执行。如果执行器仍然可用，我们可能会生成一个未来任务来进行清理，但如果它从未运行，我们已经尽力而为了。
+- 对于这些问题，没有完美的解决方案，无论我们做什么，一些应用程序都不可避免地会回退到我们的Drop实现。因此，我们需要通过Drop提供尽力而为的清理。如果清理出现错误，至少我们尝试过-我们会忽略错误并继续执行。如果执行器仍然可用，我们可能会生成一个Future任务来进行清理，但如果它从未运行，我们已经尽力而为了。
 - 然而，我们应该为希望不留下任何悬空线程的用户提供更好的选择。我们可以通过提供显式的析构函数来实现这一点。通常，这采用一个接受 self 所有权并公开与销毁相关的任何错误（使用 -> Result<_,_>) 或异步性（使用 async fn）的方法的形式。然后，细心的用户可以使用该方法来优雅地关闭任何相关资源。
 **注意** 确保在文档中突出显示显式析构函数！
 - 像往常一样，存在权衡。一旦添加了显式析构函数，您将遇到两个问题。首先，由于您的类型实现了Drop，您无法在析构函数中移动该类型的任何字段。这是因为在显式析构函数运行之后，仍然会调用Drop::drop，并且它需要&mut self，这要求self的任何部分都没有被移动。其次，drop接受的是&mut self，而不是self，因此您的Drop实现不能简单地调用显式析构函数并忽略其结果（因为它不拥有self）。有几种方法可以解决这些问题，但没有一种是完美的。
@@ -913,7 +913,7 @@ is_normal::<MyType>();
 
 ### 4.错误处理
 
-对于除了最简单的程序之外，您将会有可能失败的方法。在本章中，我们将探讨表示、处理和传播这些失败的不同方式，以及每种方式的优点和缺点。我们将首先探讨不同的错误表示方式，包括枚举和擦除，然后研究一些需要不同表示技术的特殊错误情况。接下来，我们将看一些处理错误的方法以及错误处理的未来发展方向。
+对于除了最简单的程序之外，您将会有可能失败的方法。在本章中，我们将探讨表示、处理和传播这些失败的不同方式，以及每种方式的优点和缺点。我们将首先探讨不同的错误表示方式，包括枚举和擦除，然后研究一些需要不同表示技术的特殊错误情况。接下来，我们将看一些处理错误的方法以及错误处理的Future发展方向。
 值得注意的是，Rust中的错误处理最佳实践仍然是一个活跃的讨论话题，在撰写本文时，生态系统尚未就单一统一的方法达成一致。因此，本章将重点介绍基本原则和技术，而不是推荐特定的crate或模式。
 
 #### 表示错误
@@ -1020,7 +1020,7 @@ fn do_the_thing() -> Result<(), Error> {
 
 #### 总结
 
-本章介绍了在Rust中构建错误类型的两种主要方法：枚举和擦除。我们讨论了何时使用每种方法以及每种方法的优点和缺点。我们还深入探讨了?运算符的一些幕后细节，并考虑了?在未来可能变得更加有用的情况。在下一章中，我们将从代码中退后一步，看看如何组织一个Rust项目。我们将讨论特性标志、依赖管理和版本控制，以及如何使用工作区和子模块来管理更复杂的crate。我们在下一页见！
+本章介绍了在Rust中构建错误类型的两种主要方法：枚举和擦除。我们讨论了何时使用每种方法以及每种方法的优点和缺点。我们还深入探讨了?运算符的一些幕后细节，并考虑了?在Future可能变得更加有用的情况。在下一章中，我们将从代码中退后一步，看看如何组织一个Rust项目。我们将讨论特性标志、依赖管理和版本控制，以及如何使用工作区和子模块来管理更复杂的crate。我们在下一页见！
 
 ### 5.项目结构
 
@@ -1301,7 +1301,7 @@ nix = "0.17"
 
 - 有两种技术可以让创建者为处于这种情况下的用户提供一些便利。第一种是建立一个最低支持的 Rust 版本（MSRV）策略，承诺新版本的 crate 将始终与过去 X 个月内的任何稳定版本编译通过。确切的数字有所不同，但通常为 6 或 12 个月。根据 Rust 的六周发布周期，这对应于最新的四个或八个稳定版本。项目中引入的任何新代码都必须与 MSRV 编译器（通常由 CI 检查）一起编译通过，或者在 MSRV 策略允许的情况下暂时保留，直到可以合并。这有时可能会有些麻烦，因为这意味着这些 crate 无法充分利用语言的最新功能，但它将为您的用户带来便利。
 - 第二种技术是确保每当 MSRV 更改时，增加您的 crate 的次要版本号。因此，如果您发布了版本为 2.7.0 的 crate，并将其 MSRV 从 Rust 1.44 增加到 Rust 1.45，那么依赖于您的 crate 并停留在 1.44 上的项目可以使用依赖版本说明符 version = "2, <2.7" 来保持项目正常运行，直到可以迁移到 Rust 1.45。重要的是，您要增加次要版本号，而不仅仅是修订版本号，这样您仍然可以通过进行另一个修订版本的关键安全修复来为先前的 MSRV 发布提供支持，如果有必要的话。
-- 一些项目非常重视对最低支持的 Rust 版本（MSRV）的支持，将 MSRV 的更改视为破坏性更改并增加主版本号。这意味着下游项目必须明确选择接受 MSRV 的更改，而不是选择不接受，但这也意味着没有严格的 MSRV 要求的用户将无法看到未来的错误修复，除非更新其依赖项，这可能需要他们进行破坏性更改。正如我所说，这些解决方案都有缺点。
+- 一些项目非常重视对最低支持的 Rust 版本（MSRV）的支持，将 MSRV 的更改视为破坏性更改并增加主版本号。这意味着下游项目必须明确选择接受 MSRV 的更改，而不是选择不接受，但这也意味着没有严格的 MSRV 要求的用户将无法看到Future的错误修复，除非更新其依赖项，这可能需要他们进行破坏性更改。正如我所说，这些解决方案都有缺点。
 - 在当前的 Rust 生态系统中，强制最低支持的 Rust 版本（MSRV）是具有挑战性的。只有少数一部分的 crate 提供了任何 MSRV 的保证，即使你的依赖项提供了，你也需要不断监控它们以了解何时增加了 MSRV。当它们增加了 MSRV 时，你需要使用之前提到的限制版本范围进行新的 crate 发布，以确保你的 MSRV 不会改变。这可能会迫使你放弃依赖项的安全性和性能更新，因为你必须继续使用旧版本，直到你的 MSRV 策略允许更新。而这个决定也会影响到你的依赖者。有一些提案将 MSRV 检查集成到 Cargo 中，但截至目前为止，还没有可行的稳定版本。
 
 #### 最小依赖版本
@@ -1405,7 +1405,7 @@ fn insert_just_one() {
 
 代码清单 6-2：访问不可访问的内部状态的测试，因此无法编译
 
-- 这段代码无法编译，因为尽管测试代码可以访问HashMap的私有table字段，但它无法访问RawTable的私有buckets字段，因为RawTable位于不同的模块中。我们可以通过将buckets字段的可见性设置为pub(crate)来修复这个问题，但我们实际上不希望HashMap能够直接访问buckets，因为它可能会意外地破坏RawTable的内部状态。即使将buckets作为只读字段可用也可能会有问题，因为HashMap中的新代码可能会开始依赖于RawTable的内部状态，从而使未来的修改变得更加困难。
+- 这段代码无法编译，因为尽管测试代码可以访问HashMap的私有table字段，但它无法访问RawTable的私有buckets字段，因为RawTable位于不同的模块中。我们可以通过将buckets字段的可见性设置为pub(crate)来修复这个问题，但我们实际上不希望HashMap能够直接访问buckets，因为它可能会意外地破坏RawTable的内部状态。即使将buckets作为只读字段可用也可能会有问题，因为HashMap中的新代码可能会开始依赖于RawTable的内部状态，从而使Future的修改变得更加困难。
 - 解决方案是使用#[cfg(test)]。我们可以向RawTable添加一个方法，只允许在测试时访问buckets，如代码清单6-3所示，从而避免为其余代码添加不必要的风险。然后，可以更新代码清单6-2中的代码，调用buckets()而不是访问私有的buckets字段。
 
 ```rust
@@ -1810,7 +1810,7 @@ $($key:expr => $value:expr),+
 
 而且，至关重要的是，使用这个匹配器调用宏的代码可以为键或值提供任意复杂的表达式 - 匹配器的魔力会确保键和值表达式被适当地分割。
 
-- 宏规则支持各种片段类型；你已经看到了标识符的 :ident 和表达式的 :expr，还有类型的 :ty，甚至还有任何单个标记树的 :tt！你可以在 Rust 语言参考手册的第三章中找到片段类型的完整列表（https://doc.rust-lang.org/reference/macros-by-example.html）。这些片段类型，再加上重复匹配模式的机制（$()），使你能够匹配大多数简单的代码模式。然而，如果你发现使用匹配器难以表达你想要的模式，你可以尝试使用过程宏，其中你不需要遵循 macro_rules! 所要求的严格语法。我们将在本章后面更详细地介绍这些内容。
+- 宏规则支持各种片段类型；你已经看到了标识符的 :ident 和表达式的 :expr，还有类型的 :ty，甚至还有任何单个标记树的 :tt！你可以在 Rust 语言参考手册的第三章中找到片段类型的完整列表[（https://doc.rust-lang.org/reference/macros-by-example.html）]。这些片段类型，再加上重复匹配模式的机制（$()），使你能够匹配大多数简单的代码模式。然而，如果你发现使用匹配器难以表达你想要的模式，你可以尝试使用过程宏，其中你不需要遵循 macro_rules! 所要求的严格语法。我们将在本章后面更详细地介绍这些内容。
 
 ##### Transcribers
 
@@ -1821,7 +1821,6 @@ $(map.insert($key, $value);)+
 ```
 
 - 注意，在这里我们希望每次重复都有一个分号，而不仅仅是用于分隔重复，因此我们将分号放在重复的括号内。
-
 
 **注意** 在转录器中的每个重复中，您必须使用一个元变量，以便编译器知道在匹配器中使用哪个重复（如果有多个）。
 
@@ -1843,6 +1842,7 @@ let_foo!(2);
 assert_eq!(foo, 1);
 
 ```
+
 清单 7-5：宏存在于它们自己的小宇宙中。大多数情况下。
 
 - 在编译器展开 let_foo!(2) 后，assert 看起来应该会失败。然而，原始代码中的 foo 和宏生成的 foo 存在于不同的宇宙中，除了它们恰好共享一个可读的名称之外，它们之间没有任何关系。实际上，编译器会抱怨宏中的 let foo 是一个未使用的变量。这种隔离对于使宏更容易调试非常有帮助 - 你不必担心因为选择了相同的变量名而意外遮蔽或覆盖宏调用者中的变量！
@@ -1850,7 +1850,6 @@ assert_eq!(foo, 1);
 - 当编写一个希望从你的 crate 中导出的宏时，宏中类型的缺乏清洁性尤为重要。为了使宏真正可重用，你不能假设调用方的作用域中会有什么类型。也许调用你的宏的代码定义了一个 mod std {}，或者导入了自己的 Result 类型。为了保险起见，确保使用完全指定的类型，如 ::core::option::Option 或 ::alloc::boxed::Box。如果你特别需要引用定义宏的 crate 中的内容，可以使用特殊的元变量 $crate。
   
 **注意** 如果可能的话，避免使用 ::std 路径，以便宏在 no_std crate 中继续工作。
-
 
 - 如果你希望宏影响调用者作用域中的特定变量，你可以选择在宏和调用者之间共享标识符。关键是记住标识符的来源，因为它将与该命名空间绑定。如果在宏中放置 let foo = 1;，那么标识符 foo 的来源是宏，将永远不会在调用者的标识符命名空间中可用。另一方面，如果宏以 $foo:ident 作为参数，然后写入 let $foo = 1;，当调用者使用 !(foo) 调用宏时，标识符将源自调用者，并且将引用调用者作用域中的 foo。
 
@@ -1932,7 +1931,6 @@ assert_eq!(x, 2);
 这样我们就只剩下属性宏了。虽然可以说属性宏是过程宏中最通用的一种，但也是最难确定何时使用的。多年来，我一次又一次地看到属性宏在以下四个方面增加了巨大的价值。
 
 **Test generation**
-
 很常见的情况是希望在多个不同的配置下运行相同的测试，或者在相同的引导代码下运行许多类似的测试。虽然声明式宏可以让您表达这一点，但如果您有一个类似 #[foo_test] 的属性，它在每个注解测试中引入了一个设置前导和尾声，或者一个可重复的属性像 #[test_case(1)] #[test_case(2)] 来标记一个给定的测试应该重复多次，每次都有不同的输入，那么您的代码通常更易于阅读和维护。
 
 ###### Framework annotations
@@ -1951,6 +1949,7 @@ assert_eq!(x, 2);
 #### How Do They Work?
 
 在所有过程宏的核心是 TokenStream 类型，可以迭代它以获取组成该令牌流的单个 TokenTree 项。TokenTree 可以是单个令牌，如标识符、标点符号或字面量，也可以是另一个由括号（()）或大括号（{}）括起来的 TokenStream。通过遍历 TokenStream，您可以解析出任何您希望的语法，只要单个令牌是有效的 Rust 令牌。如果您希望将输入解析为 Rust 代码，您可能需要使用 syn crate，它实现了一个完整的 Rust 解析器，并可以将 TokenStream 转换为易于遍历的 Rust AST。
+
 - 对于大多数过程宏，你不仅需要解析 TokenStream，还需要生成要注入到调用过程宏的程序中的 Rust 代码。有两种主要的方法可以实现这一点。第一种方法是手动构建一个 TokenStream，并逐个 TokenTree 扩展它。第二种方法是使用 TokenStream 的 FromStr 实现，它允许你将包含 Rust 代码的字符串解析为 TokenStream，例如 "".parse::<TokenStream>()。你也可以混合使用这两种方法；如果你想在宏的输入之前添加一些代码，只需构建一个用于前言的 TokenStream，然后使用 Extend trait 将原始输入追加到其中。
 **注意**，TokenStream还实现了Display，可以将流中的令牌漂亮地打印出来。
 这对于调试非常有用！
@@ -1969,6 +1968,7 @@ macro_rules! name_as_debug {
   };
 }
 ```
+
 清单7-7：一个非常简单的用于实现Debug的宏
 
 - 现在让我们假设有人使用 name_as_debug!(u31) 调用这个宏。从技术上讲，编译器错误发生在宏内部，具体来说是在我们为 $t 编写的地方（$t 的另一个用法可以处理无效的类型）。但是我们希望编译器将用户指向他们代码中的 u31，并且确实，这就是范围让我们能够做到的。
@@ -1977,6 +1977,7 @@ macro_rules! name_as_debug {
 - 范围非常灵活，它使您能够编写可以生成复杂错误消息的过程宏，如果您使用 compile_error! 宏。正如其名称所示，compile_error! 会导致编译器在其所放置的位置发出错误，提供的字符串作为消息。这可能看起来并不是很有用，直到您将其与范围配对。通过将生成的 TokenTree 的范围设置为与输入的某个子集的范围相等，您实际上是告诉编译器发出此编译器错误，并将用户指向源代码的这部分。通过这两种机制，宏可以产生看起来源自代码相关部分的错误，即使实际的编译器错误在用户甚至从未看到的生成代码中！
 
 **注意** 如果您曾经对syn的错误处理方式感到好奇，它的Error类型实现了Error::to_compile_error方法，将其转换为仅包含compile_error!指令的TokenStream。特别有趣的是，syn的Error类型内部保存了一组错误，每个错误都产生一个具有自己范围的独立compile_error!指令，因此您可以轻松地从您的过程宏中产生多个独立的错误。
+
 - 跨度的威力不止于此；跨度也是 Rust 宏卫生的实现方式。当你构造一个 Ident 令牌时，你还要给出该标识符的跨度，而该跨度决定了该标识符的作用域。如果你将标识符的跨度设置为 Span::call_site()，则该标识符将在调用宏的地方解析，并且不会与周围的作用域隔离。另一方面，如果你将其设置为 Span::mixed_site()，那么（变量）标识符将在宏定义的地方解析，因此在调用点处与同名变量完全卫生。Span::mixed_site 之所以被称为这样，是因为它符合 macro_rules! 的标识符卫生规则，正如我们之前讨论的那样，它在变量上“混合”了标识符解析，使用宏定义的地方解析变量，使用调用点解析类型、模块和其他所有内容。
 
 #### Summary
@@ -2003,7 +2004,6 @@ macro_rules! name_as_debug {
 
 ##### Multithreading
 
-
 到目前为止，允许并发执行的最常见解决方案是使用多线程。在多线程程序中，每个线程负责执行特定的独立的阻塞操作序列，操作系统通过多路复用来在线程之间切换，以便如果任何一个线程可以取得进展，就会有进展。如果一个线程被阻塞，可能仍然有其他线程可运行，因此应用程序可以继续进行有用的工作。
 
 - 通常，这些线程使用锁或通道等同步原语进行通信，以便应用程序仍然可以协调它们的工作。例如，您可能有一个线程等待用户输入，一个线程等待网络数据包，另一个线程等待这两个线程之一在所有三个线程之间共享的通道上发送消息。
@@ -2023,6 +2023,7 @@ enum Poll<T> {
   Pending
 }
 ```
+
 清单8-1：异步的核心：“现在给你或稍后回来”的类型
 
 - Poll通常出现在以poll开头的函数的返回类型中，这些函数是指它们可以尝试执行操作而不阻塞的方法。我们将在本章后面详细介绍它们是如何做到这一点的，但总的来说，它们会尝试在通常会阻塞之前尽可能多地执行操作，然后返回。关键是，它们会记住它们离开的位置，以便在以后可以再次进行额外的进展时恢复执行。
@@ -2040,9 +2041,10 @@ trait Future {
   fn poll(&mut self) -> Poll<Self::Output>;
 }
 ```
+
 清单8-2：Future trait的简化视图
 
-- 实现Future trait的类型被称为futures，表示可能尚不可用的值。一个future可以表示下一个网络数据包到达的时间、鼠标光标移动的时间，或者只是某个时间段已经过去的时间点。您可以将Future<Output = Foo>理解为“将在未来产生一个Foo类型的值的类型”。在其他语言中，这样的类型通常被称为promises，它们承诺最终会产生指定的类型。当一个future最终返回Poll::Ready(T)时，我们说该future解析为T类型。
+- 实现Future trait的类型被称为futures，表示可能尚不可用的值。一个future可以表示下一个网络数据包到达的时间、鼠标光标移动的时间，或者只是某个时间段已经过去的时间点。您可以将Future<Output = Foo>理解为“将在Future产生一个Foo类型的值的类型”。在其他语言中，这样的类型通常被称为promises，它们承诺最终会产生指定的类型。当一个future最终返回Poll::Ready(T)时，我们说该future解析为T类型。
 
 - 有了这个trait，我们可以将提供poll方法的模式泛化。不再需要像poll_recv和poll_keypress这样的方法，而是可以使用像recv和keypress这样的方法，它们都返回具有适当Output类型的impl Future。这并不改变您必须对它们进行轮询的事实——我们稍后会处理这个问题——但至少意味着这些待处理值有了一个标准化的接口，我们不需要在每个地方都使用poll_前缀。
 
@@ -2059,6 +2061,7 @@ async fn forward<T>(rx: Receiver<T>, tx: Sender<T>) {
   }
 }
 ```
+
 清单8-3：使用async和await实现通道转发future
 
 - 这段使用async和await语法编写的代码与其等效的同步代码非常相似，易于阅读。我们只是在一个循环中发送接收到的每个消息，直到没有更多的消息，每个await点对应于同步变体可能阻塞的地方。现在想象一下，如果您必须通过手动实现Future trait来表达这段代码。由于每次调用poll都从函数的顶部开始，您需要打包必要的状态以从代码中上次暂停的位置继续执行。结果相当丑陋，如清单8-4所示。
@@ -2111,17 +2114,19 @@ impl<T> Future for Forward<T> {
 }
 }
 ```
+
 清单8-4：手动实现通道转发future
 
-在 Rust 中，您很少需要编写这样的代码，但它能够深入了解底层工作原理，因此让我们一起来看看。首先，我们将未来类型定义为一个枚举 1，我们将使用它来跟踪当前正在等待的操作。这是因为当我们返回 Poll::Pending 时，下一次调用 poll 将再次从函数顶部开始。我们需要一种方式来知道我们中途停下来的位置，以便知道要继续哪个操作。此外，根据我们的操作不同，我们需要跟踪不同的信息：如果我们正在等待接收完成，我们需要保留 ReceiveFuture（此示例中未显示其定义），以便在下次自己被轮询时对其进行轮询；对于 SendFuture 也是如此。这里的 Option 可能让您感到奇怪；我们稍后会详细解释。
+在 Rust 中，您很少需要编写这样的代码，但它能够深入了解底层工作原理，因此让我们一起来看看。首先，我们将Future类型定义为一个枚举 1，我们将使用它来跟踪当前正在等待的操作。这是因为当我们返回 Poll::Pending 时，下一次调用 poll 将再次从函数顶部开始。我们需要一种方式来知道我们中途停下来的位置，以便知道要继续哪个操作。此外，根据我们的操作不同，我们需要跟踪不同的信息：如果我们正在等待接收完成，我们需要保留 ReceiveFuture（此示例中未显示其定义），以便在下次自己被轮询时对其进行轮询；对于 SendFuture 也是如此。这里的 Option 可能让您感到奇怪；我们稍后会详细解释。
+
 - 当我们为Forward实现Future时，将其输出类型声明为() 2，因为这个future实际上不返回任何东西。相反，当它完成从输入通道到输出通道的所有转发时，该future解析（没有结果）。在一个更完整的示例中，我们的转发类型的Output可能是一个Result，以便它可以将receive()和send()的错误传递回堆栈，以便轮询转发完成的函数。但是这段代码已经足够复杂了，所以我们将把它留到以后再说。
-- 当对Forward进行轮询时，它需要从上次离开的地方继续执行，我们可以通过匹配当前存储在self中的枚举变体来找到 3。对于我们进入的任何分支，第一步是对阻止当前操作进展的未来进行轮询；如果我们尝试接收，我们轮询ReceiveFuture，如果我们尝试发送，我们轮询SendFuture。如果轮询调用返回Poll::Pending，则我们无法取得任何进展，我们自己返回Poll::Pending。但是如果当前的未来解析了，我们就有工作要做！
+- 当对Forward进行轮询时，它需要从上次离开的地方继续执行，我们可以通过匹配当前存储在self中的枚举变体来找到 3。对于我们进入的任何分支，第一步是对阻止当前操作进展的Future进行轮询；如果我们尝试接收，我们轮询ReceiveFuture，如果我们尝试发送，我们轮询SendFuture。如果轮询调用返回Poll::Pending，则我们无法取得任何进展，我们自己返回Poll::Pending。但是如果当前的Future解析了，我们就有工作要做！
 - 当内部的某个future解析时，我们需要通过切换存储在self中的枚举变体来更新当前操作。为了做到这一点，我们必须移出self以调用Receiver::receive或Sender::send，但我们不能这样做，因为我们只有&mut self。因此，我们将需要移动的状态存储在Option中，并使用Option::take来移出 4。这有点愚蠢，因为我们马上就要覆盖self 5，因此Options总是Some，但有时需要一些技巧来让借用检查器满意。
 - 最后，如果我们取得了进展，我们再次对self进行轮询 6，以便如果我们可以立即在挂起的发送或接收上取得进展，我们就这样做。实际上，这在实现真正的Future trait时是必要的，我们稍后会回到这个问题，但现在将其视为一种优化。
 - 我们刚刚手写了一个状态机：一个具有多个可能状态并根据特定事件在这些状态之间转换的类型。这个状态机相当简单。想象一下，如果您需要为具有额外中间步骤的更复杂用例编写这样的代码，那将是多么困难！
-- 除了编写笨重的状态机之外，我们还必须知道Sender::send和Receiver::receive返回的未来类型，以便将它们存储在我们的类型中。如果这些方法返回的是impl Future，我们将无法为我们的变体编写类型。send和receive方法还必须获取发送器和接收器的所有权；如果它们没有这样做，返回的未来的生命周期将与self的借用相关联，而当我们从poll返回时，这个借用将结束。但这样做是行不通的，因为我们试图将这些未来存储在self中。
+- 除了编写笨重的状态机之外，我们还必须知道Sender::send和Receiver::receive返回的Future类型，以便将它们存储在我们的类型中。如果这些方法返回的是impl Future，我们将无法为我们的变体编写类型。send和receive方法还必须获取发送器和接收器的所有权；如果它们没有这样做，返回的Future的生命周期将与self的借用相关联，而当我们从poll返回时，这个借用将结束。但这样做是行不通的，因为我们试图将这些Future存储在self中。
 
-**注意** 您可能已经注意到，Receiver 很像是 Iterator 的异步版本。其他人也注意到了这一点，标准库正在逐步添加一个专门用于可以有意义地实现 poll_next 的类型的 trait。在未来，这些异步迭代器（通常称为流）可能会获得一流的语言支持，例如直接在它们上面进行循环！
+**注意** 您可能已经注意到，Receiver 很像是 Iterator 的异步版本。其他人也注意到了这一点，标准库正在逐步添加一个专门用于可以有意义地实现 poll_next 的类型的 trait。在Future，这些异步迭代器（通常称为流）可能会获得一流的语言支持，例如直接在它们上面进行循环！
 
 - 最终，这段代码很难编写、难以阅读和难以修改。例如，如果我们想要添加错误处理，代码的复杂性将显著增加。幸运的是，有一种更好的方法！
 
@@ -2129,7 +2134,7 @@ impl<T> Future for Forward<T> {
 
 Rust 1.39 引入了 async 关键字和紧密相关的 await 后缀运算符，我们在清单 8-3 的原始示例中使用了它们。它们一起为我们提供了一种更方便的机制来编写像清单 8-5 中的异步状态机。具体来说，它们让您以一种看起来甚至不像状态机的方式编写代码！
 
-```rust 
+```rust
 
 async fn forward<T>(rx: Receiver<T>, tx: Sender<T>) {
   while let Some(t) = rx.next().await {
@@ -2137,6 +2142,7 @@ async fn forward<T>(rx: Receiver<T>, tx: Sender<T>) {
   }
 }
 ```
+
 清单8-5：使用async和await实现通道转发future，与清单8-3中的代码重复
 
 - 如果您对async和await没有太多经验，那么清单8-4和清单8-5之间的区别可能会让您对为什么Rust社区对它们的到来如此兴奋有所了解。但由于这是一本中级书籍，让我们深入了解一下这段代码是如何替代更长的手动实现的。为了做到这一点，我们首先需要讨论生成器——实现async和await的机制。
@@ -2151,14 +2157,17 @@ async fn forward<T>(rx: Receiver<T>, tx: Sender<T>) {
 ```rust
 
 generator fn forward<T>(rx: Receiver<T>, tx: Sender<T>) {
-loop {
-let mut f = rx.next();
-let r = if let Poll::Ready(r) = f.poll() { r } else { yield };
-if let Some(t) = r {
-let mut f = tx.send(t);
-let _ = if let Poll::Ready(r) = f.poll() { r } else { yield };
-} else { break Poll::Ready(()); }
-}
+  loop {
+    let mut f = rx.next();
+    let r = if let Poll::Ready(r) = f.poll() { r } else { yield };
+    if let Some(t) = r {
+    let mut f = tx.send(t);
+
+    let _ = if let Poll::Ready(r) = f.poll() { r } else { yield };
+    } else {
+       break Poll::Ready(()); 
+      }
+  }
 }
 
 
@@ -2167,73 +2176,37 @@ let _ = if let Poll::Ready(r) = f.poll() { r } else { yield };
 清单8-6：将async/await转换为生成器
 
 - 在撰写本文时，生成器实际上在Rust中无法使用——它们只是编译器内部用于实现async/await的工具——但这可能会在将来发生变化。生成器在许多情况下非常有用，例如在不必携带结构体的情况下实现迭代器，或者实现一个impl Iterator，该迭代器可以逐个生成项目。
+
 - 如果您仔细观察清单8-5和清单8-6，一旦您知道每个await或yield实际上都是函数的返回，它们可能看起来有点神奇。毕竟，函数中有几个局部变量，不清楚在稍后恢复时如何恢复它们。这就是生成器的编译器生成部分发挥作用的地方。编译器会透明地注入代码，将这些变量持久化到生成器的关联数据结构中，并在执行时从中读取，而不是从堆栈中读取。因此，如果您声明、写入或读取某个局部变量a，实际上是在操作类似于self.a的东西。问题解决了！这真是太神奇了。
+
 - 手动转发实现和async/await版本之间一个微妙但重要的区别是后者可以在yield点之间保持引用。这使得像清单8-5中的Receiver::next和Sender::send这样的函数可以接受&mut self，而不是清单8-4中的self。如果我们尝试在手动状态机实现中使用&mut self接收器来实现这些方法，借用检查器将无法强制执行在调用Receiver::next时和返回的future解析之间，不能引用Forward内部存储的Receiver的规则，因此它会拒绝该代码。只有通过将Receiver移动到future中，我们才能说服编译器Receiver在其他地方不可访问。与此同时，使用async/await，借用检查器可以在编译器将代码转换为状态机之前检查代码，并验证在future被丢弃（即await返回）之后，rx确实不会再次被访问。
-**THE SIZE OF GENERATORS**
-The data structure used to back a generator’s state must be able to hold the combined
-state at any one yield point. If your async fn contains, say, a [u8; 8192],
-those 8KiB must be stored in the generator itself. Even if your async fn contains
-only smaller local variables, it must also contain any future that it awaits, since it
-needs to be able to poll such a future later, when poll is invoked.
-- This nesting means that generators, and thus futures based on async
-functions and blocks, can get quite large without any visible indicator of that
-increased size in your code. This can in turn impact your program’s runtime
-performance, since those giant generators may have to be copied across function
-calls and in and out of data structures, which amounts to a fair amount of
-memory copying. In fact, you can usually identify when the size of your generator-
-based futures is affecting performance by looking for excessive amounts of
-time spent in the memcpy function in your application’s performance profiles!
-- Finding these large futures isn’t always easy, however, and often requires
-manually identifying long or complex chains of async functions. Clippy may
-be able to help with this in the future, but at the time of writing, you’re on your
-own. When you do find a particularly large future, you have two options: you
-can try to reduce the amount of local state the async functions need, or you
-can move the future to the heap (with Box::pin) so that moving the future just
-requires moving the pointer to it. The latter is by far the easiest way to go, but
-it also introduces an extra allocation and a pointer indirection. Your best bet is
-usually to put the problematic future on the heap, measure your performance,
-and then use your performance benchmarks to guide you from there.
+
+**生成器的大小**
+用于支持生成器状态的数据结构必须能够在任何一个yield点上保存组合状态。如果您的async fn包含一个[u8; 8192]，那么这8KiB必须存储在生成器本身中。即使您的async fn只包含较小的局部变量，它也必须包含它等待的任何Future，因为它需要在调用poll时能够轮询这样的Future。
+
+- 这种嵌套意味着生成器以及基于异步函数和块的Future可能会变得非常庞大，而在您的代码中没有任何可见的指示。这反过来会影响您程序的运行时性能，因为这些巨大的生成器可能需要在函数调用之间和数据结构中进行复制，这相当于相当多的内存复制。实际上，您通常可以通过查看应用程序性能概要中的memcpy函数的使用时间来确定生成器基于Future的大小是否影响性能！
+
+- 然而，找到这些大型Future并不总是容易的，通常需要手动识别长或复杂的异步函数链。Clippy可能在Future能够提供帮助，但在撰写本文时，您需要自己解决。当您找到一个特别大的Future时，有两种选择：您可以尝试减少异步函数所需的局部状态量，或者将Future移动到堆上（使用Box::pin），以便移动Future只需要移动指向它的指针。后者是最简单的方法，但它也引入了额外的分配和指针间接引用。通常，您最好将有问题的Future放在堆上，测量性能，然后使用性能基准来指导您的进一步操作。
 
 ##### Pin and Unpin
 
-We’re not quite done. While generators are neat, a challenge arises from
-the technique as I’ve described it so far. In particular, it’s not clear what
-happens if the code in the generator (or, equivalently, the async block) takes
-a reference to a local variable. In the code from Listing 8-5, the future that
-rx.next() returns must necessarily hold a reference to rx if a next message
-is not immediately available so that it knows where to try again when the
-generator next resumes. When the generator yields, the future and the reference
-the future contains get stashed away inside the generator. But what
-now happens if the generator is moved? Specifically, look at the code in
-Listing 8-7, which calls forward.
+我们还没有完成。虽然生成器很棒，但从我目前描述的技术中出现了一个挑战。特别是，如果生成器中的代码（或等效的异步块）对局部变量取引用，那么情况就不太清楚了。在清单8-5中的代码中，rx.next()返回的Future必须在下一个消息不可用时持有对rx的引用，以便在生成器下次恢复时知道从哪里再次尝试。当生成器暂停时，Future和Future包含的引用都被存储在生成器内部。但是，如果移动生成器会发生什么呢？具体来说，看一下清单8-7中调用forward的代码。
 
 ```rust
 
 async fn try_forward<T>(rx: Receiver<T>, tx: Sender<T>) -> Option<impl Future>
 {
-let mut f = forward(rx, tx);
-if f.poll().is_pending() { Some(f) } else { None }
+  let mut f = forward(rx, tx);
+  if f.poll().is_pending() { Some(f) } else { None }
 }
 ```
-Listing 8-7: Moving a future after polling it
 
-The try_forward function polls forward only once, to forward as many
-messages as possible without blocking. If the receiver may still produce more
-messages (that is, if it returned Poll::Pending instead of Poll::Ready(None)),
-those messages are deferred to be forwarded at some later time by returning
-the forwarding future to the caller, which may choose to poll again at a time
-when it sees fit.
-- Let’s work through what happens here with what we know about async
-and await so far. When we poll the forward generator, it goes through the
-while loop some unknown number of times and eventually returns either
-Poll::Ready(()) if the receiver ended, or Poll::Pending otherwise. If it returns
-Poll::Pending, the generator contains a future returned from either rx.next()
-or tx.send(t). Those futures both contain a reference to one of the arguments
-initially provided to forward (rx and tx, respectively), which must also
-be stored in the generator. But when try_forward returns the entire generator,
-the fields of the generator also move. Thus, rx and tx no longer reside
-at the same locations in memory, and the references stored in the stashedaway
-future are no longer pointing to the right data!
+清单8-7：在对其进行轮询后移动Future
+
+try_forward函数只对forward进行一次轮询，尽可能多地转发消息而不阻塞。如果接收器可能仍然产生更多的消息（即，它返回的是Poll::Pending而不是Poll::Ready(None)），那么这些消息将被延迟到稍后的某个时间通过将转发的Future返回给调用者来转发。调用者可以选择在适当的时候再次进行轮询。
+
+- 让我们根据我们目前对async和await的了解来分析这里发生的情况。当我们轮询forward生成器时，它会通过while循环进行一些未知次数的迭代，最终返回Poll::Ready(())（如果接收器结束）或Poll::Pending（否则）。如果返回Poll::Pending，生成器中包含从rx.next()或tx.send(t)返回的future。这些future都包含对forward最初提供的参数（分别是rx和tx）的引用，这些参数也必须存储在生成器中。但是当try_forward返回整个生成器时，生成器的字段也会移动。因此，rx和tx不再位于内存中的相同位置，而存储在生成器中的引用也不再指向正确的数据！
+
 - What we’ve run into here is a case of a self-referential data structure: one
 that holds both data and references to that data. With generators, these selfreferential
 structures are very easy to construct, and being unable to support
@@ -2258,12 +2231,14 @@ type Output;
 fn poll(self: Pin<&mut Self>) -> Poll<Self::Output>;
 }
 ```
+
 Listing 8-8: A less simplified view of the Future trait with Pin
 
 - In particular, this definition requires that you call poll on Pin<&mut Self>.
 Once you have a value behind a Pin, that constitutes a contract that that value
 will never move again. This means that you can construct self-references
 internally to your heart’s delight, exactly as you want for generators.
+
 **NOTE** While Future makes use of Pin, Pin is not tied to the Future trait—you can use Pin for
 any self-referential data structure.
 
@@ -2272,25 +2247,27 @@ the contained value won’t move? To see how this magic works, let’s look
 at the definition of std::pin::Pin and some of its key methods, shown in
 Listing 8-9.
 
-```rust 
+```rust
 
 struct Pin<P> { pointer: P }
 impl<P> Pin<P> where P: Deref {
-pub unsafe fn new_unchecked(pointer: P) -> Self;
+  pub unsafe fn new_unchecked(pointer: P) -> Self;
 }
 impl<'a, T> Pin<&'a mut T> {
-pub unsafe fn get_unchecked_mut(self) -> &'a mut T;
+  pub unsafe fn get_unchecked_mut(self) -> &'a mut T;
 }
 impl<P> Deref for Pin<P> where P: Deref {
-type Target = P::Target;
-fn deref(&self) -> &Self::Target;
+  type Target = P::Target;
+  fn deref(&self) -> &Self::Target;
 }
 ```
+
 Listing 8-9: std::pin::Pin and its key methods
 
 - There’s a lot to unpack here, and we’re going to have to go over the
 definition in Listing 8-9 a few times before all the bits make sense, so please
 bear with me.
+
 - First, you’ll notice that Pin holds a pointer type. That is, rather than hold
 some T directly, it holds a type P that dereferences through Deref into T. This
 means that rather than have a Pin<MyType>, you’ll have a Pin<Box<MyType>> or
@@ -2300,6 +2277,7 @@ T won’t move, as doing so might invalidate self-references stored in the T. If
 the Pin just held a T directly, then simply moving the Pin would be enough to
 invalidate that invariant! In the remainder of this section, I’ll refer to P as
 the pointer type and T as the target type.
+
 - Next, notice that Pin’s constructor, new_unchecked, is unsafe. This is
 because the compiler has no way to actually check that the pointer type
 indeed promises that the pointed-to (target) type won’t move again. Consider,
@@ -2378,7 +2356,7 @@ that contains only Unpin members. Only types that explicitly opt out of Unpin
 - For target types that are Unpin, we can provide a much simpler safe
 interface to Pin, as shown in Listing 8-10.
 
-```rust 
+```rust
 
 impl<P> Pin<P> where P: Deref, P::Target: Unpin {
 pub fn new(pointer: P) -> Self;
@@ -2387,6 +2365,7 @@ impl<P> DerefMut for Pin<P> where P: DerefMut, P::Target: Unpin {
 fn deref_mut(&mut self) -> &mut Self::Target;
 }
 ```
+
 Listing 8-10: The safe API to Pin for Unpin target types
 
 - To make sense of the safe API in Listing 8-10, think about the safety
@@ -2438,6 +2417,7 @@ can provide a safe Pin constructor: if you move a Box<T>, you do not move the
 T. In other words, the unconditional implementation asserts that you can move a
 Box<T> out of a Pin even if T cannot be moved out of a Pin. Note, however, that
 this does not enable you to move a T that is !Unpin out of a Pin<Box<T>>.
+
 - The other option, pinning to the stack, is a little more involved, and at
 the time of writing requires a smidgen of unsafe code. We have to ensure
 that the pinned value cannot be accessed after the Pin with a &mut to it has
@@ -2454,6 +2434,7 @@ let mut $var = unsafe { Pin::new_unchecked(&mut $var) };
 }
 }
 ```
+
 Listing 8-11: Macro for pinning to the stack
 
 - By taking the name of the variable to pin to the stack, the macro
@@ -2470,6 +2451,7 @@ Specifically, without that line, the caller could write (note the extra scope):
 
 let foo = /**/; { pin_mut!(foo); foo.poll() }; foo.mut_self_method();
 ```
+
 - Here, we give a pinned instance of foo to poll, but then we later use a
 &mut to foo without a Pin, which violates the Pin contract. With the extra reassignment,
 on the other hand, that code would also move foo into the new
@@ -2477,11 +2459,14 @@ scope, rendering it unusable after the scope ends.
 - Pinning on the stack therefore requires unsafe code, unlike Box::pin,
 but avoids the extra allocation that Box introduces and also works in no_std
 environments.
+
 ##### Back to the Future
+
 We now have our pinned future, and we know what that means. But you
 may have noticed that none of this important pinning stuff shows up in
 most asynchronous code you write with async and await. And that’s because
 the compiler hides it from you.
+
 - Think back to when we discussed Listing 8-5, when I told you that
 <expr>.await desugars into something like:
 
@@ -2489,6 +2474,7 @@ the compiler hides it from you.
 
 loop { if let Poll::Ready(r) = expr.poll() { break r } else { yield } }
 ```
+
 - That was an ever-so-slight simplification because, as we’ve seen, you can
 call Future::poll only if you have a Pin<&mut Self> for the future. The desugaring
 is actually a bit more sophisticated, as shown in Listing 8-12.
@@ -2506,6 +2492,7 @@ Poll::Pending => yield,
 Listing 8-12: A more accurate desugaring of <expr>.await
 
 ```
+
 - The match 1 is a neat shorthand to not only ensure that the expansion
 remains a valid expression, but also move the expression result into
 a variable that we can then pin on the stack. Beyond that, the main new
@@ -2543,6 +2530,7 @@ the CPU receives a particular interrupt,” or even “after this much time has
 passed.” On top of that, developers can write their own futures that wrap
 multiple other futures, and thus, they may have several wake-up conditions.
 Some futures may even introduce their own entirely custom wake events.
+
 - To accommodate these many use cases, Rust introduces the notion of
 a Waker: a way to wake the executor to signal that progress can be made. The
 Waker is what makes the whole machinery around futures work. The executor
@@ -2551,13 +2539,14 @@ go to sleep, and passes the Waker in to any Future it polls. How? With the addit
 parameter to Future::poll that I’ve hidden from you so far. Sorry about
 that. Listing 8-13 gives the final and true definition for Future—no more lies!
 
-```rust 
+```rust
 
 trait Future {
 type Output;
 fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output>;
 }
 ```
+
 Listing 8-13: The actual Future trait with Context
 
 - The &mut Context contains the Waker. The argument is a Context, not a
