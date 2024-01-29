@@ -2892,20 +2892,7 @@ x = false;
 unsafe impl<#[may_dangle] T> Drop for ..
 ```
 
-- This escape hatch allows a type to declare that a given generic parameter
-isn’t used in Drop, which enables use cases like Box<&mut T>. However,
-it also introduces a new problem if your Box<T> holds a raw heap pointer,
-*mut T, and allows T to dangle using #[may_dangle]. Specifically, the*mut T
-makes Rust’s drop check think that your Box<T> doesn’t own a T, and thus
-that it doesn’t call T::drop either. Combined with the may_dangle assertion
-that we don’t access T when the Box<T> is dropped, the drop check now concludes
-that it’s fine to have a Box<T> where the T doesn’t live until the Box
-is dropped (like our shortened &mut x in Listing 9-10). But that’s not true,
-since we do call T::drop, which may itself access, say, a reference to said x.
-Luckily, the fix is simple: we add a PhantomData<T> to tell the drop check
-that even though the Box<T> doesn’t hold any T, and won’t access T on drop,
-it does still own a T and will drop one when the Box is dropped. Listing 9-11
-shows what our hypothetical Box type would look like.
+- 这个逃生通道允许类型声明一个给定的泛型参数在 Drop 中不被使用，这使得像 Box<&mut T> 这样的用例成为可能。然而，如果你的 Box<T> 持有一个原始堆指针 *mut T，并且使用 #[may_dangle] 允许 T 悬垂，那么就会引入一个新的问题。具体来说，*mut T 会让 Rust 的 drop 检查认为你的 Box<T> 不拥有 T，因此也不会调用 T::drop。结合 may_dangle 断言，在 Box<T> 被丢弃时不访问 T，drop 检查现在会认为拥有一个 Box<T>，其中 T 不会在 Box 被丢弃之前存活（就像清单 9-10 中我们缩短的 &mut x）。但事实并非如此，因为我们确实调用了 T::drop，它可能会访问到 x 的引用。幸运的是，修复很简单：我们添加一个 PhantomData<T>，告诉 drop 检查即使 Box<T> 不持有任何 T，并且在丢弃时不会访问 T，它仍然拥有一个 T，并且在 Box 被丢弃时会丢弃一个 T。清单 9-11 展示了我们假设的 Box 类型的样子。
 
 ```rust
 
@@ -2917,200 +2904,55 @@ unsafe impl<#[may_dangle] T> for Box<T> { /_ ... _/ }
 
 ```
 
-Listing 9-11: A definition for Box that is maximally flexible in terms of the drop check
+清单 9-11：Box 的定义在 drop 检查方面具有最大的灵活性
 
-- This interaction is subtle and easy to miss, but it arises only when you
-use the unstable #[may_dangle] attribute. Hopefully this subsection will serve
-as a warning so that when you see unsafe impl Drop in the wild in the future,
-you’ll know to look for a PhantomData<T> as well!
+- 这种交互是微妙且容易被忽视的，但它只会在使用不稳定的#[may_dangle]属性时出现。希望这个小节能作为一个警告，以便当你将来在代码中看到不安全的impl Drop时，你会知道要寻找PhantomData<T>！
 
-**NOTE** Another consideration for unsafe code concerning Drop is to make sure that you have
-a Type<T> that lets T continue to live after self is dropped. For example, if you’re
-implementing delayed garbage collection, you need to also add T: 'static. Otherwise,
-if T = WriteOnDrop<&mut U>, the later access or drop of T could trigger undefined
-behavior!
+**注意** 关于 Drop 的不安全代码的另一个考虑是确保在 self 被丢弃后，仍然让 T 继续存在的 Type<T>。例如，如果你正在实现延迟垃圾回收，你还需要添加 T: 'static。否则，如果 T = WriteOnDrop<&mut U>，后续对 T 的访问或丢弃可能会触发未定义行为！
 
 #### Coping with Fear
 
-With this chapter mostly behind you, you may now be more afraid of unsafe
-code than you were before you started. While that is understandable, it’s
-important to stress that it’s not only possible to write safe unsafe code, but
-most of the time it’s not even that difficult. The key is to make sure that you
-handle unsafe code with care; that’s half the struggle. And be really sure
-that there isn’t a safe implementation you can use instead before resorting
-to unsafe.
-In the remainder of this chapter, we’ll look at some techniques and
-tools that can help you be more confident in the correctness of your unsafe
-code when there’s no way around it.
+通过本章的学习，你可能比之前更害怕不安全的代码。虽然这是可以理解的，但重要的是要强调，编写安全的不安全代码不仅是可能的，而且大多数情况下并不那么困难。关键是要确保你小心处理不安全的代码；这是一半的斗争。在诉诸不安全代码之前，请确保没有安全的实现可供使用。
+在本章的剩余部分，我们将介绍一些技术和工具，可以帮助你在无法避免使用不安全代码时对其正确性更有信心。
 
 ##### Manage Unsafe Boundaries
 
-It’s tempting to reason about unsafety locally; that is, to consider whether
-the code in the unsafe block you just wrote is safe without thinking too
-much about its interaction with the rest of the codebase. Unfortunately,
-that kind of local reasoning often comes back to bite you. A good example
-of this is the Unpin trait—you may write some code for your type that uses
-Pin::new_unchecked to produce a pinned reference to a field of the type, and
-that code may be entirely safe when you write it. But then at some later
-point in time, you (or someone else) might add a safe implementation of
-Unpin for said type, and suddenly the unsafe code is no longer safe, even
-though it’s nowhere near the new impl!
-Safety is a property that can be checked only at the privacy boundary of
-all code that relates to the unsafe block. Privacy boundary here isn’t so much
-a formal term as an attempt at describing “any part of your code that can
-fiddle with the unsafe bits.” For example, if you declare a public type Foo in
-a module bar that is marked pub or pub(crate), then any other code in the
-same crate can implement methods on and traits for Foo. So, if the safety
-of your unsafe code depends on Foo not implementing particular traits or
-methods with particular signatures, you need to remember to recheck the
-safety of that unsafe block any time you add an impl for Foo. If, on the other
-hand, Foo is not visible to the entire crate, then a much smaller set of scopes
-is able to add problematic implementations, and thus, the risk of accidentally
-adding an implementation that breaks the safety invariants goes down
-accordingly. If Foo is private, then only the current module and any submodules
-can add such implementations.
-The same rule applies to access to fields: if the safety of an unsafe block
-depends on certain invariants over a type’s fields, then any code that can
-touch those fields (including safe code) falls within the privacy boundary
-of the unsafe block. Here, too, minimizing the privacy boundary is the
-best approach—code that cannot get to the fields cannot mess up your
-invariants!
-Because unsafe code often requires this wide-reaching reasoning,
-it’s best practice to encapsulate the unsafety in your code as best you can.
-Provide the unsafety in the form of a single module, and strive to give that
-164 Chapter 9
-module an interface that is entirely safe. That way you only need to audit the
-internals of that module for your invariants. Or better yet, stick the unsafe
-bits in their own crate so that you can’t leave any holes open by accident!
-It’s not always possible to fully encapsulate complex unsafe interactions
-to a single, safe interface, however. When that’s the case, try to narrow
-down the parts of the public interface that have to be unsafe so that you
-have only a very small number of them, give them names that clearly communicate
-that care is needed, and then document them rigorously.
-It is sometimes tempting to remove the unsafe marker on internal APIs
-so that you don’t have to stick unsafe {} throughout your code. After all,
-inside your code you know never to invoke frobnify if you’ve previously
-called bazzify, right? Removing the unsafe annotation can lead to cleaner
-code but is usually a bad decision in the long run. A year from now, when
-your codebase has grown, you’ve paged out some of the safety invariants,
-and you “ just want to hack together this one feature real quick,” chances
-are that you’ll inadvertently violate one of those invariants. And since
-you don’t have to type unsafe, you won’t even think to check. Plus, even
-if you never make mistakes, what about other contributors to your code?
-Ultimately, cleaner code is not a good enough argument to remove the
-intentionally noisy unsafe marker.
-Read and Write Documentation
-It goes without saying that if you write an unsafe function, you must document
-the conditions under which that function is safe to call. Here, both
-clarity and completeness are important. Don’t leave any invariants out, even
-if you’ve already written them somewhere else. If you have a type or module
-that requires certain global invariants—invariants that must always hold for
-all uses of the type—then remind the reader that they must also uphold the
-global invariants in every unsafe function’s documentation too. Developers
-often read documentation in an ad hoc, on-demand manner, so you can
-assume they have probably not read your carefully written module-level
-documentation and need to be given a nudge to do so.
-What may be less obvious is that you should also document all unsafe
-implementations and blocks—think of this as providing proof that you
-do indeed uphold the contract the operation in question requires. For
-example, slice::get_unchecked requires that the provided index is within the
-bounds of the slice; when you call that method, put a comment just above
-it explaining how you know that the index is in fact guaranteed to be in
-bounds. In some cases, the invariants that the unsafe block requires are
-extensive, and your comments may get long. That’s a good thing. I have
-caught mistakes many times by trying to write the safety comment for an
-unsafe block and realizing halfway through that I actually don’t uphold
-a key invariant. You’ll also thank yourself a year down the road when you
-have to modify this code and ensure it’s still safe. And so will the contributor
-to your project who just stumbled across this unsafe call and wants to
-understand what’s going on.
-Unsafe Code 165
-Before you get too deep into writing unsafe code, I also highly recommend
-that you go read the Rustonomicon (<https://doc.rust-lang.org/nomicon/>)
-cover to cover. There are so many details that are easy to miss, and will
-come back to bite you if you’re not aware of them. We’ve covered many
-of them in this chapter, but it never hurts to be more aware. You should
-also make liberal use of the Rust reference whenever you’re in doubt. It’s
-added to regularly, and chances are that if you’re even slightly unsure about
-whether some assumption you have is right, the reference will call it out. If
-it doesn’t, consider opening an issue so that it’ll be added!
-Check Your Work
-Okay, so you’ve written some unsafe code, you’ve double- and triple-checked
-all the invariants, and you think it’s ready to go. Before you put it into production,
-there are some automated tools that you should run your test suite
-through (you have a test suite, right?).
-The first of these is Miri, the mid-level intermediate representation
-interpreter. Miri doesn’t compile your code into machine code but instead
-interprets the Rust code directly. This provides Miri with far more visibility
-into what your program is doing, which in turn allows it to check that your
-program doesn’t do anything obviously bad, like read from uninitialized
-memory. Miri can catch a lot of very subtle and Rust-specific bugs and is a
-lifesaver for anyone writing unsafe code.
-Unfortunately, because Miri has to interpret the code to execute it, code
-run under Miri often runs orders of magnitude slower than its compiled
-counterpart. For that reason, Miri should really be used only to execute your
-test suite. It can also check only the code that actually runs, and thus won’t
-catch issues in code paths that your test suite doesn’t reach. You should think
-of Miri as an extension of your test suite, not a replacement for it.
-There are also tools known as sanitizers, which instrument machine code
-to detect erroneous behavior at runtime. The overhead and fidelity of these
-tools vary greatly, but one widely loved tool is Google’s AddressSanitizer.
-It detects a large number of memory errors, such as use-after-free, buffer
-overflows, and memory leaks, all of which are common symptoms of incorrect
-unsafe code. Unlike Miri, these tools operate on machine code and thus
-tend to be fairly fast—usually within the same order of magnitude. But like
-Miri, they are constrained to analyzing the code that actually runs, so here
-too a solid test suite is vital.
-The key to using these tools effectively is to automate them through
-your continuous integration pipeline so they’re run for every change, and
-to ensure that you add regression tests over time as you discover errors.
-The tools get better at catching problems as the quality of your test suite
-improves, so by incorporating new tests as you fix known bugs, you’re earning
-double points back, so to speak!
-Finally, don’t forget to sprinkle assertions generously through unsafe
-code. A panic is always better than triggering undefined behavior! Check
-all of your assumptions with assertions if you can—even things like the size
-166 Chapter 9
-of a usize if you rely on that for safety. If you’re concerned about runtime
-cost, make use of the debug_assert_ macros and the if cfg!(debug_assertions)
-|| cfg!(test) construct to execute them only in debug and test contexts.
-A HOUSE OF CARDS?
-Unsafe code can violate all of Rust’s safety guarantees, and this is often touted
-as a reason why Rust’s whole safety argument is a charade. The concern is
-that it takes only one bit of incorrect unsafe code for the whole house to come
-crashing down and all safety to be lost. Proponents of this argument then
-sometimes argue that at the very least only unsafe code should be able to call
-unsafe code, so that the unsafety is visible all the way to the highest level of the
-application.
-The argument is understandable—it is true that the safety of Rust code
-relies on the safety of all the transitive unsafe code it ends up invoking. And
-indeed, if some of that unsafe code is incorrect, it may have implications for
-the safety of the program overall. However, what this argument misses is that
-all successful safe languages provide a facility for language extensions that are
-not expressible in the (safe) surface language, usually in the form of code written
-in C or assembly. Just as Rust relies on the correctness of its unsafe code,
-the safety of those languages relies on the correctness of those extensions.
-Rust is different in that it doesn’t have a separate extension language, but
-instead allows extensions to be written in what amounts to a dialect of Rust
-(unsafe Rust). This allows much closer integration between the safe and unsafe
-code, which in turn reduces the likelihood of errors due to impedance mismatches
-at the interface between the two, or due to developers being familiar
-with one but not the other. The closer integration also makes it easier to write
-tools that analyze the correctness of the unsafe code’s interaction with the safe
-code, as exemplified by tools like Miri. And since unsafe Rust continues to be
-subject to the borrow checker for any operation that isn’t explicitly unsafe, there
-remain many safety checks in place that aren’t present when developers must
-drop down to a language like C.
-Summary
-In this chapter, we’ve walked through the powers that come with the unsafe
-keyword and the responsibilities we accept by leveraging those powers. We
-also talked about the consequences of writing unsafe unsafe code, and how
-you really should be thinking about unsafe as a way to swear to the compiler
-that you’ve manually checked that the indicated code is still safe. In the
-next chapter, we’ll jump into concurrency in Rust and see how you can get
-all those cores on your shiny new computer to pull in the same direction!
+诱人的是，在局部范围内推理不安全性；也就是说，在你刚刚编写的不安全代码块中考虑它是否安全，而不太考虑它与代码库的其他部分的交互。不幸的是，这种局部推理经常会带来麻烦。一个很好的例子是Unpin trait——你可能为你的类型编写一些代码，使用Pin::new_unchecked来生成类型字段的固定引用，当你编写它时，这段代码可能是完全安全的。但是在以后的某个时间点，你（或其他人）可能为该类型添加了一个安全的Unpin实现，突然间，不安全的代码就不再安全了，尽管它与新的实现毫不相干！
 
-### 10 CONCURRENCY (ANdD PARALLELISM)
+- 安全性是只能在与不安全代码相关的所有代码的隐私边界处进行检查的属性。这里的隐私边界不是一个正式的术语，而是试图描述“与不安全位相关的代码的任何部分”。例如，如果你在模块bar中声明了一个公共类型Foo，并标记为pub或pub(crate)，那么同一crate中的任何其他代码都可以为Foo实现方法和特性。因此，如果你的不安全代码的安全性取决于Foo不实现特定的特性或具有特定签名的方法，那么你需要记住在为Foo添加impl时重新检查该不安全代码的安全性。另一方面，如果Foo对整个crate不可见，那么只有一个更小的范围可以添加有问题的实现，因此，意外添加破坏安全不变性的实现的风险相应降低。如果Foo是私有的，那么只有当前模块和任何子模块可以添加这样的实现。
+- 同样的规则也适用于字段的访问：如果不安全代码的安全性取决于类型字段上的某些不变量，那么任何可以访问这些字段的代码（包括安全代码）都在不安全代码的隐私边界内。在这里，最小化隐私边界是最好的方法——无法访问字段的代码无法破坏你的不变量！
+- 由于不安全代码通常需要这种广泛的推理，最佳实践是尽可能将不安全性封装在代码中。以单个模块的形式提供不安全性，并努力为该模块提供完全安全的接口。这样，你只需要审查该模块的内部以确保不变量。或者更好的是，将不安全的部分放在自己的crate中，这样你就不会意外留下任何漏洞！
+- 然而，并不总是可能将复杂的不安全交互完全封装到一个安全的接口中。在这种情况下，尝试缩小必须是不安全的公共接口的范围，这样你只需要很少的接口，给它们起一个清晰表达需要小心的名称，然后严格记录它们。
+- 有时候，人们会诱惑地去掉内部API上的不安全标记，这样你就不必在代码中到处写unsafe {}了。毕竟，在你的代码中，你知道如果之前调用了bazzify，就永远不会调用frobnify，对吗？去掉不安全标记可以使代码更清晰，但从长远来看通常是一个糟糕的决定。一年后，当你的代码库增长，你已经忽略了一些安全不变量，并且“只想快速地拼凑这个功能”，很有可能你会无意中违反其中一个不变量。而且，即使你从不犯错误，其他贡献者呢？最终，更干净的代码不足以去除故意嘈杂的不安全标记。
+
+##### Read and Write Documentation
+
+不言而喻，如果你编写了一个不安全的函数，你必须记录调用该函数的条件。在这里，清晰和完整都很重要。不要遗漏任何不变量，即使你已经在其他地方写过它们。如果你有一个需要特定全局不变量的类型或模块，即对于类型的所有使用，这些不变量必须始终保持不变，那么在每个不安全函数的文档中提醒读者他们也必须遵守全局不变量。开发人员通常以临时的、按需的方式阅读文档，所以你可以假设他们可能没有仔细阅读你精心编写的模块级文档，需要给他们一个提示。
+
+- 可能不太明显的是，你还应该记录所有不安全的实现和代码块，可以将其视为提供证明，证明你确实遵守了所需操作的契约。例如，slice::get_unchecked要求提供的索引在切片的范围内；当你调用该方法时，在它上面加上一条注释，解释你如何知道索引确实保证在范围内。在某些情况下，不安全代码块所需的不变量可能很多，你的注释可能会很长。这是件好事。我曾多次通过尝试为不安全代码块编写安全注释，然后在中途意识到我实际上没有遵守一个关键不变量而发现错误。当你不得不修改这段代码并确保它仍然安全时，你也会感谢自己。同样，你的项目贡献者也会感谢你，他们刚刚遇到这个不安全调用，并希望理解发生了什么。
+
+- 在你深入编写不安全代码之前，我也强烈建议你阅读《Rustonomicon》（<https://doc.rust-lang.org/nomicon/>）。有很多细节很容易被忽视，如果你不了解它们，它们会给你带来麻烦。我们在本章中涵盖了其中的许多内容，但多了解一些也无妨。在你有疑问时，你还应该大量使用Rust参考手册。它经常更新，如果你对某个假设是否正确有一丝丝不确定，参考手册会指出。如果没有，考虑提出一个问题，以便将其添加进去！
+
+##### Check Your Work
+
+好的，你已经编写了一些不安全的代码，你已经反复检查了所有的不变量，并且认为它已经准备好了。在投入生产之前，有一些自动化工具可以帮助你运行测试套件（你有测试套件吗？）。
+
+- 首先是Miri，中级中间表示解释器。Miri不会将你的代码编译成机器代码，而是直接解释Rust代码。这使得Miri对程序的运行有更多的可见性，从而可以检查你的程序是否做了一些明显错误的事情，比如从未初始化的内存中读取数据。Miri可以捕捉到许多非常微妙且特定于Rust的错误，对于编写不安全代码的人来说是一个救命稻草。
+- 不幸的是，由于Miri必须解释代码来执行它，所以在Miri下运行的代码通常比编译后的代码运行得慢得多。因此，Miri应该只用于执行测试套件。它只能检查实际运行的代码，因此无法捕捉到测试套件未触及的代码路径中的问题。你应该将Miri视为测试套件的扩展，而不是替代品。
+- 还有一些被称为sanitizer的工具，它们会在运行时对机器代码进行插装以检测错误行为。这些工具的开销和准确性各不相同，但其中一个广受喜爱的工具是Google的AddressSanitizer。它可以检测到许多内存错误，比如使用已释放的内存、缓冲区溢出和内存泄漏，这些都是不正确的不安全代码的常见症状。与Miri不同，这些工具操作的是机器代码，因此通常速度相当快，通常在相同数量级内。但与Miri一样，它们只能分析实际运行的代码，因此一个可靠的测试套件至关重要。
+- 使用这些工具的关键是通过持续集成流水线自动化运行它们，以便在每次更改时运行，并确保随着发现错误而逐渐添加回归测试。随着测试套件质量的提高，这些工具在捕捉问题方面变得更加出色，因此通过在修复已知错误时添加新的测试，你可以获得双倍的回报！
+- 最后，不要忘记在不安全代码中大量使用断言。引发panic总比触发未定义行为要好！如果可能的话，使用断言检查所有的假设，甚至是像usize的大小这样的东西，如果你依赖它来确保安全性。如果你担心运行时成本，可以利用debug_assert_宏和if cfg!(debug_assertions) || cfg!(test)结构，只在调试和测试环境中执行它们。
+**一座纸牌屋？**
+不安全代码可能违反Rust的所有安全保证，这经常被用作Rust整个安全论点是虚伪的理由。人们担心的是，只需要一个不正确的不安全代码，整个系统就会崩溃，所有的安全性都会丧失。因此，这种论点的支持者有时会主张至少只有不安全代码才能调用不安全代码，以便不安全性在应用程序的最高层面上可见。
+- 这个论点是可以理解的——Rust代码的安全性确实依赖于所有传递的不安全代码的安全性。而且，如果其中一些不安全代码是不正确的，它可能对整个程序的安全性产生影响。然而，这个论点忽略了一个事实，即所有成功的安全语言都提供了一种语言扩展的机制，这些扩展在（安全的）表面语言中无法表达，通常以C或汇编的形式编写的代码。就像Rust依赖于其不安全代码的正确性一样，那些语言的安全性依赖于这些扩展的正确性。
+- Rust的不同之处在于它没有单独的扩展语言，而是允许以一种类似于Rust的方言（不安全的Rust）编写扩展。这使得安全代码和不安全代码之间的集成更加紧密，从而减少了由于两者之间的接口不匹配或开发人员只熟悉其中一种而导致的错误的可能性。这种更紧密的集成还使得更容易编写分析不安全代码与安全代码交互正确性的工具，例如Miri。由于不安全的Rust在任何不是显式不安全的操作中仍然受到借用检查器的限制，因此仍然存在许多安全检查，而在开发人员必须转向像C这样的语言时则不存在。
+
+
+#### Summary
+
+在本章中，我们已经介绍了使用unsafe关键字所带来的能力，以及通过利用这些能力所承担的责任。我们还讨论了编写不安全的unsafe代码的后果，以及你应该将unsafe视为一种向编译器发誓的方式，即你已经手动检查了所指示的代码仍然是安全的。在下一章中，我们将深入探讨Rust中的并发性，并了解如何让你闪亮的新计算机上的所有核心朝着同一个方向努力！
+
+### 10 CONCURRENCY (AND PARALLELISM)
 
 With this chapter I hope to provide you
 with all the information and tools you’ll
@@ -3124,15 +2966,15 @@ application. Instead, my goal is to give you sufficient
 understanding of the underlying mechanisms
 that you’re equipped to wield them yourself for whatever
 you may need them for.
-Concurrency comes in three flavors: single-thread concurrency (like
+
+- Concurrency comes in three flavors: single-thread concurrency (like
 with async/await, as we discussed in Chapter 8), single-core multithreaded
 concurrency, and multicore concurrency, which yields true parallelism.
-168 Chapter 10
 Each flavor allows the execution of concurrent tasks in your program to be
 interleaved in different ways. There are even more subflavors if you take the
 details of operating system scheduling and preemption into account, but we
 won’t get too deep into that.
-At the type level, Rust represents only one aspect of concurrency: multithreading.
+- At the type level, Rust represents only one aspect of concurrency: multithreading.
 Either a type is safe for use by more than one thread, or it is not.
 Even if your program has multiple threads (and so is concurrent) but only
 one core (and so is not parallel), Rust must assume that if there are multiple
@@ -3141,7 +2983,7 @@ talking about apply equally whether two threads actually execute in parallel
 or not, so to keep the language simple, I’ll be using the word concurrency
 in the informal sense of “things running more or less at the same time”
 throughout this chapter. When the distinction is important, I’ll call that out.
-What’s particularly neat about Rust’s approach to type-based safe
+- What’s particularly neat about Rust’s approach to type-based safe
 multithreading
 is that it is not a feature of the compiler, but rather a library
 feature that developers can extend to develop sophisticated concurrency
@@ -3149,7 +2991,7 @@ contracts. Since thread safety is expressed in the type system through Send
 and Sync implementations and bounds, which propagate all the way out
 to application code, the thread safety of the entire program is checked
 through type checking alone.
-The Rust Programming Language already covers most of the basics when it
+- The Rust Programming Language already covers most of the basics when it
 comes to concurrency, including the Send and Sync traits, Arc and Mutex, and
 channels. I therefore won’t reiterate much of that here, except where it’s
 worth repeating something specifically in the context of some other topic.
@@ -3159,12 +3001,16 @@ explore how concurrency and asynchrony interact (and how they don’t)
 before diving into how to use atomic operations to implement lower-level
 concurrent operations. Finally, I’ll close out the chapter with some advice
 for how to retain your sanity when working with concurrent code.
-The Trouble with Concurrency
+
+#### The Trouble with Concurrency
+
 Before we dive into good patterns for concurrent programming and the
 details of Rust’s concurrency mechanisms, it’s worth taking some time to
 understand why concurrency is challenging in the first place. That is, why
 do we need special patterns and mechanisms for concurrent code?
-Correctness
+
+##### Correctness
+
 The primary difficulty in concurrency is coordinating access—in particular,
 write access—to a resource that is shared among multiple threads. If lots of
 threads want to share a resource solely for the purposes of reading it, then
@@ -3177,7 +3023,8 @@ Concurrency (and Parallelism) 169
 safeguards in place, the second thread may read partially overwritten state,
 clobber parts of what the first thread wrote, or fail to see the first thread’s
 write at all! In general, all data races are considered undefined behavior.
-Data races are a part of a broader class of problems that primarily,
+
+- Data races are a part of a broader class of problems that primarily,
 though not exclusively, occur in a concurrent setting: race conditions. A race
 condition occurs whenever multiple outcomes are possible from a sequence
 of instructions, depending on the relative timing of other events in the
@@ -3187,7 +3034,9 @@ occurrence. Race conditions, unlike data races, are not inherently bad,
 and are not considered undefined behavior. However, they are a breeding
 ground for bugs when particularly peculiar races occur, as you’ll see
 throughout this chapter.
-Performance
+
+###### Performance
+
 Often, developers introduce concurrency into their programs in the
 hope of increasing performance. Or, to be more precise, they hope that
 concurrency will enable them to perform more operations per second in
@@ -3200,7 +3049,8 @@ about concurrency, which is often framed in terms of scalability. Scalability
 in this context means “the performance of this program scales with the
 number of cores,” implying that if you give your program more cores, its
 performance improves.
-While achieving such a speedup is possible, it’s harder than it seems.
+
+- While achieving such a speedup is possible, it’s harder than it seems.
 The ultimate goal in scalability is linear scalability, where doubling the number
 of cores doubles the amount of work your program completes per unit
 of time. Linear scalability is also often called perfect scalability. However, in
@@ -3210,7 +3060,7 @@ from one core to two, but adding more cores yields diminishing returns.
 Some programs even experience negative scaling, where giving the program
 access to more cores reduces throughput, usually because the many threads
 are all contending for some shared resource.
-It might help to think of a group of people trying to pop all the bubbles
+- It might help to think of a group of people trying to pop all the bubbles
 on a piece of bubble wrap—adding more people helps initially, but at some
 point you get diminishing returns as the crowding makes any one person’s
 job harder. If the humans involved are particularly ineffective, your group
@@ -3220,8 +3070,8 @@ execute in parallel is called contention and is the archnemesis of scaling well.
 Contention can arise in a number of ways, but the primary offenders are
 mutual exclusion, shared resource exhaustion, and false sharing.
 
-170 Chapter 10
-Mutual Exclusion
+###### Mutual Exclusion
+
 When only a single concurrent task is allowed to execute a particular piece
 of code at any one time, we say that execution of that segment of code is
 mutually exclusive—if one thread executes it, no other thread can do so
@@ -3232,7 +3082,8 @@ exclusion can also happen implicitly, however. For example, if you spin up
 a thread to manage a shared resource and send jobs to it over an mpsc channel,
 that thread effectively implements mutual exclusion, since only one
 such job gets to execute at a time.
-Mutual exclusion can also occur when invoking operating system or
+
+- Mutual exclusion can also occur when invoking operating system or
 library calls that internally enforce single-threaded access to a critical section.
 For example, for many years, the standard memory allocator required
 mutual exclusion for some allocations, which made memory allocation an
@@ -3242,15 +3093,19 @@ they should be independent, such as creating two files with different names
 in the same directory, may end up having to happen sequentially inside the
 kernel.
 **NOTE** Scalable concurrent allocations is the raison d’être for the jemalloc memory allocator!
-Mutual exclusion is the most obvious barrier to parallel speedup since,
+
+- Mutual exclusion is the most obvious barrier to parallel speedup since,
 by definition, it forces serial execution of some portion of your program.
 Even if you make the remainder of your program scale with the number of
 cores perfectly, the total speedup you can achieve is limited by the length of
 the mutually exclusive, serial section. Be mindful of your mutually exclusive
 sections, and seek to restrict them to only where strictly necessary.
+
 **NOTE** For the theoretically minded, the limits on the achievable speedup as a result of mutually
 exclusive sections of code can be computed using Amdahl’s law.
-Shared Resource Exhaustion
+
+###### Shared Resource Exhaustion
+
 Unfortunately, even if you achieve perfect concurrency within your tasks,
 the environment those tasks need to interact with may itself not be perfectly
 scalable. The kernel can handle only so many sends on a given TCP socket
@@ -3262,13 +3117,14 @@ hardware!), so we won’t talk much more about this topic in this chapter. Just
 remember that scalability is rarely something you can “achieve,” and more
 something you just strive for.
 
-Concurrency (and Parallelism) 171
-False Sharing
+###### False Sharing
+
 False sharing occurs when two operations that shouldn’t contend with one
 another contend anyway, preventing efficient simultaneous execution. This
 usually happens because the two operations happen to intersect on some
 shared resource even though they use unrelated parts of that resource.
-The simplest example of this is lock oversharing, where a lock guards
+
+- The simplest example of this is lock oversharing, where a lock guards
 some composite state, and two operations that are otherwise independent
 both need to take the lock to update their particular parts of the state.
 This in turn means the operations must execute serially instead of in parallel.
@@ -3285,7 +3141,7 @@ critical section entirely by using a lock-free version of the underlying algorit
 though those are also tricky to get right. Ultimately, false sharing is a
 hard problem to solve, and there isn’t a single catchall solution—but identifying
 the problem is a good start.
-A more subtle example of false sharing occurs on the CPU level, as we
+- A more subtle example of false sharing occurs on the CPU level, as we
 discussed briefly in Chapter 2. The CPU internally operates on memory in
 terms of cache lines—longer sequences of consecutive bytes in memory—
 rather than individual bytes, to amortize the cost of memory accesses. For
@@ -3295,7 +3151,7 @@ multiple of 64 bytes. The false sharing comes into play when two cores
 want to update the value of two different bytes that happen to fall on the
 same cache line; those updates must execute sequentially even though the
 updates are logically disjoint.
-This might seem too low-level to matter, but in practice this kind of
+- This might seem too low-level to matter, but in practice this kind of
 false sharing can decimate the parallel speedup of an application. Imagine
 that you allocate an array of integer values to indicate how many operations
 each thread has completed, but the integers all fall within the same cache
@@ -3303,13 +3159,13 @@ line—now, all your otherwise parallel threads will contend on that one
 cache line for every operation they perform. If the operations are relatively
 quick, most of your execution time may end up being spent contending on
 those counters!
-The trick to avoiding false cache line sharing is to pad your values so
+- The trick to avoiding false cache line sharing is to pad your values so
 that they are the size of a cache line. That way, two adjacent values always
 fall on different cache lines. But of course, this also inflates the size of your
 data structures, so use this approach only when benchmarks indicate a
 problem.
-172 Chapter 10
-THE COST OF SCALABILITY
+
+**THE COST OF SCALABILITY**
 A somewhat orthogonal aspect of concurrency that you should be mindful of is
 the cost of introducing concurrency in the first place. Compilers are really good
 at optimizing single-threaded code—they’ve been doing it for a long time, after
