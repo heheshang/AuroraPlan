@@ -3331,7 +3331,6 @@ walk through how to align Rust types with types defined in other languages
 and explore some of the intricacies of allowing data to flow across the FFI
 boundary. Finally, we’ll talk about some of the tools you’ll likely want to use
 if you’re doing any nontrivial amount of FFI.
-194 Chapter 11
 **NOTE** While I often refer to FFI as being about crossing the boundary between one language
 and another, FFI can also occur entirely inside Rust-land. If one Rust program shares
 memory with another Rust program but the two aren’t compiled together—say, if you’re
@@ -3422,7 +3421,6 @@ correct cross-referenced addresses for any shared symbols.
 A symbol can be linked either statically or dynamically. Static linking
 is the simplest, as each reference to a symbol is simply replaced with the
 address of that symbol’s definition. Dynamic linking, on the other hand,
-196 Chapter 11
 ties each reference to a symbol to a bit of generated code that tries to find
 the symbol’s definition when the program runs. We’ll talk more about these
 linking modes a little later. Rust generally defaults to static linking for Rust
@@ -3466,7 +3464,6 @@ unsafe to access.
 The procedure to declare FFI functions is very similar. In Listing 11-2,
 we make hello_rust accessible to non-Rust code and pull in the external
 hello_foreign function.
-Foreign Function Interfaces 197
 
 # [no_mangle]
 
