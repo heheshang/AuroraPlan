@@ -2480,7 +2480,7 @@ async fn server(socket: TcpListener) -> Result<()> {
 清单8-15：使用手动执行器处理连接
 
 - 这至少可以同时处理多个连接，但是它非常复杂。而且效率不高，因为现在的代码在已有连接和接受新连接之间来回切换。它必须每次都检查每个连接，因为它不知道哪些连接可以取得进展（如果有的话）。它也不能在任何时候等待，因为那样会阻止其他future取得进展。你可以实现自己的唤醒器，以确保代码只轮询可以取得进展的future，但最终这将走向开发自己的迷你执行器的道路。
-- 只使用一个任务来处理服务器的所有客户端连接的另一个缺点是服务器最终变成了单线程。只有一个任务，并且为了轮询它，代码必须持有对任务的未来的独占引用（poll接受Pin<&mut Self>），这只能由一个线程持有。
+- 只使用一个任务来处理服务器的所有客户端连接的另一个缺点是服务器最终变成了单线程。只有一个任务，并且为了轮询它，代码必须持有对任务的Future的独占引用（poll接受Pin<&mut Self>），这只能由一个线程持有。
 - 解决方案是将每个客户端future作为自己的任务，并由执行器在任务之间进行多路复用。你可以通过生成future来实现这一点。执行器将继续在服务器future上阻塞，但如果无法在该future上取得进展，它将在后台使用执行机制来在其他任务上取得进展。最重要的是，如果执行器是多线程的，并且你的客户端futures是Send的，它可以并行运行它们，因为它可以同时持有对不同任务的&muts。清单8-16展示了这可能是什么样子。
 
 ```rust 
@@ -2495,9 +2495,9 @@ async fn server(socket: TcpListener) -> Result<()> {
 }
 
 ```
-清单8-16：生成未来以创建更多可以同时轮询的任务
+清单8-16：生成Future以创建更多可以同时轮询的任务
 
-- 当你生成一个未来并将其作为任务时，它有点像生成一个线程。未来在后台继续运行，并与执行器给定的任何其他任务并发地进行多路复用。然而，与生成的线程不同，生成的任务仍然依赖于执行器的轮询。如果执行器停止运行，要么因为你放弃了它，要么因为你的代码不再运行执行器的代码，那些生成的任务将停止取得进展。在服务器示例中，想象一下，如果主服务器未来由于某种原因解析。由于执行器已经将控制权返回给你的代码，它无法继续做任何事情。多线程执行器通常会生成后台线程，即使执行器将控制权返回给用户的代码，它们仍然会继续轮询任务，但并非所有执行器都会这样做，所以在依赖这种行为之前，请检查你的执行器！
+- 当你生成一个Future并将其作为任务时，它有点像生成一个线程。Future在后台继续运行，并与执行器给定的任何其他任务并发地进行多路复用。然而，与生成的线程不同，生成的任务仍然依赖于执行器的轮询。如果执行器停止运行，要么因为你放弃了它，要么因为你的代码不再运行执行器的代码，那些生成的任务将停止取得进展。在服务器示例中，想象一下，如果主服务器Future由于某种原因解析。由于执行器已经将控制权返回给你的代码，它无法继续做任何事情。多线程执行器通常会生成后台线程，即使执行器将控制权返回给用户的代码，它们仍然会继续轮询任务，但并非所有执行器都会这样做，所以在依赖这种行为之前，请检查你的执行器！
 
 #### Summary
 
@@ -2546,7 +2546,7 @@ impl<T> SomeType<T> {
 - 这两个清单在使用unsafe方面有所不同，因为它们体现了不同的约定。decr要求调用者在调用该方法时要小心，而as_ref则假设调用者在调用其他不安全方法（如decr）时已经小心了。为了理解这一点，想象一下SomeType实际上是一个类似Rc的引用计数类型。尽管decr只是减少一个数字，但这个减少可能通过安全方法as_ref触发未定义行为。如果你调用decr，然后丢弃给定T的倒数第二个Rc，引用计数将降为零，T将被丢弃 - 但程序可能仍然在最后一个Rc上调用as_ref，并得到一个悬空引用。
 **注意** 未定义行为描述了在运行时违反语言不变量的程序的后果。一般来说，如果一个程序触发了未定义行为，其结果是完全不可预测的。我们将在本章后面更详细地讨论未定义行为。
 - 相反，只要没有办法使用安全代码破坏Rc的引用计数，就可以安全地解引用Rc内部的指针，就像as_ref的代码所做的那样——&self的存在证明指针仍然有效。我们可以利用这一点，为调用者提供一个安全的API，让其访问一个本来是不安全操作的核心部分，这是如何负责地使用不安全代码的关键。
-- 由于历史原因，每个不安全函数在 Rust 中都包含一个隐式的不安全块。也就是说，如果你声明了一个不安全函数，你可以在该函数内部调用任何不安全的方法或原始操作。然而，这个决定现在被认为是一个错误，并且正在通过已经被接受和实施的 RFC 2585 进行撤销。这个 RFC 警告说，如果一个不安全函数在内部执行不安全操作而没有显式的不安全块，那么这是一个错误。这个 lint 在 Rust 的未来版本中也可能成为一个硬错误。这个想法是为了减少“脚枪半径”——如果每个不安全函数都是一个巨大的不安全块，那么你可能会在不知情的情况下执行不安全操作！例如，在清单9-1中的decr函数中，根据当前的规则，你也可以添加*std::ptr::null()而不需要任何不安全的注释。
+- 由于历史原因，每个不安全函数在 Rust 中都包含一个隐式的不安全块。也就是说，如果你声明了一个不安全函数，你可以在该函数内部调用任何不安全的方法或原始操作。然而，这个决定现在被认为是一个错误，并且正在通过已经被接受和实施的 RFC 2585 进行撤销。这个 RFC 警告说，如果一个不安全函数在内部执行不安全操作而没有显式的不安全块，那么这是一个错误。这个 lint 在 Rust 的Future版本中也可能成为一个硬错误。这个想法是为了减少“脚枪半径”——如果每个不安全函数都是一个巨大的不安全块，那么你可能会在不知情的情况下执行不安全操作！例如，在清单9-1中的decr函数中，根据当前的规则，你也可以添加*std::ptr::null()而不需要任何不安全的注释。
 - 作为标记的unsafe和作为启用不安全操作机制的unsafe块之间的区别很重要，因为你必须以不同的方式思考它们。一个unsafe fn向调用者表示，在调用该函数时必须小心，并且必须确保函数的文档中所述的安全不变量成立。
 - 与此同时，一个不安全块意味着编写该块的人仔细检查了其中执行的任何不安全操作的安全不变量是否成立。如果你想要一个近似于现实世界的类比，不安全函数是一个无符号合同，要求调用代码的作者“郑重承诺 X、Y 和 Z”。与此同时，unsafe {} 是调用代码的作者对块中包含的所有不安全合同的签署。在我们继续阅读本章的过程中，请记住这一点。
 
@@ -3020,7 +3020,7 @@ Rust有三种常见的并发模式：共享内存并发、工作池和actor模�
 
 ##### Worker Pools
 
-在工作池模型中，许多相同的线程从共享的作业队列中接收作业，然后完全独立地执行它们。例如，Web服务器通常有一个处理传入连接的工作池，而用于异步代码的多线程运行时通常使用工作池来集体执行应用程序的所有未来任务（或者更准确地说，是顶级任务）。
+在工作池模型中，许多相同的线程从共享的作业队列中接收作业，然后完全独立地执行它们。例如，Web服务器通常有一个处理传入连接的工作池，而用于异步代码的多线程运行时通常使用工作池来集体执行应用程序的所有Future任务（或者更准确地说，是顶级任务）。
 - 共享内存并发和工作池之间的界限通常很模糊，因为工作池倾向于使用共享内存并发来协调它们从队列中获取作业以及如何将未完成的作业返回到队列中。例如，假设您正在使用数据并行库rayon在并行中对向量的每个元素执行某个函数。在幕后，rayon会启动一个工作池，将向量分割成子范围，然后将子范围分配给工作池中的线程。当工作池中的线程完成一个范围时，rayon会安排它开始处理下一个未处理的子范围。向量在所有工作线程之间共享，并且线程通过支持工作窃取的共享内存队列类似的数据结构进行协调。
 - 工作窃取是大多数工作池的关键特性。基本原理是，如果一个线程提前完成了工作，并且没有更多未分配的工作可用，那么该线程可以窃取已经分配给其他工作线程但尚未开始的任务。并不是所有的任务完成所需的时间都相同，因此即使每个工作线程都分配了相同数量的任务，有些工作线程可能会比其他工作线程更快地完成任务。这些提前完成的线程不应该坐在那里等待那些执行时间较长的任务完成，而是应该帮助那些落后的线程，以便整个操作能够更早地完成。
 - 实现支持这种工作窃取的数据结构并不容易，因为线程不断尝试从彼此那里窃取工作会带来显著的开销，但这个特性对于高性能的工作池至关重要。如果你发现自己需要一个工作池，通常最好使用一个已经经过大量工作的工作池，或者至少重用现有工作池的数据结构，而不是从头开始编写一个。
@@ -3032,149 +3032,41 @@ Rust有三种常见的并发模式：共享内存并发、工作池和actor模�
 
 ##### Actors
 
-演员并发模型在许多方面与工作池模型相反。工作池有许多相同的线程共享一个作业队列，而演员模型有许多单独的作业队列，每个队列对应一个作业“主题”。每个作业队列都输入到特定的演员中，该演员处理与应用程序状态的一个子集相关的所有作业。该状态可以是数据库连接、文件、度量收集数据结构或任何其他您可以想象到许多线程可能需要访问的结构。无论是什么，一个单独的演员拥有该状态，如果某个任务想要与该状态交互，它需要向拥有的演员发送一条消息，总结它希望执行的操作。当拥有的演员接收到该消息时，它执行指定的操作，并向询问的任务返回操作的结果（如果相关）。由于演员具有对其内部资源的独占访问权，除了消息传递所需的同步机制外，不需要任何锁或其他同步机制。
-- 演员模式的一个关键点是演员之间相互通信。例如，负责日志记录的演员如果需要写入文件和数据库表，它可能会向负责每个操作的演员发送消息，要求它们执行相应的操作，然后继续处理下一个日志事件。通过这种方式，演员模型更像是一个网络，而不是一个轮子上的辐条——用户对Web服务器的请求可能从一个负责该连接的演员开始，但在满足用户请求之前，可能会传递给系统中更深层次的演员产生数十、数百甚至数千条消息。
-- 演员模型并不要求每个演员都拥有自己的线程。相反，大多数演员系统建议应该有大量的演员，因此每个演员应该映射到一个任务而不是一个线程。毕竟，演员只在执行时需要对其封装的资源进行独占访问，并不关心它们是否在自己的线程上。事实上，演员模型经常与工作池模型结合使用——例如，使用多线程异步运行时Tokio的应用程序可以为每个演员生成一个异步任务，然后Tokio将每个演员的执行作为其工作池中的一个作业。因此，给定演员的执行可能会在工作池中的线程之间移动，因为演员进行暂停和恢复，但每次演员执行时，它都保持对其封装资源的独占访问。
-- 演员并发模型非常适合当您有许多相对独立的资源，并且在每个资源内部几乎没有或根本没有并发机会的情况下。例如，操作系统可能对每个硬件设备都有一个负责的演员，而Web服务器可能对每个后端数据库连接都有一个演员。如果您只需要少数演员，工作在演员之间的工作不均衡，或者某些演员变得很大，那么演员模型可能效果不佳，在这些情况下，您的应用程序可能会受到系统中单个演员执行速度的瓶颈限制。由于每个演员都希望对其所在的世界片段拥有独占访问权，因此您无法轻松地并行执行该瓶颈演员的执行。
+Acotor并发模型在许多方面与工作池模型相反。工作池有许多相同的线程共享一个作业队列，而Acotor模型有许多单独的作业队列，每个队列对应一个作业“主题”。每个作业队列都输入到特定的Acotor中，该Acotor处理与应用程序状态的一个子集相关的所有作业。该状态可以是数据库连接、文件、度量收集数据结构或任何其他您可以想象到许多线程可能需要访问的结构。无论是什么，一个单独的Acotor拥有该状态，如果某个任务想要与该状态交互，它需要向拥有的Acotor发送一条消息，总结它希望执行的操作。当拥有的Acotor接收到该消息时，它执行指定的操作，并向询问的任务返回操作的结果（如果相关）。由于Acotor具有对其内部资源的独占访问权，除了消息传递所需的同步机制外，不需要任何锁或其他同步机制。
+- Acotor模式的一个关键点是Acotor之间相互通信。例如，负责日志记录的Acotor如果需要写入文件和数据库表，它可能会向负责每个操作的Acotor发送消息，要求它们执行相应的操作，然后继续处理下一个日志事件。通过这种方式，Acotor模型更像是一个网络，而不是一个轮子上的辐条——用户对Web服务器的请求可能从一个负责该连接的Acotor开始，但在满足用户请求之前，可能会传递给系统中更深层次的Acotor产生数十、数百甚至数千条消息。
+- Acotor模型并不要求每个Acotor都拥有自己的线程。相反，大多数Acotor系统建议应该有大量的Acotor，因此每个Acotor应该映射到一个任务而不是一个线程。毕竟，Acotor只在执行时需要对其封装的资源进行独占访问，并不关心它们是否在自己的线程上。事实上，Acotor模型经常与工作池模型结合使用——例如，使用多线程异步运行时Tokio的应用程序可以为每个Acotor生成一个异步任务，然后Tokio将每个Acotor的执行作为其工作池中的一个作业。因此，给定Acotor的执行可能会在工作池中的线程之间移动，因为Acotor进行暂停和恢复，但每次Acotor执行时，它都保持对其封装资源的独占访问。
+- Acotor并发模型非常适合当您有许多相对独立的资源，并且在每个资源内部几乎没有或根本没有并发机会的情况下。例如，操作系统可能对每个硬件设备都有一个负责的Acotor，而Web服务器可能对每个后端数据库连接都有一个Acotor。如果您只需要少数Acotor，工作在Acotor之间的工作不均衡，或者某些Acotor变得很大，那么Acotor模型可能效果不佳，在这些情况下，您的应用程序可能会受到系统中单个Acotor执行速度的瓶颈限制。由于每个Acotor都希望对其所在的世界片段拥有独占访问权，因此您无法轻松地并行执行该瓶颈Acotor的执行。
 
 #### Asynchrony and Parallelism
 
-As we discussed in Chapter 8, asynchrony in Rust enables concurrency
-without parallelism—we can use constructs like selects and joins to have
-a single thread poll multiple futures and continue when one, some, or all
-of them complete. Because there is no parallelism involved, concurrency
-with futures does not fundamentally require those futures to be Send. Even
-spawning a future to run as an additional top-level task does not fundamentally
-require Send, since a single executor thread can manage the polling of
-many futures at once.
+正如我们在第8章中讨论的那样，Rust中的异步性使得并发成为可能，而无需并行性 - 我们可以使用选择和连接等构造来使单个线程轮询多个Future，并在其中一个、一些或全部完成时继续执行。由于没有涉及并行性，使用Future的并发性并不基本要求这些Future是可发送的（Send）。即使将Future作为额外的顶级任务来运行也不基本要求Send，因为单个执行器线程可以同时管理多个Future的轮询。
 
-- However, in most cases, applications want both concurrency and parallelism.
-For example, if a web application constructs a future for each incoming
-connection and so has many active connections at once, it probably wants the
-asynchronous executor to be able to take advantage of more than one core
-on the host computer. That won’t happen naturally: your code has to explicitly
-tell the executor which futures can run in parallel and which cannot.
-- In particular, two pieces of information must be given to the executor
-to let it know that it can spread the work in the futures across a worker pool
-of threads. The first is that the futures in question are Send—if they aren’t,
-the executor is not allowed to send the futures to other threads for processing,
-and no parallelism is possible; only the thread that constructed such
-futures can poll them.
-- The second piece of information is how to split the futures into tasks
-that can operate independently. This ties back to the discussion of tasks versus
-futures from Chapter 8: if one giant Future contains a number of Future
-instances that themselves correspond to tasks that can run in parallel, the
-executor must still call poll on the top-level Future, and it must do so from
-a single thread, since poll requires &mut self. Thus, to achieve parallelism
-with futures, you have to explicitly spawn the futures you want to be able to
-run in parallel. Also, because of the first requirement, the executor function
-you use to do so will require that the passed-in Future is Send.
+- 然而，在大多数情况下，应用程序既需要并发性又需要并行性。例如，如果一个Web应用程序为每个传入连接构建一个Future，并且同时有许多活动连接，那么它可能希望异步执行器能够利用主机计算机上的多个核心。这不会自然发生：您的代码必须明确告诉执行器哪些Future可以并行运行，哪些不能。
+- 特别是，执行器需要提供两个信息，以便让它知道可以将Future的工作分散到一个线程池中。第一个信息是相关的Future是可发送的（Send）- 如果它们不是可发送的，执行器就不允许将这些Future发送到其他线程进行处理，因此无法实现并行性；只有构造这样的Future的线程才能对其进行轮询。
+- 第二个信息是如何将Future分割为可以独立运行的任务。这与第8章中关于任务与Future的讨论有关：如果一个巨大的Future包含了一些Future实例，它们本身对应可以并行运行的任务，那么执行器仍然必须调用顶层Future的轮询，并且必须从单个线程中进行，因为轮询需要 &mut self。因此，要实现Future的并行性，您必须显式地生成您希望能够并行运行的Future。此外，由于第一个要求，用于执行此操作的执行器函数将要求传入的Future是可发送的（Send）。
 
-**ASYNCHRONOUS SYNCHRONIZATION PRIMITIVES**
-Most of the synchronization primitives that exist for blocking code (think
-std::sync) also have asynchronous counterparts. There are asynchronous variants
-of channels, mutexes, reader/writer locks, barriers, and all sorts of other
-similar constructs. We need these because, as discussed in Chapter 8, blocking
-inside a future will hold up other work the executor may need to do, and so is
-inadvisable.
-- However, the asynchronous versions of these primitives are often slower
-than their synchronous counterparts because of the additional machinery
-needed to perform the necessary wake-ups. For that reason, you may want to
-use synchronous synchronization primitives even in asynchronous contexts whenever
-the use does not risk blocking the executor. For example, while it’s generally
-true that acquiring a Mutex might block for a long time, that might not be true for
-a particular Mutex that, perhaps, is acquired only rarely, and only ever for short
-periods of time. In that case, blocking for the short time until the Mutex becomes
-available again might not actually cause any problems. You will want to make
-sure that you never yield or perform other long-running operations while holding
-the MutexGuard, but barring that you shouldn’t run into problems.
-- As always with such optimizations, though, make sure you measure first,
-and choose only the synchronous primitive if it nets you significant performance
-improvements. If it does not, the additional footguns introduced by using a synchronous
-primitive in an asynchronous context are probably not worth it.
+**异步同步原语**
+大多数用于阻塞代码的同步原语（例如std::sync）也有异步版本。存在异步通道、互斥锁、读写锁、屏障和各种其他类似构造的异步变体。我们需要这些原语，因为如第8章所讨论的，在Future内部阻塞会阻塞执行器可能需要执行的其他工作，因此是不可取的。
+- 然而，这些原语的异步版本通常比它们的同步对应版本慢，因为需要额外的机制来执行必要的唤醒操作。因此，在异步上下文中，即使使用不会阻塞执行器的情况下，您可能仍希望使用同步的同步原语。例如，虽然通常获取互斥锁可能会阻塞很长时间，但对于一个特定的互斥锁来说，这可能并不是真实的情况，也许它只会很少地被获取，并且只会在很短的时间内被获取。在这种情况下，阻塞一段时间直到互斥锁再次可用可能实际上不会引起任何问题。您需要确保在持有MutexGuard时不要放弃或执行其他长时间运行的操作，但除此之外，您不应该遇到问题。
+- 然而，像这样的优化总是要先进行测量，只有在同步原语带来显著性能改进时才选择同步原语。如果没有带来性能改进，那么在异步上下文中使用同步原语引入的额外问题可能不值得。
 
 #### Lower-Level Concurrency
 
-The standard library provides the std::sync::atomic module, which provides
-access to the underlying CPU primitives, higher-level constructs like
-channels and mutexes are built with. These primitives come in the form
-of atomic types with names starting with Atomic—AtomicUsize, AtomicI32,
-AtomicBool, AtomicPtr, and so on—the Ordering type, and two functions
-called fence and compiler_fence. We’ll look at each of these over the next few
-sections.
-- These types are the blocks used to build any code that has to communicate
-between threads. Mutexes, channels, barriers, concurrent hash tables,
-lock-free stacks, and all other synchronization constructs ultimately rely on
-these few primitives to do their jobs. They also come in handy on their own
-for lightweight cooperation between threads where heavyweight synchronization
-like a mutex is excessive—for example, to increment a shared counter
-or set a shared Boolean to true.
-- The atomic types are special in that they have defined semantics for
-what happens when multiple threads try to access them concurrently. These
-types all support (mostly) the same API: load, store, fetch_*, and compare_
-exchange. In the rest of this section, we’ll look at what those do, how to use
-them correctly, and what they’re useful for. But first, we have to talk about
-low-level memory operations and memory ordering.
+标准库提供了std::sync::atomic模块，该模块提供了访问底层CPU原语的功能，高级构造如通道和互斥锁都是基于这些原语构建的。这些原语以原子类型的形式提供，名称以Atomic开头，例如AtomicUsize、AtomicI32、AtomicBool、AtomicPtr等，还有Ordering类型和两个名为fence和compiler_fence的函数。在接下来的几节中，我们将逐个讨论这些内容。
+- 这些类型是用于构建需要在线程之间进行通信的任何代码的基本组件。互斥锁、通道、屏障、并发哈希表、无锁栈以及所有其他同步构造最终都依赖于这几个基本原语来完成它们的工作。它们也可以单独使用，用于轻量级线程之间的协作，其中重量级的同步（如互斥锁）是过度的——例如，用于递增共享计数器或将共享布尔值设置为true。
+- 原子类型是特殊的，因为它们在多个线程尝试并发访问时具有定义好的语义。这些类型都支持（大部分）相同的API：load、store、fetch_*和compare_exchange。在本节的其余部分，我们将看看它们的作用、如何正确使用它们以及它们的用途。但首先，我们必须讨论低级内存操作和内存顺序。
 
 ##### Memory Operations
 
-Informally, we often refer to accessing variables as “reading from” or “writing
-to” memory. In reality, a lot of machinery between code uses a variable
-and the actual CPU instructions that access your memory hardware. It’s
-important to understand that machinery, at least at a high level, in order to
-understand how concurrent memory accesses behave.
+通常，我们非正式地将访问变量称为“从内存中读取”或“写入内存”。实际上，在代码使用变量和实际访问内存硬件的CPU指令之间有很多机制。至少在高层次上理解这些机制是很重要的，以了解并发内存访问的行为方式。
 
-- The compiler decides what instructions to emit when your program
-reads the value of a variable or assigns a new value to it. It is permitted to
-perform all sorts of transformations and optimizations on your code and
-may end up reordering your program statements, eliminating operations
-it deems redundant, or using CPU registers rather than actual memory to
-store intermediate computations. The compiler is subject to a number of
-restrictions on these transformations, but ultimately only a subset of your
-variable accesses actually end up as memory access instructions.
-- At the CPU level, memory instructions come in two main shapes: loads
-and stores. A load pulls bytes from a location in memory into a CPU register,
-and a store stores bytes from a CPU register into a location in memory.
-Loads and stores operate on small chunks of memory at a time: usually
-8 bytes or less on modern CPUs. If a variable access spans more bytes than
-can be accessed with a single load or store, the compiler automatically turns
-it into multiple load or store instructions, as appropriate. The CPU also has
-some leeway in how it executes a program’s instructions to make better use
-of the hardware and improve program performance. For example, modern
-CPUs often execute instructions in parallel, or even out of order, when they
-don’t have dependencies on each other. There are also several layers of caches
-between each CPU and your computer’s DRAM, which means that a load
-of a given memory location may not necessarily see the latest store to that
-memory location, going by wall-clock time.
-- In most code, the compiler and CPU are permitted to transform the
-code only in ways that don’t affect the semantics of the resulting program,
-so these transformations are invisible to the programmer. However, in the
-context of parallel execution, these transformations can have a significant
-impact on application behavior. Therefore, CPUs typically provide multiple
-different variations of the load and store instructions, each with different
-guarantees about how the CPU may reorder them and how they may be
-interleaved with parallel operations on other CPUs. Similarly, compilers (or
-rather, the language the compiler compiles) provide different annotations
-you can use to force particular execution constraints for some subset of
-their memory accesses. In Rust, those annotations come in the form of the
-atomic types and their methods, which we’ll spend the rest of this section
-picking apart.
+- 当程序读取变量的值或给变量赋新值时，编译器决定要生成哪些指令。它可以对代码进行各种转换和优化，可能会重新排序程序语句，消除它认为是多余的操作，或者使用CPU寄存器而不是实际内存来存储中间计算结果。编译器在这些转换上受到一些限制，但最终只有一部分变量访问会变成内存访问指令。
+- 在CPU级别上，内存指令有两种主要形式：加载和存储。加载将字节从内存中的某个位置拉入CPU寄存器，而存储将字节从CPU寄存器存储到内存中的某个位置。加载和存储每次操作一小块内存：通常是现代CPU上的8个字节或更少。如果变量访问跨越的字节数超过了单个加载或存储可以访问的范围，编译器会自动将其转换为多个适当的加载或存储指令。CPU在执行程序指令时也有一定的灵活性，以更好地利用硬件并提高程序性能。例如，现代CPU在没有彼此依赖关系时经常并行执行指令，甚至可以无序执行。在每个CPU和计算机的DRAM之间还有几层缓存，这意味着根据挂钟时间，对给定内存位置的加载可能不一定能看到对该内存位置的最新存储。
+- 在大多数代码中，编译器和CPU只能以不影响结果程序语义的方式转换代码，因此这些转换对程序员来说是不可见的。然而，在并行执行的上下文中，这些转换可能对应用程序行为产生重大影响。因此，CPU通常提供多个不同版本的加载和存储指令，每个指令对于CPU如何重新排序它们以及如何与其他CPU上的并行操作交错具有不同的保证。类似地，编译器（或者更准确地说，编译器编译的语言）提供了不同的注解，您可以使用这些注解来强制执行某些内存访问的特定执行约束。在Rust中，这些注解以原子类型及其方法的形式提供，我们将在本节的其余部分详细介绍它们。
 
 ##### Atomic Types
 
-Rust’s atomic types are so called because they can be accessed atomically—
-that is, the value of an atomic-type variable is written all at once and will
-never be written using multiple stores, guaranteeing that a load of that variable
-cannot observe that only some of the bytes composing the value have
-changed while others have not (yet). This is easiest understood by way of
-contrast with non-atomic types. For example, reassigning a new value to a
-tuple of type (i64, i64) typically requires two CPU store instructions, one
-for each 8-byte value. If one thread were to perform both of those stores,
-another thread could (if we ignore the borrow checker for a second) read
-the tuple’s value after the first store but before the second, and thus end up
-with an inconsistent view of the tuple’s value. It would end up reading the
-new value for the first element and the old value for the second element, a
-value that was never actually stored by any thread.
+Rust的原子类型之所以被称为原子类型，是因为它们可以以原子方式访问——也就是说，原子类型变量的值是一次性写入的，并且永远不会使用多个存储进行写入，从而保证对该变量的加载不会观察到只有部分字节组成的值发生了更改，而其他部分尚未更改（尚未）。通过与非原子类型进行对比，可以更容易地理解这一点。例如，将一个新值重新分配给类型为(i64, i64)的元组通常需要两个CPU存储指令，每个8字节值一个。如果一个线程执行了这两个存储操作，另一个线程（如果我们忽略借用检查器）可以在第一个存储操作之后但第二个存储操作之前读取元组的值，从而得到元组值的不一致视图。它将读取第一个元素的新值和第二个元素的旧值，这个值实际上从未被任何线程存储过。
 
 - The CPU can atomically access values only of certain sizes, so there are
 only a few atomic types, all of which live in the atomic module. Each atomic
@@ -3187,6 +3079,7 @@ back to later, so that the mapping between the code the programmer writes
 and the resulting CPU instructions is clearer. For example, AtomicI32::load
 performs a single load of a signed 32-bit value, and AtomicPtr::store performs
 a single store of a pointer-sized (64 bits on a 64-bit platform) value.
+
 ##### Memory Ordering
 Most of the methods on the atomic types take an argument of type Ordering,
 which dictates the memory ordering restrictions the atomic operation is
