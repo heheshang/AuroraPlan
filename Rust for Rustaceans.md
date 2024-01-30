@@ -3009,156 +3009,33 @@ unsafe impl<#[may_dangle] T> for Box<T> { /_ ... _/ }
 
 #### Concurrency Models
 
-Rust has three patterns for adding concurrency to your programs that
-you’ll come across fairly often: shared memory concurrency, worker pools,
-and actors. Going through every way you could add concurrency in detail
-would take a book of its own, so here I’ll focus on just these three patterns.
+Rust有三种常见的并发模式：共享内存并发、工作池和actor模式。详细介绍每种添加并发的方式需要一本专门的书籍，所以在这里我将重点介绍这三种模式。
 
 ##### Shared Memory
 
-Shared memory concurrency is, conceptually, very straightforward: the
-threads cooperate by operating on regions of memory shared between
-them. This might take the form of state guarded by a mutex or stored in
-a hash map with support for concurrent access from many threads. The
-many threads may be doing the same task on disjoint pieces of data, such
-as if many threads perform some function over disjoint subranges of a Vec,
-or they may be performing different tasks that require some shared state,
-such as in a database where one thread handles user queries to a table
-while another optimizes the data structures used to store that table in the
-background.
-- When you use shared memory concurrency, your choice of data structures
-is significant, especially if the threads involved need to cooperate
-very closely. A regular mutex might prevent scaling beyond a very small
-number of cores, a reader/writer lock might allow many more concurrent
-reads at the cost of slower writes, and a sharded reader/writer lock might
-allow perfectly scalable reads at the cost of making writes highly disruptive.
-Similarly, some concurrent hash maps aim for good all-round performance
-while others specifically target, say, concurrent reads where writes are rare.
-In general, in shared memory concurrency, you want to use data structures
-that are specifically designed for something as close to your target use case
-as possible, so that you can take advantage of optimizations that trade off
-performance aspects your application does not care about for those it does.
-- Shared memory concurrency is a good fit for use cases where threads
-need to jointly update some shared state in a way that does not commute.
-That is, if one thread has to update the state s with some function f, and
-another has to update the state with some function g, and f(g(s)) != g(f(s)),
-then shared memory concurrency is likely necessary. If that is not the case,
-the other two patterns are likely better fits, as they tend to lead to simpler
-and more performant designs.
-**NOTE** Some problems have known algorithms that can provide concurrent shared memory
-operations without the use of locks. As the number of cores grows, these lock-free
-algorithms may scale better than lock-based algorithms, though they also often have
-slower per-core performance due to their complexity. As always with performance matters,
-benchmark first, then look for alternative solutions.
+共享内存并发在概念上非常简单：线程通过操作彼此共享的内存区域来进行协作。这可以采用由互斥锁保护的状态的形式，或者存储在支持多线程并发访问的哈希映射中。许多线程可以在不相交的数据片段上执行相同的任务，例如，如果许多线程在Vec的不相交子范围上执行某个函数，或者它们可以执行需要一些共享状态的不同任务，例如在数据库中，一个线程处理用户对表的查询，而另一个线程在后台优化用于存储该表的数据结构。
+- 当使用共享内存并发时，你选择的数据结构非常重要，特别是如果涉及的线程需要密切合作。普通的互斥锁可能无法扩展到非常小的核心数量之外，读写锁可能允许更多并发读取，但写入速度较慢，分片的读写锁可能允许完全可扩展的读取，但写入会产生很大的干扰。同样，一些并发哈希映射可能追求全面的性能表现，而其他一些则专注于例如并发读取而写入很少的情况。总的来说，在共享内存并发中，你希望使用专门为接近目标用例的数据结构，这样你就可以利用优化，以在你的应用程序关心的性能方面进行权衡，而不关心其他方面。
+- 共享内存并发适用于需要多个线程共同更新某个共享状态的情况，而这种更新方式不可交换。也就是说，如果一个线程需要使用某个函数f更新状态s，而另一个线程需要使用某个函数g更新状态，且f(g(s)) != g(f(s))，那么共享内存并发可能是必要的。如果不是这种情况，其他两种模式可能更适合，因为它们往往会导致更简单和更高效的设计。
+**注意** 一些问题有已知的算法，可以在没有使用锁的情况下提供并发的共享内存操作。随着核心数量的增加，这些无锁算法可能比基于锁的算法更具扩展性，尽管它们通常由于复杂性而具有较慢的每个核心性能。在性能问题上，始终先进行基准测试，然后寻找替代解决方案。
 
 ##### Worker Pools
 
-In the worker pool model, many identical threads receive jobs from a
-shared job queue, which they then execute entirely independently. Web
-servers, for example, often have a worker pool handling incoming connections,
-and multithreaded runtimes for asynchronous code tend to use a
-worker pool to collectively execute all of an application’s futures (or, more
-accurately, its top-level tasks).
-- The lines between shared memory concurrency and worker pools are
-often blurry, as worker pools tend to use shared memory concurrency to
-coordinate how they take jobs from the queue and how they return incomplete
-jobs back to the queue. For example, say you’re using the data parallelism
-library rayon to perform some function over every element of a vector
-in parallel. Behind the scenes rayon spins up a worker pool, splits the vector
-into subranges, and then hands out subranges to the threads in the pool.
-When a thread in the pool finishes a range, rayon arranges for it to start
-working on the next unprocessed subrange. The vector is shared among all
-the worker threads, and the threads coordinate through a shared memory
-queue–like data structure that supports work stealing.
-- Work stealing is a key feature of most worker pools. The basic premise
-is that if one thread finishes its work early, and there’s no more unassigned
-work available, that thread can steal jobs that have already been assigned to
-a different worker thread but haven’t been started yet. Not all jobs take the
-same amount of time to complete, so even if every worker is given the same
-number of jobs, some workers may end up finishing their jobs more quickly
-than others. Rather than sit around and wait for the threads that drew
-longer-running jobs to complete, those threads that finish early should help
-the stragglers so the overall operation is completed sooner.
-- It’s quite a task to implement a data structure that supports this kind
-of work stealing without incurring significant overhead from threads constantly
-trying to steal work from one another, but this feature is vital to a
-high-performance worker pool. If you find yourself in need of a worker
-pool, your best bet is usually to use one that has already seen a lot of work
-go into it, or at least reuse data structures from an existing one, rather than
-to write one yourself from scratch.
-- Worker pools are a good fit when the work that each thread performs is
-the same, but the data it performs it on varies. In a rayon parallel map operation,
-every thread performs the same map computation; they just perform
-it on different subsets of the underlying data. In a multithreaded asynchronous
-runtime, each thread simply calls Future::poll; they just call it on different
-futures. If you start having to distinguish between the threads in your
-thread pool, a different design is probably more appropriate.
-**CONNECTION POOLS**
-A connection pool is a shared memory construct that keeps a set of established
-connections and hands them out to threads that need a connection. It’s a common
-design pattern in libraries that manage connections to external services.
-If a thread needs a connection but one isn’t available, either a new connection
-is established or the thread is forced to block. When a thread is done with a
-connection, it returns that connection to the pool, and thus makes it available to
-other threads that may be waiting.
-- Usually, the hardest task for a connection pool is managing connection
-life cycles. A connection can be returned to the pool in whatever state it was
-put in by the last thread that used it. The connection pool therefore has to make
-sure any state associated with the connection, whether on the client or on the
-server, has been reset so that when the connection is subsequently used by
-another thread, that thread can act as though it was given a fresh, dedicated
-connection.
+在工作池模型中，许多相同的线程从共享的作业队列中接收作业，然后完全独立地执行它们。例如，Web服务器通常有一个处理传入连接的工作池，而用于异步代码的多线程运行时通常使用工作池来集体执行应用程序的所有未来任务（或者更准确地说，是顶级任务）。
+- 共享内存并发和工作池之间的界限通常很模糊，因为工作池倾向于使用共享内存并发来协调它们从队列中获取作业以及如何将未完成的作业返回到队列中。例如，假设您正在使用数据并行库rayon在并行中对向量的每个元素执行某个函数。在幕后，rayon会启动一个工作池，将向量分割成子范围，然后将子范围分配给工作池中的线程。当工作池中的线程完成一个范围时，rayon会安排它开始处理下一个未处理的子范围。向量在所有工作线程之间共享，并且线程通过支持工作窃取的共享内存队列类似的数据结构进行协调。
+- 工作窃取是大多数工作池的关键特性。基本原理是，如果一个线程提前完成了工作，并且没有更多未分配的工作可用，那么该线程可以窃取已经分配给其他工作线程但尚未开始的任务。并不是所有的任务完成所需的时间都相同，因此即使每个工作线程都分配了相同数量的任务，有些工作线程可能会比其他工作线程更快地完成任务。这些提前完成的线程不应该坐在那里等待那些执行时间较长的任务完成，而是应该帮助那些落后的线程，以便整个操作能够更早地完成。
+- 实现支持这种工作窃取的数据结构并不容易，因为线程不断尝试从彼此那里窃取工作会带来显著的开销，但这个特性对于高性能的工作池至关重要。如果你发现自己需要一个工作池，通常最好使用一个已经经过大量工作的工作池，或者至少重用现有工作池的数据结构，而不是从头开始编写一个。
+- 当每个线程执行的工作相同，但其操作的数据不同时，工作池是一个很好的选择。在rayon并行映射操作中，每个线程执行相同的映射计算；它们只是在底层数据的不同子集上执行。在多线程异步运行时中，每个线程只是简单地调用Future::poll；它们只是在不同的future上调用它。如果您开始区分线程池中的线程，那么可能需要选择不同的设计。
+**连接池**
+连接池是一个共享内存结构，它保存一组已建立的连接，并将它们分配给需要连接的线程。这是管理与外部服务的连接的库中常见的设计模式。
+如果一个线程需要连接，但没有可用的连接，要么建立一个新的连接，要么强制线程阻塞。当线程完成一个连接时，它将该连接返回给连接池，从而使其可供可能正在等待的其他线程使用。
+- 通常，连接池最困难的任务是管理连接的生命周期。连接可以以最后一个使用它的线程设置的任何状态返回到池中。因此，连接池必须确保与连接相关的任何状态（无论是客户端还是服务器端）都已重置，以便当连接随后被另一个线程使用时，该线程可以像获得一个新的专用连接一样操作。
 
 ##### Actors
 
-The actor concurrency model is, in many ways, the opposite of the worker
-pool model. Whereas the worker pool has many identical threads that
-share a job queue, the actor model has many separate job queues, one
-for each job “topic.” Each job queue feeds into a particular actor, which
-handles all jobs that pertain to a subset of the application’s state. That state
-might be a database connection, a file, a metrics collection data structure,
-or any other structure that you can imagine many threads may need to be
-able to access. Whatever it is, a single actor owns that state, and if some
-task wants to interact with that state, it needs to send a message to the
-owning actor summarizing the operation it wishes to perform. When the
-owning actor receives that message, it performs the indicated action and
-responds to the inquiring task with the result of the operation, if relevant.
-Concurrency (and Parallelism) 175
-Since the actor has exclusive access to its inner resource, no locks or other
-synchronization mechanisms are required beyond what’s needed for the
-messaging.
-- A key point in the actor pattern is that actors all talk to one another.
-If, say, an actor that is responsible for logging needs to write to a file and a
-database table, it might send off messages to the actors responsible for each
-of those, asking them to perform the respective actions, and then proceed
-to the next log event. In this way, the actor model more closely resembles a
-web than spokes on a wheel—a user request to a web server might start as a
-single request to the actor responsible for that connection but might transitively
-spawn tens, hundreds, or even thousands of messages to actors deeper
-in the system before the user’s request is satisfied.
-- Nothing in the actor model requires that each actor is its own thread. To
-the contrary, most actor systems suggest that there should be a large number
-of actors, and so each actor should map to a task rather than a thread. After
-all, actors require exclusive access to their wrapped resources only when
-they execute, and do not care whether they are on a thread of their own
-or not. In fact, very frequently, the actor model is used in conjunction with
-the worker pool model—for example, an application that uses the multithreaded
-asynchronous runtime Tokio can spawn an asynchronous task for
-each actor, and Tokio will then make the execution of each actor a job in its
-worker pool. Thus, the execution of a given actor may move from thread to
-thread in the worker pool as the actor yields and resumes, but every time the
-actor executes it maintains exclusive access to its wrapped resource.
-- The actor concurrency model is well suited for when you have many
-resources that can operate relatively independently, and where there is
-little or no opportunity for concurrency within each resource. For example,
-an operating system might have an actor responsible for each hardware
-device, and a web server might have an actor for each backend database
-connection. The actor model does not work so well if you need only a few
-actors, if work is skewed significantly among the actors, or if some actors
-grow large—in all of those cases, your application may end up being bottlenecked
-on the execution speed of a single actor in the system. And since
-actors each expect to have exclusive access to their little slice of the world,
-you can’t easily parallelize the execution of that one bottleneck actor.
+演员并发模型在许多方面与工作池模型相反。工作池有许多相同的线程共享一个作业队列，而演员模型有许多单独的作业队列，每个队列对应一个作业“主题”。每个作业队列都输入到特定的演员中，该演员处理与应用程序状态的一个子集相关的所有作业。该状态可以是数据库连接、文件、度量收集数据结构或任何其他您可以想象到许多线程可能需要访问的结构。无论是什么，一个单独的演员拥有该状态，如果某个任务想要与该状态交互，它需要向拥有的演员发送一条消息，总结它希望执行的操作。当拥有的演员接收到该消息时，它执行指定的操作，并向询问的任务返回操作的结果（如果相关）。由于演员具有对其内部资源的独占访问权，除了消息传递所需的同步机制外，不需要任何锁或其他同步机制。
+- 演员模式的一个关键点是演员之间相互通信。例如，负责日志记录的演员如果需要写入文件和数据库表，它可能会向负责每个操作的演员发送消息，要求它们执行相应的操作，然后继续处理下一个日志事件。通过这种方式，演员模型更像是一个网络，而不是一个轮子上的辐条——用户对Web服务器的请求可能从一个负责该连接的演员开始，但在满足用户请求之前，可能会传递给系统中更深层次的演员产生数十、数百甚至数千条消息。
+- 演员模型并不要求每个演员都拥有自己的线程。相反，大多数演员系统建议应该有大量的演员，因此每个演员应该映射到一个任务而不是一个线程。毕竟，演员只在执行时需要对其封装的资源进行独占访问，并不关心它们是否在自己的线程上。事实上，演员模型经常与工作池模型结合使用——例如，使用多线程异步运行时Tokio的应用程序可以为每个演员生成一个异步任务，然后Tokio将每个演员的执行作为其工作池中的一个作业。因此，给定演员的执行可能会在工作池中的线程之间移动，因为演员进行暂停和恢复，但每次演员执行时，它都保持对其封装资源的独占访问。
+- 演员并发模型非常适合当您有许多相对独立的资源，并且在每个资源内部几乎没有或根本没有并发机会的情况下。例如，操作系统可能对每个硬件设备都有一个负责的演员，而Web服务器可能对每个后端数据库连接都有一个演员。如果您只需要少数演员，工作在演员之间的工作不均衡，或者某些演员变得很大，那么演员模型可能效果不佳，在这些情况下，您的应用程序可能会受到系统中单个演员执行速度的瓶颈限制。由于每个演员都希望对其所在的世界片段拥有独占访问权，因此您无法轻松地并行执行该瓶颈演员的执行。
 
 #### Asynchrony and Parallelism
 
