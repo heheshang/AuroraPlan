@@ -3068,72 +3068,17 @@ Acotor并发模型在许多方面与工作池模型相反。工作池有许多�
 
 Rust的原子类型之所以被称为原子类型，是因为它们可以以原子方式访问——也就是说，原子类型变量的值是一次性写入的，并且永远不会使用多个存储进行写入，从而保证对该变量的加载不会观察到只有部分字节组成的值发生了更改，而其他部分尚未更改（尚未）。通过与非原子类型进行对比，可以更容易地理解这一点。例如，将一个新值重新分配给类型为(i64, i64)的元组通常需要两个CPU存储指令，每个8字节值一个。如果一个线程执行了这两个存储操作，另一个线程（如果我们忽略借用检查器）可以在第一个存储操作之后但第二个存储操作之前读取元组的值，从而得到元组值的不一致视图。它将读取第一个元素的新值和第二个元素的旧值，这个值实际上从未被任何线程存储过。
 
-- The CPU can atomically access values only of certain sizes, so there are
-only a few atomic types, all of which live in the atomic module. Each atomic
-type is of one of the sizes the CPU supports atomic access to, with multiple
-variations for things like whether the value is signed and to differentiate
-between an atomic usize and a pointer (which is of the same size as usize).
-Furthermore, the atomic types have explicit methods for loading and storing
-the values they hold, and a handful of more complex methods we’ll get
-back to later, so that the mapping between the code the programmer writes
-and the resulting CPU instructions is clearer. For example, AtomicI32::load
-performs a single load of a signed 32-bit value, and AtomicPtr::store performs
-a single store of a pointer-sized (64 bits on a 64-bit platform) value.
+- CPU只能以原子方式访问特定大小的值，因此只有少数几种原子类型，它们都位于atomic模块中。每种原子类型都是CPU支持原子访问的大小之一，有多个变体，用于区分值是否为有符号以及区分原子usize和指针（指针与usize大小相同）。此外，原子类型具有显式的加载和存储值的方法，以及一些稍后会介绍的更复杂的方法，以便程序员编写的代码与生成的CPU指令之间的映射更清晰。例如，AtomicI32::load执行对有符号32位值的单个加载，而AtomicPtr::store执行对指针大小（在64位平台上为64位）值的单个存储。
 
 ##### Memory Ordering
-Most of the methods on the atomic types take an argument of type Ordering,
-which dictates the memory ordering restrictions the atomic operation is
-subject to. Across different threads, loads and stores of an atomic value
-Concurrency (and Parallelism) 179
-may be sequenced by the compiler and CPU only in interleavings that are
-compatible with the requested memory ordering of each of the atomic
-operations on that atomic value. Over the next few sections, we’ll see some
-examples of why control over the ordering is important and necessary to get
-the expected semantics out of the compiler and CPU.
+大多数原子类型的方法都接受一个Ordering类型的参数，该参数决定了原子操作所受到的内存顺序限制。在不同的线程中，对原子值的加载和存储可能会被编译器和CPU按照每个原子操作所请求的内存顺序进行交错。在接下来的几节中，我们将看到一些示例，说明控制顺序对于获得预期的语义在编译器和CPU中是重要且必要的。
 
-- Memory ordering often comes across as counterintuitive, because we
-humans like to read programs from top to bottom and imagine that they
-execute line by line—but that’s not how the code actually executes when
-it hits the hardware. Memory accesses can be reordered, or even entirely
-elided, and writes on one thread may not immediately be visible to other
-threads, even if later writes in program order have already been observed.
+- 内存顺序经常让人感到反直觉，因为我们人类习惯从上到下阅读程序，并想象它们按行执行 - 但这不是代码在硬件上实际执行的方式。内存访问可以重新排序，甚至完全省略，并且一个线程上的写入可能不会立即对其他线程可见，即使程序顺序中的后续写入已经被观察到。
 
-- Think of it like this: each memory location sees a sequence of modifications
-coming from different threads, and the sequences of modifications for
-different memory locations are independent. If two threads T1 and T2 both
-write to memory location M, then even if T1 executed first as measured by
-a user with a stopwatch, T2’s write to M may still appear to have happened
-first for M absent any other constraints between the two threads’ execution.
-Essentially, the computer does not take wall-clock time into account when it determines
-the value of a given memory location—all that matter are the execution
-constraints the programmer puts on what constitutes a valid execution.
-For example, if T1 writes to M and then spawns thread T2, which then
-writes to M, the computer must recognize T1’s write as having happened
-first because T2’s existence depends on T1.
-- If that’s hard to follow, don’t fret—memory ordering can be mindbending,
-and language specifications tend to use very precise but not very
-intuitive wording to describe it. We can construct a mental model that’s
-easier to grasp, if a little simplified, by instead focusing on the underlying
-hardware architecture. Very basically, your computer memory is structured
-as a treelike hierarchy of storage where the leaves are CPU registers and
-the roots are the storage on your physical memory chips, often called main
-memory. Between the two are several layers of caches, and different layers
-of the hierarchy can reside on different pieces of hardware. When a
-thread performs a store to a memory location, what really happens is that
-the CPU starts a write request for the value in a given CPU register that
-then has to make its way up the memory hierarchy toward main memory.
-When a thread performs a load, the request flows up the hierarchy until it
-hits a layer that has the value available, and returns from there. Herein lies
-the problem: writes aren’t visible everywhere until all caches of the written
-memory location have been updated, but other CPUs can execute instructions
-against the same memory location at the same time, and weirdness
-ensues. Memory ordering, then, is a way to request precise semantics for
-what happens when multiple CPUs access a particular memory location for
-a particular operation.
-- With this in mind, let’s take a look at the Ordering type, which is the
-primary mechanism by which we, as programmers, can dictate additional
-constraints on what concurrent executions are valid.
-- Ordering is defined as an enum with the variants shown in Listing 10-1.
+- 可以这样理解：每个内存位置都会看到来自不同线程的一系列修改，而不同内存位置的修改序列是独立的。如果两个线程T1和T2都写入内存位置M，那么即使按照使用秒表测量的时间，T1先执行，T2对M的写入仍然可能在M上看起来先发生，除非两个线程之间存在其他约束。实际上，计算机在确定给定内存位置的值时不考虑挂钟时间，只关注程序员对什么构成有效执行的执行约束。例如，如果T1写入M，然后创建线程T2，然后T2写入M，计算机必须将T1的写入识别为先发生，因为T2的存在依赖于T1。
+- 如果这很难理解，不要担心——内存顺序可能令人费解，而语言规范往往使用非常精确但不太直观的措辞来描述它。我们可以构建一个更容易理解的心智模型，尽管有点简化，但是我们可以将重点放在底层的硬件架构上。非常基本地说，计算机内存被结构化为一个树状层次结构的存储，其中叶子节点是CPU寄存器，根节点是物理内存芯片上的存储，通常称为主内存。在两者之间有几层缓存，层次结构的不同层可以驻留在不同的硬件上。当线程对内存位置执行存储操作时，实际发生的是CPU启动了对给定CPU寄存器中的值的写入请求，然后该请求必须沿着内存层次结构向主内存传递。当线程执行加载操作时，请求沿着层次结构向上流动，直到命中具有可用值的层，然后从那里返回。问题就在这里：在所有缓存更新之前，写入不会在所有地方可见，但其他CPU可以同时对同一内存位置执行指令，这会导致奇怪的问题。因此，内存顺序是一种请求精确语义的方式，用于描述多个CPU对特定内存位置进行特定操作时发生的情况。
+- 有了这个理解，让我们来看一下Ordering类型，这是我们作为程序员可以用来指定额外约束的主要机制。
+- Ordering被定义为一个枚举类型，其变体如列表10-1所示。
 
 ```rust
 
@@ -3146,20 +3091,13 @@ enum Ordering {
 }
 
 ```
-Listing 10-1: The definition of Ordering
+列表10-1：Ordering的定义
 
-- Each of these places different restrictions on the mapping from source
-code to execution semantics, and we’ll explore each one in turn in the
-remainder of this section.
+- 每个变体对从源代码到执行语义的映射施加了不同的限制，我们将在本节的其余部分逐个探讨每个变体。
 
-##### Relaxed Ordering
+##### 松散顺序
 
-Relaxed ordering essentially guarantees nothing about concurrent
-access to the value beyond the fact that the access is atomic. In particular,
-relaxed ordering gives no guarantees about the relative ordering of memory
-accesses across different threads. This is the weakest form of memory
-ordering. Listing 10-2 shows a simple program in which two threads access
-two atomic variables using Ordering::Relaxed.
+松散顺序实际上对于并发访问值没有提供任何保证，除了访问是原子的。特别是，松散顺序不会对不同线程之间的内存访问的相对顺序提供任何保证。这是最弱的内存顺序形式。列表10-2展示了一个简单的程序，其中两个线程使用Ordering::Relaxed访问两个原子变量。
 
 ```rust 
 
@@ -3175,73 +3113,26 @@ let t2 = spawn(|| {
 });
 
 ```
-Listing 10-2: Two racing threads with Ordering::Relaxed
+代码清单10-2：使用Ordering::Relaxed的两个竞争线程
 
-- Looking at the thread spawned as t2, you might expect that r2 can
-never be true, since all values are false until the same thread assigns true to
-Y on the line after reading X. However, with a relaxed memory ordering, that
-outcome is completely possible. The reason is that the CPU is allowed to
-reorder the loads and stores involved. Let’s walk through exactly what happens
-here to make r2 = true possible.
-- First, the CPU notices that 4 doesn’t have to happen after 3, since 4
-doesn’t use any output or side effect of 3. That is, 4 has no execution dependency
-on 3. So, the CPU decides to reorder them for _waves hands_ reasons
-that’ll make your program go faster. The CPU thus goes ahead and executes 4
-first, setting Y = true, even though 3 hasn’t run yet. Then, t2 is put to sleep
-by the operating system and thread t1 executes a few instructions, or t1 simply
-executes on another core. In t1, the compiler must indeed run 1 first and
-then 2, since 2 depends on the value read in 1. Therefore, t1 reads true from
-Concurrency (and Parallelism) 181
-Y (written by 4) into r1 and then writes that back to X. Finally, t2 executes 3,
-which reads X and gets true, as was written by 2.
-- The relaxed memory ordering allows this execution because it imposes
-no additional constraints on concurrent execution. That is, under relaxed
-memory ordering, the compiler must ensure only that execution dependencies
-on any given thread are respected (just as if atomics weren’t involved);
-it need not make any promises about the interleaving of concurrent operations.
-Reordering 3 and 4 is permitted for a single-threaded execution, so
-it is permitted under relaxed ordering as well.
-- In some cases, this kind of reordering is fine. For example, if you have a
-counter that just keeps track of metrics, it doesn’t really matter when exactly
-it executes relative to other instructions, and Ordering::Relaxed is fine. In
-other cases, this could be disastrous: say, if your program uses r2 to figure
-out if security protections have already been set up, and thus ends up erroneously
-believing that they already have been.
-- You don’t generally notice this reordering when writing code that
-doesn’t make fancy use of atomics—the CPU has to promise that there is
-no observable difference between the code as written and what each thread
-actually executes, so everything seems like it runs in order just as you wrote
-it. This is referred to as respecting program order or evaluation order; the
-terms are synonyms.
+- 查看作为t2生成的线程，您可能会期望r2永远不会为true，因为在读取X之后，直到同一线程将true分配给Y的行之后，所有值都为false。然而，使用松散的内存顺序，这种结果是完全可能的。原因是CPU允许重新排序涉及的加载和存储操作。让我们详细说明一下发生了什么，以使r2 = true成为可能。
+- 首先，CPU注意到4不必在3之后发生，因为4不使用3的任何输出或副作用。也就是说，4对3没有执行依赖性。因此，CPU决定为了使程序运行更快而重新排序它们。CPU因此先执行4，将Y设置为true，即使3尚未运行。然后，操作系统将t2置于休眠状态，线程t1执行几条指令，或者t1在另一个核心上执行。在t1中，编译器确实必须先运行1，然后运行2，因为2依赖于1中读取的值。因此，t1从Y（由4写入）中读取true到r1，然后将其写回X。最后，t2执行3，读取X并得到true，就像2写入的那样。
+- 松散的内存顺序允许此执行，因为它对并发执行没有额外的约束。也就是说，在松散的内存顺序下，编译器只需确保对任何给定线程的执行依赖性得到尊重（就像没有原子操作一样）；它不需要对并发操作的交错做出任何承诺。重新排序3和4在单线程执行中是允许的，因此在松散顺序下也是允许的。
+- 在某些情况下，这种重新排序是可以接受的。例如，如果您有一个仅用于跟踪指标的计数器，那么它在相对于其他指令的执行时间上并不重要，Ordering::Relaxed就可以接受。在其他情况下，这可能是灾难性的：例如，如果您的程序使用r2来确定安全保护是否已经设置好，从而错误地认为它们已经设置好。
+- 当编写不使用原子操作的代码时，通常不会注意到这种重新排序 - CPU必须保证代码与每个线程实际执行的代码之间没有可观察的差异，因此一切似乎都按照您编写的顺序运行。这被称为尊重程序顺序或评估顺序；这些术语是同义词。
 
 ##### Acquire/Release Ordering
 
-At the next step up in the memory ordering hierarchy, we have
-Ordering::Acquire, Ordering::Release, and Ordering::AcqRel (acquire plus
-release). At a high level, these establish an execution dependency between
-a store in one thread and a load in another and then restrict how operations
-can be reordered with respect to that load and store. Crucially, these
-dependencies not only establish a relationship between a store and a load of
-a single value, but also put ordering constraints on other loads and stores in
-the threads involved. This is because every execution must respect the program
-order; if a load in thread B has a dependency on some store in thread
-A (the store in A must execute before the load in B), then any read or write
-in B after that load must also happen after that store in A.
+在内存顺序层次结构的下一个步骤中，我们有Ordering::Acquire、Ordering::Release和Ordering::AcqRel（acquire加上release）。在高层次上，这些建立了一个存储在一个线程中和加载在另一个线程中的执行依赖关系，并限制了操作在该加载和存储之间的重新排序方式。关键是，这些依赖关系不仅建立了一个存储和加载单个值之间的关系，还对涉及的线程中的其他加载和存储施加了顺序约束。这是因为每个执行都必须尊重程序顺序；如果线程B中的加载对线程A中的某个存储有依赖关系（A中的存储必须在B中的加载之前执行），那么在该加载之后，B中的任何读取或写入也必须在A中的存储之后发生。
 
-**NOTE** The Acquire memory ordering can be applied only to loads, Release only to stores,
-and AcqRel only to operations that both load and store (like fetch_add).
-Concretely, these memory orderings place the following restrictions on
-execution:
+**注意**，Acquire内存顺序只能应用于加载操作，Release只能应用于存储操作，而AcqRel则可以应用于既加载又存储的操作（例如fetch_add）。
+具体而言，这些内存顺序对执行施加了以下限制：
 
-1. Loads and stores cannot be moved forward past a store with
-Ordering::Release.
-2. Loads and stores cannot be moved back before a load with
-Ordering::Acquire.
-3. An Ordering::Acquire load of a variable must see all stores that happened
-before an Ordering::Release store that stored what the load loaded.
-- To see how these memory orderings change things, Listing 10-3 shows
-Listing 10-2 again but with the memory ordering swapped out for Acquire
-and Release.
+1. 加载和存储不能被向前移动到具有Ordering::Release的存储之后。
+2. 加载和存储不能被向后移动到具有Ordering::Acquire的加载之前。
+3. Ordering::Acquire加载变量必须看到在Ordering::Release存储之前发生的所有存储。
+
+- 为了了解这些内存顺序如何改变事物，代码清单10-3再次显示了代码清单10-2，但将内存顺序更改为Acquire和Release。
 
 ```rust 
 
@@ -3256,43 +3147,16 @@ let t2 = spawn(|| {
 2 Y.store(true, Ordering::Release)
 });
 ```
-Listing 10-3: Listing 10-2 with Acquire/Release memory ordering
+代码清单10-3：使用Acquire/Release内存顺序的代码清单10-2
 
-- These additional restrictions mean that it is no longer possible for t2 to
-see r2 = true. To see why, consider the primary cause of the weird outcome
-in Listing 10-2: the reordering of 1 and 2. The very first restriction, on
-stores with Ordering::Release, dictates that we cannot move 1 below 2, so
-we’re all good!
-- But these rules are useful beyond this simple example. For example,
-imagine that you implement a mutual exclusion lock. You want to make
-sure that any loads and stores a thread runs while it holds the lock are executed
-only while it’s actually holding the lock, and visible to any thread that
-takes the lock later. This is exactly what Release and Acquire enable you to
-do. By performing a Release store to release the lock and an Acquire load to
-acquire the lock, you can guarantee that the loads and stores in the critical
-section are never moved to before the lock was actually acquired or to after
-the lock was released!
+- 这些额外的限制意味着t2不再可能看到r2 = true。要理解原因，请考虑代码清单10-2中奇怪结果的主要原因：1和2的重新排序。第一个限制，对具有Ordering::Release的存储的限制，规定我们不能将1移动到2之下，所以一切都很好！
+- 但是，这些规则在这个简单示例之外也很有用。例如，想象一下你实现了一个互斥锁。你希望确保线程在持有锁时运行的任何加载和存储操作只在实际持有锁时执行，并且对于稍后获取锁的任何线程都可见。这正是Release和Acquire让你能够做到的。通过执行一个Release存储来释放锁，并执行一个Acquire加载来获取锁，你可以保证临界区中的加载和存储永远不会被移动到锁实际被获取之前或锁被释放之后！
 
-**NOTE** On some CPU architectures, like x86, Acquire/Release ordering is guaranteed
-by the hardware, and there is no additional cost to using Ordering::Release and
-Ordering::Acquire over Ordering::Relaxed. On other architectures that is not the
-case, and your program may see speedups if you switch to Relaxed for atomic operations
-that can tolerate the weaker memory ordering guarantees.
+**注意**：在某些CPU架构（如x86）上，硬件保证了Acquire/Release内存顺序，并且使用Ordering::Release和Ordering::Acquire与Ordering::Relaxed相比没有额外的成本。但在其他架构上，情况并非如此，如果将原子操作切换到Relaxed，程序可能会看到加速，因为它可以容忍较弱的内存顺序保证。
 
 ##### Sequentially Consistent Ordering
 
-Sequentially consistent ordering (Ordering::SeqCst) is the strongest memory
-ordering we have access to. Its exact guarantees are somewhat hard to nail
-down, but very broadly, it requires not only that each thread sees results
-consistent with Acquire/Release, but also that all threads see the same ordering
-as one another. This is best seen by way of contrast with the behavior of
-Acquire and Release. Specifically, Acquire/Release ordering does not guarantee
-that if two threads A and B atomically load values written by two other
-threads X and Y, A and B will see a consistent pattern of when X wrote
-relative to Y. That’s fairly abstract, so consider the example in Listing 10-4,
-which shows a case where Acquire/Release ordering can produce unexpected
-results. Afterwards, we’ll see how sequentially consistent ordering avoids
-that particular unexpected outcome.
+顺序一致性内存顺序（Ordering::SeqCst）是我们可以访问的最强内存顺序。它的确切保证有些难以确定，但总体上，它要求不仅每个线程都能看到与Acquire/Release一致的结果，而且所有线程都能看到彼此相同的顺序。这与Acquire和Release的行为形成对比最能体现出来。具体而言，Acquire/Release内存顺序不能保证如果两个线程A和B原子地加载由另外两个线程X和Y写入的值，A和B将以一致的模式看到X相对于Y的写入时间。这相当抽象，所以请考虑列表10-4中的示例，它展示了Acquire/Release内存顺序可能产生意外结果的情况。之后，我们将看到顺序一致性内存顺序如何避免这种特定的意外结果。
 
 ```rust 
 
@@ -3316,90 +3180,21 @@ while (!Y.load(Ordering::Acquire)) {}
 Z.fetch_add(1, Ordering::Relaxed); }
 });
 ```
-Listing 10-4: Weird results with Acquire/Release ordering
+代码清单10-4：使用Acquire/Release内存顺序的奇怪结果
 
-- The two threads t1 and t2 set X and Y to true, respectively. Thread t3
-waits for X to be true; once X is true, it checks if Y is true and, if so, adds 1 to
-Z. Thread t4 instead waits for Y to become true, and then checks if X is true
-and, if so, adds 1 to Z. At this point the question is: what are the possible
-values for Z after all the threads terminate? Before I show you the answer,
-try to work your way through it given the definitions of Release and Acquire
-ordering in the previous section.
-- First, let’s recap the conditions under which Z is incremented. Thread t3
-increments Z if it sees that Y is true after it observes that X is true, which can
-happen only if t2 runs before t3 evaluates the load at 1. Conversely, thread
-t4 increments Z if it sees that X is true after it observes that Y is true, so only if
-t1 runs before t4 evaluates the load at 2. To simplify the explanation, let’s
-assume for now that each thread runs to completion once it runs.
-- Logically, then, Z can be incremented twice if the threads run in the
-order 1, 2, 3, 4—both X and Y are set to true, and then t3 and t4 run to find
-that their conditions for incrementing Z are met. Similarly, Z can trivially
-be incremented just once if the threads run in the order 1, 3, 2, 4. This satisfies
-t4’s condition for incrementing Z, but not t3’s. Getting Z to be 0, however,
-seems impossible: if we want to prevent t3 from incrementing Z, t2 has
-to run after t3. Since t3 runs only after t1, that implies that t2 runs after t1.
-However, t4 won’t run until after t2 has run, so t1 must have run and set X
-to true by the time t4 runs, and so t4 will increment Z.
-- Our inability to get Z to be 0 stems mostly from our human inclination
-for linear explanations; this happened, then this happened, then this
-happened. Computers aren’t limited in the same way and have no need to
-box all events into a single global order. There’s nothing in the rules for
-Release and Acquire that says that t3 must observe the same execution order
-for t1 and t2 as t4 observes. As far as the computer is concerned, it’s fine
-to let t3 observe t1 as having executed first, while having t4 observe t2 as
-having executed first. With that in mind, an execution in which t3 observes
-that Y is false after it observes that X is true (implying that t2 runs after t1),
-while in the same execution t4 observes that X is false after it observes that
-Y is true (implying that t2 runs before t1), is completely reasonable, even if
-that seems outrageous to us mere humans.
-- As we discussed earlier, Acquire/Release requires only that an
-Ordering::Acquire load of a variable must see all stores that happened before
-an Ordering::Release store that stored what the load loaded. In the ordering
-just discussed, the computer did uphold that property: t3 sees X == true,
-and indeed sees all stores by t1 prior to it setting X = true—there are none.
-It also sees Y == false, which was stored by the main thread at program
-startup, so there aren’t any relevant stores to be concerned with. Similarly,
-t4 sees Y = true and also sees all stores by t2 prior to setting Y = true—again,
-there are none. It also sees X == false, which was stored by the main thread
-and has no preceding store. No rules are broken, yet it just seems wrong
-somehow.
-- Our intuitive expectation was that we could put the threads in some
-global order to make sense of what every thread saw and did, but that was
-not the case for Acquire/Release ordering in this example. To achieve something
-closer to that intuitive expectation, we need sequential consistency.
-Sequential consistency requires all the threads taking part in an atomic
-operation to coordinate to ensure that what each thread observes corresponds
-to (or at least appears to correspond to) some single, common execution
-order. This makes it easier to reason about but also makes it costly.
-- Atomic loads and stores marked with Ordering::SeqCst instruct the compiler
-to take any extra precautions (such as using special CPU instructions)
-needed to guarantee sequential consistency for those loads and stores. The
-exact formalism around this is fairly convoluted, but sequential consistency
-essentially ensures that if you looked at all the related SeqCst operations
-from across all your threads, you could put the thread executions in some
-order so that the values that were loaded and stored would all match up.
-- If we replaced all the memory ordering arguments in Listing 10-4 with
-SeqCst, Z could not possibly be 0 after all the threads have exited, just as we
-originally expected. Under sequential consistency, it must be possible to say
-either that t1 definitely ran before t2 or that t2 definitely ran before t1, so
-the execution where t3 and t4 see different orders is not allowed, and thus Z
-cannot be 0.
+- 两个线程t1和t2分别将X和Y设置为true。线程t3等待X变为true；一旦X为true，它检查Y是否为true，如果是，则将1添加到Z中。线程t4则等待Y变为true，然后检查X是否为true，如果是，则将1添加到Z中。现在的问题是：在所有线程终止后，Z可能的值是什么？在展示答案之前，请根据前一节中Release和Acquire内存顺序的定义尝试自己解决这个问题。
+- 首先，让我们回顾一下Z被增加的条件。线程t3在观察到X为true后，如果观察到Y也为true，则增加Z；这只有在t2在t3评估1处的加载之前运行时才会发生。相反，线程t4在观察到Y为true后，如果观察到X也为true，则增加Z；这只有在t1在t4评估2处的加载之前运行时才会发生。为了简化解释，让我们暂时假设每个线程运行一次。
+- 逻辑上，Z可以增加两次，如果线程按照顺序1、2、3、4运行 - X和Y都设置为true，然后t3和t4运行以满足它们增加Z的条件。类似地，如果线程按照顺序1、3、2、4运行，Z可以简单地增加一次。这满足了t4增加Z的条件，但不满足t3的条件。然而，让Z为0似乎是不可能的：如果我们想要阻止t3增加Z，t2必须在t3之后运行。由于t3只有在t1之后运行，这意味着t2在t1之后运行。然而，t4直到t2运行后才会运行，所以t1必须在t4运行时运行并将X设置为true，因此t4将增加Z。
+- 我们无法使Z为0主要是因为我们人类倾向于线性解释的倾向；这发生了，然后发生了这个，然后发生了这个。计算机没有受到相同的限制，不需要将所有事件都放入单个全局顺序中。Release和Acquire的规则中没有任何规定，要求t3必须观察到与t1和t2相同的执行顺序，就像t4观察到的那样。对于计算机来说，让t3观察到t1先执行，而让t4观察到t2先执行是完全合理的。在这种情况下，t3观察到Y为false，这是在观察到X为true之后存储的（这意味着t2在t1之后运行），而在同一执行中，t4观察到X为false，这是在观察到Y为true之后存储的（这意味着t2在t1之前运行），这是完全合理的，即使对我们这些凡人来说似乎有些荒谬。
+- 正如我们之前讨论的，Acquire/Release只要求Ordering::Acquire加载变量必须看到在Ordering::Release存储之前发生的所有存储。在刚才讨论的顺序中，计算机确实遵守了这个属性：t3看到X == true，并且确实看到t1在设置X = true之前的所有存储 - 没有存储。它还看到Y == false，这是由主线程在程序启动时存储的，因此没有相关的存储需要担心。类似地，t4看到Y = true，并且在设置Y = true之前看到了t2的所有存储 - 同样，没有存储。它还看到X == false，这是由主线程存储的，并且没有前置存储。没有违反规则，但它似乎不对。
+- 我们的直觉期望是可以将线程放入某个全局顺序中，以理解每个线程所看到和执行的内容，但在这个例子中，Acquire/Release内存顺序并不是这样。为了实现更接近直觉期望的结果，我们需要顺序一致性。
+顺序一致性要求参与原子操作的所有线程协调起来，以确保每个线程观察到的内容与（或至少表面上与）某个单一的共同执行顺序相对应。这样更容易进行推理，但也更昂贵。
+- 使用Ordering::SeqCst标记的原子加载和存储指令指示编译器采取任何额外的预防措施（例如使用特殊的CPU指令）来保证这些加载和存储的顺序一致性。确切的形式化定义相当复杂，但顺序一致性基本上确保如果您从所有线程的相关SeqCst操作中观察，您可以将线程执行放入某个顺序中，以使加载和存储的值都能匹配上。
+- 如果我们将代码清单10-4中的所有内存顺序参数替换为SeqCst，那么在所有线程退出后，Z不可能为0，就像我们最初预期的那样。在顺序一致性下，必须能够说t1肯定在t2之前运行，或者t2肯定在t1之前运行，因此不允许t3和t4看到不同的顺序，因此Z不能为0。
 
 ##### Compare and Exchange
 
-In addition to load and store, all of Rust’s atomic types provide a method
-called compare_exchange. This method is used to atomically and conditionally
-replace a value. You provide compare_exchange with the last value you
-Concurrency (and Parallelism) 185
-observed for an atomic variable and the new value you want to replace the
-original value with, and it will replace the value only if it is still the same as
-it was when you last observed it. To see why this is important, take a look
-at the (broken) implementation of a mutual exclusion lock in Listing 10-5.
-This implementation keeps track of whether the lock is held in the static
-atomic variable LOCK. We use the Boolean value true to represent that the
-lock is held. To acquire the lock, a thread waits for LOCK to be false, then
-sets it to true again; it then enters its critical section and sets LOCK to false
-to release the lock when its work (f) is done.
+除了load和store之外，Rust的所有原子类型都提供了一个名为compare_exchange的方法。该方法用于原子地和有条件地替换一个值。您提供compare_exchange方法的最后一个观察到的原子变量的值以及您希望用来替换原始值的新值，它只会在您最后观察到的值仍然与您观察到的值相同时才进行替换。为了理解为什么这很重要，请看一下代码清单10-5中的（错误的）互斥锁实现。该实现使用静态原子变量LOCK来跟踪锁是否被持有。我们使用布尔值true来表示锁被持有。要获取锁，线程等待LOCK为false，然后再次将其设置为true；然后它进入其临界区并在完成工作（f）后将LOCK设置为false以释放锁。
 
 ```rust 
 
@@ -3416,19 +3211,11 @@ f();
 LOCK.store(false, Ordering::Release);
 }
 ```
-Listing 10-5: An incorrect implementation of a mutual exclusion lock
+代码清单10-5：一个错误的互斥锁实现
 
-This mostly works, but it has a terrible flaw—two threads might both
-see LOCK == false at the same time and both leave the while loop. Then they
-both set LOCK to true and both enter the critical section, which is exactly
-what the mutex function was supposed to prevent!
-The issue in Listing 10-5 is that there is a gap between when we load
-the current value of the atomic variable and when we subsequently update
-it, during which another thread might get to run and read or touch its
-value. It is exactly this problem that compare_exchange solves—it swaps out the
-value behind the atomic variable only if its value still matches the previous
-read, and otherwise notifies you that the value has changed. Listing 10-6
-shows the corrected implementation using compare_exchange.
+这个实现大部分都是正确的，但是有一个严重的缺陷 - 两个线程可能同时看到LOCK == false，并且都离开while循环。然后它们都将LOCK设置为true，并且都进入了临界区，这正是mutex函数应该防止的！
+
+代码清单10-5中的问题在于，在我们加载原子变量的当前值和随后更新它之间存在一个间隙，在此期间，另一个线程可能会运行并读取或触摸其值。正是这个问题，compare_exchange解决了 - 它只有在其值仍然与先前读取的值匹配时才交换原子变量的值，并且否则通知您该值已更改。代码清单10-6展示了使用compare_exchange进行修正的实现。
 
 ```rust
 
@@ -3455,303 +3242,80 @@ f();
 LOCK.store(false, Ordering::Release);
 }
 ```
-Listing 10-6: A corrected implementation of a mutual exclusion lock
+代码清单10-6：互斥锁的修正实现
 
-- This time around, we use compare_exchange in the loop, and it takes care
-of both checking that the lock is currently not held and storing true to take
-the lock as appropriate. This happens through the first and second arguments
-to compare_exchange, respectively: in this case, false and then true. You
-can read the invocation as “Store true only if the current value is false.”
-The compare_exchange method returns a Result that indicates either that the
-value was successfully updated (Ok) or that it could not be updated (Err).
-In either case, it also returns the current value. This isn’t too useful with
-an AtomicBool since we know what the value must be if the operation failed,
-but for something like an AtomicI32, the updated current value will let you
-quickly recompute what to store and then try again without having to do
-another load.
+- 这次我们在循环中使用compare_exchange，并通过compare_exchange的第一个和第二个参数来检查锁当前是否未被持有，并在适当的情况下存储true以获取锁。可以将调用解读为“仅在当前值为false时存储true”。compare_exchange方法返回一个Result，表示值是否成功更新（Ok）或无法更新（Err）。无论哪种情况，它都返回当前值。对于AtomicBool来说，这并不太有用，因为如果操作失败，我们知道值必须是什么，但对于AtomicI32之类的类型，更新后的当前值将让您快速重新计算要存储的值，然后无需再次加载即可尝试。
 
-**NOTE** Note that compare_exchange checks only whether the value is the same as the one that
-was passed in as the current value. If some other thread modifies the atomic variable’s
-value and then resets it to the original value again, a compare_exchange on that variable
-will still succeed. This is often referred to as the A-B-A problem.
+**注意** 注意，compare_exchange仅检查值是否与传入的当前值相同。如果其他线程修改了原子变量的值，然后将其重新设置为原始值，对该变量的compare_exchange仍将成功。这通常被称为A-B-A问题。
 
-- Unlike simple loads and stores, compare_exchange takes two Ordering arguments.
-The first is the “success ordering,” and it dictates what memory
-ordering should be used for the load and store that the compare_exchange
-represents in the case that the value was successfully updated. The second
-is the “failure ordering,” and it dictates the memory ordering for the load
-if the loaded value does not match the expected current value. These two
-orderings are kept separate so that the developer can give the CPU leeway
-to improve execution performance by reordering loads and stores on failure
-when appropriate, but still get the correct ordering on success. In this
-case, it’s okay to reorder loads and stores across failed iterations of the lock
-acquisition loop, but it’s not okay to reorder loads and stores inside the critical
-section in such a way that they end up outside of it.
-- Even though its interface is simple, compare_exchange is a very powerful
-synchronization primitive—so much so that it’s been theoretically proven
-that you can build all other distributed consensus primitives using only
-compare_exchange! For that reason, it is the workhorse of many, if not most,
-synchronization constructs when you really dig into the implementation
-details.
-- Be aware, though, that a compare_exchange requires that a single CPU has
-exclusive access to the underlying value, and it is therefore a form of mutual
-exclusion at the hardware level. This in turn means that compare_exchange
-Concurrency (and Parallelism) 187
-can quickly become a scalability bottleneck: only one CPU can make progress
-at a time, so there’s a portion of your code that will not scale with the
-number of cores. In fact, it’s probably worse than that—the CPUs have to
-coordinate to ensure that only one CPU succeeds at a compare_exchange for a
-variable at a time (take a look at the MESI protocol if you’re curious about
-how that works), and that coordination grows quadratically more costly the
-more CPUs are involved!
+- 与简单的加载和存储不同，compare_exchange需要两个Ordering参数。第一个是“成功顺序”，它决定在值成功更新时compare_exchange所表示的加载和存储应使用的内存顺序。第二个是“失败顺序”，它决定在加载的值与预期的当前值不匹配时加载的内存顺序。这两个顺序是分开的，以便开发人员可以给CPU一些灵活性，以便在适当的情况下重新排序失败时的加载和存储，从而提高执行性能，但仍然可以在成功时获得正确的顺序。在这种情况下，可以重新排序锁获取循环的失败迭代中的加载和存储，但不能以使其超出临界区的方式重新排序加载和存储。
+- 尽管其接口很简单，但compare_exchange是一个非常强大的同步原语 - 事实上，已经有理论证明，您可以仅使用compare_exchange构建所有其他分布式一致性原语！因此，当您深入研究实现细节时，它是许多同步构造的主力军。
+- 但请注意，compare_exchange要求单个CPU对底层值具有独占访问权，因此它是一种硬件级别的互斥。这反过来意味着compare_exchange很快就会成为可扩展性瓶颈：一次只有一个CPU可以取得进展，因此在您的代码中有一部分不会随着核心数量的增加而扩展。实际上，情况可能比这更糟糕 - CPU必须协调以确保一次只有一个CPU对变量的compare_exchange成功（如果您对MESI协议感兴趣，请查看一下它是如何工作的），并且随着涉及的CPU越多，这种协调的成本将呈二次增长！
 **COMPARE_EXCHANGE_WEAK**
-The careful documentation reader will notice that compare_exchange has a suspiciously
-named cousin, compare_exchange_weak, and wonder what the difference
-is. The weak variant of compare_exchange is allowed to fail even if the atomic
-variable’s value does still match the expected value that the user passed in,
-whereas the strong variant must succeed in this case.
-- This might seem odd—how could an atomic value swap fail except if the
-value has changed? The answer lies in system architectures that do not have a
-native compare_exchange operation. For example, ARM processors instead have
-locked load and conditional store operations, where a conditional store will fail
-if the value read by an associated locked load has not been written to since
-the load. The Rust standard library implements compare_exchange on ARM by
-calling this pair of instructions in a loop and returning only once the conditional
-store succeeds. This makes the code in Listing 10-6 needlessly inefficient—we
-end up with a nested loop, which requires more instructions and is harder to
-optimize. Since we already have a loop in this case, we could instead use compare_
-exchange_weak, remove the unreachable!() on Err(false), and get better
-machine code on ARM and the same compiled code on x86!
+仔细阅读文档的读者会注意到compare_exchange有一个名为compare_exchange_weak的可疑表亲，并想知道它们之间的区别。compare_exchange的弱变体即使原子变量的值仍然与用户传入的预期值匹配，也允许失败，而强变体在这种情况下必须成功。
 
-##### The Fetch Methods
+- 这可能看起来很奇怪 - 除非值已更改，否则原子值交换如何失败？答案在于没有本地compare_exchange操作的系统架构。例如，ARM处理器使用锁定加载和条件存储操作，其中条件存储将失败，如果与关联的锁定加载读取的值相比，自从加载后还没有写入该值。Rust标准库通过在循环中调用这对指令来实现ARM上的compare_exchange，并且仅在条件存储成功后才返回。这使得代码清单10-6变得不必要低效 - 我们最终得到了一个嵌套循环，这需要更多的指令并且更难优化。由于我们已经在这种情况下有一个循环，我们可以使用compare_exchange_weak，删除Err(false)上的unreachable！()，并在ARM上获得更好的机器代码以及在x86上相同的编译代码！
 
-Fetch methods (fetch_add, fetch_sub, fetch_and, and the like) are designed to
-allow more efficient execution of atomic operations that commute—that
-is, operations that have meaningful semantics regardless of the order they
-execute in. The motivation for this is that the compare_exchange method
-is powerful, but also costly—if two threads both want to update a single
-atomic variable, one will succeed, while the other will fail and have to retry.
-If many threads are involved, they all have to mediate sequential access to
-the underlying value, and there will be plenty of spinning while threads
-retry on failure.
-- For simple operations that commute, rather than fail and retry just
-because another thread modified the value, we can tell the CPU what
-operation to perform on the atomic variable. It’ll then perform that operation
-on whatever the current value happens to be when the CPU eventually
-gets exclusive access. Think of an AtomicUsize that counts the number of
-operations a pool of threads has completed. If two threads both complete a
-job at the same time, it doesn’t matter which one updates the counter first
-as long as both their increments are counted.
-- The fetch methods implement these kinds of commutative operations.
-They perform a read and a store operation in a single step and
-guarantee that the store operation was performed on the atomic variable
-when it held exactly the value returned by the method. As an example,
-AtomicUsize::fetch_add(1, Ordering::Relaxed) never fails—it always adds 1 to
-the current value of the AtomicUsize, no matter what it is, and returns the
-value of the AtomicUsize precisely when this thread’s 1 was added.
-- The fetch methods tend to be more efficient than compare_exchange
-because they don’t require threads to fail and retry when multiple threads
-contend for access to a variable. Some hardware architectures even have
-specialized fetch method implementations that scale much better as the
-number of involved CPUs grows. Nevertheless, if enough threads try to
-operate on the same atomic variable, those operations will begin to slow
-down and exhibit sublinear scaling due to the coordination required. In
-general, the best way to significantly improve the performance of a concurrent
-algorithm is to split contended variables into more atomic variables
-that are each less contended, rather than switching from compare_exchange to
-a fetch method.
+##### 获取方法
 
-**NOTE** The fetch_update method is somewhat deceptively named—behind the scenes, it is
-really just a compare_exchange_weak loop, so its performance profile will more closely
-match that of compare_exchange than the other fetch methods.
+获取方法（fetch_add、fetch_sub、fetch_and等）旨在允许更高效地执行可交换的原子操作，即无论它们以何种顺序执行，都具有有意义的语义。这样做的动机是compare_exchange方法非常强大，但也很昂贵 - 如果两个线程都想更新一个单一的原子变量，一个线程会成功，而另一个线程会失败并需要重试。如果涉及许多线程，它们都必须协调对底层值的顺序访问，并且在失败时会有大量自旋。
 
-#### Sane Concurrency
+对于可交换的简单操作，我们可以告诉CPU在原子变量上执行什么操作，而不是因为另一个线程修改了该值而失败并重试。然后，当CPU最终获得独占访问时，它将在当前值上执行该操作。想象一个AtomicUsize，它计算一组线程完成的操作数量。如果两个线程同时完成一个作业，无论哪个线程先更新计数器，只要它们的增量都被计数即可。
 
-Writing correct and performant concurrent code is harder than writing
-sequential code; you have to consider not only possible execution interleavings
-but also how your code interacts with the compiler, the CPU, and the
-memory subsystem. With such a wide array of footguns at your disposal, it’s
-easy to want to throw your hands in the air and just give up on concurrency
-altogether. In this section we’ll explore some techniques and tools that can
-help ensure that you write correct concurrent code without (as much) fear.
+获取方法实现了这些可交换操作。它们在一步中执行读取和存储操作，并保证存储操作在持有该方法返回的值时执行在原子变量上。例如，AtomicUsize::fetch_add(1, Ordering::Relaxed)永远不会失败 - 它总是将1添加到AtomicUsize的当前值中，无论它是什么，并在添加线程的1时返回AtomicUsize的值。
 
-##### Start Simple
+获取方法往往比compare_exchange更高效，因为它们不需要线程在多个线程争用访问变量时失败和重试。一些硬件架构甚至具有专门的获取方法实现，随着涉及的CPU数量增加，它们的扩展性更好。然而，如果足够多的线程尝试操作相同的原子变量，这些操作将开始变慢，并且由于所需的协调，展现出次线性的扩展性。通常，显着提高并发算法性能的最佳方法是将有争议的变量分割为更少的原子变量，每个变量都较少有争议，而不是从compare_exchange切换到获取方法。
 
-It is a fact of life that simple, straightforward, easy-to-follow code is more
-likely to be correct. This principle also applies to concurrent code—always
-start with the simplest concurrent design you can think of, then measure,
-and only if measurement reveals a performance problem should you optimize
-your algorithm.
-- To follow this tip in practice, start out with concurrency patterns that
-do not require intricate use of atomics or lots of fine-grained locks. Begin
-with multiple threads that run sequential code and communicate over
-channels, or that cooperate through locks, and then benchmark the resulting
-performance with the workload you care about. You’re much less likely
-to make mistakes this way than by implementing fancy lockless algorithms
-or by splitting your locks into a thousand pieces to avoid false sharing. For
-many use cases, these designs are plenty fast enough; it turns out a lot of
-time and effort has gone into making channels and locks perform well!
-And if the simple approach is fast enough for your use case, why introduce
-more complex and error-prone code?
-- If your benchmarks indicate a performance problem, then figure out
-exactly which part of your system scales poorly. Focus on fixing that bottleneck
-in isolation where you can, and try to do so with small adjustments
-where possible. Maybe it’s enough to split a lock in two rather than move
-to a concurrent hash table, or to introduce another thread and a channel
-rather than implement a lock-free work stealing queue. If so, do that.
-- Even when you do have to work directly with atomics and the like, keep
-things simple until there’s a proven need to optimize—use Ordering::SeqCst
-and compare_exchange at first, and then iterate if you find concrete evidence
-that those are becoming bottlenecks that must be taken care of.
+**注意** 获取更新方法的命名有些误导性 - 在幕后，它实际上只是一个compare_exchange_weak循环，因此其性能特征更接近compare_exchange而不是其他获取方法。
 
-##### Write Stress Tests
+#### 理智的并发
 
-As the author, you have a lot of insight into where bugs in your code
-may hide, without necessarily knowing what those bugs are (yet, anyway).
-Writing stress tests is a good way to shake out some of the hidden bugs.
-Stress tests don’t necessarily perform a complex sequence of steps but
-instead have lots of threads doing relatively simple operations in parallel.
-- For example, if you were writing a concurrent hash map, one stress test
-might be to have N threads insert or update keys and M threads read keys
-in such a way that those M+N threads are likely to often choose the same
-keys. Such a test doesn’t test for a particular outcome or value but instead
-tries to trigger many possible interleavings of operations in the hopes that
-buggy interleavings might reveal themselves.
-- Stress tests resemble fuzz tests in many ways; whereas fuzzing generates
-many random inputs to a given function, the stress test instead generates
-many random thread and memory access schedules. Just like fuzzers,
-stress tests are therefore only as good as the assertions in your code; they
-can’t tell you about a bug that doesn’t manifest in some easy-to-spot way
-like an assertion failure or some other kind of panic. For that reason, it’s a
-good idea to litter your low-level concurrency code with assertions, or debug_
-assert__ if you’re worried about runtime cost in particularly hot loops.
+编写正确且高性能的并发代码比编写顺序代码更困难；您不仅需要考虑可能的执行交错，还需要考虑代码与编译器、CPU和内存子系统的交互。在如此多的陷阱中，很容易想要举起双手，完全放弃并发。在本节中，我们将探讨一些技术和工具，可以帮助确保您编写正确的并发代码，而不必（太多地）担心。
 
-##### Use Concurrency Testing Tools
+##### 从简单开始
 
-The primary challenge in writing concurrent code is to handle all the possible
-ways the execution of different threads can interleave. As we saw in the
-Ordering::SeqCst example in Listing 10-4, it’s not just the thread scheduling
-that matters, but also which memory values are possible for a given thread
-to observe at any given point in time. Writing tests that execute every possible
-legal execution is not only tedious but also difficult—you need very
-low-level control over which threads execute when and what values their
-reads return, which the operating system likely doesn’t provide.
+事实证明，简单、直接、易于理解的代码更有可能是正确的。这个原则也适用于并发代码 - 总是从您能想到的最简单的并发设计开始，然后进行测量，只有在测量结果显示存在性能问题时，才优化您的算法。
 
-##### Model Checking with Loom
+要在实践中遵循这个提示，首先使用不需要复杂使用原子操作或大量细粒度锁的并发模式。从运行顺序代码的多个线程开始，并通过通道进行通信，或通过锁进行协作，然后使用您关心的工作负载对结果性能进行基准测试。这种方式比实现复杂的无锁算法或将锁分割成一千个片段以避免伪共享的方式更不容易出错。对于许多用例来说，这些设计已经足够快了；事实证明，为了使通道和锁性能良好，已经投入了大量的时间和精力！如果简单方法对于您的用例来说足够快，为什么要引入更复杂和容易出错的代码呢？
 
-Luckily, a tool already exists that can simplify this execution exploration
-for you in the form of the loom crate. Given the relative release cycles of this
-book and that of a Rust crate, I won’t give any examples of how to use Loom
-here, as they’d likely be out of date by the time you read this book, but I will
-give an overview of what it does.
-- Loom expects you to write dedicated test cases in the form of closures
-that you pass into a Loom model. The model keeps track of all cross-thread
-interactions and tries to intelligently explore all possible iterations of those
-interactions by executing the test case closure multiple times. To detect
-and control thread interactions, Loom provides replacement types for all
-the types in the standard library that allow threads to coordinate with one
-another; that includes most types under std::sync and std::thread as well
-as UnsafeCell and a few others. Loom expects your application to use those
-replacement types whenever you run the Loom tests. The replacement
-types tie into the Loom executor and perform a dual function: they act as
-rescheduling points so that Loom can choose which operation to run next
-after each possible thread interaction point, and they inform Loom of new
-possible interleavings to consider. Essentially, Loom builds up a tree of all
-the possible future executions for each point at which multiple execution
-interleavings are possible and then tries to execute all of them, one after
-the other.
-- Loom attempts to fully explore all possible executions of the test
-cases you provide it with, which means it can find bugs that occur only in
-extremely rare executions that stress testing would not find in a hundred
-years. While that’s great for smaller test cases, it’s generally not feasible
-to apply that kind of rigorous testing to larger test cases that test more
-involved sequences of operations or require many threads to run at once.
-Loom would simply take too long to get decent coverage of the code. In
-practice, you may therefore want to tell Loom to consider only a subset of
-the possible executions, which Loom’s documentation has more details on.
-- Like with stress tests, Loom can catch only bugs that manifest as panics,
-so that’s yet another reason to spend some time placing strategic assertions
-in your concurrent code! In many cases, it may even be worthwhile to add
-additional state tracking and bookkeeping instructions to your concurrent
-code to give you better assertions.
+如果基准测试显示存在性能问题，那么确定您的系统中哪个部分扩展性较差。专注于在可能的情况下以小的调整来解决瓶颈，并尽可能地进行小的调整。也许只需将锁分成两部分而不是转向并发哈希表，或者引入另一个线程和通道而不是实现无锁的工作窃取队列。如果是这样，请这样做。
 
-##### Runtime Checking with ThreadSanitizer
-For larger test cases, your best bet is to run the test through a couple of iterations
-under Google’s excellent ThreadSanitizer, also known as TSan. TSan
-automatically augments your code by placing extra bookkeeping instructions
-prior to every memory access. Then, as your code runs, those bookkeeping
-instructions update and check a special state machine that flags any concurrent
-memory operations that indicate a problematic race condition. For
-example, if thread B writes to some atomic value X, but has not synchronized
-(lots of hand waving here) with the thread that wrote the previous value of X
-that indicates a write/write race, which is nearly always a bug.
-Concurrency (and Parallelism) 191
-- Since TSan only observes your code running and does not execute
-it over and over again like Loom, it generally only adds a constant-factor
-overhead to the runtime of your program. While that factor can be significant
-(5–15 times at the time of writing), it’s still small enough that you can
-execute even most complex test cases in a reasonable amount of time.
-- At the time of writing, to use TSan you need to use a nightly version of
-the Rust compiler and pass in the -Zsanitizer=thread command-line argument
-(or set it in RUSTFLAGS), though hopefully in time this will be a standard
-supported option. Other sanitizers are also available that check things like
-out-of-bounds memory accesses, use-after-free, memory leaks, and reads of
-uninitialized memory, and you may want to run your concurrent test suite
-through those too!
-HEISENBUGS
-Heisenbugs are bugs that seem to disappear when you try to study them. This
-happens quite frequently when trying to debug highly concurrent code; the
-additional instrumentation to debug the problem changes the relative timing of
-concurrent events and might cause the execution interleaving that triggered the
-bug to no longer happen.
-A particularly common cause of disappearing concurrency bugs is using
-print statements, which is by far one of the most common debugging techniques.
-There are two reasons why print statements have such an outsized effect on
-concurrency bugs. The first, and perhaps most obvious, is that relatively speaking,
-printing something to the user’s terminal (or wherever standard output
-points) takes quite a long time, especially if your program is producing a lot
-of output. Writing to the terminal requires, at the very least, a round-trip to the
-operating system kernel to perform the write, but the write may also have to
-wait for the terminal itself to read from the process’s output into its own buffers.
-All that extra time might so much delay the operation that previously raced with
-an operation in some other thread that the race condition disappears.
-The second reason why print statements disturb concurrent execution patterns
-is that writing to standard output is (generally) guarded by a lock. If you look
-inside the Stdout type in the standard library, you’ll see that it holds a Mutex that
-guards access to the output stream. It does this so that the output isn’t garbled too
-badly if multiple threads try to write at the same time—without a lock, a given
-line might have characters interspersed from multiple thread writes, but with the
-lock the threads will take turns writing instead. Unfortunately, acquiring the output
-lock, is another thread synchronization point, and one that every printing thread is
-involved in. This means that if your code was previously broken due to missing synchronization
-between two threads, or just because a particular race between two
-threads was possible, adding print statements might fix that bug as a side effect!
-In general, when you spot what seems like a Heisenbug, try to find other
-ways to narrow down the problem. That might involve using Loom or TSan,
-(continued)
+即使在直接使用原子操作等情况下，直到有明确的优化需求，也要保持简单 - 首先使用Ordering::SeqCst和compare_exchange，然后根据具体证据进行迭代，以确定它们是否成为必须处理的瓶颈。
 
-192 Chapter 10
-using gdb or lldb, or using a per-thread in-memory log that you print only at the
-end. Many logging frameworks also work hard to avoid synchronization points
-on the critical path of issuing log events, so switching to one of those might
-make your life easier. As an added bonus, good logging that you leave behind
-after fixing a particular bug might come in handy later. Personally I’m a big fan
-of the tracing crate, but there are many good options out there.
-Summary
-In this chapter, we first covered common correctness and performance pitfalls
-in concurrent Rust, and some of the high-level concurrency patterns
-that successful concurrent applications tend to use to work around them.
-We also explored how asynchronous Rust enables concurrency without parallelism,
-and how to explicitly introduce parallelism in asynchronous Rust
-code. We then dove deeper into Rust’s many different lower-level concurrency
-primitives, including how they work, how they differ, and what they’re
-all for. Finally, we explored techniques for writing better concurrent code
-and looked at tools like Loom and TSan that can help you vet that code. In
-the next chapter we’ll continue our journey through the lower levels of Rust
-by digging into foreign function interfaces, which allow Rust code to link
-directly against code written in other languages.
+##### 编写压力测试
 
-### FOREIGN FUNCTION I NTERFACES
+作为作者，您对代码中可能隐藏的错误有很多了解，但并不一定知道这些错误是什么（至少目前还不知道）。编写压力测试是发现一些隐藏错误的好方法。压力测试不一定执行复杂的步骤，而是让许多线程并行执行相对简单的操作。
+- 例如，如果您正在编写一个并发哈希映射，一个压力测试可能是让N个线程插入或更新键，M个线程读取键，以使这些M+N个线程很可能经常选择相同的键。这样的测试不测试特定的结果或值，而是尝试触发操作的许多可能交错，希望错误的交错可能会显露出来。
+- 压力测试在许多方面类似于模糊测试；而模糊测试会为给定函数生成许多随机输入，压力测试则生成许多随机的线程和内存访问调度。与模糊测试器一样，压力测试只能检测到代码中的断言；它们无法告诉您不会以易于发现的方式（如断言失败或其他类型的恐慌）表现出来的错误。因此，建议在低级并发代码中添加断言，或者如果您担心特别热的循环中的运行时成本，可以使用debug_assert_。
+
+##### 使用并发测试工具
+
+编写并发代码的主要挑战是处理不同线程执行的所有可能交错的方式。正如我们在列表10-4中看到的Ordering::SeqCst示例，不仅线程调度很重要，还有给定线程在任何给定时间点上可能观察到的内存值。编写执行每个可能的合法执行的测试不仅繁琐而且困难 - 您需要对线程执行的时间和读取返回的值有非常低级别的控制，而操作系统可能无法提供。
+
+##### 使用Loom进行模型检查
+
+幸运的是，已经存在一个工具可以简化这种执行探索，即loom crate。鉴于本书和Rust crate的相对发布周期，我不会在这里给出如何使用Loom的示例，因为到您阅读本书时，它们可能已经过时了，但我会概述它的功能。
+- Loom希望您编写专用的测试用例，以闭包的形式传递给Loom模型。该模型跟踪所有跨线程的交互，并尝试智能地探索这些交互的所有可能迭代，通过多次执行测试用例闭包。为了检测和控制线程交互，Loom为标准库中的所有类型提供了替代类型，这些类型允许线程彼此协调；这包括std::sync和std::thread下的大多数类型，以及UnsafeCell和其他一些类型。在运行Loom测试时，Loom期望您的应用程序使用这些替代类型。替代类型与Loom执行器相关联，并执行双重功能：它们作为重新调度点，以便Loom可以选择在每个可能的线程交互点之后运行哪个操作，并通知Loom考虑新的可能交错。实质上，Loom为每个可能的多个执行交错点构建了一棵树，然后尝试依次执行所有这些交错点。
+- Loom尝试完全探索您提供的测试用例的所有可能执行，这意味着它可以发现仅在极少数执行中出现的错误，这些错误在压力测试中可能需要一百年才能发现。虽然对于较小的测试用例来说很好，但通常不可行将这种严格的测试应用于更大的测试用例，这些测试用例测试更复杂的操作序列或需要同时运行多个线程。Loom将花费太长时间来获得代码的良好覆盖率。因此，您可能希望告诉Loom仅考虑可能执行的子集，Loom的文档中有更多详细信息。
+- 与压力测试类似，Loom只能捕获作为panic表现出来的错误，因此这是在并发代码中放置一些断言的又一个原因！在许多情况下，甚至值得为并发代码添加额外的状态跟踪和簿记指令，以提供更好的断言。
+
+##### 使用ThreadSanitizer进行运行时检查
+
+对于较大的测试用例，您最好通过Google出色的ThreadSanitizer（也称为TSan）运行测试几次。TSan通过在每个内存访问之前放置额外的簿记指令来自动增强您的代码。然后，当您的代码运行时，这些簿记指令会更新和检查一个特殊的状态机，标记任何指示存在问题的竞争内存操作。例如，如果线程B写入某个原子值X，但未与写入X的先前值的线程同步（这里有很多手势），则表示存在写/写竞争，这几乎总是一个bug。
+- 由于TSan只观察您的代码运行而不像Loom一样反复执行它，它通常只会为程序的运行时添加一个恒定的因子开销。尽管这个因子可能很大（在撰写本文时为5-15倍），但它仍然足够小，以便您可以在合理的时间内执行即使是最复杂的测试用例。
+- 在撰写本文时，要使用TSan，您需要使用Rust编译器的nightly版本，并传入-Zsanitizer=thread命令行参数（或在RUSTFLAGS中设置），但希望以后这将成为一个标准支持的选项。还提供了其他检查器，例如检查越界内存访问、使用后释放、内存泄漏和读取未初始化内存的检查器，您可能还希望将并发测试套件运行通过这些检查器！
+
+**海森堡Bug**
+海森堡Bug是在尝试研究它们时似乎消失的Bug。在尝试调试高度并发的代码时，这种情况经常发生；用于调试问题的附加工具会改变并发事件的相对时序，并可能导致触发Bug的执行交错不再发生。
+- 造成并发Bug消失的一个特别常见原因是使用打印语句，这是最常见的调试技术之一。打印语句对并发Bug产生如此大的影响有两个原因。首先，相对而言，向用户的终端（或标准输出指向的位置）打印某些内容需要相当长的时间，特别是如果您的程序产生大量输出。写入终端至少需要一个往返到操作系统内核来执行写入，但写入可能还必须等待终端自己从进程的输出中读取到自己的缓冲区中。所有这些额外的时间可能会延迟操作，以至于先前与其他线程中的操作竞争的操作的竞争条件消失。
+- 第二个原因是打印到标准输出（通常）受到锁的保护。如果您查看标准库中的Stdout类型，您会看到它持有一个Mutex，用于保护对输出流的访问。它这样做是为了防止多个线程同时写入时输出混乱 - 没有锁定，给定行可能会有来自多个线程写入的字符，但使用锁定，线程将轮流写入。不幸的是，获取输出锁是另一个线程同步点，每个打印线程都会参与其中。这意味着如果您的代码之前由于两个线程之间缺少同步而损坏，或者仅仅因为两个线程之间的特定竞争是可能的，添加打印语句可能会作为副作用修复该Bug！
+- 通常情况下，当您发现似乎是海森堡Bug时，尝试找到其他缩小问题的方法。这可能涉及使用Loom或TSan，使用gdb或lldb，或者使用仅在最后打印的每个线程的内存中的日志。许多日志框架也会努力避免在发出日志事件的关键路径上进行同步点，因此切换到其中之一可能会使您的生活更轻松。作为额外的奖励，修复特定Bug后留下的良好日志可能会在以后派上用场。我个人非常喜欢tracing crate，但市场上有很多好的选择。
+
+#### 总结
+
+在本章中，我们首先介绍了并发Rust中常见的正确性和性能陷阱，以及成功的并发应用程序倾向于使用的一些高级并发模式来解决这些陷阱。我们还探讨了异步Rust如何在没有并行性的情况下实现并发，以及如何在异步Rust代码中显式引入并行性。然后，我们深入探讨了Rust的许多不同的低级并发原语，包括它们的工作原理、差异和用途。最后，我们探讨了编写更好的并发代码的技术，并介绍了像Loom和TSan这样的工具，可以帮助您验证该代码。在下一章中，我们将继续深入研究Rust的低级别，通过深入研究外部函数接口，允许Rust代码直接链接到其他语言编写的代码。
+
+### FOREIGN FUNCTION INTERFACES
 
 Not all code is written in Rust. It’s shocking,
 I know. Every so often, you’ll need to interact
