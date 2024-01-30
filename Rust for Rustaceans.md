@@ -3315,7 +3315,7 @@ LOCK.store(false, Ordering::Release);
 
 在本章中，我们首先介绍了并发Rust中常见的正确性和性能陷阱，以及成功的并发应用程序倾向于使用的一些高级并发模式来解决这些陷阱。我们还探讨了异步Rust如何在没有并行性的情况下实现并发，以及如何在异步Rust代码中显式引入并行性。然后，我们深入探讨了Rust的许多不同的低级并发原语，包括它们的工作原理、差异和用途。最后，我们探讨了编写更好的并发代码的技术，并介绍了像Loom和TSan这样的工具，可以帮助您验证该代码。在下一章中，我们将继续深入研究Rust的低级别，通过深入研究外部函数接口，允许Rust代码直接链接到其他语言编写的代码。
 
-### FOREIGN FUNCTION INTERFACES
+### 11.FOREIGN FUNCTION INTERFACES
 
 Not all code is written in Rust. It’s shocking,
 I know. Every so often, you’ll need to interact
