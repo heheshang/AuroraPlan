@@ -3320,135 +3320,46 @@ LOCK.store(false, Ordering::Release);
 
 ### 11.FOREIGN FUNCTION INTERFACES
 
-Not all code is written in Rust. It’s shocking,
-I know. Every so often, you’ll need to interact
-with code written in other languages,
-either by calling into such code from Rust or
-by allowing that code to call your Rust code. You can
-achieve this through foreign function interfaces (FFI).
+并不是所有的代码都是用Rust编写的。我知道这很令人震惊。偶尔，您需要与其他语言编写的代码进行交互，无论是从Rust调用该代码，还是允许该代码调用您的Rust代码。您可以通过外部函数接口（FFI）实现这一点。
 
-- In this chapter we’ll first look at the primary mechanism Rust provides
-for FFI: the extern keyword. We’ll see how to use extern both to expose Rust
-functions and statics to other languages and to give Rust access to functions
-and static variables provided from outside the Rust bubble. Then, we’ll
-walk through how to align Rust types with types defined in other languages
-and explore some of the intricacies of allowing data to flow across the FFI
-boundary. Finally, we’ll talk about some of the tools you’ll likely want to use
-if you’re doing any nontrivial amount of FFI.
+#### 编译和链接的一些说明
 
-**NOTE** While I often refer to FFI as being about crossing the boundary between one language
-and another, FFI can also occur entirely inside Rust-land. If one Rust program shares
-memory with another Rust program but the two aren’t compiled together—say, if you’re
-using a dynamically linked library in your Rust program that happens to be written in
-Rust, but you just have the C-compatible .so file—the same complications arise.
+编译器速成课时间！了解将代码转换为可运行二进制文件的复杂过程的大致概念将有助于您更好地理解外部函数接口（FFI）。您知道，编译器不是一个单一的程序，而是（通常）被分解为几个较小的程序，每个程序执行不同的任务，并按顺序运行。从高层次来看，编译有三个不同的阶段 - 编译、代码生成和链接，由三个不同的组件处理。
 
-#### Crossing Boundaries with extern
+- 第一阶段由大多数人倾向于认为是“编译器”的部分执行，它处理类型检查、借用检查、单态化和其他与给定编程语言相关的功能。该阶段不生成机器代码，而是生成使用大量注释的抽象机器操作的代码的低级表示。然后，将该低级表示传递给代码生成工具，该工具生成实际可在给定CPU上运行的机器代码。
+- 这两个操作合在一起，不必一次性对整个代码库进行大规模处理。相反，代码库可以切分为较小的块，然后并行地通过编译。例如，只要它们之间没有依赖关系，Rust通常会独立并行地编译不同的crate。它还可以
 
-FFI is, ultimately, all about accessing bytes that originate somewhere outside
-your application’s Rust code. For that, Rust provides two primary building
-blocks: symbols, which are names assigned to particular addresses in a
-given segment of your binary that allow you to share memory (be it for data
-or code) between the external origin and your Rust code, and calling conventions
-that provide a common understanding of how to call functions stored
-in such shared memory. We’ll look at each of these in turn.
+##### 使用extern跨界
 
-##### Symbols
+外部函数接口（FFI）最终都是关于访问源自应用程序Rust代码之外的字节。为此，Rust提供了两个主要的构建块：符号和调用约定。符号是分配给二进制文件中特定地址的名称，允许您在外部源和Rust代码之间共享内存（无论是用于数据还是代码），而调用约定提供了对如何调用存储在共享内存中的函数的共同理解。我们将依次查看每个构建块。
 
-Any binary artifact that the compiler produces from your code is filled with
-symbols—every function or static variable you define has a symbol that
-points to its location in the compiled binary. Generic functions may even
-have multiple symbols, one for each monomorphization of the function the
-compiler generates!
+##### 符号
 
-- Normally, you don’t have to think about symbols—they’re used internally
-by the compiler to pass around the final address of a function or
-static variable in your binary. This is how the compiler knows what location
-in memory each function call should target when it generates the final
-machine code, or where to read from if your code accesses a static variable.
-Since you don’t usually refer to symbols directly in your code, the compiler
-defaults to choosing semirandom names for them—you may have two functions
-called foo in different parts of your code, but the compiler will generate
-distinct symbols from them so that there’s no confusion.
+编译器从您的代码生成的任何二进制文件都充满了符号 - 您定义的每个函数或静态变量都有一个指向其在编译二进制文件中位置的符号。通用函数甚至可能有多个符号，每个函数的单态化都会生成一个符号！
 
-- However, using random names for symbols won’t work when you want
-to call a function or access a static variable that isn’t compiled at the same
-time, such as code that’s written in a different language and thus compiled
-by a different compiler. You can’t tell Rust about a static variable defined in
-C if the symbol for that variable has a semirandom name that keeps changing.
-Conversely, you can’t tell Python’s FFI interface about a Rust function if
-you can’t produce a stable name for it.
+- 通常情况下，您不必考虑符号 - 它们由编译器在二进制文件中传递函数或静态变量的最终地址时内部使用。这是编译器在生成最终机器代码时知道每个函数调用应该定位到内存中的哪个位置，或者如果您的代码访问静态变量，则从何处读取的方式。由于您通常不直接在代码中引用符号，编译器默认为它们选择半随机的名称 - 您的代码中可能有两个名为foo的函数，但编译器将为它们生成不同的符号，以避免混淆。
 
-- To use a symbol with an external origin, we also need some way to tell
-Rust about a variable or function in such a manner that the compiler will
-look for that same symbol defined elsewhere rather than defining its own
-(we’ll talk about how that search happens later). Otherwise, we would just
-end up with two identical symbols for that function or static variable, and
-no sharing would take place. In fact, in all likelihood, compilation would
-fail since any code that referred to that symbol wouldn’t know which definition
-(that is, which address) to use for it!
+- 但是，当您想要调用一个不同时编译的函数或访问静态变量时，使用随机名称的符号是行不通的，例如使用不同语言编写的代码，因此由不同的编译器编译。如果变量的符号具有不断变化的半随机名称，您无法告诉Rust有关在C中定义的静态变量。同样，如果您无法为Rust函数生成稳定的名称，也无法告诉Python的FFI接口有关Rust函数。
 
-**NOTE** A quick note about terminology: a symbol can be declared multiple times but
-defined only once. Every declaration of a symbol will link to the same single definition
-for that symbol at linking time. If no definition for a declaration is found, or if
-there are multiple definitions, the linker will complain.
+- 要使用具有外部来源的符号，我们还需要一种方法以某种方式告诉Rust有关变量或函数，以便编译器将在其他地方查找相同的符号，而不是定义自己的符号（我们稍后将讨论搜索方式）。否则，我们将得到两个相同的函数或静态变量的符号，并且不会发生共享。实际上，很可能编译会失败，因为引用该符号的任何代码都不知道要使用哪个定义（即哪个地址）！
+
+##### 注意
+
+关于术语的一个快速说明：符号可以声明多次，但只能定义一次。每个符号的每个声明在链接时都将链接到相同的单个定义。如果找不到声明的定义，或者存在多个定义，则链接器将报错。
 
 ##### An Aside on Compilation and Linking
 
-Compiler crash course time! Having a rough idea of the complicated process
-of turning code into a runnable binary will help you understand FFI
-better. You see, the compiler isn’t one monolithic program but is (typically)
-broken down into a handful of smaller programs that each perform distinct
-tasks and run one after the other. At a high level, there are three distinct
-phases to compilation—compilation, code generation, and linking—handled by
-three different components.
+编译器速成课时间！对将代码转换为可运行二进制文件的复杂过程有一个大致的了解将有助于您更好地理解外部函数接口（FFI）。您知道，编译器不是一个单一的程序，而是（通常）被分解为几个较小的程序，每个程序执行不同的任务，并按顺序运行。从高层次来看，编译有三个不同的阶段 - 编译、代码生成和链接，由三个不同的组件处理。
 
-- The first phase is performed by what most people tend to think of
-as “the compiler”; it deals with type checking, borrow checking, monomorphization,
-and other features we associate with a given programming
-language. This phase generates no machine code but rather a low-level
-representation of the code that uses heavily annotated abstract machine
-operations. That low-level representation is then passed to the code generation
-tool, which is what produces machine code that can actually run on a
-given CPU.
-- These two operations, taken together, do not have to be run in a single
-big pass over the whole codebase all at once. Instead, the codebase can be
-sliced into smaller chunks that are then run through compilation concurrently.
-For example, Rust generally compiles different crates independently
-and in parallel as long as there isn’t a dependency between them. It can also
-invoke the code generation tool for independent crates separately to process
-them in parallel. Rust can often even compile multiple smaller slices of
-a single crate separately!
-- Once the machine code for every piece of the application has been
-generated, those pieces can then be wired together. This is done in the
-linking phase by, unsurprisingly, the linker. The linker’s primary job is to
-take all the binary artifacts, called object files, produced by code generation,
-stitch them together into a single file, and then replace every reference to a
-symbol with the final memory address of that symbol. This is how you can
-define a function in one crate and call it from another but still compile the
-two crates separately.
-- The linker is what enables FFI to work. It doesn’t care how each of the
-input object files were constructed; it just dutifully links together all the
-object files and then resolves any shared symbols. One object file may originally
-have been Rust code, one originally C code, and one may be a binary
-blob downloaded from the internet; as long as they all use the same symbol
-names, the linker will make sure that the resulting machine code uses the
-correct cross-referenced addresses for any shared symbols.
-- A symbol can be linked either statically or dynamically. Static linking
-is the simplest, as each reference to a symbol is simply replaced with the
-address of that symbol’s definition. Dynamic linking, on the other hand,
-ties each reference to a symbol to a bit of generated code that tries to find
-the symbol’s definition when the program runs. We’ll talk more about these
-linking modes a little later. Rust generally defaults to static linking for Rust
-code, and dynamic linking for FFI.
+- 第一阶段由大多数人倾向于认为是“编译器”的部分执行，它处理类型检查、借用检查、单态化和其他与给定编程语言相关的功能。该阶段不生成机器代码，而是生成使用大量注释的抽象机器操作的代码的低级表示。然后，将该低级表示传递给代码生成工具，该工具生成实际可在给定CPU上运行的机器代码。
+- 这两个操作合在一起，不必一次性对整个代码库进行大规模处理。相反，代码库可以切分为较小的块，然后并行地通过编译。例如，只要它们之间没有依赖关系，Rust通常会独立并行地编译不同的crate。它还可以单独调用代码生成工具以并行处理独立的crate。甚至在一个crate的多个较小的切片中，Rust通常也可以分别编译！
+- 一旦生成了应用程序的每个部分的机器代码，这些部分就可以被连接在一起。这是通过链接阶段由链接器完成的，不出所料。链接器的主要工作是将代码生成产生的所有二进制文件（称为目标文件）连接在一起，然后将对符号的每个引用替换为该符号的最终内存地址。这就是您可以在一个crate中定义一个函数并从另一个crate中调用它，但仍然可以单独编译这两个crate的方式。
+- 链接器使FFI能够工作。它不关心每个输入目标文件是如何构建的；它只是忠实地将所有目标文件链接在一起，然后解析任何共享符号。一个目标文件可能最初是Rust代码，一个可能是C代码，一个可能是从互联网下载的二进制blob；只要它们都使用相同的符号名称，链接器就会确保生成的机器代码使用任何共享符号的正确交叉引用地址。
+- 符号可以静态链接或动态链接。静态链接是最简单的，因为对符号的每个引用只是被该符号的定义的地址替换。另一方面，动态链接将每个对符号的引用与一段生成的代码相关联，该代码在程序运行时尝试找到符号的定义。稍后我们将更详细地讨论这些链接模式。Rust通常默认为Rust代码使用静态链接，而对于FFI使用动态链接。
 
 ##### Using extern
 
-The extern keyword is the mechanism that allows us to declare a symbol as
-residing within a foreign interface. Specifically, it declares the existence of
-a symbol that’s defined elsewhere. In Listing 11-1 we define a static variable
-called RS_DEBUG in Rust that we make available to other code via FFI. We also
-declare a static variable called FOREIGN_DEBUG whose definition is unspecified
-but will be resolved at linking time.
+extern关键字是允许我们将符号声明为存在于外部接口中的机制。具体来说，它声明了一个在其他地方定义的符号的存在。在列表11-1中，我们在Rust中定义了一个名为RS_DEBUG的静态变量，通过FFI使其可供其他代码使用。我们还声明了一个名为FOREIGN_DEBUG的静态变量，其定义未指定，但将在链接时解析。
 
 ```rust
 # [no_mangle]
@@ -3459,34 +3370,14 @@ static FOREIGN_DEBUG: bool;
 }
 ```
 
-Listing 11-1: Exposing a Rust static variable, and accessing one declared elsewhere,
-through FFI
+代码清单11-1：通过FFI公开Rust静态变量，并访问其他地方声明的变量
 
-- The #[no_mangle] attribute ensures that RS_DEBUG retains that name during
-compilation rather than having the compiler assign it another symbol
-name to, for example, distinguish it from another (non-FFI) RS_DEBUG static
-variable elsewhere in the program. The variable is also declared as pub since
-it’s a part of the crate’s public API, though that annotation isn’t strictly
-necessary on items marked #[no_mangle]. Note that we don’t use extern for
-RS_DEBUG, since it’s defined here. It will still be accessible to link against from
-other languages.
-- The extern block surrounding the FOREIGN_DEBUG static variable denotes
-that this declaration refers to a location that Rust will learn at linking
-time based on where the definition of the same symbol is located. Since
-it’s defined elsewhere, we don’t give it an initialization value, just a type,
-which should match the type used at the definition site. Because Rust
-doesn’t know anything about the code that defines the static variable,
-and thus can’t check that you’ve declared the correct type for the symbol,
-FOREIGN_DEBUG can be accessed only inside an unsafe block.
+- #[no_mangle]属性确保RS_DEBUG在编译过程中保留该名称，而不是由编译器分配另一个符号名称，例如用于区分程序中其他（非FFI）RS_DEBUG静态变量的名称。由于它是crate的公共API的一部分，变量也被声明为pub，尽管在标记为#[no_mangle]的项上，这个注解不是严格必需的。请注意，我们不使用extern来定义RS_DEBUG，因为它在这里被定义。它仍然可以从其他语言中链接访问。
+- 包围FOREIGN_DEBUG静态变量的extern块表示此声明是指向Rust将在链接时根据相同符号的定义所在位置学习的位置。由于它在其他地方定义，我们不给它一个初始化值，只给它一个类型，该类型应与定义处使用的类型匹配。因为Rust对定义静态变量的代码一无所知，因此无法检查您是否为符号声明了正确的类型，因此FOREIGN_DEBUG只能在unsafe块内访问。
 
-**NOTE** Static variables in Rust aren’t mutable by default, regardless of whether they’re in an
-extern block. These variables are always available from any thread, so mutable access
-would pose a data race risk. You can declare a static as mut, but if you do, it becomes
-unsafe to access.
+**注意** Rust中的静态变量默认情况下是不可变的，无论它们是否在extern块中。这些变量始终可以从任何线程中访问，因此可变访问会带来数据竞争的风险。您可以将静态变量声明为mut，但如果这样做，访问它将变得不安全。
 
-- The procedure to declare FFI functions is very similar. In Listing 11-2,
-we make hello_rust accessible to non-Rust code and pull in the external
-hello_foreign function.
+- 声明FFI函数的过程非常相似。在代码清单11-2中，我们使hello_rust对非Rust代码可访问，并引入外部的hello_foreign函数。
 
 ```rust
 # [no_mangle]
@@ -3495,208 +3386,67 @@ extern {
 fn hello_foreign(i: i32);
 }
 ```
-Listing 11-2: Exposing a Rust function, and accessing one defined elsewhere, through FFI
 
-- The building blocks are all the same as in Listing 11-1 with the exception
-that the Rust function is declared using extern fn, which we’ll explore
-in the next section.
-- If there are multiple definitions of a given extern symbol like FOREIGN_
-DEBUG or hello_foreign, you can explicitly specify which library the symbol
-should link against using the #[link] attribute. If you don’t, the linker will
-give you an error saying that it’s found multiple definitions for the symbol
-in question. For example, if you prefix an extern block with #[link(name =
-"crypto")], you’re telling the linker to resolve any symbols (whether statics
-or functions) against a linked library named “crypto.” You can also rename
-an external static or function in your Rust code by annotating its declaration
-with #[link_name = "<actual_symbol_name>"], and then the item links to
-whatever name you wish. Similarly, you can rename a Rust item for export
-using #[export_name = "<export_symbol_name>"].
+代码清单11-2：通过FFI公开Rust函数，并通过FFI访问其他地方定义的函数
 
-#### Link Kinds
+- 构建块与代码清单11-1中的相同，唯一的区别是Rust函数使用extern fn声明，我们将在下一节中探讨。
+- 如果存在给定外部符号（如FOREIGN_DEBUG或hello_foreign）的多个定义，您可以使用#[link]属性显式指定该符号应链接到的库。如果不这样做，链接器将报错，表示找到了该符号的多个定义。例如，如果在extern块前面加上#[link(name = "crypto")]，则表示告诉链接器将任何符号（无论是静态变量还是函数）与名为"crypto"的链接库解析。您还可以通过在Rust代码中注释其声明来重命名外部静态变量或函数，使用#[link_name = "<actual_symbol_name>"]，然后该项将链接到您希望的任何名称。类似地，您可以使用#[export_name = "<export_symbol_name>"]重命名要导出的Rust项。
 
-`# [link]` also accepts the argument kind, which dictates how the items in the
-block should be linked. The argument defaults to "dylib", which signifies
-C-compatible dynamic linking. The alternative kind value is "static", which
-indicates that the items in the block should be linked fully at compile time
-(that is, statically). This essentially means that the external code is wired
-directly into the binary produced by the compiler , and thus doesn’t need to
-exist at runtime. There are a few other kinds as well, but they are much less
-common and outside the scope of this book.
+#### 链接类型
 
-- There are several trade-offs between static and dynamic linking, but the
-main considerations are security, binary size, and distribution. First, dynamic
-linking tends to be more secure because it makes it easier to upgrade libraries
-independently. Dynamic linking allows whoever deploys a binary that contains
-your code to upgrade libraries your code links against without having
-to recompile your code. If, say, libcrypto gets a security update, the user can
-update the crypto library on the host and restart the binary, and the updated
-library code will be used automatically. With static compilation, the library’s
-code is hardwired into the binary, so the user would have to recompile your
-code against an upgraded version of the library to get the update.
-- Dynamic linking also tends to produce smaller binaries. Since static
-compilation includes any linked code into the final binary output, and any
-code that code in turn pulls in, it produces larger binaries. With dynamic
-linking, each external item includes just a small bit of wrapper code that
-loads the indicated library at runtime and then forwards the access.
-- So far, static linking may not seem very attractive, but it has one big advantage
-over dynamic linking: ease of distribution. With dynamic linking, anyone
-who wants to run a binary that includes your code must also have any libraries
-your code links against. Not only that, but they must make sure the version of
-each such library they have is compatible with what your code expects. This
-may be fine for libraries like glibc or OpenSSL that are available on most systems,
-but it poses a problem for more obscure libraries. The user then needs
-to be aware that they should install that library and must hunt for it in order to
-run your code! With static linking, the library’s code is embedded directly into
-the binary output, so the user doesn’t need to install it themselves.
-- Ultimately, there isn’t a right choice between static and dynamic linking.
-Dynamic linking is usually a good default, but static compilation may be a
-better option for particularly constrained deployment environments or for
-very small or niche library dependencies. Use your best judgment!
+`#[link]`还接受kind参数，它指定了块中的项应如何链接。参数默认为"dylib"，表示与C兼容的动态链接。另一种kind值是"static"，它表示块中的项应在编译时完全链接（即静态链接）。这实际上意味着外部代码直接嵌入到编译器生成的二进制文件中，因此不需要在运行时存在。还有其他几种类型，但它们较少见，超出了本书的范围。
+
+- 静态链接和动态链接之间存在几个权衡。主要考虑因素是安全性、二进制文件大小和分发。首先，动态链接往往更安全，因为它使得独立升级库更容易。动态链接允许在包含您的代码的二进制文件上升级您的代码链接的库，而无需重新编译您的代码。例如，如果libcrypto获得了安全更新，用户可以在主机上更新crypto库并重新启动二进制文件，更新的库代码将自动使用。使用静态编译，库的代码被硬编码到二进制文件中，因此用户必须使用升级版本的库重新编译您的代码才能获得更新。
+- 动态链接还倾向于生成较小的二进制文件。由于静态编译将任何链接的代码包含到最终的二进制输出中，并且该代码进一步引入的任何代码，因此会产生较大的二进制文件。使用动态链接，每个外部项只包含一个小的包装代码，该代码在运行时加载指定的库，然后转发访问。
+- 到目前为止，静态链接可能看起来并不那么吸引人，但它在分发方面有一个巨大的优势：易于分发。使用动态链接，任何想要运行包含您的代码的二进制文件的人也必须拥有您的代码链接的任何库。不仅如此，他们还必须确保他们拥有的每个库的版本与您的代码所期望的兼容。这对于像glibc或OpenSSL这样在大多数系统上都可用的库来说可能没问题，但对于更不常见的库来说，这是一个问题。然后，用户需要知道他们应该安装该库，并且必须寻找它以便运行您的代码！使用静态链接，库的代码直接嵌入到二进制输出中，因此用户不需要自己安装它。
+- 最终，静态链接和动态链接之间没有正确的选择。动态链接通常是一个很好的默认选择，但对于特别受限的部署环境或非常小型或利基的库依赖项，静态编译可能是更好的选择。请根据实际情况做出判断！
 
 ##### Calling Conventions
 
-Symbols dictate where a given function or variable is defined, but that’s not
-enough to allow function calls across FFI boundaries. To call a foreign
-function in any language, the compiler also needs to know its calling convention,
-which dictates the assembly code to use to invoke the function. We
-won’t get into the actual technical details of each calling convention here,
-but as a general overview, the convention dictates:
-• How the stack frame for the call is set up
-• How arguments are passed (whether on the stack or in registers, in
-order or in reverse)
-• How the function is told where to jump back to when it returns
-• How various CPU states, like registers, are restored in the caller after
-the function completes
+符号决定了函数或变量的定义位置，但这还不足以允许跨FFI边界进行函数调用。为了调用任何语言中的外部函数，编译器还需要知道其调用约定，该约定规定了用于调用函数的汇编代码。我们不会在这里详细介绍每个调用约定的技术细节，但作为一般概述，调用约定规定了：
 
-- Rust has its own unique calling convention that isn’t standardized and
-is allowed to be changed by the compiler over time. This works fine as long
-as all function definitions and calls are compiled by the same Rust compiler,
-but it is problematic if you want interoperability with external code
-because that external code doesn’t know about the Rust calling convention.
-- Every Rust function is implicitly declared with extern "Rust" if you don’t
-declare anything else. Using extern on its own, as in Listing 11-2, is shorthand
-for extern "C", which means “use the standard C calling convention.”
-The shorthand is there because the C calling convention is what you want
-in nearly every case of FFI.
+- 如何设置调用的堆栈帧
+- 如何传递参数（是在堆栈上还是在寄存器中，按顺序还是按相反顺序）
+- 函数返回时如何告诉函数跳回到哪里
+- 在函数完成后，如何在调用者中恢复各种CPU状态，如寄存器
 
-**NOTE** Unwinding generally works only with regular Rust functions. If you unwind
-across the end of a Rust function that isn’t extern "Rust", your program will abort.
-Unwinding across the FFI boundary into external code is undefined behavior. With
-RFC 2945, Rust gained a new extern declaration, extern "C-unwind"; this permits
-unwinding across FFI boundaries in particular situations, but if you wish to use it
-you should read the RFC carefully.
+Rust有自己独特的调用约定，它不是标准化的，并且允许编译器随时间改变。只要所有函数定义和调用都由同一个Rust编译器编译，这是可以的，但如果您希望与外部代码进行互操作，这将是一个问题，因为外部代码不知道Rust的调用约定。
+如果您没有声明其他内容，每个Rust函数都会隐式地声明为extern "Rust"。在列表11-2中，使用extern关键字本身是extern "C"的简写，意思是“使用标准的C调用约定”。之所以有这个简写，是因为在几乎所有的FFI情况下，您都希望使用C调用约定。
 
-- Rust also supports a number of other calling conventions that you supply
-as a string following the extern keyword (in both fn and block context). For
-example, extern "system" says to use the calling convention of the operating
-system’s standard library interface, which at the time of writing is the same
-as "C" everywhere except on Win32, which uses the "stdcall" calling convention.
-In general, you’ll rarely need to supply a calling convention explicitly
-unless you’re working with particularly platform-specific or highly optimized
-external interfaces, so just extern (which is extern "C") will be fine.
+**注意** 展开通常只适用于常规的Rust函数。如果您在不是extern "Rust"的Rust函数的末尾展开，您的程序将中止。在FFI边界上展开到外部代码是未定义行为。通过RFC 2945，Rust获得了一个新的extern声明，extern "C-unwind"；这允许在特定情况下跨FFI边界展开，但如果您希望使用它，应该仔细阅读RFC。
 
-**NOTE** A function’s calling convention is part of its type. That is, the type extern "C" fn()
-is not the same as fn() (or extern "Rust" fn()), which is different again from extern
-"system" fn().
+Rust还支持许多其他调用约定，您可以在extern关键字后面提供一个字符串来指定。例如，extern "system"表示使用操作系统标准库接口的调用约定，目前与"C"相同，除了Win32使用"stdcall"调用约定。通常情况下，除非您使用特定于平台或高度优化的外部接口，否则很少需要显式提供调用约定，所以只使用extern（即extern "C"）就可以了。
 
-**OTHER BINARY ARTIFACTS**
-Normally, you compile Rust code only to run its tests or build a binary that
-you’re then going to distribute or run. Unlike in many other languages, you
-don’t generally compile a Rust library to distribute it to others—if you run a command
-like cargo publish, it just wraps up your crate’s source code and uploads
-it to crates.io. This is mostly because it is difficult to distribute generic code as
-anything but source code. Since the compiler monomorphizes each generic
-function to the provided type arguments, and those types may be defined in
-the caller’s crate, the compiler must have access to the function’s generic form,
-which means no optimized machine code!
+**注意** 函数的调用约定是其类型的一部分。也就是说，类型extern "C" fn()与fn()（或extern "Rust" fn()）不同，而extern "system" fn()又与它们不同。
 
-- Technically speaking, Rust does compile binary library artifacts, called rlibs,
-of each dependency that it combines in the end. These rlibs include the information
-necessary to resolve generic types, but they are specific to the exact compiler
-used and can’t generally be distributed in any meaningful way.
-- So what do you do if you want to write a library in Rust that you then
-want to interface with from another programming language? The solution is to
-produce C-compatible library files in the form of dynamically linked libraries
-(.so files on Unix, .dylib files on macOS, and .dll files on Windows) and statically
-linked libraries (.a files on Unix/macOS and .lib files on Windows). Those
-files look like files produced by C code, so they can also be used by other languages
-that know how to interact with C.
-- To produce these C-compatible binary artifacts, you set the crate-type
-field of the [lib] section of your Cargo.toml file. The field takes an array of values,
-which would normally just be "lib" to indicate a standard Rust library (an
-rlib). Cargo applies some heuristics that will set this value automatically if your
-crate is clearly not a library (for example, if it's a procedural macro), but best
-practice is to set this value explicitly if you’re producing anything but a good ol’
-Rust library.
-- There are a number of different crate types, but the relevant ones here are
-"cdylib" and "staticlib", which produce C-compatible library files that are
-dynamically and statically linked, respectively. Keep in mind that when you
-produce one of these artifact types, only publicly available symbols are available—
-that is, public and #[no_mangle] static variables and functions. Things like
-types and constants won’t be available, even if they’re marked pub, since they
-have no meaningful representation in a binary library file.
+**其他二进制文件**
+通常情况下，您只需编译Rust代码以运行其测试或构建要分发或运行的二进制文件。与许多其他语言不同，您通常不会编译Rust库以分发给其他人 - 如果运行类似cargo publish的命令，它只会将您的crate源代码打包并上传到crates.io。这主要是因为将通用代码分发为源代码以外的任何形式都很困难。由于编译器将每个泛型函数单态化为提供的类型参数，并且这些类型可能在调用者的crate中定义，因此编译器必须访问函数的泛型形式，这意味着没有优化的机器代码！
 
-#### Types Across Language Boundaries
+- 严格来说，Rust确实会编译二进制库文件，称为rlibs，它们包含了解析泛型类型所需的信息，但它们特定于使用的确切编译器，并且通常无法以有意义的方式分发。
+- 那么，如果您想在Rust中编写一个库，然后希望从另一种编程语言中进行接口调用，该怎么办呢？解决方案是生成与C兼容的库文件，形式为动态链接库（Unix上的.so文件，macOS上的.dylib文件，Windows上的.dll文件）和静态链接库（Unix/macOS上的.a文件，Windows上的.lib文件）。这些文件看起来像由C代码生成的文件，因此也可以被其他知道如何与C交互的语言使用。
+- 要生成这些与C兼容的二进制文件，您需要在Cargo.toml文件的[lib]部分的crate-type字段中设置值。该字段接受一个值数组，通常只是"lib"，表示标准的Rust库（一个rlib）。如果您的crate显然不是库（例如，如果它是一个过程宏），Cargo会自动应用一些启发式规则来设置该值，但最佳实践是如果您生成的不是一个传统的Rust库，则显式设置该值。
+- 这里有许多不同的crate类型，但这里相关的是"cdylib"和"staticlib"，它们分别生成动态链接和静态链接的与C兼容的库文件。请记住，当您生成这些二进制文件类型之一时，只有公开可用的符号可用 - 即公共和#[no_mangle]静态变量和函数。诸如类型和常量之类的东西将不可用，即使它们被标记为pub，因为它们在二进制库文件中没有有意义的表示形式。
 
-With FFI, type layout is crucial; if one language lays out the memory for
-some shared data one way but the language on the other side of the FFI
-boundary expects it to be laid out differently, then the two sides will interpret
-the data inconsistently. In this section, we’ll look at how to make types
-match up over FFI, and other aspects of types to be aware of when you cross
-the boundaries between languages.
+#### 跨语言边界的类型
 
-##### Type Matching
+在使用FFI时，类型布局非常重要；如果一种语言以某种方式布局共享数据，而FFI边界的另一侧的语言期望以不同的方式布局，那么两侧将以不一致的方式解释数据。在本节中，我们将看看如何使类型在FFI上匹配，并在跨语言边界时要注意的其他类型方面。
 
-Types aren’t shared across the FFI boundary. When you declare a type in
-Rust, that type information is lost entirely upon compilation. All that’s communicated
-to the other side is the bits that make up values of that type.
-You therefore need to declare the type for those bits on both sides of the
-boundary. When you declare the Rust version of the type, you first must
-make sure the primitives contained within the type match up. For example,
-if C is used on the other side of the boundary, and the C type uses an int,
-the Rust code had better use the exact Rust equivalent: an i32. To take
-some of the guesswork out of that process, for interfaces that use C-like
-types the Rust standard library provides you with the correct C types in
-the std::os::raw module, which defines type c_int = i32, type c_char = i8/
-u8 depending on whether char is signed, type c_long = i32/i64 depending on
-the target pointer width, and so on.
+##### 类型匹配
 
-**NOTE** Take particular note of quirky integer types in C like __be32. These often do not translate
-directly to Rust types and may be best left as something like [u8; 4]. For example,
-__be32 is always encoded as big-endian, whereas Rust’s i32 uses the endianness of the
-current platform.
+类型不会在FFI边界上共享。当您在Rust中声明一个类型时，该类型信息在编译时完全丢失。在另一侧传递的只是构成该类型值的位。
+因此，您需要在边界的两侧都声明该位的类型。当您声明类型的Rust版本时，首先必须确保类型中包含的基本类型匹配。例如，如果在边界的另一侧使用C，并且C类型使用int，那么Rust代码最好使用完全相同的Rust等效类型：i32。为了简化这个过程，对于使用类似C类型的接口，Rust标准库为您提供了正确的C类型，位于std::os::raw模块中，其中定义了类型c_int = i32，类型c_char = i8/u8（取决于char是否有符号），类型c_long = i32/i64（取决于目标指针宽度），等等。
 
-- With more complex types like vectors and strings, you usually need
-to do the mapping manually. For example, since C tends to represent
-a string as a sequence of bytes terminated with a 0 byte, rather than a
-UTF-8–encoded string with the length stored separately, you cannot generally
-use Rust’s string types over FFI. Instead, assuming the other side
-uses a C-style string representation, you should use the std::ffi::CStr and
-std::ffi::CString types for borrowed and owned strings, respectively. For
-vectors, you’ll likely want to use a raw pointer to the first element and then
-pass the length separately—the Vec::into_raw_parts method may come in
-handy for that.
-- For types that contain other types, such as structs and unions, you also
-need to deal with layout and alignment. As we discussed in Chapter 2, Rust
-lays out types in an undefined way by default, so at the very least you will
-want to use #[repr(C)] to ensure that the type has a deterministic layout and
-alignment that mirrors what’s (likely and hopefully) used across the FFI
-boundary. If the interface also specifies other configurations for the type,
-such as manually setting its alignment or removing padding, you’ll need to
-adjust your #[repr] accordingly.
-- A Rust enum has multiple possible C-style representations depending
-on whether the enum contains data or not. Consider an enum without data,
-like this:
+**注意** 特别注意C中奇怪的整数类型，如__be32。这些类型通常不能直接转换为Rust类型，最好将其保留为类似[u8; 4]的形式。例如，__be32始终以大端字节序编码，而Rust的i32使用当前平台的字节序。
+
+- 对于更复杂的类型，如向量和字符串，通常需要手动进行映射。例如，由于C倾向于将字符串表示为以0字节结尾的字节序列，而不是使用单独存储长度的UTF-8编码字符串，通常不能在FFI上使用Rust的字符串类型。相反，假设另一侧使用C风格的字符串表示，您应该使用std::ffi::CStr和std::ffi::CString类型分别用于借用和拥有的字符串。对于向量，您可能需要使用指向第一个元素的原始指针，然后单独传递长度 - 对于这一点，Vec::into_raw_parts方法可能会很有用。
+- 对于包含其他类型的类型，例如结构体和联合体，您还需要处理布局和对齐方式。正如我们在第2章中讨论的那样，Rust默认以未定义的方式布局类型，因此至少您将希望使用#[repr(C)]来确保该类型具有确定的布局和与FFI边界上使用的布局和对齐方式相对应的对齐方式（可能和希望）。如果接口还为该类型指定了其他配置，例如手动设置其对齐方式或删除填充，您将需要相应地调整#[repr]。
+- Rust枚举类型具有多种可能的C风格表示，具体取决于枚举是否包含数据。考虑一个没有数据的枚举，如下所示：
 
 ```rust
 enum Foo { Bar, Baz }
 ```
 
-- With #[repr(C)], the type Foo is encoded using just a single integer of
-the same size that a C compiler would choose for an enum with the same
-number of variants. The first variant has the value 0, the second the value 1,
-and so on. You can also manually assign values to each variant, as shown in
-Listing 11-3.
+- 使用#[repr(C)]，类型Foo使用与C编译器为具有相同数量变体的枚举选择的大小相同的单个整数进行编码。第一个变体的值为0，第二个变体的值为1，依此类推。您还可以手动为每个变体分配值，如清单11-3所示。
 
 ```rust
 # [repr(C)]
@@ -3706,33 +3456,12 @@ enum Foo {
 }
 ```
 
-Listing 11-3: Defining explicit variant values for a dataless enum
-**NOTE** Technically, the specification says that the first variant’s value is 0 and every subsequent
-variant’s value is one greater than that of the previous one. This makes a difference
-if you manually set the value for some variants but not others—those you do
-not set will continue from the last one you did set.
+代码清单11-3：为无数据的枚举定义显式的变体值
+**注意** 从技术上讲，规范指定第一个变体的值为0，每个后续变体的值比前一个变体的值大1。如果您为某些变体手动设置了值但没有为其他变体设置值，这将产生差异 - 没有设置的变体将从您最后设置的变体继续。
 
-- You should be careful about mapping enum-like types in C to Rust
-this way, however, as only the values for defined variants are valid for an
-instance of the enum type. This tends to get you into trouble with C-style
-enumerations that often function more like bitsets, where variants can be
-bitwise ORed together to produce a value that encapsulates multiple variants
-at once. In the example from Listing 11-3, for instance, a value of 3 produced
-by taking Bar | Baz would not be valid for Foo in Rust! If you need to
-model a C API that uses an enumeration for a set of bitflags that can be set
-and unset individually, consider using a newtype wrapper around an integer
-type, with associated constants for each variant and implementations of
-the various Bit*traits for improved ergonomics. Or use the bitflags crate.
-**NOTE** For fieldless enums, you can also pass a numeric type to #[repr] to use a different
-type than isize for the discriminator. For example, #[repr(u8)] will encode the discriminator
-using a single unsigned byte. For a data-carrying enum, you can pass
-`# [repr(C, u8)]` to get the same effect
-- On an enum that contains data, the #[repr(C)] attribute causes the enum
-to be represented using a tagged union. That is, it is represented in memory
-by a #[repr(C)] struct with two fields, where the first is the discriminator as
-it would be encoded if none of the variants had fields, and the second is a
-union of the data structures for each variant. For a concrete example, consider
-the enum and associated representation in Listing 11-4.
+- 但是，您应该小心将C中的类似枚举类型映射到Rust中，因为只有定义的变体的值对于枚举类型的实例是有效的。这在处理C风格的枚举时往往会遇到问题，因为它们通常更像是位集，其中变体可以按位OR在一起以产生封装多个变体的值。例如，在代码清单11-3中，通过取Bar | Baz生成的值为3在Rust中是无效的！如果您需要模拟使用枚举表示一组可以单独设置和取消设置的位标志的C API，请考虑使用围绕整数类型的新类型包装器，并为每个变体提供关联常量以及各种Bit*特性的实现以提高人性化。或者使用bitflags crate。
+**注意** 对于无字段的枚举，您还可以将数字类型传递给#[repr]，以使用与isize不同的类型。例如，#[repr(u8)]将使用单个无符号字节编码鉴别器。对于带有数据的枚举，您可以传递`# [repr(C, u8)]`以获得相同的效果。
+- 对于包含数据的枚举，#[repr(C)]属性会导致枚举使用标记联合表示。也就是说，它在内存中由一个#[repr(C)]结构体表示，该结构体有两个字段，第一个字段是鉴别器，如果没有变体具有字段，则编码方式与之相同，第二个字段是每个变体的数据结构的联合体。具体示例，请参见代码清单11-4中的枚举和相关表示。
 
 ```rust
 # [repr(C)]
@@ -3771,34 +3500,16 @@ data: FooData
 
 ```
 
-Listing 11-4: Rust enums with #[repr(C)] are represented as tagged unions.
+代码清单11-4：使用#[repr(C)]的Rust枚举表示为标记联合。
 
-**THE NICHE OPTIMIZATION IN FFI**
-In Chapter 9 we talked about the niche optimization, where the Rust compiler
-uses invalid bit patterns to represent enum variants that hold no data. The fact
-that this optimization is guaranteed leads to an interesting interaction with FFI.
-Specifically, it means that nullable pointers can always be represented in FFI types
-using an Option-wrapped pointer type. For example, a nullable function pointer
-can be represented as Option<extern fn(...)>, and a nullable data pointer can
-be represented as Option<*mut T>. These will transparently do the right thing if an
-all-zero bit pattern value is provided, and will represent it as None in Rust.
+**FFI中的特殊优化**
+在第9章中，我们讨论了特殊优化，即Rust编译器使用无效的位模式来表示不包含数据的枚举变体。这种优化的保证意味着它与FFI之间有一个有趣的交互。具体来说，这意味着可以始终使用Option包装的指针类型在FFI类型中表示可空指针。例如，可空函数指针可以表示为Option<extern fn(...)>, 可空数据指针可以表示为Option<*mut T>。如果提供了全零位模式值，它们将自动执行正确的操作，并在Rust中表示为None。
 
-##### Allocations
+##### 分配
 
-When you allocate memory, that allocation belongs to its allocator and can
-be freed only by that same allocator. This is the case if you use multiple
-allocators within Rust and also if you are allocating memory both in Rust
-and with some allocator on the other side of the FFI boundary. You’re
-free to send pointers across the boundary and access that memory to your
-heart’s content, but when it comes to releasing the memory again, it needs
-to be returned to the appropriate allocator.
+当您分配内存时，该分配属于其分配器，并且只能由该相同的分配器释放。这适用于在Rust中使用多个分配器的情况，也适用于在Rust和FFI边界的另一侧使用某个分配器进行内存分配的情况。您可以自由地将指针发送到边界并访问该内存，但是当涉及释放内存时，它需要返回给适当的分配器。
 
-- Most FFI interfaces will have one of two configurations for handling
-allocation: either the caller provides data pointers to chunks of memory
-or the interface exposes dedicated freeing methods to which any allocated
-resources should be returned when they are no longer needed. Listing 11-5
-shows an example of Rust declarations of some signatures from the
-OpenSSL library that use implementation-managed memory.
+- 大多数FFI接口将具有两种处理分配的配置：要么调用方提供数据指针以指向内存块，要么接口公开专用的释放方法，应将任何分配的资源在不再需要时返回给这些方法。代码清单11-5显示了一些来自OpenSSL库的签名的Rust声明示例，这些签名使用实现管理的内存。
 
 ```rust
 // One function allocates memory for a new object.
@@ -3809,18 +3520,10 @@ extern fn ECDSA_SIG_free(sig:*mut ECDSA_SIG);
 
 ```
 
-Listing 11-5: An implementation-managed memory interface
+代码清单11-5：实现管理的内存接口
 
-- The functions ECDSA_SIG_new and ECDSA_SIG_free form a pair, where the
-caller is expected to call the new function, use the returned pointer for as
-long as it needs (likely by passing it to other functions in turn), and then
-finally pass the pointer to the free function once it’s done with the referenced
-resource. Presumably, the implementation allocates memory in
-the new function and deallocates it in the free function. If these functions
-were defined in Rust, the new function would likely use Box::new, and the
-free function would invoke Box::from_raw and then drop the value to run its
-destructor.
-Listing 11-6 shows an example of caller-managed memory.
+- 函数ECDSA_SIG_new和ECDSA_SIG_free形成一对，调用者需要调用new函数，使用返回的指针尽可能长时间（可能通过将其依次传递给其他函数）并在完成引用的资源后将指针传递给free函数。假设实现在new函数中分配内存，并在free函数中释放它。如果这些函数在Rust中定义，new函数可能会使用Box::new，而free函数将调用Box::from_raw，然后丢弃值以运行其析构函数。
+代码清单11-6显示了一个调用者管理的内存示例。
 
 ```rust
 // An example of caller-managed memory.
@@ -3830,109 +3533,44 @@ Listing 11-6 shows an example of caller-managed memory.
 extern fn BIO_new_mem_buf(buf: *const c_void, len: c_int) ->*mut BIO
 ```
 
-Listing 11-6: A caller-managed memory interface
+代码清单11-6：调用者管理的内存接口
 
-- Here, the BIO_new_mem_buf function instead has the caller supply the
-backing memory. The caller can choose to allocate memory on the heap,
-or use whatever other mechanism it deems fit for obtaining the required
-memory, and then passes it to the library. The onus is then on the caller to
-ensure that the memory is later deallocated, but only once it is no longer
-needed by the FFI implementation!
-- You can use either of these approaches in your FFI APIs or even mix
-and match them if you wish. As a general rule of thumb, allow the caller to
-pass in memory when doing so is feasible, since it gives the caller more freedom
-to manage memory as it deems appropriate. For example, the caller
-may be using a highly specialized allocator on some custom operating
-system, and may not want to be forced to use the standard allocator your
-implementation would use. If the caller can pass in the memory, it might
-even avoid allocations entirely if it can instead use stack memory or reuse
-already allocated memory. However, keep in mind that the ergonomics of a
-caller-managed interface are often more convoluted, since the caller must
-now do all the work to figure out how much memory to allocate and then
-set that up before it can call into your library.
-- In some instances, it may even be impossible for the caller to know
-ahead of time how much memory to allocate—for example, if your library’s
-types are opaque (and thus not known to the caller) or can change over
-time, the caller won’t be able to predict the size of the allocation. Similarly,
-if your code has to allocate more memory while it is running, such as if
-you’re building a graph on the fly, the amount of memory needed may vary
-dynamically at runtime. In such cases, you will have to use implementationmanaged
-memory.
-- When you’re forced to make a trade-off, go with caller-allocated memory
-for anything that is either large or frequent. In those cases the caller is
-likely to care the most about controlling the allocations itself. For anything
-else, it’s probably okay for your code to allocate and then expose destructor
-functions for each relevant type.
+- 在这里，BIO_new_mem_buf函数由调用者提供后备内存。调用者可以选择在堆上分配内存，或者使用任何其他机制来获取所需的内存，然后将其传递给库。然后，责任在于调用者确保内存在不再被FFI实现需要时进行释放！
+- 您可以在您的FFI API中使用这两种方法，甚至可以混合使用它们。作为一个经验法则，如果可行的话，允许调用者传递内存，因为这样可以给调用者更多自由来管理内存。例如，调用者可能在某个自定义操作系统上使用高度专门化的分配器，并且可能不想被强制使用您的实现所使用的标准分配器。如果调用者可以传递内存，它甚至可以避免完全分配，而是使用堆栈内存或重用已分配的内存。但是，请记住，调用者管理的接口的人机工程学通常更加复杂，因为调用者现在必须做所有的工作来确定要分配多少内存，并在调用您的库之前设置它。
+- 在某些情况下，调用者甚至无法预先知道要分配多少内存-例如，如果您的库的类型是不透明的（因此调用者不知道）或者可以随时间变化，调用者将无法预测分配的大小。同样，如果您的代码在运行时需要分配更多的内存，例如，如果您正在动态构建图形，则所需的内存量可能会在运行时动态变化。在这种情况下，您将不得不使用实现管理的内存。
+- 当您被迫做出权衡时，对于任何大型或频繁的内容，请使用调用者分配的内存。在这些情况下，调用者很可能最关心自己控制分配。对于其他任何情况，您的代码可能会分配并公开每个相关类型的析构函数。
 
-##### Callbacks
+##### 回调函数
 
-You can pass function pointers across the FFI boundary and call the referenced
-function through those pointers as long as the function pointer’s
-type has an extern annotation that matches the function’s calling convention.
-That is, you can define an extern "C" fn(c_int) -> c_int in Rust and
-then pass a reference to that function to C code as a callback that the C
-code will eventually invoke.
+您可以在FFI边界上传递函数指针，并通过这些指针调用引用的函数，只要函数指针的类型具有与函数的调用约定匹配的extern注释。也就是说，您可以在Rust中定义一个extern "C" fn(c_int) -> c_int，然后将对该函数的引用作为回调传递给C代码，C代码最终会调用该回调。
 
-- You do need to be careful using callbacks around panics, as having a
-panic unwind past the end of a function that is anything but extern "Rust"
-is undefined behavior. The Rust compiler will currently automatically abort
-if it detects such a panic, but that may not always be the behavior you want.
-Instead, you may want to use std::panic::catch_unwind to detect the panic in
-any function marked extern, and then translate the panic into an error that
-is FFI-compatible.
+- 在使用回调时，需要小心处理panic，因为在除了extern "Rust"之外的函数末尾发生panic的行为是未定义的。Rust编译器当前会在检测到这种panic时自动中止，但这可能不是您想要的行为。相反，您可能希望使用std::panic::catch_unwind在任何标记为extern的函数中检测panic，然后将panic转换为与FFI兼容的错误。
 
-##### Safety
+##### 安全性
 
-When you write Rust FFI bindings, most of the code that actually interfaces
-with the FFI will be unsafe and will mainly revolve around raw pointers.
-However, your goal should be to ultimately present a safe Rust interface on
-top of the FFI. Doing so mainly comes down to reading carefully through
-the invariants of the unsafe interface you are wrapping and then ensuring
-you uphold them all through the Rust type system in the safe interface. The
-three most important elements of safely encapsulating a foreign interface
-are capturing & versus &mut accurately, implementing Send and Sync appropriately,
-and ensuring that pointers cannot be accidentally confused. I’ll go
-over how to enforce each of these next.
+当编写Rust FFI绑定时，实际与FFI进行交互的大部分代码将是不安全的，并且主要围绕原始指针展开。然而，您的目标应该是最终在FFI之上呈现一个安全的Rust接口。要做到这一点，主要是仔细阅读您正在封装的不安全接口的不变量，然后通过Rust类型系统在安全接口中确保您遵守所有这些不变量。安全封装外部接口的三个最重要的元素是准确捕获&与&mut、适当实现Send和Sync，并确保指针不能被意外混淆。接下来，我将介绍如何强制执行每个元素。
 
-##### References and Lifetimes
+##### 引用和生命周期
 
-If there’s a chance external code will modify data behind a given pointer,
-make sure that the safe Rust interface has an exclusive reference to the
-relevant data by taking &mut. Otherwise a user of your safe wrapper might
-accidentally read from memory that the external code is simultaneously
-modifying, and all hell will break loose!
+如果有可能外部代码会修改给定指针后面的数据，请确保安全的Rust接口通过使用&mut来获得对相关数据的独占引用。否则，安全包装器的用户可能会意外读取外部代码同时修改的内存，这将导致灾难性后果！
 
-- You’ll also want to make good use of Rust lifetimes to ensure that all
-pointers live for as long as the FFI requires. For example, imagine an external
-interface that lets you create a Context and then lets you create a Device from
-that Context with the requirement that the Context remain valid for as long as
-the Device lives. In that case, any safe wrapper for the interface should enforce
-that requirement in the type system by having Device hold a lifetime associated
-with the borrow of Context that the Device was created from.
+- 您还应该充分利用Rust的生命周期，以确保所有指针的生命周期与FFI所需的时间一样长。例如，想象一个外部接口，它允许您创建一个Context，然后允许您从该Context创建一个Device，并要求Context在Device存在期间保持有效。在这种情况下，任何安全的接口的实现都应该通过在Device中持有与创建Device的Context相关联的借用的生命周期来强制执行该要求。
 
-##### Send and Sync
+##### Send和Sync
 
-Do not implement Send and Sync for types from an external library unless
-that library explicitly documents that those types are thread-safe! It is the
-safe Rust wrapper’s job to ensure that safe Rust code cannot violate the
-invariants of the external code and thus trigger undefined behavior.
+除非外部库明确说明这些类型是线程安全的，否则不要为外部库的类型实现Send和Sync！安全的Rust封装的工作是确保安全的Rust代码不会违反外部代码的不变量，从而触发未定义的行为。
 
-- Sometimes, you may even want to introduce dummy types to enforce
-external invariants. For example, say you have an event loop library with the
-interface given in Listing 11-7.
+- 有时，您甚至可能希望引入虚拟类型来强制执行外部不变量。例如，假设您有一个事件循环库，其接口如代码清单11-7所示。
 
 ```rust
 
 extern fn start_main_loop();
 extern fn next_event() -> *mut Event;
 ```
-Listing 11-7: A library that expects single-threaded use
 
-- Now suppose that the documentation for the external library states that
-next_event may be called only by the same thread that called start_main_loop.
-However, here we have no type that we can avoid implementing Send for!
-Instead, we can take a page out of Chapter 3 and introduce additional
-marker state to enforce the invariant, as shown in Listing 11-8.
+代码清单11-7：一个期望单线程使用的库
+
+- 现在假设外部库的文档说明只能在调用start_main_loop的同一线程中调用next_event。然而，在这里我们没有可以避免实现Send的类型！相反，我们可以借鉴第3章的方法，引入额外的标记状态来强制执行不变量，如代码清单11-8所示。
 
 ```rust
 pub struct EventLoop(std::marker::PhantomData<*const ()>);
@@ -3949,51 +3587,19 @@ pub fn start() -> EventLoop {
 
 ```
 
-Listing 11-8: Enforcing an FFI invariant by introducing auxiliary types
+代码清单11-8：通过引入辅助类型来强制执行FFI不变量
 
-The empty type EventLoop doesn’t actually connect with anything in the
-underlying external interface but rather enforces the contract that you call
-next_event only after calling start_main_loop, and only on the same thread.
-You enforce the “same thread” part by making EventLoop neither Send nor
-Sync, by having it hold a phantom raw pointer (which itself is neither Send
-nor Sync).
+空类型EventLoop实际上与底层外部接口没有任何连接，而是强制执行在调用start_main_loop之后才能调用next_event，并且只能在同一线程上调用的约定。通过使EventLoop既不是Send也不是Sync，并持有一个幻影原始指针（它本身既不是Send也不是Sync），可以强制执行“同一线程”部分。
 
-- Using PhantomData<_const ()> to “undo” the Send and Sync auto-traits as
-we do here is a bit ugly and indirect. Rust does have an unstable compiler
-feature that enables negative trait implementations like impl !Send for
-EventLoop {}, but it’s surprisingly difficult to get its implementation right,
-and it likely won’t stabilize for some time.
-- You may have noticed that nothing prevents the caller from invoking
-start_main_loop multiple times, either from the same thread or from another
-thread. How you’d handle that would depend on the semantics of the
-library in question, so I’ll leave it to you as an exercise.
+- 在这里，我们使用PhantomData<_const ()>来“取消”Send和Sync自动特性，这有点丑陋和间接。Rust确实有一个不稳定的编译器特性，可以启用负面特性实现，例如impl !Send for EventLoop {}，但是正确实现它非常困难，并且可能需要一些时间才能稳定下来。
+- 您可能已经注意到，调用者可以多次调用start_main_loop，无论是在同一线程还是在另一个线程中。如何处理这个问题取决于所讨论的库的语义，所以我将把它作为一个练习留给您。
 
-##### Pointer Confusion
+##### 指针混淆
 
-In many FFI APIs, you don’t necessarily want the caller to know the internal
-representation for each and every chunk of memory you give it pointers to.
-The type might have internal state that the caller shouldn’t fiddle with, or
-the state might be difficult to express in a cross-language-compatible way.
-For these kinds of situations, C-style APIs usually expose void pointers, written
-out as the C type void_, which is equivalent to *mut std::ffi::c_void in
-Rust. A type-erased pointer like this is, effectively, just a pointer, and does
-not convey anything about the thing it points to. For that reason, these
-kinds of pointers are often referred to as opaque.
+在许多FFI API中，您不一定希望调用者知道您给它指针的每个内部表示。该类型可能具有调用者不应该干涉的内部状态，或者该状态可能难以以跨语言兼容的方式表示。对于这些情况，C风格的API通常会暴露void指针，以C类型void_表示，它等同于Rust中的*mut std::ffi::c_void。这样的类型擦除指针实际上只是一个指针，不传达任何关于其指向的内容的信息。因此，这些类型的指针通常被称为不透明指针。
 
-- Opaque pointers effectively serve the role of visibility modifiers for
-types across FFI boundaries—since the method signature does not say
-what’s being pointed to, the caller has no option but to pass around the
-pointer as is and use any available FFI methods to provide visibility into
-the referenced data. Unfortunately, since one*mut c_void is indistinguishable
-from another, there’s nothing stopping a user from taking an opaque
-pointer as is returned from one FFI method and supplying it to a method
-that expects a pointer to a different opaque type.
-- We can do better than this in Rust. To mitigate this kind of pointer
-type confusion, we can avoid using _mut c_void directly for opaque pointers
-in FFI, even if the actual interface calls for a void_, and instead construct
-different empty types for each distinct opaque type. For example,
-in Listing 11-9 I use two distinct opaque pointer types that cannot be
-confused.
+- 不透明指针在FFI边界上实际上起到了类型的可见性修饰符的作用-由于方法签名不会说明指针指向的内容，调用者只能按原样传递指针，并使用任何可用的FFI方法来提供对所引用数据的可见性。不幸的是，由于一个*mut c_void与另一个*mut c_void是无法区分的，因此用户可以从一个FFI方法返回的不透明指针直接传递给期望指向不同不透明类型的方法。
+- 在Rust中，我们可以做得更好。为了减轻这种指针类型混淆的问题，我们可以避免在FFI中直接使用_mut c_void作为不透明指针，即使实际接口需要一个void_，而是为每个不同的不透明类型构造不同的空类型。例如，在代码清单11-9中，我使用了两个不同的不透明指针类型，它们不能混淆。
 
 ```rust 
 # [non_exhaustive] #[repr(transparent)] pub struct Foo(c_void)
