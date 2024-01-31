@@ -3752,29 +3752,13 @@ impl<T, const N: usize> ArrayVec<T, N> {
 - 在稳定的Rust上仍然可以编写汇编代码-您只需要稍微有些创造力。具体来说，还记得第11章的构建脚本吗？好吧，Cargo构建脚本可以发出某些特殊指令到标准输出，以增强Cargo的标准构建过程，包括cargo:rustc-link-lib=static=xyz将静态库文件libxyz.a链接到最终的二进制文件中，以及cargo:rustc-linksearch:/some/path将/some/path添加到链接对象的搜索路径中。
 使用这些指令，我们可以将一个build.rs添加到项目中，该脚本使用目标平台的编译器将独立的汇编文件（.s）编译为目标文件（.o），然后使用适当的归档工具（通常是ar）将其重新打包为静态存档文件（.a）。然后，项目会发出这两个Cargo指令，指向它放置静态存档的位置-可能是在OUT_DIR中-然后我们就可以开始了！如果目标平台不变，甚至可以在发布crate时包含预编译的.a文件，以便消费者无需重新构建它。
 
-#### Misuse-Resistant Hardware Abstraction
+#### 防止滥用的硬件抽象
 
-Rust’s type system excels at encapsulating unsafe, hairy, and otherwise
-unpleasant code behind safe, ergonomic interfaces. Nowhere is that
-more important than in the infamously complex world of low-level systems
-programming, littered with magic hardware-defined values pulled
-from obscure manuals and mysterious undocumented assembly instruction
-incantations to get devices into just the right state. And all that in a
-space where a runtime error might crash more than just a user program!
-In no_std programs, it is immensely important to use the type system to
-make illegal states impossible to represent, as we discussed in Chapter 3. If
-certain combinations of register values cannot occur at the same time, then
-create a single type whose type parameters indicate the current state of the
-relevant registers, and implement only legal transitions on it, like we did for
-the rocket example in Listing 3-2.
+Rust的类型系统在将不安全、复杂和令人不愉快的代码封装在安全、人性化的接口后面方面表现出色。在低级系统编程的复杂世界中，这一点尤为重要，这个世界充斥着从晦涩的手册中提取出来的神奇硬件定义值和神秘的未记录的汇编指令咒语，以使设备处于恰到好处的状态。而且在这个空间中，运行时错误可能会导致更多的用户程序崩溃！在no_std程序中，使用类型系统使不合法的状态无法表示是非常重要的，正如我们在第3章中讨论的那样。如果某些寄存器值的组合不能同时发生，则创建一个单一类型，其类型参数指示相关寄存器的当前状态，并且仅在其上实现合法的转换，就像我们在清单3-2中为火箭示例所做的那样。
 
-**NOTE** Make sure to also review the advice from Chapter 3 on API design—all of that
-applies in the context of no_std programs as well!
+**注意** 确保还要查看第3章关于API设计的建议-所有这些都适用于no_std程序的上下文！
 
-- For example, consider a pair of registers where at most one register
-should be “on” at any given point in time. Listing 12-2 shows how you can
-represent that in a (single-threaded) program in a way makes it impossible
-to write code that violates that invariant.
+- 例如，考虑一对寄存器，在任何给定时间最多只能有一个寄存器处于“开启”状态。清单12-2展示了如何以一种方式在（单线程）程序中表示这一点，使得不可能编写违反该不变式的代码。
 
 ```rust
 // raw register address -- private submodule
@@ -3810,510 +3794,187 @@ Pair(PhantomData)
 // .. and inverse for Pair<Off, On>
 ```
 
-Listing 12-2: Statically ensuring correct operation
+清单12-2：静态确保正确操作
 
-- There are a few noteworthy patterns in this code. The first is that we
-ensure only a single instance of Pair ever exists by checking a private static
-Boolean in its only constructor and making all methods consume self. We
-then ensure that the initial state is valid and that only valid state transitions
-are possible to express, and therefore the invariant must hold globally.
-- The second noteworthy pattern in Listing 12-2 is that we use PhantomData
-to take advantage of zero-sized types and represent runtime information
-statically. That is, at any given point in the code the types tell us what the
-runtime state must be, and therefore we don’t need to track or check any
-state related to the registers at runtime. There’s no need to check that r2
-isn’t already on when we’re asked to enable r1, since the types prevent writing
-a program in which that is the case.
+- 这段代码中有几个值得注意的模式。首先，我们通过检查其唯一构造函数中的一个私有静态布尔值，并使所有方法消耗self，确保只有一个Pair实例存在。然后，我们确保初始状态是有效的，并且只有有效的状态转换是可能的，因此不变式必须在全局范围内成立。
+- 清单12-2中的第二个值得注意的模式是我们使用PhantomData利用零大小类型，并在静态上表示运行时信息。也就是说，在代码的任何给定点上，类型告诉我们运行时状态必须是什么样的，因此我们不需要在运行时跟踪或检查与寄存器相关的任何状态。当我们被要求启用r1时，无需检查r2是否已经打开，因为类型阻止编写这种情况的程序。
 
-#### Cross-Compilation
+#### 交叉编译
 
-Usually, you’ll write no_std programs on a computer with a full-fledged
-operating system running and all the niceties of modern hardware, but ultimately
-run it on a dinky hardware device with 93/4 bits of RAM and a sock
-for a CPU. That calls for cross-compilation—you need to compile the code in
-your development environment, but compile it for the sock. That’s not the
-only context in which cross-compilation is important, though. For example,
-it’s increasingly common to have one build pipeline produce binary
-artifacts for all consumer platforms rather than trying to have a build pipeline
-for every platform your consumers may be using, and that means using
-cross-compilation.
+通常，您会在具有完整操作系统和现代硬件设备的计算机上编写no_std程序，但最终在具有93/4位RAM和一个CPU插槽的小型硬件设备上运行。这就需要交叉编译-您需要在开发环境中编译代码，但将其编译为适用于小型硬件设备的代码。然而，交叉编译的重要性不仅限于此。例如，现在越来越常见的做法是使用一个构建流水线为所有消费者平台生成二进制文件，而不是尝试为消费者可能使用的每个平台都建立一个构建流水线，这意味着需要使用交叉编译。
 
-**NOTE** If you’re actually compiling for something sock-like with limited memory, or even
-something as fancy as a potato, you may want to set the opt-level Cargo configuration
-to "s" to optimize for smaller binary sizes.
+**注意** 如果您实际上是为类似于具有有限内存的设备（甚至是像土豆这样的设备）进行编译，您可能希望将opt-level Cargo配置设置为"s"以优化二进制文件的大小。
 
-- Cross-compiling involves two platforms: the host platform and the target
-platform. The host platform is the one doing the compiling, and the target
-platform is the one that will eventually run the output of the compilation.
-We specify platforms as target triples, which take the form machine-vendor-
-os.
-The machine part dictates the machine architecture the code will run on,
-such as x86_64, armv7, or wasm32, and tells the compiler what instruction set to
-use for the emitted machine code. The vendor part generally takes the value
-of pc on Windows, apple on macOS and iOS, and unknown everywhere else,
-and doesn’t affect compilation in any meaningful way; it’s mostly irrelevant
-and can even be left out. The os part tells the compiler what format to use
-for the final binary artifacts, so a value of linux dictates Linux .so files, windows
-dictates Windows .dll files, and so on.
+- 交叉编译涉及两个平台：主机平台和目标平台。主机平台进行编译，目标平台最终运行编译输出。我们将平台指定为目标三元组，其形式为machine-vendor-os。machine部分指定代码将在其上运行的机器体系结构，例如x86_64、armv7或wasm32，并告诉编译器生成的机器代码使用的指令集。vendor部分通常采用Windows上的pc值，macOS和iOS上的apple值，以及其他地方的unknown值，并且对编译没有实质性影响；它基本上是无关紧要的，甚至可以省略。os部分告诉编译器用于最终二进制文件的格式，因此linux值指定Linux .so文件，windows值指定Windows .dll文件，依此类推。
 
-**NOTE** By default, Cargo assumes that the target platform is the same as the host platform,
-which is why you generally never have to tell Cargo to, say, compile for Linux when
-you’re already on Linux. Sometimes you may want to use --target even if the CPU
-and OS of the target are the same, though, such as to target the musl implementation
-of libc.
+**注意** 默认情况下，Cargo假设目标平台与主机平台相同，这就是为什么通常不需要告诉Cargo在Linux上编译Linux的原因。但是，有时您可能希望即使目标的CPU和操作系统相同，也使用--target，例如针对libc的musl实现。
 
-- To tell Cargo to cross-compile, you simply pass it the --target <target
-triple>
-argument with your triple of choice. Cargo will then take care of
-forwarding that information to the Rust compiler so that it generates binary
-artifacts that will work on the given target platform. Cargo will also take care
-to use the appropriate version of the standard library for that platform—after
-all, the standard library contains a lot of conditional compilation directives
-(using #[cfg(...)]) so that the right system calls get invoked and the right
-architecture-specific implementations are used, so we can’t use the standard
-library for the host platform on the target.
-- The target platform also dictates what components of the standard
-library are available. For example, while x86_64-unknown-linux-gnu includes
-the full std library, something like thumbv7m-none-eabi does no, and doesn’t
-even define an allocator, so if you use alloc without defining one explicitly,
-you’ll get a build error. This comes in handy for testing that code you write
-actually doesn’t require std (recall that even with #![no_std] you can still have
-use std::, since no_std opts out of only the std prelude). If you have your continuous
-integration pipeline build your crate with --target thumbv7m-none-eabi,
-any attempt to access components from anything but core will trigger a build
-failure. Crucially, this will also check that your crate doesn’t accidentally
-bring in dependencies that themselves use items from std (or alloc).
+- 要告诉Cargo进行交叉编译，只需使用您选择的三元组作为--target <target triple>参数传递给它。然后，Cargo将负责将该信息转发给Rust编译器，以便生成适用于给定目标平台的二进制文件。Cargo还会确保使用适当版本的标准库-毕竟，标准库包含许多条件编译指令（使用#[cfg(...)]），以便调用正确的系统调用并使用正确的特定于体系结构的实现，因此我们不能在目标上使用主机平台的标准库。
+- 目标平台还决定了标准库的哪些组件可用。例如，x86_64-unknown-linux-gnu包括完整的std库，而thumbv7m-none-eabi之类的库则不包括，甚至不定义分配器，因此如果您在没有显式定义分配器的情况下使用alloc，将会出现构建错误。这对于测试您编写的代码是否实际上不需要std非常有用（请记住，即使使用#![no_std]，您仍然可以使用std::，因为no_std仅放弃了std预导入）。如果您的持续集成流水线使用--target thumbv7m-none-eabi构建您的crate，任何尝试访问除core之外的组件都将触发构建失败。关键是，这也将检查您的crate是否意外地引入了使用std（或alloc）的依赖项。
 
-**PLATFORM SUPPORT**
-The standard Rust installer, Rustup, doesn’t install the standard library for all the
-target triples that Rust supports by default. That would be a waste of space and
-bandwidth. Instead, you have to use the command rustup target add to install
-the appropriate standard library versions for additional targets. If no version of
-the standard library exists for your target platform, you’ll have to compile it from
-source yourself by adding the rust-src Rustup component and using Cargo’s
-(currently unstable) build-std feature to also build std (and/or core and alloc)
-when building any crate.
+**平台支持**
+标准的Rust安装程序Rustup默认不会为Rust支持的所有目标三元组安装标准库。这将浪费空间和带宽。相反，您必须使用命令rustup target add来安装适当的标准库版本以供其他目标使用。如果您的目标平台没有标准库的版本，您将需要自己从源代码编译它，方法是添加rust-src Rustup组件，并在构建任何crate时使用Cargo的（当前不稳定的）build-std功能来构建std（和/或core和alloc）。
 
-- If your target is not supported by the Rust compiler—that is, if rustc doesn’t
-even know about your target triple—you’ll have to go one step further and teach
-rustc about the properties of the triple using a custom target specification. How
-you do that is both currently unstable and beyond the scope of this book, but a
-search for “custom target specification json” is a good place to start.
+- 如果您的目标平台不受Rust编译器支持-也就是说，如果rustc甚至不知道您的目标三元组的属性-您将需要更进一步，并使用自定义目标规范来教会rustc有关三元组的属性。如何做到这一点目前是不稳定的，超出了本书的范围，但是搜索“custom target specification json”是一个好的起点。
 
-#### Summary
+#### 总结
 
-In this chapter, we’ve covered what lies beneath the standard library—or,
-more precisely, beneath std. We’ve gone over what you get with core, how
-you can extend your non-std reach with alloc, and what the (tiny) Rust runtime
-adds to your programs to make fn main work. We’ve also taken a look
-at how you can interact with device-mapped memory and otherwise handle
-the unorthodox execution patterns that can happen at the very lowest level
-of hardware programming, and how to safely encapsulate at least some of
-the oddities of hardware in the Rust type system. Next, we’ll move from the
-very small to the very large by discussing how to navigate, understand, and
-maybe even contribute to the larger Rust ecosystem.
+在本章中，我们介绍了标准库（或者更准确地说，std）之下的内容。我们讨论了core提供的功能，以及如何使用alloc扩展非std范围，并介绍了（微小的）Rust运行时如何使fn main工作。我们还介绍了如何与设备映射的内存进行交互，并处理可能发生在硬件编程的最低级别的非正常执行模式，以及如何在Rust类型系统中安全地封装硬件的一些奇特之处。接下来，我们将从非常小的范围转向非常大的范围，讨论如何浏览、理解甚至为更大的Rust生态系统做出贡献。
 
 ### 13 THE RUST ECOSYSTEM
 
-Programming rarely happens in a vacuum
-these days—nearly every Rust crate you
-build is likely to take dependencies on some
-code that wasn’t written by you. Whether this
-trend is good, bad, or a little of both is a subject of
-heavy debate, but either way, it’s a reality of today’s
-developer experience.
+编程很少发生在真空中，如今几乎每个你构建的Rust crate都可能依赖于一些你没有编写的代码。无论这种趋势是好是坏，还是两者兼而有之，都是当今开发者经验的现实。
 
-- In this brave new interdependent world, it’s more important than ever
-to have a solid grasp of what libraries and tools are available and to stay up
-to date on the latest and greatest of what the Rust community has to offer.
-This chapter is dedicated to how you can leverage, track, understand, and
-contribute back to the Rust ecosystem. Since this is the final chapter, in the
-closing section I’ll also provide some suggestions of additional resources
-you can explore to continue developing your Rust skills.
+- 在这个新的相互依赖的世界中，更重要的是要对可用的库和工具有一个扎实的掌握，并及时了解Rust社区所提供的最新和最好的内容。本章将介绍如何利用、跟踪、理解和为Rust生态系统做出贡献。由于这是最后一章，在结束部分，我还将提供一些额外的资源建议，供您继续发展您的Rust技能。
 
-#### What’s Out There?
+#### 有什么可用的？
 
-Despite its relative youth, Rust already has an ecosystem large enough that
-it’s hard to keep track of everything that’s available. If you know what you
-want, you may be able to search your way to a set of appropriate crates and
-then use download statistics and superficial vibe-checks on each crate’s
-repository to determine which may make for reasonable dependencies.
-However, there’s also a plethora of tools, crates, and general language features
-that you might not necessarily know to look for that could potentially
-save you countless hours and difficult design decisions.
+尽管相对年轻，但Rust已经拥有一个庞大的生态系统，以至于很难跟踪到所有可用的内容。如果您知道您想要什么，您可能能够通过搜索找到一组合适的crate，然后使用下载统计数据和对每个crate的存储库进行表面检查，以确定哪些可能是合理的依赖关系。然而，还有大量的工具、crate和一般的语言特性，您可能不一定知道要寻找什么，但它们可能会节省您无数小时和困难的设计决策。
 
-- In this section, I’ll go through some of the tools, libraries, and Rust features
-I have found helpful over the years in the hopes that they may come
-in useful for you at some point too!
+- 在本节中，我将介绍一些我多年来发现有用的工具、库和Rust特性，希望它们在某个时候对您也有用！
 
 ##### Tools
 
-First off, here are some Rust tools I find myself using regularly that you
-should add to your toolbelt:
+首先，这里有一些我经常使用的Rust工具，你应该加入你的工具包：
 
 ###### cargo-deny
 
-Provides a way to lint your dependency graph. At the time of writing,
-you can use cargo-deny to allow only certain licenses, deny-list crates or
-specific crate versions, detect dependencies with known vulnerabilities
-or that use Git sources, and detect crates that appear multiple times
-with different versions in the dependency graph. By the time you’re
-reading this, there may be even more handy lints in place.
+提供了一种对依赖图进行代码检查的方式。在撰写本文时，您可以使用 cargo-deny 来仅允许特定的许可证，禁止某些 crate 或特定 crate 版本，检测已知漏洞的依赖关系或使用 Git 源的 crate，并检测在依赖图中以不同版本出现的 crate。在您阅读本文时，可能已经有更多有用的代码检查功能可用。
 
 ###### cargo-expand
 
-Expands macros in a given crate and lets you inspect the output, which
-makes it much easier to spot mistakes deep down in macro transcribers
-or procedural macros. cargo-expand is an invaluable tool when you’re
-writing your own macros.
+展开给定 crate 中的宏，并让您检查输出，这样可以更容易地发现宏转录器或过程宏中的错误。当您编写自己的宏时，cargo-expand 是一个非常有价值的工具。
 cargo-hack
-Helps you check that your crate works with any combination of features
-enabled. The tool presents an interface similar to that of Cargo itself
-(like cargo check, build, and test) but gives you the ability to run a given
-command with all possible combinations (the powerset) of the crate’s
-features.
+帮助您检查您的 crate 是否与启用的任何特性组合都能正常工作。该工具提供了与 Cargo 自身类似的界面（如 cargo check、build 和 test），但它使您能够使用 crate 的所有可能组合（幂集）运行给定命令。
 
 ###### cargo-llvm-lines
 
-Analyzes the mapping from Rust code to the intermediate representation
-(IR) that’s passed to the part of the Rust compiler that actually
-generates machine code (LLVM), and tells you which bits of Rust code
-produce the largest IR. This is useful because a larger IR means longer
-compile times, so identifying what Rust code generates a bigger IR (due
-to, for example, monomorphization) can highlight opportunities for
-reducing compile times.
+分析从Rust代码到传递给实际生成机器代码的Rust编译器部分（LLVM）的中间表示（IR）的映射，并告诉您哪些Rust代码生成了最大的IR。这很有用，因为较大的IR意味着较长的编译时间，因此识别生成较大IR的Rust代码（例如，由于单态化）可以突出减少编译时间的机会。
 
 ###### cargo-outdated
 
-Checks whether any of your dependencies, either direct or transitive,
-have newer versions available. Crucially, unlike cargo update, it even
-tells you about new major versions, so it’s an essential tool for checking
-if you’re missing out on newer versions due to an outdated major
-version specifier. Just keep in mind that bumping the major version of
-a dependency may be a breaking change for your crate if you expose
-that dependency’s types in your interface!
+检查您的依赖项（直接或间接）是否有更新的版本可用。与 cargo update 不同的是，它甚至会告诉您有关新的主要版本的信息，因此它是一个重要的工具，用于检查是否由于过时的主要版本指定而错过了更新的版本。只需记住，如果在接口中公开了依赖项的类型，将主要版本的依赖项升级可能会破坏您的 crate！
 
 ###### cargo-udeps
 
-Identifies any dependencies listed in your Cargo.toml that are never actually
-used. Maybe you used them in the past but they’ve since become
-redundant, or maybe they should be moved to dev-dependencies; whatever
-the case, this tool helps you trim down bloat in your dependency
-closure.
+识别在您的Cargo.toml中列出但实际上从未使用的任何依赖项。也许您过去使用过它们，但现在它们已经变得多余，或者可能应该移动到dev-dependencies；无论如何，这个工具可以帮助您减少依赖闭包中的冗余。
 
-- While they’re not specifically tools for developing Rust, I highly recommend
-fd and ripgrep too—they’re excellent improvements over their predecessors
-find and grep and also happen to be written in Rust themselves. I use
-both every day.
+- 虽然它们不是专门用于开发Rust的工具，但我强烈推荐fd和ripgrep，它们是对它们的前身find和grep的极好改进，而且它们本身也是用Rust编写的。我每天都使用这两个工具。
 
 ##### Libraries
 
-Next up are some useful but lesser-known crates that I reach for regularly,
-and that I suspect I will continue to depend on for a long time:
+接下来是一些我经常使用的有用但不太知名的crate，我猜我会继续依赖它们很长一段时间：
 
 ###### bytes
 
-Provides an efficient mechanism for passing around subslices of a single
-piece of contiguous memory without having to copy or deal with lifetimes.
-This is great in low-level networking code where you may need
-multiple views into a single chunk of bytes, and copying is a no-no.
+提供了一种高效的机制，可以在不复制或处理生命周期的情况下传递单个连续内存块的子切片。这在低级网络代码中非常有用，您可能需要多个视图来查看单个字节块，并且复制是不可取的。
 
 ###### criterion
 
-A statistics-driven benchmarking library that uses math to eliminate
-noise from benchmark measurements and reliably detect changes in
-performance over time. You should almost certainly be using it if you’re
-including micro-benchmarks in your crate.
+一个基于统计的基准测试库，使用数学方法消除基准测试测量中的噪音，并可靠地检测性能变化。如果您的crate中包含微基准测试，几乎肯定应该使用它。
 
 ###### cxx
 
-Provides a safe and ergonomic mechanism for calling C++ code from
-Rust and Rust code from C++. If you’re willing to invest some time into
-declaring your interfaces more thoroughly in advance in exchange for
-much nicer cross-language compatibility, this library is well worth your
-attention.
+提供了一种从Rust调用C++代码和从C++调用Rust代码的安全、人性化的机制。如果您愿意在事先更彻底地声明接口的情况下投入一些时间，以换取更好的跨语言兼容性，这个库非常值得关注。
 
 ###### flume
 
-Implements a multi-producer, multi-consumer channel that is faster,
-more flexible, and simpler than the one included with the Rust standard
-library. It also supports both asynchronous and synchronous operation
-and so is a great bridge between those two worlds.
+实现了一个多生产者、多消费者通道，比Rust标准库中的通道更快、更灵活、更简单。它还支持异步和同步操作，因此是两个世界之间的一个很好的桥梁。
 
 ###### hdrhistogram
 
-A Rust port of the High Dynamic Range (HDR) histogram data structure,
-which provides a compact representation of histograms across a
-wide range of values. Anywhere you currently track averages or min/
-max values, you should most likely be using an HDR histogram instead;
-it can give you much better insight into the distribution of your metrics.
+High Dynamic Range (HDR)直方图数据结构的Rust移植版，提供了对广泛值范围的直方图的紧凑表示。无论您当前是跟踪平均值还是最小/最大值，您很可能都应该使用HDR直方图；它可以为您提供更好的指标分布洞察。
 
 ###### heapless
 
-Supplies data structures that do not use the heap. Instead, heapless’s
-data structures are all backed by static memory, which makes them
-perfect for embedded contexts or other situations in which allocation is
-undesirable.
+提供不使用堆的数据结构。相反，heapless的数据结构都由静态内存支持，这使它们非常适合嵌入式环境或其他不希望进行分配的情况。
 
 ###### itertools
 
-Extends the Iterator trait from the standard library with lots of new
-convenient methods for deduplication, grouping, and computing powersets.
-These extension methods can significantly reduce boilerplate in
-code, such as where you manually implement some common algorithm
-over a sequence of values, like finding the min and max at the same
-time (Itertools::minmax), or where you use a common pattern like checking
-that an iterator has exactly one item (Itertools::exactly_one).
+通过许多新的便捷方法扩展了标准库中的Iterator trait，用于去重、分组和计算幂集。这些扩展方法可以显著减少代码中的样板代码，例如在一系列值上手动实现一些常见算法，比如同时查找最小值和最大值（Itertools::minmax），或者使用常见模式，如检查迭代器是否只有一个项（Itertools::exactly_one）。
 
 ###### nix
 
-Provides idiomatic bindings to system calls on Unix-like systems,
-which allows for a much better experience than trying to cobble
-together the C-compatible FFI types yourself when working with
-something like libc directly.
+在类Unix系统上提供了对系统调用的惯用绑定，相比直接使用类似libc的C兼容FFI类型，可以提供更好的体验。
 
 ###### pin-project
 
-Provides macros that enforce the pinning safety invariants for annotated
-types, which in turn provide a safe pinning interface to those
-types. This allows you to avoid most of the hassle of getting Pin and
-Unpin right for your own types. There’s also pin-project-lite, which
-avoids the (currently) somewhat heavy dependency on the procedural
-macro machinery at the cost of slightly worse ergonomics.
+提供了宏，用于强制执行已注释类型的固定安全不变式，这些类型为这些类型提供了安全的固定接口。这使您可以避免为自己的类型正确处理Pin和Unpin的大部分麻烦。还有pin-project-lite，它避免了（目前）在过程宏机制上的相对较重的依赖，但牺牲了稍差的人性化。
 
 ###### ring
 
-Takes the good parts from the cryptography library BoringSSL,
-written in C, and brings them to Rust through a fast, simple, and
-The Rust Ecosystem 227
-hard-to-misuse interface. It’s a great starting point if you need to use
-cryptography in your crate. You’ve already most likely come across this
-in the rustls library, which uses ring to provide a modern, secure-bydefault
-TLS stack.
+从用C编写的密码库BoringSSL中提取出优秀的部分，并通过快速、简单且难以误用的接口将它们带到Rust中。如果您的crate需要使用密码学，这是一个很好的起点。您很可能已经在rustls库中遇到过它，rustls使用ring提供了一个现代、默认安全的TLS堆栈。
 
 ###### slab
 
-Implements an efficient data structure to use in place of HashMap<Token, T>,
-where Token is an opaque type used only to differentiate between entries in
-the map. This kind of pattern comes up a lot when managing resources,
-where the set of current resources must be managed centrally but individual
-resources must also be accessible somehow.
+实现了一种高效的数据结构，用于替代HashMap<Token, T>，其中Token是仅用于区分映射中条目的不透明类型。在管理资源时经常遇到这种模式，其中当前资源集必须在中央管理，但也必须以某种方式访问各个资源。
 
 ###### static_assertions
 
-Provides static assertions—that is, assertions that are evaluated at, and
-thus may fail at, compile time. You can use it to assert things like that
-a type implements a given trait (like Send) or is of a given size. I highly
-recommend adding these kinds of assertions for code where those
-guarantees are likely to be important.
+提供静态断言，即在编译时评估并可能失败的断言。您可以使用它来断言诸如类型实现给定trait（如Send）或具有给定大小之类的事情。我强烈建议为那些保证可能很重要的代码添加这些类型的断言。
 
 ###### structopt
 
-Wraps the well-known argument parsing library clap and provides a way
-to describe your application’s command line interface entirely using the
-Rust type system (plus macro annotations). When you parse your application’s
-arguments, you get a value of the type you defined, and you
-thus get all the type checking benefits, like exhaustive matching and
-IDE auto-complete.
+包装了众所周知的参数解析库clap，并提供了一种完全使用Rust类型系统（加上宏注解）来描述应用程序的命令行界面的方法。当解析应用程序的参数时，您会得到一个您定义的类型的值，因此您会获得所有类型检查的好处，如全面匹配和IDE自动完成。
 
 ###### thiserror
 
-Makes writing custom enumerated error types, like the ones we discussed
-in Chapter 4, a joy. It takes care of implementing the recommended traits
-and following the established conventions and leaves you to define just
-the critical bits that are unique to your application.
+使编写自定义枚举错误类型（如第4章中讨论的类型）变得轻松愉快。它负责实现推荐的trait并遵循已建立的约定，只需定义与您的应用程序唯一相关的关键部分。
 
 ###### tower
 
-Effectively takes the function signature async fn(Request) -> Response and
-implements an entire ecosystem on top of it. At its core is the Service
-trait, which represents a type that can turn a request into a response
-(something I suspect may make its way into the standard library one
-day). This is a great abstraction to build anything that looks like a service
-on top of.
+有效地采用函数签名async fn(Request) -> Response，并在其上实现了一个完整的生态系统。其核心是Service trait，表示可以将请求转换为响应的类型（我怀疑这可能会成为标准库的一部分）。这是一个很好的抽象，用于构建任何看起来像服务的东西。
 
 ###### tracing
 
-Provides all the plumbing needed to efficiently trace the execution of
-your applications. Crucially, it is agnostic to the types of events you’re
-tracing and what you want to do with those events. This library can be
-used for logging, metrics collection, debugging, profiling, and obviously
-tracing, all with the same machinery and interfaces.
+提供了跟踪应用程序执行所需的所有基础设施。关键是，它对您跟踪的事件类型和您想要对这些事件执行的操作是不可知的。该库可用于日志记录、指标收集、调试、性能分析和跟踪，所有这些都使用相同的机制和接口。
 
-##### Rust Tooling
+##### Rust工具链
 
-The Rust toolchain has a few features up its sleeve that you may not know
-to look for. These are usually for very specific use cases, but if they match
-yours, they can be lifesavers!
+Rust工具链有一些功能，您可能不知道要寻找。这些通常是针对非常特定的用例，但如果与您的用例匹配，它们可能会成为救命稻草！
 
 ###### Rustup
 
-Rustup, the Rust toolchain installer, does its job so efficiently that it tends
-to fade into the background and get forgotten about. You’ll occasionally
-use it to update your toolchain, set a directory override, or install a component,
-but that’s about it. However, Rustup supports one very handy trick
-that it’s worthwhile to know about: the toolchain override shorthand. You
-can pass +toolchain as the first argument to any Rustup-managed binary,
-and the binary will work as if you’d set an override for the given toolchain,
-run the command, and then reset the override back to what it was previously.
-So, cargo +nightly miri will run Miri using the nightly toolchain, and
-cargo +1.53.0 check will check if the code compiles with Rust 1.53.0. The latter
-comes in particularly handy for checking that you haven’t broken your
-minimum supported Rust version contract.
+Rustup，Rust工具链安装程序，执行其工作非常高效，往往会被忽视和遗忘。您偶尔会使用它来更新工具链、设置目录覆盖或安装组件，但仅此而已。然而，Rustup支持一种非常方便的技巧，值得了解：工具链覆盖的简写。您可以将+toolchain作为Rustup管理的二进制文件的第一个参数传递，该二进制文件将按照您设置的工具链覆盖运行命令，然后将覆盖重置为之前的状态。因此，cargo +nightly miri将使用nightly工具链运行Miri，cargo +1.53.0 check将检查代码是否与Rust 1.53.0编译。后者对于检查您是否违反了最低支持的Rust版本合约非常有用。
 
-- Rustup also has a neat subcommand, doc, that opens a local copy of the
-Rust standard library documentation for the current version of the Rust
-compiler in your browser. This is invaluable if you’re developing on the go
-without an internet connection!
+- Rustup还有一个很棒的子命令doc，它在浏览器中打开当前版本Rust编译器的Rust标准库文档的本地副本。如果您在没有互联网连接的情况下进行开发，这是非常宝贵的！
 
 ###### Cargo
 
-Cargo also has some handy features that aren’t always easy to discover.
-The first of these is cargo tree, a Cargo subcommand built right into Cargo
-itself for inspecting a crate’s dependency graph. This command’s primary
-purpose is to print the dependency graph as a tree. This can be useful on
-its own, but where cargo tree really shines is through the --invert option:
-it takes a crate identifier and produces an inverted tree showing all the
-dependency paths from the current crate that bring in that dependency.
-So, for example, cargo tree -i rand will print all of the ways in which the
-current crate depends on any version of rand, including through transitive
-dependencies. This is invaluable if you want to eliminate a dependency, or
-a particular version of a dependency, and wonder why it still keeps being
-pulled in. You can also pass the -e features option to include information
-about why each Cargo feature of the crate in question is enabled.
+Cargo还有一些方便的功能，不一定容易发现。其中之一是cargo tree，这是一个内置在Cargo中的Cargo子命令，用于检查crate的依赖关系图。该命令的主要目的是将依赖关系图打印为树形结构。这本身就很有用，但是cargo tree真正出色的地方在于--invert选项：它接受一个crate标识符，并生成一个反转的树，显示从当前crate引入该依赖的所有依赖路径。因此，例如，cargo tree -i rand将打印当前crate依赖于rand的所有方式，包括通过传递依赖关系。如果您想消除一个依赖项或特定版本的依赖项，并想知道为什么它仍然被引入，这是非常宝贵的。您还可以传递-e features选项，以包括有关启用了该crate的每个Cargo特性的信息。
 
-- Speaking of Cargo subcommands, it’s really easy to write your own,
-whether for sharing with other people or just for your own local development.
-When Cargo is invoked with a subcommand it doesn’t recognize, it
-checks whether a program by the name cargo-$subcommand exists. If it does,
-Cargo invokes that program and passes it any arguments that were passed
-The Rust Ecosystem 229
-on the command line—so, cargo foo bar will invoke cargo-foo with the argument
-bar. Cargo will even integrate this command with cargo help by translating
-cargo help foo into a call to cargo-foo --help.
-- As you work on more Rust projects, you may notice that Cargo (and
-Rust more generally) isn’t exactly forgiving when it comes to disk space.
-Each project gets its own target directory for its compilation artifacts, and
-over time you end up accumulating several identical copies of compiled
-artifacts for common dependencies. Keeping artifacts for each project separate
-is a sensible choice, as they aren’t necessarily compatible across projects
-(say, if one project uses different compiler flags than another). But in most
-developer environments, sharing build artifacts is entirely reasonable and
-can save a fair amount of compilation time when switching between projects.
-Luckily, configuring Cargo to share build artifacts is simple: just set
-[build] target in your ~/.cargo/config.toml file to the directory you want those
-shared artifacts to go in, and Cargo will take care of the rest. No more target
-directories in sight! Just make sure you clean out that directory every
-now and again too, and be aware that cargo clean will now clean all of your
-projects’ build artifacts.
+- 谈到Cargo子命令，编写自己的子命令非常容易，无论是与他人共享还是仅用于本地开发。当使用不被识别的子命令调用Cargo时，它会检查是否存在名为cargo-$subcommand的程序。如果存在，Cargo将调用该程序，并将任何传递的参数传递给cargo-$subcommand。Cargo甚至会通过将cargo help foo转换为对cargo-foo --help的调用来将此命令与cargo help集成。
 
-**NOTE** Using a shared build directory can cause problems for projects that assume that compiler
-artifacts will always be under the target/ subdirectory, so watch out for that.
-Also note that if a project does use different compiler flags, you’ll end up recompiling
-affected dependencies every time you move into or out of that project. In such cases,
-you’re best off overriding the target directory in that project’s Cargo configuration to a
-distinct location.
+- 随着您在更多的Rust项目上工作，您可能会注意到Cargo（以及Rust更普遍地说）在磁盘空间方面并不宽容。每个项目都有自己的目标目录用于编译产物，随着时间的推移，您会积累几个相同的编译产物副本，用于常见的依赖项。将每个项目的产物保持分开是一个明智的选择，因为它们在项目之间不一定兼容（例如，如果一个项目使用不同的编译器标志）。但在大多数开发环境中，共享构建产物是完全合理的，并且在切换项目时可以节省大量编译时间。幸运的是，配置Cargo以共享构建产物非常简单：只需将~/.cargo/config.toml文件中的[build] target设置为您希望这些共享产物放置的目录，Cargo会处理其余的事情。不再看到目标目录！只需确保定期清理该目录，并注意cargo clean现在将清理所有项目的构建产物。
 
-- Finally, if you ever feel like Cargo is taking a suspiciously long time to
-build your crate, you can reach for the currently unstable Cargo -Ztimings
-flag. Running Cargo with that flag outputs information about how long it
-took to process each crate, how long build scripts took to run, what crates
-had to wait for what other crates to finish compiling, and tons of other
-useful metrics. This might highlight a particularly slow dependency chain
-that you can then work to eliminate, or reveal a build script that compiles
-a native dependency from scratch that you can make use system libraries
-instead. If you want to dive even deeper, there’s also rustc -Ztime-passes,
-which emits information about where time is spent inside of the compiler
-for each crate—though that information is likely only useful if you’re looking
-to contribute to the compiler itself.
+**注意** 使用共享的构建目录可能会对假定编译器产物始终位于target/子目录下的项目造成问题，因此请注意。还要注意，如果一个项目使用不同的编译器标志，每次进入或退出该项目时，您将重新编译受影响的依赖项。在这种情况下，最好将该项目的目标目录覆盖为一个不同的位置。
+
+- 最后，如果您觉得Cargo构建crate的时间过长，可以使用当前不稳定的Cargo -Ztimings标志。使用该标志运行Cargo会输出有关处理每个crate所花费的时间、运行构建脚本所花费的时间、哪些crate必须等待其他crate完成编译以及大量其他有用的指标的信息。这可能会突出显示一个特别慢的依赖链，您可以通过消除它来提高构建速度，或者揭示一个编译从头开始编译本机依赖项的构建脚本，您可以改为使用系统库。如果您想更深入地了解，还有rustc -Ztime-passes，它会为每个crate发出有关编译器内部花费时间的信息，但是该信息只有在您希望为编译器本身做出贡献时才有用。
 
 ###### rustc
 
-The Rust compiler also has some lesser-known features that can prove useful
-to enterprising developers. The first is the currently unstable -Zprinttype-
-sizes argument, which prints the sizes of all the types in the current
-crate. This produces a lot of information for all but the tiniest crates but
-is immensely valuable when trying to determine the source of unexpected
-time spent in calls to memcpy or to find ways to reduce memory use when allocating
-lots of objects of a particular type. The -Zprint-type-sizes argument
-also displays the computed alignment and layout for each type, which may
-point you to places where turning, say, a usize into a u32 could have a significant
-impact on a type’s in-memory representation. After you debug a
-particular type’s size, alignment, and layout, I recommend adding static
-assertions to make sure that they don’t regress over time. You may also be
-interested in the variant_size_differences lint, which issues a warning if a
-crate contains enum types whose variants significantly differ in size.
+Rust编译器还有一些较少为人知的功能，对于有企图心的开发者来说可能非常有用。首先是当前不稳定的-Zprint-type-sizes参数，它会打印出当前crate中所有类型的大小。对于除了最小的crate之外的所有crate，这会产生大量信息，但在尝试确定memcpy调用的时间消耗源或找到减少分配特定类型的对象的内存使用的方法时，它非常有价值。-Zprint-type-sizes参数还会显示每个类型的计算对齐和布局，这可能会指向将usize转换为u32等操作对类型的内存表示产生重大影响的地方。在调试特定类型的大小、对齐和布局之后，我建议添加静态断言，以确保它们随时间不会退化。您可能还对variant_size_differences lint感兴趣，它会发出警告，如果一个crate包含的enum类型的变体在大小上有显著差异。
 
-**NOTE** To call rustc with particular flags, you have a few options: you can either set them in
-the RUSTFLAGS environment variable or [build] rustflags in your .cargo/config.toml
-to have them apply to every invocation of rustc from Cargo, or you can use cargo
-rustc, which will pass any arguments you provide only to the rustc invocation for the
-current crate.
+**注意** 要使用特定的标志调用rustc，您有几个选项：您可以将它们设置在RUSTFLAGS环境变量中，或者在.cargo/config.toml中的[build] rustflags中设置，以使它们适用于Cargo调用rustc的每个调用，或者您可以使用cargo rustc，它将仅将您提供的任何参数传递给当前crate的rustc调用。
 
-- If your profiling samples look weird, with stack frames reordered or
-entirely missing, you could also try -Cforce-frame-pointers = yes. Frame pointers
-provide a more reliable way to unwind the stack—which is done a lot
-during profiling—at the cost of an extra register being used for function
-calls. Even though stack unwinding should work fine with just regular debug
-symbols enabled (remember to set debug = true when using the release profile),
-that’s not always the case, and frame pointers may take care of any
-issues you do encounter.
+- 如果您的性能分析样本看起来很奇怪，堆栈帧被重新排序或完全丢失，您还可以尝试-Cforce-frame-pointers = yes。帧指针提供了一种更可靠的堆栈展开方式，这在性能分析期间会频繁发生，但代价是使用额外的寄存器进行函数调用。即使堆栈展开应该在仅启用常规调试符号的情况下正常工作（记得在使用发布配置时设置debug = true），但并非总是如此，帧指针可能会解决您遇到的任何问题。
 
-###### The Standard Library
+###### 标准库
 
-The Rust standard library is generally considered to be small compared
-to those of other programming languages, but what it lacks in breadth, it
-makes up for in depth; you won’t find a web server implementation or an
-X.509 certificate parser in Rust’s standard library, but you will find more
-than 40 different methods on the Option type alongside over 20 trait implementations.
-For the types it does include, Rust does its best to make available
-any relevant functionality that meaningfully improves ergonomics, so
-you avoid all that verbose boilerplate that can so easily arise otherwise. In
-this section, I’ll present some types, macros, functions, and methods from
-the standard library that you may not have come across before, but that can
-often simplify or improve (or both) your code.
+与其他编程语言相比，Rust标准库通常被认为较小，但它在深度上弥补了广度的不足；在Rust的标准库中，您不会找到一个Web服务器实现或一个X.509证书解析器，但您会发现超过40种不同的Option类型方法以及超过20种trait实现。对于它包含的类型，Rust尽力提供任何相关的功能，以显著改善人机交互性，因此您可以避免那些容易产生冗长样板代码的情况。在本节中，我将介绍一些标准库中的类型、宏、函数和方法，您可能之前没有遇到过，但它们通常可以简化或改进（或两者兼有）您的代码。
 
-###### Macros and Functions
+###### 宏和函数
 
-Let’s start off with a few free-standing utilities. First up is the write! macro,
-which lets you use format strings to write into a file, a network socket, or anything
-else that implements Write. You may already be familiar with it—but
-one little-known feature of write! is that it works with both std::io::Write and
-std::fmt::Write, which means you can use it to write formatted text directly into
-a String. That is, you can write use std::fmt::Write; write!(&mut s, "{}+1={}", x,
-x + 1); to append the formatted text to the String s!
+让我们从一些独立的实用工具开始。首先是write!宏，它允许您使用格式字符串将内容写入文件、网络套接字或任何实现了Write的对象中。您可能已经熟悉它，但write!的一个鲜为人知的功能是它可以与std::io::Write和std::fmt::Write两者一起使用，这意味着您可以直接将格式化文本写入String中。也就是说，您可以编写use std::fmt::Write; write!(&mut s, "{}+1={}", x, x + 1);将格式化文本附加到字符串s中！
 
-- The iter::once function takes any value and produces an iterator that
-yields that value once. This comes in handy when calling functions that take
-iterators if you don’t want to allocate, or when combined with Iterator::chain
-to append a single item to an existing iterator.
-- We briefly talked about mem::replace in Chapter 1, but it’s worth bringing
-up again in case you missed it. This function takes an exclusive reference
-to a T and an owned T, swaps the two so that the referent is now the
-owned T, and returns ownership of the previous referent. This is useful
-when you need to take ownership of a value in a situation where you have
-only an exclusive reference, such as in implementations of Drop. See also
-mem::take for when T: Default.
+- iter::once函数接受任何值并生成一个只产生该值一次的迭代器。当调用需要迭代器的函数时，如果您不想分配内存，或者与Iterator::chain结合使用以将单个项附加到现有迭代器上，这非常有用。
+- 我们在第1章简要介绍了mem::replace，但如果您错过了它，它值得再次提及。该函数接受对T的独占引用和一个拥有的T，交换两者，使得引用现在是拥有的T，并返回先前引用的所有权。当您需要在只有独占引用的情况下获取值的所有权时，这非常有用，例如在Drop的实现中。另请参阅当T: Default时的mem::take。
 
-###### Types
+###### 类型
 
-Next, let’s look at some handy standard library types. The BufReader and
-BufWriter types are a must for I/O operations that issue many small read or
-write calls to the underlying I/O resource. These types wrap the respective
-underlying Read or Write and implement Read and Write themselves, but
-they additionally buffer the operations to the I/O resource such that many
-small reads do only one large read, and many small writes do only one large
-write. This can significantly improve performance as you don’t have to cross
-the system call barrier into the operating system as often.
+接下来，让我们看一些方便的标准库类型。BufReader和BufWriter类型对于对底层I/O资源发出许多小的读取或写入调用的I/O操作是必不可少的。这些类型包装了相应的底层Read或Write，并实现了自己的Read和Write，但它们还将操作缓冲到I/O资源，以便许多小的读取只进行一次大的读取，许多小的写入只进行一次大的写入。这可以显著提高性能，因为您不必经常跨越系统调用边界进入操作系统。
 
-- The Cow type, mentioned in Chapter 3, is useful when you want flexibility
-in what types you hold or need flexibility in what you return. You’ll
-rarely use Cow as a function argument (recall that you should let the caller
-allocate if necessary), but it’s invaluable as a return type as it allows you
-to accurately represent the return types of functions that may or may not
-allocate. It’s also a perfect fit for types that can be used as inputs or outputs,
-such as core types in RPC-like APIs. Say we have a type EntityIdentifier like
-in Listing 13-1 that is used in an RPC service interface.
+- Cow类型在第3章中提到过，当您希望灵活地持有哪些类型或需要在返回时灵活地持有哪些类型时非常有用。您很少会将Cow用作函数参数（请记住，如果需要，应该让调用者分配），但作为返回类型，它非常有价值，因为它允许您准确地表示可能分配或可能不分配的函数的返回类型。它也非常适合用于可以用作输入或输出的类型，例如RPC-like API中的核心类型。假设我们有一个名为EntityIdentifier的类型，就像在Listing 13-1中一样，它在RPC服务接口中使用。
 
 ```rust
 struct EntityIdentifier {
@@ -4322,21 +3983,9 @@ name: String,
 }
 ```
 
-Listing 13-1: A representation of a combined input/output type that requires allocation
+第13-1节：需要分配的组合输入/输出类型的表示
 
-Now imagine two methods: get_entity takes an EntityIdentifier as an
-argument, and find_by returns an EntityIdentifier based on some search
-parameters. The get_entity method requires only a reference since the
-identifier will (presumably) be serialized before being sent to the server.
-But for find_by, the entity will be deserialized from the server response and
-must therefore be represented as an owned value. If we make get_entity
-take &EntityIdentifier, it will mean callers must still allocate owned Strings
-to call get_entity even though that’s not required by the interface, since
-it’s required to construct an EntityIdentifier in the first place! We could
-instead introduce a separate type for get_entity, EntityIdenifierRef, that
-holds only &str types, but then we’d have two types to represent one thing.
-Cow to the rescue! Listing 13-2 shows an EntityIdentifier that instead holds
-Cows internally.
+现在想象一下有两个方法：get_entity接受一个EntityIdentifier作为参数，而find_by根据一些搜索参数返回一个EntityIdentifier。get_entity方法只需要一个引用，因为标识符（可能）在发送到服务器之前被序列化。但是对于find_by，实体将从服务器响应中反序列化，因此必须表示为拥有的值。如果我们让get_entity接受&EntityIdentifier，这意味着调用者仍然必须分配拥有的字符串来调用get_entity，即使接口并不需要，因为在构造EntityIdentifier之前就需要它！我们可以为get_entity引入一个单独的类型EntityIdenifierRef，它只包含&str类型，但这样我们就需要两种类型来表示同一件事情。Cow来拯救！第13-2节展示了一个EntityIdentifier，它在内部使用Cows来保存数据。
 
 ```rust
 struct EntityIdentifier<'a> {
@@ -4345,151 +3994,48 @@ name: Cow<'a str>,
 }
 ```
 
-Listing 13-2: A representation of a combined input/output type that does not require
-allocation
+第13-2节：不需要分配的组合输入/输出类型的表示
 
-- With this construction, get_entity can take any EntityIdentifier<'_>,
-which allows the caller to use just references to call the method. And find_
-by can return EntityIdentifier<'static>, where all the fields are Cow::Owned.
-One type shared across both interfaces, with no unnecessary allocation
-requirements!
+- 使用这种构造，get_entity可以接受任何EntityIdentifier<'_>，这允许调用者只使用引用来调用该方法。而find_by可以返回EntityIdentifier<'static>，其中所有字段都是Cow::Owned。一个类型在两个接口之间共享，没有不必要的分配要求！
 
-**NOTE** If you implement a type this way, I recommend you also provide an into_owned
-method that turns an <'a> instance into a <'static> instance by calling Cow::into_
-owned on all the fields. Otherwise, users will have no way to make longer-lasting
-clones of your type when all they have is an <'a>.
+**注意** 如果您以这种方式实现类型，我建议您还提供一个into_owned方法，该方法通过在所有字段上调用Cow::into_owned将<'a>实例转换为<'static>实例。否则，当用户只有<'a>时，他们将无法对您的类型进行更长时间的克隆。
 
-- The std::sync::Once type is a synchronization primitive that lets you run
-a given piece of code exactly once, at initialization time. This is great for
-initialization that’s part of an FFI where the library on the other side of the
-FFI boundary requires that the initialization is performed only once.
-- The VecDeque type is an oft-neglected member of std::collections that
-I find myself reaching for surprisingly often—basically, whenever I need
-a stack or a queue. Its interface is similar to that of a Vec, and like Vec its
-in-memory representation is a single chunk of memory. The difference is
-that VecDeque keeps track of both the start and end of the actual data in that
-single allocation. This allows constant-time push and pop from either side of
-the VecDeque, meaning it can be used as a stack, as a queue, or even both at
-the same time. The cost you pay is that the values are no longer necessarily
-contiguous in memory (they may have wrapped around), which means that
-VecDeque<T> does not implement AsRef<[T]>.
+- std::sync::Once类型是一种同步原语，它允许您在初始化时仅运行给定的代码一次。这对于作为FFI的一部分的初始化非常有用，其中FFI边界的另一侧的库要求仅执行一次初始化。
+- VecDeque类型是std::collections中经常被忽视的成员，但我发现自己经常使用它-基本上，每当我需要一个堆栈或队列时。它的接口类似于Vec，就像Vec一样，它的内存表示是一个单一的内存块。不同之处在于VecDeque同时跟踪实际数据的开始和结束，这允许从VecDeque的任一侧进行常数时间的推入和弹出，这意味着它可以用作堆栈、队列，甚至同时用作两者。您需要付出的代价是值不再必须在内存中连续（它们可能已经环绕），这意味着VecDeque<T>不实现AsRef<[T]>。
 
-###### Methods
+###### 方法
 
-Let’s round off with a rapid-fire look at some neat methods. First up is
-Arc::make_mut, which takes a &mut Arc<T> and gives you a &mut T. If the Arc is
-the last one in existence, it gives you the T that was behind the Arc; otherwise,
-it allocates a new Arc<T> that holds a clone of the T, swaps that in for
-the currently referenced Arc, and then gives &mut to the T in the new singleton
-Arc.
+让我们快速浏览一些不错的方法。首先是Arc::make_mut，它接受一个&mut Arc<T>并给出一个&mut T。如果Arc是存在的最后一个，它会给出Arc后面的T；否则，它会分配一个新的Arc<T>，其中包含T的克隆，将其交换到当前引用的Arc中，然后给出新单例Arc中的T的&mut。
 
-- The Clone::clone_from method is an alternative form of .clone() that
-lets you reuse an instance of the type you clone rather than allocate a new
-one. In other words, if you already have an x: T, you can do x.clone_from(y)
-rather than x = y.clone(), and you might save yourself some allocations.
-- std::fmt::Formatter::debug_*is by far the easiest way to implement Debug
-yourself if #[derive(Debug)] won’t work for your use case, such as if you want
-to include only some fields or expose information that isn’t exposed by the
-Debug implementations of your type’s fields. When implementing the fmt
-method of Debug, simply call the appropriate debug_method on the Formatter
-that’s passed in (debug_struct or debug_map, for example), call the included
-methods on the resulting type to fill in details about the type (like field to
-add a field or entries to add a key/value entry), and then call finish.
-- Instant::elapsed returns the Duration since an Instant was created. This
-is much more concise than the common approach of creating a new Instant
-and subtracting the earlier instance.
-- Option::as_deref takes an Option<P> where P: Deref and returns
-Option<&P::Target> (there’s also an as_deref_mut method). This simple operation
-can make functional transformation chains that operate on Option
-much cleaner by avoiding the inscrutable .as_ref().map(|r| &*_r).
-- Ord::clamp lets you take any type that implements Ord and clamp it
-between two other values of a given range. That is, given a lower limit min
-and an upper limit max, x.clamp(min, max) returns min if x is less than min, max
-if x is greater than max, and x otherwise.
-- Result::transpose and its counterpart Option::transpose invert types that
-nest Result and Option. That is, transposing a Result<Option<T>, E> gives an
-Option<Result<T, E>>, and vice versa. When combined with ?, this operation
-can make for cleaner code when working with Iterator::next and similar
-methods in fallible contexts.
-- Vec::swap_remove is Vec::remove’s faster twin. Vec::remove preserves the
-order of the vector, which means that to remove an element in the middle,
-it must shift all the later elements in the vector down by one. This can be
-very slow for large vectors. Vec::swap_remove, on the other hand, swaps the
-to-be-removed element with the last element and then truncates the vector’s
-length by one, which is a constant-time operation. Be aware, though, that it
-will shuffle your vector around and thus invalidate old indexes!
+- Clone::clone_from方法是.clone()的另一种形式，它允许您重用克隆的类型实例而不是分配一个新的实例。换句话说，如果您已经有一个x: T，您可以使用x.clone_from(y)而不是x = y.clone()，这样您可能会节省一些分配。
+- std::fmt::Formatter::debug_*是实现Debug的最简单的方法，如果#[derive(Debug)]对您的用例不起作用，比如如果您只想包含一些字段或公开类型字段的Debug实现中没有公开的信息。在实现Debug的fmt方法时，只需调用传入的Formatter上的适当的debug_*方法（例如debug_struct或debug_map），调用结果类型上的包含的方法来填充有关类型的详细信息（例如field添加字段或entries添加键/值条目），然后调用finish。
+- Instant::elapsed返回自创建Instant以来的Duration。这比常见的方法更简洁，常见的方法是创建一个新的Instant并减去较早的实例。
+- Option::as_deref接受一个Option<P>，其中P: Deref，并返回Option<&P::Target>（还有一个as_deref_mut方法）。这个简单的操作可以通过避免晦涩的.as_ref().map(|r| &*_r)来使在Option上操作的函数式转换链更加清晰。
+- Ord::clamp允许您获取任何实现Ord的类型，并将其夹在给定范围的两个其他值之间。也就是说，给定下限min和上限max，x.clamp(min, max)如果x小于min，则返回min，如果x大于max，则返回max，否则返回x。
+- Result::transpose及其对应的Option::transpose反转嵌套Result和Option的类型。也就是说，将Result<Option<T>, E>转置为Option<Result<T, E>>，反之亦然。与?结合使用时，在处理具有Iterator::next和类似方法的可能失败的上下文中，此操作可以使代码更清晰。
+- Vec::swap_remove是Vec::remove的更快版本。Vec::remove保留向量的顺序，这意味着要删除中间的元素，必须将向量中的所有后续元素向下移动一个位置。对于大型向量，这可能非常慢。另一方面，Vec::swap_remove将要删除的元素与最后一个元素交换，然后将向量的长度减少一，这是一个常数时间的操作。但请注意，它会重新排列您的向量，从而使旧索引无效！
 
-#### Patterns in the Wild
+#### 实际应用中的模式
 
-As you start exploring codebases that aren’t your own, you’ll likely come
-across a couple of common Rust patterns that we haven’t discussed in the
-book so far. Knowing about them will make it easier to recognize them, and
-thus understand their purpose, when you do encounter them. You may even
-find use for them in your own codebase one day!
+当您开始探索不属于自己的代码库时，您可能会遇到一些常见的Rust模式，我们在本书中尚未讨论。了解这些模式将使您更容易识别它们，并因此理解它们的目的。您甚至可能会在自己的代码库中找到它们的用途！
 
-##### Index Pointers
+##### 索引指针
 
-Index pointers allow you to store multiple references to data within a data
-structure without running afoul of the borrow checker. For example, if you
-want to store a collection of data so that it can be efficiently accessed in
-more than one way, such as by keeping one HashMap keyed by one field and
-one keyed by a different field, you don’t want to store the underlying data
-multiple times too. You could use Arc or Rc, but they use dynamic reference
-counting that introduces unnecessary overhead, and the extra bookkeeping
-requires you to store additional bytes per entry. You could use references,
-but the lifetimes become difficult if not impossible to manage because the
-data and the references live in the same data structure (it’s a self-referential
-data structure, as we discussed in Chapter 8). You could use raw pointers
-combined with Pin to ensure the pointers remain valid, but that introduces
-a lot of complexity as well as unsafety you then need to carefully consider.
+索引指针允许您在数据结构中存储对数据的多个引用，而不会违反借用检查器。例如，如果您想存储一组数据，以便可以通过不同的方式高效地访问它，例如通过保持一个以一种字段为键的HashMap和一个以不同字段为键的HashMap，您不希望多次存储底层数据。您可以使用Arc或Rc，但它们使用动态引用计数，引入了不必要的开销，并且额外的管理需要您存储每个条目的附加字节。您可以使用引用，但是如果数据和引用存储在同一个数据结构中（如第8章中讨论的自引用数据结构），则生命周期变得困难，甚至不可能管理。您可以使用与Pin结合使用的原始指针来确保指针保持有效，但这也引入了很多复杂性以及您需要仔细考虑的不安全性。
 
-- Most crates use index pointers—or, as I like to call them, indeferences—
-instead. The idea is simple: store each data entry in some indexable data
-structure like a Vec, and then store just the index in a derived data structure.
-To then perform an operation, first use the derived data structure
-to efficiently find the data index, and then use the index to retrieve the
-referenced data. No lifetimes needed—and you can even have cycles in the
-derived data representation if you wish!
-- The indexmap crate, which provides a HashMap implementation where the
-iteration order matches the map insertion order, provides a good example
-of this pattern. The implementation has to store the keys in two places,
-both in the map of keys to values and in the list of all the keys, but it obviously
-doesn’t want to keep two copies in case the key type itself is large. So,
-it uses index pointers. Specifically, it keeps all the key/value pairs in a single
-Vec and then keeps a mapping from key hashes to Vec indexes. To iterate
-over all the elements of the map, it just walks the Vec. To look up a given
-key, it hashes that key, looks that hash up in the mapping, which yields the
-key’s index in the Vec (the index pointer), and then uses that to get the key’s
-value from the Vec.
-- The petgraph crate, which implements graph data structures and algorithms,
-also uses this pattern. The crate stores one Vec of all node values
-and another of all edge values and then only ever uses the indexes into
-those Vecs to refer to a node or edge. So, for example, the two nodes associated
-with an edge are stored in that edge simply as two u32s, rather than as
-references or reference-counted values.
-- The trick lies in how you support deletions. To delete a data entry, you
-first need to search for its index in all of the derived data structures and
-remove the corresponding entries, and then you need to remove the data
-from the root data store. If the root data store is a Vec, removing the entry
-will also change the index of one other data entry (when using swap_remove),
-so you then need to go update all the derived data structures to reflect the
-new index for the entry that moved.
+- 大多数crate使用索引指针，或者我喜欢称之为indeferences。这个想法很简单：将每个数据条目存储在某个可索引的数据结构（如Vec）中，然后在派生的数据结构中仅存储索引。然后，要执行操作，首先使用派生的数据结构高效地找到数据索引，然后使用索引从中检索引用的数据。不需要生命周期-如果您希望，甚至可以在派生数据表示中具有循环！
+
+- indexmap crate是一个很好的例子，它提供了一个HashMap实现，其中迭代顺序与映射插入顺序相匹配。实现必须在两个位置存储键，一个是键到值的映射，另一个是所有键的列表，但显然不希望在键类型本身很大的情况下保留两个副本。所以，它使用索引指针。具体来说，它将所有键值对都保存在一个单独的Vec中，然后将键哈希映射到Vec索引。要遍历映射的所有元素，只需遍历Vec。要查找给定的键，它会对该键进行哈希处理，查找映射中的哈希，这会产生Vec中键的索引（索引指针），然后使用该索引从Vec中获取键的值。
+
+- petgraph crate实现了图数据结构和算法，也使用了这种模式。crate将所有节点值存储在一个Vec中，将所有边值存储在另一个Vec中，并且只使用这些Vec中的索引来引用节点或边。因此，例如，与边关联的两个节点仅在该边中存储为两个u32，而不是作为引用或引用计数值。
+
+- 诀窍在于如何支持删除。要删除数据条目，首先需要在所有派生的数据结构中搜索其索引并删除相应的条目，然后需要从根数据存储中删除数据。如果根数据存储是Vec，则删除条目还会更改另一个数据条目的索引（使用swap_remove时），因此您需要更新所有派生的数据结构以反映移动的条目的新索引。
 
 ##### Drop Guards
 
-Drop guards provide a simple but reliable way to ensure that a bit of code
-runs even in the presence of panics, which is often essential in unsafe code.
-An example is a function that takes a closure f: FnOnce and executes it under
-mutual exclusion using atomics. Say the function uses compare_exchange (discussed
-in Chapter 10) to set a Boolean from false to true, calls f, and then
-sets the Boolean back to false to end the mutual exclusion. But consider
-what happens if f panics—the function will never get to run its cleanup, and
-no other call will be able to enter the mutual exclusion section ever again.
+Drop guards提供了一种简单但可靠的方式来确保在发生panic时仍然运行一些代码，这在不安全代码中通常是必不可少的。一个例子是一个函数，它接受一个闭包f: FnOnce，并使用原子操作在互斥下执行它。假设该函数使用compare_exchange（在第10章中讨论）将一个布尔值从false设置为true，调用f，然后将布尔值重新设置为false以结束互斥。但是考虑一下如果f发生panic会发生什么-函数将永远无法运行其清理代码，并且没有其他调用将能够再次进入互斥部分。
 
-- It’s possible to work around this using catch_unwind, but drop guards
-provide an alternative that is often more ergonomic. Listing 13-3 shows
-how, in our current example, we can use a drop guard to ensure the
-Boolean always gets reset.
+- 使用catch_unwind可以解决这个问题，但是drop guards提供了一种通常更符合人体工程学的替代方法。在我们当前的示例中，列表13-3显示了如何使用drop guard来确保布尔值始终被重置。
 
 ```rust
 fn mutex(lock: &AtomicBool, f: impl FnOnce()) {
@@ -4505,208 +4051,66 @@ f();
 }
 ```
 
-Listing 13-3: Using a drop guard to ensure code gets run after an unwinding panic
+清单13-3：使用drop guard确保在取消展开的panic后运行代码
 
-We introduce the local type DropGuard that implements Drop and place
-the cleanup code in its implementation of Drop::drop. Any necessary state
-can be passed in through the fields of DropGuard. Then, we construct an
-instance of the guard type just before we call the function that might
-panic, which is f here. When f returns, whether due to a panic or because
-it returns normally, the guard is dropped, its destructor runs, the lock is
-released, and all is well.
+我们引入了本地类型DropGuard，它实现了Drop，并将清理代码放在其Drop::drop的实现中。任何必要的状态都可以通过DropGuard的字段传递进来。然后，在调用可能引发panic的函数之前，即f在这里，我们构造了一个guard类型的实例。当f返回时，无论是由于panic还是正常返回，guard都会被丢弃，其析构函数运行，锁被释放，一切都很好。
 
-- It’s important that the guard is assigned to a variable that is dropped
-at the end of the scope, after the user-provided code has been executed.
-This means that even though we never refer to the guard’s variable again, it
-needs to be given a name, as let _ = DropGuard(lock) would drop the guard
-immediately—before the user-provided code even runs!
+- 重要的是，guard被分配给一个在作用域结束时被丢弃的变量。这意味着即使我们再也不引用guard的变量，它也需要被赋予一个名称，因为let _ = DropGuard(lock)会立即丢弃guard，而不会在用户提供的代码运行之前！
 
-**NOTE** Like catch_unwind, drop guards work only when panics unwind. If the code is compiled
-with panic=abort, no code gets to run after the panic.
+**注意** 像catch_unwind一样，drop guard仅在panic取消展开时起作用。如果代码使用panic=abort编译，那么在panic后不会运行任何代码。
 
-- This pattern is frequently used in conjunction with thread locals,
-when library code may wish to set the thread local state so that it’s valid
-only for the duration of the execution of the closure, and thus needs to
-be cleared afterwards. For example, at the time of writing, Tokio uses this
-pattern to provide information about the executor calling Future::poll to
-leaf resources like TcpStream without having to propagate that information
-through function signatures that are visible to users. It’d be no good if the
-thread local state continued to indicate that a particular executor thread
-was active even after Future::poll returned due to a panic, so Tokio uses a
-drop guard to ensure that the thread local state is reset.
+- 这种模式通常与线程局部变量一起使用，当库代码可能希望设置线程局部状态，以便仅在闭包执行期间有效，并且在之后需要清除时。例如，在撰写本文时，Tokio使用此模式为像TcpStream这样的叶资源提供有关调用Future::poll的执行器的信息，而无需通过对用户可见的函数签名传播该信息。如果线程局部状态在Future::poll由于panic返回后仍然指示特定执行器线程处于活动状态，那将是不好的，因此Tokio使用drop guard确保线程局部状态被重置。
 
-**NOTE** You’ll often see Cell or Rc<RefCell> used in thread locals. This is because thread
-locals are accessible only through shared references, since a thread might access a
-thread local again that it is already referencing somewhere higher up in the call stack.
-Both types provide interior mutability without incurring much overhead because
-they’re intended only for single-threaded use, and so are ideal for this use case.
+**注意** 您经常会看到在线程局部变量中使用Cell或Rc<RefCell>。这是因为线程局部变量仅通过共享引用访问，因为线程可能再次访问它已经在调用堆栈中的某个更高位置引用的线程局部变量。这两种类型提供了内部可变性，而不会产生太多开销，因为它们仅用于单线程使用，因此非常适合此用例。
 
-##### Extension Traits
+##### 扩展特性
 
-Extension traits allow crates to provide additional functionality to types
-that implement a trait from a different crate. For example, the itertools
-crate provides an extension trait for Iterator, which adds a number of convenient
-shortcuts for common (and not so common) iterator operations. As
-another example, tower provides ServiceExt, which adds several more ergonomic
-operations to wrap the low-level interface in the Service trait from
-tower-service.
+扩展特性允许crate为实现来自不同crate的trait的类型提供附加功能。例如，itertools crate为Iterator提供了一个扩展特性，其中添加了许多方便的常用（和不常用）迭代器操作。作为另一个例子，tower提供了ServiceExt，它为tower-service中的Service trait添加了几个更符合人体工程学的操作。
 
-- Extension traits tend to be useful either when you do not control the
-base trait, as with Iterator, or when the base trait lives in a crate of its own
-so that it rarely sees breaking releases and thus doesn’t cause unnecessary
-ecosystem splits, as with Service.
-- An extension trait extends the base trait it is an extension of (trait
-ServiceExt: Service) and consists solely of provided methods. It also comes
-with a blanket implementation for any T that implements the base trait
-(impl<T> ServiceExt for T where T: Service {}). Together, these conditions
-ensure that the extension trait’s methods are available on anything that
-implements the base trait.
+- 扩展特性通常在您无法控制基本trait的情况下非常有用，就像Iterator一样，或者当基本trait位于自己的crate中时，因此很少发生破坏性发布，从而不会导致不必要的生态系统分裂，就像Service一样。
+- 扩展特性扩展了它所扩展的基本trait（trait ServiceExt: Service），仅由提供的方法组成。它还提供了对任何实现基本trait的T的全局实现（impl<T> ServiceExt for T where T: Service {}）。这些条件共同确保扩展特性的方法在任何实现基本trait的内容上都可用。
 
-##### Crate Preludes
+##### Crate预导入
 
-In Chapter 12, we talked about the standard library prelude that makes a
-number of types and traits automatically available without you having to
-write any use statements. Along similar lines, crates that export multiple
-types, traits, or functions that you’ll often use together sometimes define
-their own prelude in the form of a module called prelude, which re-exports
-some particularly common subset of those types, traits, and functions.
-There’s nothing magical about that module name, and it doesn’t get used
-automatically, but it serves as a signal to users that they likely want to add
-use somecrate::prelude::_ to files that want to use the crate in question. The *
-is a glob import and tells Rust to use all publicly available items from the indicated
-module. This can save quite a bit of typing when the crate has a lot of
-items you’ll usually need to name.
+在第12章中，我们讨论了标准库预导入，它使得一些类型和特性在没有编写任何use语句的情况下自动可用。类似地，导出多个类型、特性或函数并经常一起使用的crate有时会定义自己的预导入形式，即一个名为prelude的模块，该模块重新导出了其中一些特定常见子集的类型、特性和函数。这个模块名称没有任何神奇之处，也不会自动使用，但它向用户发出信号，他们可能希望在想要使用相关crate的文件中添加use somecrate::prelude::_。*是一个全局导入，告诉Rust使用指定模块中的所有公共可用项。当crate有许多通常需要命名的项时，这可以节省很多输入。
 
-**NOTE** Items used through* have lower precedence than items that are used explicitly by
-name. This is what allows you to define items in your own crate that overlap with
-what’s in the standard library prelude without having to specify which one to use.
+**注意** 通过*使用的项的优先级低于通过名称显式使用的项。这使您可以在自己的crate中定义与标准库预导入重叠的项，而无需指定要使用的项。
 
-- Preludes are also great for crates that expose a lot of extension traits,
-since trait methods can be called only if the trait that defines them is in
-scope. For example, the diesel crate, which provides ergonomic access to
-relational databases, makes extensive use of extension traits so you can
-write code like:
+- 预导入对于导出许多扩展特性的crate也非常有用，因为只有在特性的trait方法在作用域中时，才能调用这些方法。例如，提供对关系数据库的人性化访问的diesel crate广泛使用扩展特性，因此您可以编写如下的代码：
 
 ```rust
 
 posts.filter(published.eq(true)).limit(5).load::<Post>(&connection)
 ```
 
-This line will work only if all the right traits are in scope, which the prelude
-takes care of.
+只有当所有正确的trait在作用域内时，这行代码才能正常工作，而预导入则负责此事。
 
-- In general, you should be careful when adding glob imports to your
-code, as they can potentially turn additions to the indicated module into
-backward-incompatible changes. For example, if someone adds a new trait
-to a module you glob-import from, and that new trait makes a method foo
-available on a type that already had some other foo method, code that calls
-foo on that type will no longer compile as the call to foo is now ambiguous.
-Interestingly enough, while the existence of glob imports makes any module
-addition a technically breaking change, the Rust RFC on API evolution
-(RFC 1105; see <https://rust-lang.github.io/rfcs/1105-api-evolution.html>) does not
-require a library to issue a new major version for such a change. The RFC
-goes into great detail about why, and I recommend you read it, but the gist
-is that minor releases are allowed to require minimally invasive changes to
-dependents, like having to add type annotations in edge cases, because otherwise
-a large fraction of changes would require new major versions despite
-being very unlikely to actually break any consumers.
-- Specifically in the case of preludes, using glob imports is usually fine
-when recommended by the vending crate, since its maintainers know that
-their users will use glob imports for the prelude module and thus will take
-that into account when deciding whether a change requires a major version
-bump.
+- 一般来说，向代码添加全局导入时需要小心，因为它们可能将对指定模块的添加转变为不兼容的更改。例如，如果有人向您从中进行全局导入的模块添加了一个新的trait，并且该新的trait使得已经存在其他foo方法的类型上的foo方法可用，那么调用该类型上的foo方法的代码将无法编译，因为对foo的调用现在是模棱两可的。有趣的是，尽管全局导入的存在使得任何模块的添加在技术上都是破坏性的更改，但是Rust关于API演进的RFC（RFC 1105；参见<https://rust-lang.github.io/rfcs/1105-api-evolution.html>）并不要求库为这种更改发布一个新的主要版本。该RFC详细介绍了为什么，我建议您阅读一下，但要点是，次要版本允许对依赖项进行最小侵入性的更改，例如在边缘情况下需要添加类型注释，否则，尽管这些更改非常不可能实际上会破坏任何消费者，但会要求发布新的主要版本。
+- 特别是在预导入的情况下，当供应crate建议使用全局导入时，通常是可以的，因为其维护者知道用户将使用预导入模块的全局导入，并且在决定更改是否需要主要版本升级时会考虑到这一点。
 
-#### Staying Up to Date
+#### 保持更新
 
-Rust, being such a young language, is evolving rapidly. The language itself,
-the standard library, the tooling, and the broader ecosystem are all still in
-their infancy, and new developments happen every day. While staying on
-top of all the changes would be infeasible, it’s worth your time to keep up
-with significant developments so that you can take advantage of the latest
-and greatest features in your projects.
+Rust作为一门年轻的语言，正在快速发展。语言本身、标准库、工具链和更广泛的生态系统都还处于初级阶段，每天都会有新的发展。虽然跟上所有变化是不可行的，但花时间了解重大发展是值得的，这样您就可以在项目中充分利用最新和最好的功能。
 
-- For monitoring improvements to Rust itself, including new language
-features, standard library additions, and core tooling upgrades, the official
-Rust blog at <https://blog.rust-lang.org/> is a good, low-volume place to start. It
-mainly features announcements for each new Rust release. I recommend
-you make a habit of reading these, as they tend to include interesting tidbits
-that will slowly but surely deepen your knowledge of the language. To
-dig a little deeper, I highly recommend reading the detailed changelogs
-for Rust and Cargo as well (links can usually be found near the bottom of
-each release announcement). The changelogs surface changes that weren’t
-large enough to warrant a paragraph in the release notes but that may be
-just what you need two weeks from now. For a less frequently updated news
-source, check in on The Edition Guide at <https://doc.rust-lang.org/edition-guide/>,
-which outlines what’s new in each Rust edition. Rust editions tend to be
-released every three years.
+- 要监控Rust本身的改进，包括新的语言特性、标准库的添加和核心工具的升级，官方的Rust博客<https://blog.rust-lang.org/>是一个好的、低频的起点。它主要发布每个新的Rust版本的公告。我建议您养成阅读这些公告的习惯，因为它们往往包含有趣的细节，这些细节会逐渐加深您对语言的了解。为了深入了解一些内容，我强烈建议阅读Rust和Cargo的详细变更日志（链接通常可以在每个发布公告的底部找到）。变更日志会展示那些在发布说明中没有被列为段落的变更，但可能正是您在两周后所需要的。对于更新频率较低的新闻来源，请查看Edition Guide<https://doc.rust-lang.org/edition-guide/>，其中概述了每个Rust版本中的新内容。Rust版本通常每三年发布一次。
 
-**NOTE** Clippy is often able to tell you when you can take advantage of a new language or
-standard library feature—always enable Clippy!
+**注意** Clippy通常可以告诉您何时可以利用新的语言或标准库功能-始终启用Clippy！
 
-- If you’re curious about how Rust itself is developed, you may also want
-to subscribe to the Inside Rust blog at <https://blog.rust-lang.org/inside-rust/>. It
-includes updates from the various Rust teams, as well as incident reports,
-larger change proposals, edition planning information, and the like. To get
-involved in Rust development yourself—which I highly encourage, as it’s
-a lot of fun and a great learning experience—you can check out the various
-Rust working groups at <https://www.rust-lang.org/governance/>, which each
-focus on improving a specific aspect of Rust. Find one that appeals to you,
-check in with the group wherever it meets and ask how you may be able to
-help. You can also join the community discussion about Rust internals over
-at <https://internals.rust-lang.org/>; this is another great way to get insight into
-the thought that goes into every part of Rust’s design and development.
-- As is the case for most programming languages, much of Rust’s value
-is derived from its community. Not only do the members of the Rust community
-constantly develop new work-saving crates and discover new Rustspecific
-techniques and design patterns, but they also collectively and
-continuously help one another understand, document, and explain how
-to take best advantage of the Rust language. Everything I have covered in
-this book, and much more, has already been discussed by the community
-in thousands of comment threads, blog posts, and Twitter and Discord conversations.
-Dipping into these discussions even just once in a while is almost
-guaranteed to show you new things about a language feature, a technique,
-or a crate that you didn’t already know.
-- The Rust community lives in a lot of places, but some good places to
-start are the Users forum (<https://users.rust-lang.org/>), the Rust subreddit
-(<https://www.reddit.com/r/rust/>), the Rust Community Discord (<https://discord>
-.gg/rust-lang-community), and the Rust Twitter account (<https://twitter.com/>
-rustlang). You don’t have to engage with all of these, or all of the time—
-pick one you like the vibe of, and check in occasionally!
-- A great single location for staying up to date with ongoing developments
-is the This Week in Rust blog (<https://this-week-in-rust.org/>), a “weekly summary
-of [Rust’s] progress and community.” It links to official announcements and
-changelogs as well as popular community discussions and resources, interesting
-new crates, opportunities for contributions, upcoming Rust events, and
-Rust job opportunities. It even lists interesting language RFCs and compiler
-PRs, so this site truly has it all! Discerning what information is valuable to
-you and what isn’t may be a little daunting, but even just scrolling through
-and clicking occasional links that appear interesting is a good way to keep a
-steady stream of new Rust knowledge trickling into your brain.
-**NOTE** Want to look up when a particular feature landed on stable? Can I Use…
-(<https://caniuse.rs/>) has you covered.
+- 如果您对Rust本身的开发感兴趣，您可能还想订阅Inside Rust博客<https://blog.rust-lang.org/inside-rust/>。它包括来自各种Rust团队的更新，以及事故报告、较大的变更提案、版本规划信息等等。要参与Rust的开发——我非常鼓励您这样做，因为这是一种有趣的学习经历——您可以查看各种Rust工作组<https://www.rust-lang.org/governance/>，每个工作组都致力于改进Rust的特定方面。找到一个吸引您的工作组，与该组会面并询问您如何能够提供帮助。您还可以加入Rust内部讨论社区<https://internals.rust-lang.org/>；这是了解Rust设计和开发的每个部分背后思想的另一种绝佳方式。
+- 对于大多数编程语言来说，Rust的价值很大程度上来自于其社区。Rust社区的成员不仅不断开发新的节省工作的crate，发现新的Rust特定技术和设计模式，而且还共同不断帮助彼此理解、记录和解释如何最好地利用Rust语言。我在本书中涵盖的所有内容，以及更多内容，已经在社区的成千上万个评论线程、博客文章和Twitter、Discord的对话中讨论过。即使只是偶尔参与这些讨论，几乎可以保证向您展示关于语言特性、技术或crate的新东西，这些您之前不知道的东西。
+- Rust社区存在于许多地方，但一些好的起点是用户论坛<https://users.rust-lang.org/>、Rust subreddit<https://www.reddit.com/r/rust/>、Rust Community Discord<https://discord.gg/rust-lang-community>和Rust Twitter账号<https://twitter.com/rustlang>。您不必与所有这些或一直参与其中——选择一个您喜欢的氛围，并偶尔查看一下！
+- 一个了解正在进行的发展的绝佳单一位置是This Week in Rust博客<https://this-week-in-rust.org/>，它是一个“[Rust的]进展和社区的每周摘要”。它链接到官方公告和变更日志，以及受欢迎的社区讨论和资源、有趣的新crate、贡献机会、即将举行的Rust活动和Rust工作机会。它甚至列出了有趣的语言RFC和编译器PR，所以这个网站真的应有尽有！辨别哪些信息对您有价值，哪些不是可能有点令人生畏，但即使只是浏览并偶尔点击看起来有趣的链接，也是让新的Rust知识源源不断地涌入您的大脑的好方法。
+**注意** 想要查找特定功能何时在稳定版中引入？Can I Use...(<https://caniuse.rs/>)可以帮到您。
 
-#### What Next?
+#### 接下来做什么？
 
-So, you’ve read this book front to back, absorbed all the knowledge it
-imparts, and are still hungry for more? Great! There are a number of other
-excellent resources out there for broadening and deepening your knowledge and understanding of Rust, and in this very final section I’ll give you a survey of some of my favorites so that you can keep learning. I’ve divided them into subsections based on how different people prefer to learn so that you can find resources that’ll work for you.
+那么，您已经从头到尾阅读了本书，吸收了它所传授的所有知识，仍然渴望更多？太好了！还有许多其他优秀的资源可供您拓宽和深化对Rust的知识和理解，在这最后一节中，我将为您概述一些我最喜欢的资源，以便您可以继续学习。我根据不同人喜欢的学习方式将它们分成了几个小节，这样您就可以找到适合您的资源。
 
-**NOTE** A challenge with learning on your own, especially in the beginning, is that progress
-is hard to perceive. Implementing even the simplest of things can take an outsized
-amount of time when you have to constantly refer to documentation and other
-resources, ask for help, or debug to learn how some aspect of Rust works. All of that
-non-coding work can make it seem like you’re treading water and not really improving. But you’re learning, which is progress in and of itself—it’s just harder to notice
-and appreciate.
+**注意** 在自学过程中，尤其是在开始阶段，一个挑战是进展难以察觉。即使是实现最简单的东西，当您不得不不断参考文档和其他资源、寻求帮助或进行调试以了解Rust的某个方面时，可能需要大量的时间。所有这些非编码工作可能会让您感觉自己在原地踏步，没有真正进步。但您正在学习，这本身就是进步——只是更难察觉和欣赏而已。
 
 ##### Learn by Watching
 
-Watching experienced developers code is essentially a life hack to remedy
-the slow starting phase of solo learning. It allows you to observe the process of designing and building while utilizing someone else’s experience.
-Listening to experienced developers articulate their thinking and explain
-tricky concepts or techniques as they come up can be an excellent alternative to struggling through problems on your own. You’ll also pick up a
-variety of auxiliary knowledge like debugging techniques, design patterns,
-and best practices. Eventually you will have to sit down and do things yourself—it’s the only way to check that you actually understand what you’ve
-observed—but piggybacking on the experience of others will almost certainly make the early stages more pleasant. And if the experience is interactive, that’s even better!
+观看经验丰富的开发者编码实际上是解决独立学习初始阶段的一种生活技巧。它让您能够观察设计和构建过程，同时利用他人的经验。倾听经验丰富的开发者在遇到问题时表达他们的思考并解释棘手的概念或技术，可以是解决问题的绝佳替代方法。您还将学到各种辅助知识，如调试技巧、设计模式和最佳实践。最终，您将不得不坐下来自己动手做事——这是检查您是否真正理解所观察到的内容的唯一方式——但依赖他人的经验几乎肯定会使早期阶段更加愉快。如果这种经验是互动的，那就更好了！
 
 - So, with that said, here are some Rust video channels that I recommend:
 - - Perhaps unsurprisingly, my own channel: <https://www.youtube.com/c/>
@@ -4879,4 +4283,8 @@ how you can get your hands dirty and contribute back to the ecosystem
 yourself. Finally, we discussed where you can go next to continue your Rust
 journey now that this book has reached its end. And with that, there’s little
 more to do than to declare:
+
+```
+
 }
+```
