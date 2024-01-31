@@ -3295,6 +3295,7 @@ LOCK.store(false, Ordering::Release);
 ##### 使用Loom进行模型检查
 
 幸运的是，已经存在一个工具可以简化这种执行探索，即loom crate。鉴于本书和Rust crate的相对发布周期，我不会在这里给出如何使用Loom的示例，因为到您阅读本书时，它们可能已经过时了，但我会概述它的功能。
+
 - Loom希望您编写专用的测试用例，以闭包的形式传递给Loom模型。该模型跟踪所有跨线程的交互，并尝试智能地探索这些交互的所有可能迭代，通过多次执行测试用例闭包。为了检测和控制线程交互，Loom为标准库中的所有类型提供了替代类型，这些类型允许线程彼此协调；这包括std::sync和std::thread下的大多数类型，以及UnsafeCell和其他一些类型。在运行Loom测试时，Loom期望您的应用程序使用这些替代类型。替代类型与Loom执行器相关联，并执行双重功能：它们作为重新调度点，以便Loom可以选择在每个可能的线程交互点之后运行哪个操作，并通知Loom考虑新的可能交错。实质上，Loom为每个可能的多个执行交错点构建了一棵树，然后尝试依次执行所有这些交错点。
 - Loom尝试完全探索您提供的测试用例的所有可能执行，这意味着它可以发现仅在极少数执行中出现的错误，这些错误在压力测试中可能需要一百年才能发现。虽然对于较小的测试用例来说很好，但通常不可行将这种严格的测试应用于更大的测试用例，这些测试用例测试更复杂的操作序列或需要同时运行多个线程。Loom将花费太长时间来获得代码的良好覆盖率。因此，您可能希望告诉Loom仅考虑可能执行的子集，Loom的文档中有更多详细信息。
 - 与压力测试类似，Loom只能捕获作为panic表现出来的错误，因此这是在并发代码中放置一些断言的又一个原因！在许多情况下，甚至值得为并发代码添加额外的状态跟踪和簿记指令，以提供更好的断言。
@@ -3302,6 +3303,7 @@ LOCK.store(false, Ordering::Release);
 ##### 使用ThreadSanitizer进行运行时检查
 
 对于较大的测试用例，您最好通过Google出色的ThreadSanitizer（也称为TSan）运行测试几次。TSan通过在每个内存访问之前放置额外的簿记指令来自动增强您的代码。然后，当您的代码运行时，这些簿记指令会更新和检查一个特殊的状态机，标记任何指示存在问题的竞争内存操作。例如，如果线程B写入某个原子值X，但未与写入X的先前值的线程同步（这里有很多手势），则表示存在写/写竞争，这几乎总是一个bug。
+
 - 由于TSan只观察您的代码运行而不像Loom一样反复执行它，它通常只会为程序的运行时添加一个恒定的因子开销。尽管这个因子可能很大（在撰写本文时为5-15倍），但它仍然足够小，以便您可以在合理的时间内执行即使是最复杂的测试用例。
 - 在撰写本文时，要使用TSan，您需要使用Rust编译器的nightly版本，并传入-Zsanitizer=thread命令行参数（或在RUSTFLAGS中设置），但希望以后这将成为一个标准支持的选项。还提供了其他检查器，例如检查越界内存访问、使用后释放、内存泄漏和读取未初始化内存的检查器，您可能还希望将并发测试套件运行通过这些检查器！
 
@@ -3323,7 +3325,8 @@ with code written in other languages,
 either by calling into such code from Rust or
 by allowing that code to call your Rust code. You can
 achieve this through foreign function interfaces (FFI).
-In this chapter we’ll first look at the primary mechanism Rust provides
+
+- In this chapter we’ll first look at the primary mechanism Rust provides
 for FFI: the extern keyword. We’ll see how to use extern both to expose Rust
 functions and statics to other languages and to give Rust access to functions
 and static variables provided from outside the Rust bubble. Then, we’ll
@@ -3331,12 +3334,15 @@ walk through how to align Rust types with types defined in other languages
 and explore some of the intricacies of allowing data to flow across the FFI
 boundary. Finally, we’ll talk about some of the tools you’ll likely want to use
 if you’re doing any nontrivial amount of FFI.
+
 **NOTE** While I often refer to FFI as being about crossing the boundary between one language
 and another, FFI can also occur entirely inside Rust-land. If one Rust program shares
 memory with another Rust program but the two aren’t compiled together—say, if you’re
 using a dynamically linked library in your Rust program that happens to be written in
 Rust, but you just have the C-compatible .so file—the same complications arise.
-Crossing Boundaries with extern
+
+#### Crossing Boundaries with extern
+
 FFI is, ultimately, all about accessing bytes that originate somewhere outside
 your application’s Rust code. For that, Rust provides two primary building
 blocks: symbols, which are names assigned to particular addresses in a
@@ -3344,13 +3350,16 @@ given segment of your binary that allow you to share memory (be it for data
 or code) between the external origin and your Rust code, and calling conventions
 that provide a common understanding of how to call functions stored
 in such shared memory. We’ll look at each of these in turn.
-Symbols
+
+##### Symbols
+
 Any binary artifact that the compiler produces from your code is filled with
 symbols—every function or static variable you define has a symbol that
 points to its location in the compiled binary. Generic functions may even
 have multiple symbols, one for each monomorphization of the function the
 compiler generates!
-Normally, you don’t have to think about symbols—they’re used internally
+
+- Normally, you don’t have to think about symbols—they’re used internally
 by the compiler to pass around the final address of a function or
 static variable in your binary. This is how the compiler knows what location
 in memory each function call should target when it generates the final
@@ -3359,14 +3368,16 @@ Since you don’t usually refer to symbols directly in your code, the compiler
 defaults to choosing semirandom names for them—you may have two functions
 called foo in different parts of your code, but the compiler will generate
 distinct symbols from them so that there’s no confusion.
-However, using random names for symbols won’t work when you want
+
+- However, using random names for symbols won’t work when you want
 to call a function or access a static variable that isn’t compiled at the same
 time, such as code that’s written in a different language and thus compiled
 by a different compiler. You can’t tell Rust about a static variable defined in
 C if the symbol for that variable has a semirandom name that keeps changing.
 Conversely, you can’t tell Python’s FFI interface about a Rust function if
 you can’t produce a stable name for it.
-To use a symbol with an external origin, we also need some way to tell
+
+- To use a symbol with an external origin, we also need some way to tell
 Rust about a variable or function in such a manner that the compiler will
 look for that same symbol defined elsewhere rather than defining its own
 (we’ll talk about how that search happens later). Otherwise, we would just
@@ -3374,12 +3385,14 @@ end up with two identical symbols for that function or static variable, and
 no sharing would take place. In fact, in all likelihood, compilation would
 fail since any code that referred to that symbol wouldn’t know which definition
 (that is, which address) to use for it!
-Foreign Function Interfaces 195
+
 **NOTE** A quick note about terminology: a symbol can be declared multiple times but
 defined only once. Every declaration of a symbol will link to the same single definition
 for that symbol at linking time. If no definition for a declaration is found, or if
 there are multiple definitions, the linker will complain.
-An Aside on Compilation and Linking
+
+##### An Aside on Compilation and Linking
+
 Compiler crash course time! Having a rough idea of the complicated process
 of turning code into a runnable binary will help you understand FFI
 better. You see, the compiler isn’t one monolithic program but is (typically)
@@ -3387,7 +3400,8 @@ broken down into a handful of smaller programs that each perform distinct
 tasks and run one after the other. At a high level, there are three distinct
 phases to compilation—compilation, code generation, and linking—handled by
 three different components.
-The first phase is performed by what most people tend to think of
+
+- The first phase is performed by what most people tend to think of
 as “the compiler”; it deals with type checking, borrow checking, monomorphization,
 and other features we associate with a given programming
 language. This phase generates no machine code but rather a low-level
@@ -3395,7 +3409,7 @@ representation of the code that uses heavily annotated abstract machine
 operations. That low-level representation is then passed to the code generation
 tool, which is what produces machine code that can actually run on a
 given CPU.
-These two operations, taken together, do not have to be run in a single
+- These two operations, taken together, do not have to be run in a single
 big pass over the whole codebase all at once. Instead, the codebase can be
 sliced into smaller chunks that are then run through compilation concurrently.
 For example, Rust generally compiles different crates independently
@@ -3403,7 +3417,7 @@ and in parallel as long as there isn’t a dependency between them. It can also
 invoke the code generation tool for independent crates separately to process
 them in parallel. Rust can often even compile multiple smaller slices of
 a single crate separately!
-Once the machine code for every piece of the application has been
+- Once the machine code for every piece of the application has been
 generated, those pieces can then be wired together. This is done in the
 linking phase by, unsurprisingly, the linker. The linker’s primary job is to
 take all the binary artifacts, called object files, produced by code generation,
@@ -3411,21 +3425,23 @@ stitch them together into a single file, and then replace every reference to a
 symbol with the final memory address of that symbol. This is how you can
 define a function in one crate and call it from another but still compile the
 two crates separately.
-The linker is what enables FFI to work. It doesn’t care how each of the
+- The linker is what enables FFI to work. It doesn’t care how each of the
 input object files were constructed; it just dutifully links together all the
 object files and then resolves any shared symbols. One object file may originally
 have been Rust code, one originally C code, and one may be a binary
 blob downloaded from the internet; as long as they all use the same symbol
 names, the linker will make sure that the resulting machine code uses the
 correct cross-referenced addresses for any shared symbols.
-A symbol can be linked either statically or dynamically. Static linking
+- A symbol can be linked either statically or dynamically. Static linking
 is the simplest, as each reference to a symbol is simply replaced with the
 address of that symbol’s definition. Dynamic linking, on the other hand,
 ties each reference to a symbol to a bit of generated code that tries to find
 the symbol’s definition when the program runs. We’ll talk more about these
 linking modes a little later. Rust generally defaults to static linking for Rust
 code, and dynamic linking for FFI.
-Using extern
+
+##### Using extern
+
 The extern keyword is the mechanism that allows us to declare a symbol as
 residing within a foreign interface. Specifically, it declares the existence of
 a symbol that’s defined elsewhere. In Listing 11-1 we define a static variable
@@ -3433,15 +3449,19 @@ called RS_DEBUG in Rust that we make available to other code via FFI. We also
 declare a static variable called FOREIGN_DEBUG whose definition is unspecified
 but will be resolved at linking time.
 
+```rust
 # [no_mangle]
 
 pub static RS_DEBUG: bool = true;
 extern {
 static FOREIGN_DEBUG: bool;
 }
+```
+
 Listing 11-1: Exposing a Rust static variable, and accessing one declared elsewhere,
 through FFI
-The #[no_mangle] attribute ensures that RS_DEBUG retains that name during
+
+- The #[no_mangle] attribute ensures that RS_DEBUG retains that name during
 compilation rather than having the compiler assign it another symbol
 name to, for example, distinguish it from another (non-FFI) RS_DEBUG static
 variable elsewhere in the program. The variable is also declared as pub since
@@ -3449,7 +3469,7 @@ it’s a part of the crate’s public API, though that annotation isn’t strict
 necessary on items marked #[no_mangle]. Note that we don’t use extern for
 RS_DEBUG, since it’s defined here. It will still be accessible to link against from
 other languages.
-The extern block surrounding the FOREIGN_DEBUG static variable denotes
+- The extern block surrounding the FOREIGN_DEBUG static variable denotes
 that this declaration refers to a location that Rust will learn at linking
 time based on where the definition of the same symbol is located. Since
 it’s defined elsewhere, we don’t give it an initialization value, just a type,
@@ -3457,25 +3477,29 @@ which should match the type used at the definition site. Because Rust
 doesn’t know anything about the code that defines the static variable,
 and thus can’t check that you’ve declared the correct type for the symbol,
 FOREIGN_DEBUG can be accessed only inside an unsafe block.
+
 **NOTE** Static variables in Rust aren’t mutable by default, regardless of whether they’re in an
 extern block. These variables are always available from any thread, so mutable access
 would pose a data race risk. You can declare a static as mut, but if you do, it becomes
 unsafe to access.
-The procedure to declare FFI functions is very similar. In Listing 11-2,
+
+- The procedure to declare FFI functions is very similar. In Listing 11-2,
 we make hello_rust accessible to non-Rust code and pull in the external
 hello_foreign function.
 
+```rust
 # [no_mangle]
-
 pub extern fn hello_rust(i: i32) { ... }
 extern {
 fn hello_foreign(i: i32);
 }
+```
 Listing 11-2: Exposing a Rust function, and accessing one defined elsewhere, through FFI
-The building blocks are all the same as in Listing 11-1 with the exception
+
+- The building blocks are all the same as in Listing 11-1 with the exception
 that the Rust function is declared using extern fn, which we’ll explore
 in the next section.
-If there are multiple definitions of a given extern symbol like FOREIGN_
+- If there are multiple definitions of a given extern symbol like FOREIGN_
 DEBUG or hello_foreign, you can explicitly specify which library the symbol
 should link against using the #[link] attribute. If you don’t, the linker will
 give you an error saying that it’s found multiple definitions for the symbol
@@ -3486,10 +3510,10 @@ an external static or function in your Rust code by annotating its declaration
 with #[link_name = "<actual_symbol_name>"], and then the item links to
 whatever name you wish. Similarly, you can rename a Rust item for export
 using #[export_name = "<export_symbol_name>"].
-Link Kinds
 
-# [link] also accepts the argument kind, which dictates how the items in the
+#### Link Kinds
 
+`# [link]` also accepts the argument kind, which dictates how the items in the
 block should be linked. The argument defaults to "dylib", which signifies
 C-compatible dynamic linking. The alternative kind value is "static", which
 indicates that the items in the block should be linked fully at compile time
@@ -3497,7 +3521,8 @@ indicates that the items in the block should be linked fully at compile time
 directly into the binary produced by the compiler , and thus doesn’t need to
 exist at runtime. There are a few other kinds as well, but they are much less
 common and outside the scope of this book.
-There are several trade-offs between static and dynamic linking, but the
+
+- There are several trade-offs between static and dynamic linking, but the
 main considerations are security, binary size, and distribution. First, dynamic
 linking tends to be more secure because it makes it easier to upgrade libraries
 independently. Dynamic linking allows whoever deploys a binary that contains
@@ -3507,13 +3532,12 @@ update the crypto library on the host and restart the binary, and the updated
 library code will be used automatically. With static compilation, the library’s
 code is hardwired into the binary, so the user would have to recompile your
 code against an upgraded version of the library to get the update.
-Dynamic linking also tends to produce smaller binaries. Since static
+- Dynamic linking also tends to produce smaller binaries. Since static
 compilation includes any linked code into the final binary output, and any
 code that code in turn pulls in, it produces larger binaries. With dynamic
 linking, each external item includes just a small bit of wrapper code that
 loads the indicated library at runtime and then forwards the access.
-198 Chapter 11
-So far, static linking may not seem very attractive, but it has one big advantage
+- So far, static linking may not seem very attractive, but it has one big advantage
 over dynamic linking: ease of distribution. With dynamic linking, anyone
 who wants to run a binary that includes your code must also have any libraries
 your code links against. Not only that, but they must make sure the version of
@@ -3523,11 +3547,13 @@ but it poses a problem for more obscure libraries. The user then needs
 to be aware that they should install that library and must hunt for it in order to
 run your code! With static linking, the library’s code is embedded directly into
 the binary output, so the user doesn’t need to install it themselves.
-Ultimately, there isn’t a right choice between static and dynamic linking.
+- Ultimately, there isn’t a right choice between static and dynamic linking.
 Dynamic linking is usually a good default, but static compilation may be a
 better option for particularly constrained deployment environments or for
 very small or niche library dependencies. Use your best judgment!
-Calling Conventions
+
+##### Calling Conventions
+
 Symbols dictate where a given function or variable is defined, but that’s not
 enough to allow function calls across FFI boundaries. To call a foreign
 function in any language, the compiler also needs to know its calling convention,
@@ -3540,24 +3566,26 @@ order or in reverse)
 • How the function is told where to jump back to when it returns
 • How various CPU states, like registers, are restored in the caller after
 the function completes
-Rust has its own unique calling convention that isn’t standardized and
+
+- Rust has its own unique calling convention that isn’t standardized and
 is allowed to be changed by the compiler over time. This works fine as long
 as all function definitions and calls are compiled by the same Rust compiler,
 but it is problematic if you want interoperability with external code
 because that external code doesn’t know about the Rust calling convention.
-Every Rust function is implicitly declared with extern "Rust" if you don’t
+- Every Rust function is implicitly declared with extern "Rust" if you don’t
 declare anything else. Using extern on its own, as in Listing 11-2, is shorthand
 for extern "C", which means “use the standard C calling convention.”
 The shorthand is there because the C calling convention is what you want
 in nearly every case of FFI.
+
 **NOTE** Unwinding generally works only with regular Rust functions. If you unwind
 across the end of a Rust function that isn’t extern "Rust", your program will abort.
 Unwinding across the FFI boundary into external code is undefined behavior. With
 RFC 2945, Rust gained a new extern declaration, extern "C-unwind"; this permits
 unwinding across FFI boundaries in particular situations, but if you wish to use it
 you should read the RFC carefully.
-Foreign Function Interfaces 199
-Rust also supports a number of other calling conventions that you supply
+
+- Rust also supports a number of other calling conventions that you supply
 as a string following the extern keyword (in both fn and block context). For
 example, extern "system" says to use the calling convention of the operating
 system’s standard library interface, which at the time of writing is the same
@@ -3565,10 +3593,12 @@ as "C" everywhere except on Win32, which uses the "stdcall" calling convention.
 In general, you’ll rarely need to supply a calling convention explicitly
 unless you’re working with particularly platform-specific or highly optimized
 external interfaces, so just extern (which is extern "C") will be fine.
+
 **NOTE** A function’s calling convention is part of its type. That is, the type extern "C" fn()
 is not the same as fn() (or extern "Rust" fn()), which is different again from extern
 "system" fn().
-OTHER BINARY ARTIFACTS
+
+**OTHER BINARY ARTIFACTS**
 Normally, you compile Rust code only to run its tests or build a binary that
 you’re then going to distribute or run. Unlike in many other languages, you
 don’t generally compile a Rust library to distribute it to others—if you run a command
@@ -3578,41 +3608,44 @@ anything but source code. Since the compiler monomorphizes each generic
 function to the provided type arguments, and those types may be defined in
 the caller’s crate, the compiler must have access to the function’s generic form,
 which means no optimized machine code!
-Technically speaking, Rust does compile binary library artifacts, called rlibs,
+
+- Technically speaking, Rust does compile binary library artifacts, called rlibs,
 of each dependency that it combines in the end. These rlibs include the information
 necessary to resolve generic types, but they are specific to the exact compiler
 used and can’t generally be distributed in any meaningful way.
-So what do you do if you want to write a library in Rust that you then
+- So what do you do if you want to write a library in Rust that you then
 want to interface with from another programming language? The solution is to
 produce C-compatible library files in the form of dynamically linked libraries
 (.so files on Unix, .dylib files on macOS, and .dll files on Windows) and statically
 linked libraries (.a files on Unix/macOS and .lib files on Windows). Those
 files look like files produced by C code, so they can also be used by other languages
 that know how to interact with C.
-To produce these C-compatible binary artifacts, you set the crate-type
+- To produce these C-compatible binary artifacts, you set the crate-type
 field of the [lib] section of your Cargo.toml file. The field takes an array of values,
 which would normally just be "lib" to indicate a standard Rust library (an
 rlib). Cargo applies some heuristics that will set this value automatically if your
 crate is clearly not a library (for example, if it's a procedural macro), but best
 practice is to set this value explicitly if you’re producing anything but a good ol’
 Rust library.
-There are a number of different crate types, but the relevant ones here are
+- There are a number of different crate types, but the relevant ones here are
 "cdylib" and "staticlib", which produce C-compatible library files that are
 dynamically and statically linked, respectively. Keep in mind that when you
-(continued)
-200 Chapter 11
 produce one of these artifact types, only publicly available symbols are available—
 that is, public and #[no_mangle] static variables and functions. Things like
 types and constants won’t be available, even if they’re marked pub, since they
 have no meaningful representation in a binary library file.
-Types Across Language Boundaries
+
+#### Types Across Language Boundaries
+
 With FFI, type layout is crucial; if one language lays out the memory for
 some shared data one way but the language on the other side of the FFI
 boundary expects it to be laid out differently, then the two sides will interpret
 the data inconsistently. In this section, we’ll look at how to make types
 match up over FFI, and other aspects of types to be aware of when you cross
 the boundaries between languages.
-Type Matching
+
+##### Type Matching
+
 Types aren’t shared across the FFI boundary. When you declare a type in
 Rust, that type information is lost entirely upon compilation. All that’s communicated
 to the other side is the bits that make up values of that type.
@@ -3626,11 +3659,13 @@ types the Rust standard library provides you with the correct C types in
 the std::os::raw module, which defines type c_int = i32, type c_char = i8/
 u8 depending on whether char is signed, type c_long = i32/i64 depending on
 the target pointer width, and so on.
+
 **NOTE** Take particular note of quirky integer types in C like __be32. These often do not translate
 directly to Rust types and may be best left as something like [u8; 4]. For example,
 __be32 is always encoded as big-endian, whereas Rust’s i32 uses the endianness of the
 current platform.
-With more complex types like vectors and strings, you usually need
+
+- With more complex types like vectors and strings, you usually need
 to do the mapping manually. For example, since C tends to represent
 a string as a sequence of bytes terminated with a 0 byte, rather than a
 UTF-8–encoded string with the length stored separately, you cannot generally
@@ -3640,8 +3675,7 @@ std::ffi::CString types for borrowed and owned strings, respectively. For
 vectors, you’ll likely want to use a raw pointer to the first element and then
 pass the length separately—the Vec::into_raw_parts method may come in
 handy for that.
-Foreign Function Interfaces 201
-For types that contain other types, such as structs and unions, you also
+- For types that contain other types, such as structs and unions, you also
 need to deal with layout and alignment. As we discussed in Chapter 2, Rust
 lays out types in an undefined way by default, so at the very least you will
 want to use #[repr(C)] to ensure that the type has a deterministic layout and
@@ -3649,28 +3683,35 @@ alignment that mirrors what’s (likely and hopefully) used across the FFI
 boundary. If the interface also specifies other configurations for the type,
 such as manually setting its alignment or removing padding, you’ll need to
 adjust your #[repr] accordingly.
-A Rust enum has multiple possible C-style representations depending
+- A Rust enum has multiple possible C-style representations depending
 on whether the enum contains data or not. Consider an enum without data,
 like this:
+
+```rust
 enum Foo { Bar, Baz }
-With #[repr(C)], the type Foo is encoded using just a single integer of
+```
+
+- With #[repr(C)], the type Foo is encoded using just a single integer of
 the same size that a C compiler would choose for an enum with the same
 number of variants. The first variant has the value 0, the second the value 1,
 and so on. You can also manually assign values to each variant, as shown in
 Listing 11-3.
 
+```rust
 # [repr(C)]
-
 enum Foo {
-Bar = 1,
-Baz = 2,
+  Bar = 1,
+  Baz = 2,
 }
+```
+
 Listing 11-3: Defining explicit variant values for a dataless enum
 **NOTE** Technically, the specification says that the first variant’s value is 0 and every subsequent
 variant’s value is one greater than that of the previous one. This makes a difference
 if you manually set the value for some variants but not others—those you do
 not set will continue from the last one you did set.
-You should be careful about mapping enum-like types in C to Rust
+
+- You should be careful about mapping enum-like types in C to Rust
 this way, however, as only the values for defined variants are valid for an
 instance of the enum type. This tends to get you into trouble with C-style
 enumerations that often function more like bitsets, where variants can be
@@ -3684,17 +3725,15 @@ the various Bit*traits for improved ergonomics. Or use the bitflags crate.
 **NOTE** For fieldless enums, you can also pass a numeric type to #[repr] to use a different
 type than isize for the discriminator. For example, #[repr(u8)] will encode the discriminator
 using a single unsigned byte. For a data-carrying enum, you can pass
-
-# [repr(C, u8)] to get the same effect
-
-202 Chapter 11
-On an enum that contains data, the #[repr(C)] attribute causes the enum
+`# [repr(C, u8)]` to get the same effect
+- On an enum that contains data, the #[repr(C)] attribute causes the enum
 to be represented using a tagged union. That is, it is represented in memory
 by a #[repr(C)] struct with two fields, where the first is the discriminator as
 it would be encoded if none of the variants had fields, and the second is a
 union of the data structures for each variant. For a concrete example, consider
 the enum and associated representation in Listing 11-4.
 
+```rust
 # [repr(C)]
 
 enum Foo {
@@ -3728,8 +3767,12 @@ struct Foo {
 tag: FooTag,
 data: FooData
 }
+
+```
+
 Listing 11-4: Rust enums with #[repr(C)] are represented as tagged unions.
-THE NICHE OPTIMIZATION IN FFI
+
+**THE NICHE OPTIMIZATION IN FFI**
 In Chapter 9 we talked about the niche optimization, where the Rust compiler
 uses invalid bit patterns to represent enum variants that hold no data. The fact
 that this optimization is guaranteed leads to an interesting interaction with FFI.
@@ -3738,29 +3781,36 @@ using an Option-wrapped pointer type. For example, a nullable function pointer
 can be represented as Option<extern fn(...)>, and a nullable data pointer can
 be represented as Option<*mut T>. These will transparently do the right thing if an
 all-zero bit pattern value is provided, and will represent it as None in Rust.
-Allocations
+
+##### Allocations
+
 When you allocate memory, that allocation belongs to its allocator and can
 be freed only by that same allocator. This is the case if you use multiple
-
-Foreign Function Interfaces 203
 allocators within Rust and also if you are allocating memory both in Rust
 and with some allocator on the other side of the FFI boundary. You’re
 free to send pointers across the boundary and access that memory to your
 heart’s content, but when it comes to releasing the memory again, it needs
 to be returned to the appropriate allocator.
-Most FFI interfaces will have one of two configurations for handling
+
+- Most FFI interfaces will have one of two configurations for handling
 allocation: either the caller provides data pointers to chunks of memory
 or the interface exposes dedicated freeing methods to which any allocated
 resources should be returned when they are no longer needed. Listing 11-5
 shows an example of Rust declarations of some signatures from the
 OpenSSL library that use implementation-managed memory.
+
+```rust
 // One function allocates memory for a new object.
 extern fn ECDSA_SIG_new() -> *mut ECDSA_SIG;
 // And another accepts a pointer created by new
 // and deallocates it when the caller is done with it.
 extern fn ECDSA_SIG_free(sig:*mut ECDSA_SIG);
+
+```
+
 Listing 11-5: An implementation-managed memory interface
-The functions ECDSA_SIG_new and ECDSA_SIG_free form a pair, where the
+
+- The functions ECDSA_SIG_new and ECDSA_SIG_free form a pair, where the
 caller is expected to call the new function, use the returned pointer for as
 long as it needs (likely by passing it to other functions in turn), and then
 finally pass the pointer to the free function once it’s done with the referenced
@@ -3770,24 +3820,28 @@ were defined in Rust, the new function would likely use Box::new, and the
 free function would invoke Box::from_raw and then drop the value to run its
 destructor.
 Listing 11-6 shows an example of caller-managed memory.
+
+```rust
 // An example of caller-managed memory.
 // The caller provides a pointer to a chunk of memory,
 // which the implementation then uses to instantiate its own types.
 // No free function is provided, as that happens in the caller.
 extern fn BIO_new_mem_buf(buf: *const c_void, len: c_int) ->*mut BIO
+```
+
 Listing 11-6: A caller-managed memory interface
-Here, the BIO_new_mem_buf function instead has the caller supply the
+
+- Here, the BIO_new_mem_buf function instead has the caller supply the
 backing memory. The caller can choose to allocate memory on the heap,
 or use whatever other mechanism it deems fit for obtaining the required
 memory, and then passes it to the library. The onus is then on the caller to
 ensure that the memory is later deallocated, but only once it is no longer
 needed by the FFI implementation!
-You can use either of these approaches in your FFI APIs or even mix
+- You can use either of these approaches in your FFI APIs or even mix
 and match them if you wish. As a general rule of thumb, allow the caller to
 pass in memory when doing so is feasible, since it gives the caller more freedom
 to manage memory as it deems appropriate. For example, the caller
 may be using a highly specialized allocator on some custom operating
-204 Chapter 11
 system, and may not want to be forced to use the standard allocator your
 implementation would use. If the caller can pass in the memory, it might
 even avoid allocations entirely if it can instead use stack memory or reuse
@@ -3795,7 +3849,7 @@ already allocated memory. However, keep in mind that the ergonomics of a
 caller-managed interface are often more convoluted, since the caller must
 now do all the work to figure out how much memory to allocate and then
 set that up before it can call into your library.
-In some instances, it may even be impossible for the caller to know
+- In some instances, it may even be impossible for the caller to know
 ahead of time how much memory to allocate—for example, if your library’s
 types are opaque (and thus not known to the caller) or can change over
 time, the caller won’t be able to predict the size of the allocation. Similarly,
@@ -3803,26 +3857,31 @@ if your code has to allocate more memory while it is running, such as if
 you’re building a graph on the fly, the amount of memory needed may vary
 dynamically at runtime. In such cases, you will have to use implementationmanaged
 memory.
-When you’re forced to make a trade-off, go with caller-allocated memory
+- When you’re forced to make a trade-off, go with caller-allocated memory
 for anything that is either large or frequent. In those cases the caller is
 likely to care the most about controlling the allocations itself. For anything
 else, it’s probably okay for your code to allocate and then expose destructor
 functions for each relevant type.
-Callbacks
+
+##### Callbacks
+
 You can pass function pointers across the FFI boundary and call the referenced
 function through those pointers as long as the function pointer’s
 type has an extern annotation that matches the function’s calling convention.
 That is, you can define an extern "C" fn(c_int) -> c_int in Rust and
 then pass a reference to that function to C code as a callback that the C
 code will eventually invoke.
-You do need to be careful using callbacks around panics, as having a
+
+- You do need to be careful using callbacks around panics, as having a
 panic unwind past the end of a function that is anything but extern "Rust"
 is undefined behavior. The Rust compiler will currently automatically abort
 if it detects such a panic, but that may not always be the behavior you want.
 Instead, you may want to use std::panic::catch_unwind to detect the panic in
 any function marked extern, and then translate the panic into an error that
 is FFI-compatible.
-Safety
+
+##### Safety
+
 When you write Rust FFI bindings, most of the code that actually interfaces
 with the FFI will be unsafe and will mainly revolve around raw pointers.
 However, your goal should be to ultimately present a safe Rust interface on
@@ -3833,65 +3892,83 @@ three most important elements of safely encapsulating a foreign interface
 are capturing & versus &mut accurately, implementing Send and Sync appropriately,
 and ensuring that pointers cannot be accidentally confused. I’ll go
 over how to enforce each of these next.
-Foreign Function Interfaces 205
-References and Lifetimes
+
+##### References and Lifetimes
+
 If there’s a chance external code will modify data behind a given pointer,
 make sure that the safe Rust interface has an exclusive reference to the
 relevant data by taking &mut. Otherwise a user of your safe wrapper might
 accidentally read from memory that the external code is simultaneously
 modifying, and all hell will break loose!
-You’ll also want to make good use of Rust lifetimes to ensure that all
+
+- You’ll also want to make good use of Rust lifetimes to ensure that all
 pointers live for as long as the FFI requires. For example, imagine an external
 interface that lets you create a Context and then lets you create a Device from
 that Context with the requirement that the Context remain valid for as long as
 the Device lives. In that case, any safe wrapper for the interface should enforce
 that requirement in the type system by having Device hold a lifetime associated
 with the borrow of Context that the Device was created from.
-Send and Sync
+
+##### Send and Sync
+
 Do not implement Send and Sync for types from an external library unless
 that library explicitly documents that those types are thread-safe! It is the
 safe Rust wrapper’s job to ensure that safe Rust code cannot violate the
 invariants of the external code and thus trigger undefined behavior.
-Sometimes, you may even want to introduce dummy types to enforce
+
+- Sometimes, you may even want to introduce dummy types to enforce
 external invariants. For example, say you have an event loop library with the
 interface given in Listing 11-7.
+
+```rust
+
 extern fn start_main_loop();
 extern fn next_event() -> *mut Event;
+```
 Listing 11-7: A library that expects single-threaded use
-Now suppose that the documentation for the external library states that
+
+- Now suppose that the documentation for the external library states that
 next_event may be called only by the same thread that called start_main_loop.
 However, here we have no type that we can avoid implementing Send for!
 Instead, we can take a page out of Chapter 3 and introduce additional
 marker state to enforce the invariant, as shown in Listing 11-8.
+
+```rust
 pub struct EventLoop(std::marker::PhantomData<*const ()>);
 pub fn start() -> EventLoop {
-unsafe { ffi::start_main_loop() };
-EventLoop(std::marker::PhantomData)
+  unsafe { ffi::start_main_loop() };
+  EventLoop(std::marker::PhantomData)
+  }
+  impl EventLoop {
+  pub fn next_event(&self) -> Option<Event> {
+  let e = unsafe { ffi::next_event() };
+  // ...
+  }
 }
-impl EventLoop {
-pub fn next_event(&self) -> Option<Event> {
-let e = unsafe { ffi::next_event() };
-// ...
-}
-}
+
+```
+
 Listing 11-8: Enforcing an FFI invariant by introducing auxiliary types
+
 The empty type EventLoop doesn’t actually connect with anything in the
 underlying external interface but rather enforces the contract that you call
-206 Chapter 11
 next_event only after calling start_main_loop, and only on the same thread.
 You enforce the “same thread” part by making EventLoop neither Send nor
 Sync, by having it hold a phantom raw pointer (which itself is neither Send
 nor Sync).
-Using PhantomData<_const ()> to “undo” the Send and Sync auto-traits as
+
+- Using PhantomData<_const ()> to “undo” the Send and Sync auto-traits as
 we do here is a bit ugly and indirect. Rust does have an unstable compiler
 feature that enables negative trait implementations like impl !Send for
 EventLoop {}, but it’s surprisingly difficult to get its implementation right,
 and it likely won’t stabilize for some time.
-You may have noticed that nothing prevents the caller from invoking
+- You may have noticed that nothing prevents the caller from invoking
 start_main_loop multiple times, either from the same thread or from another
 thread. How you’d handle that would depend on the semantics of the
 library in question, so I’ll leave it to you as an exercise.
-Pointer Confusion
+
+##### Pointer Confusion
+
 In many FFI APIs, you don’t necessarily want the caller to know the internal
 representation for each and every chunk of memory you give it pointers to.
 The type might have internal state that the caller shouldn’t fiddle with, or
@@ -3901,7 +3978,8 @@ out as the C type void_, which is equivalent to *mut std::ffi::c_void in
 Rust. A type-erased pointer like this is, effectively, just a pointer, and does
 not convey anything about the thing it points to. For that reason, these
 kinds of pointers are often referred to as opaque.
-Opaque pointers effectively serve the role of visibility modifiers for
+
+- Opaque pointers effectively serve the role of visibility modifiers for
 types across FFI boundaries—since the method signature does not say
 what’s being pointed to, the caller has no option but to pass around the
 pointer as is and use any available FFI methods to provide visibility into
@@ -3909,75 +3987,82 @@ the referenced data. Unfortunately, since one*mut c_void is indistinguishable
 from another, there’s nothing stopping a user from taking an opaque
 pointer as is returned from one FFI method and supplying it to a method
 that expects a pointer to a different opaque type.
-We can do better than this in Rust. To mitigate this kind of pointer
+- We can do better than this in Rust. To mitigate this kind of pointer
 type confusion, we can avoid using _mut c_void directly for opaque pointers
 in FFI, even if the actual interface calls for a void_, and instead construct
 different empty types for each distinct opaque type. For example,
 in Listing 11-9 I use two distinct opaque pointer types that cannot be
 confused.
 
+```rust 
 # [non_exhaustive] #[repr(transparent)] pub struct Foo(c_void)
 
 # [non_exhaustive] #[repr(transparent)] pub struct Bar(c_void)
-
 extern {
 pub fn foo() -> *mut Foo;
 pub fn take_foo(arg:*mut Foo);
 pub fn take_bar(arg: *mut Bar);
 }
+
+```
+
 Listing 11-9: Opaque pointer types that cannot be confused
-Foreign Function Interfaces 207
-Since Foo and Bar are both zero-sized types, they can be used in place of
+
+- Since Foo and Bar are both zero-sized types, they can be used in place of
 () in the extern method signatures. Even better, since they are now distinct
 types, Rust won’t let you use one where the other is required, so it’s now
 impossible to call take_bar with a pointer you got back from foo. Adding the
-
-# [non_exhaustive] annotation ensures that the Foo and Bar types cannot be
-
+`# [non_exhaustive]` annotation ensures that the Foo and Bar types cannot be
 constructed outside of this crate.
-bindgen and Build Scripts
+
+#### bindgen and Build Scripts
+
 Mapping out the Rust types and externs for a larger external library can be
 quite a chore. Big libraries tend to have a large enough number of type and
 method signatures to match up that writing out all the Rust equivalents is
 time-consuming. They also have enough corner cases and C oddities that
 some patterns are bound to require more careful thought to translate.
-Luckily, the Rust community has developed a tool called bindgen that
+
+- Luckily, the Rust community has developed a tool called bindgen that
 significantly simplifies this process as long as you have C header files available
 for the library you want to interface with. bindgen essentially encodes all
 the rules and best practices we’ve discussed in this chapter, plus a number
 of others, and wraps them up in a configurable code generator that takes in
 C header files and spits out appropriate Rust equivalents.
-bindgen provides a stand-alone binary that generates the Rust code for C
+- bindgen provides a stand-alone binary that generates the Rust code for C
 headers once, which is convenient when you want to check in the bindings.
 This process allows you to hand-tune the generated bindings, should that
 be necessary. If, on the other hand, you want to generate the bindings automatically
 on every build and just include the C header files in your source
 code, bindgen also ships as a library that you can invoke in a custom build
 script for your package.
+
 **NOTE** If you check in the bindings directly, keep in mind that they will be correct only on
 the platform they were generated for. Generating the bindings in a build script will
 generate them specifically for the current target platform, which is less likely to cause
 platform-related layout inconsistencies.
-You declare a build script by adding build = "<some-file.rs>" to the
+
+- You declare a build script by adding build = "<some-file.rs>" to the
 [package] section of your Cargo.toml. This tells Cargo that, before compiling
 your crate, it should compile <some-file.rs> as a stand-alone Rust program
 and run it; only then should it compile the source code of your crate. The
 build script also gets its own dependencies, which you declare in the [builddependencies]
 section of your Cargo.toml.
+
 **NOTE** If you name your build script build.rs, you don’t need to declare it in your Cargo.toml.
-Build scripts come in very handy with FFI—they can compile a bundled
+
+- Build scripts come in very handy with FFI—they can compile a bundled
 C library from source, dynamically discover and declare additional build
 flags to be passed to the compiler, declare additional files that Cargo
 should check for changes for the purposes of recompilation, and, you
 guessed it, generate additional source files on the fly!
-208 Chapter 11
-Though build scripts are very versatile, beware of making them too
+- Though build scripts are very versatile, beware of making them too
 aware of the environment they run in. While you can use a build script
 to detect if the Rust compiler version is a prime or if it’s going to rain in
 Istanbul tomorrow, making your compilation dependent on such conditions
 may make builds fail unexpectedly for other developers, which leads to a
 poor development experience.
-The build script can write files to a special directory supplied through
+- The build script can write files to a special directory supplied through
 the OUT_DIR environment variable. The same directory and environment
 variable are also accessible in the Rust source code at compile time so that
 it can pick up files generated by the build script. To generate and use Rust
@@ -3985,8 +4070,13 @@ types from a C header, you first have your build script use the library version
 of bindgen to read in a .h file and turn it into a file called, say, bindings.rs
 inside OUT_DIR. You then add the following line to any Rust file in your crate
 to include bindings.rs at compilation time:
+
+```rust
+
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-Since the code in bindings.rs is autogenerated, it’s generally best practice
+```
+
+- Since the code in bindings.rs is autogenerated, it’s generally best practice
 to place the bindings in their own crate and give the crate the same
 name as the library the bindings are for, with the suffix -sys (for example,
 openssl-sys). If you don’t follow this practice, releasing new versions of your
@@ -4001,10 +4091,12 @@ the Rust bindings change—say, if the header files themselves are upgraded
 or a bindgen upgrade causes the generated Rust code to change slightly—
 without also having to cut a breaking release of the crate that safely wraps
 the FFI bindings.
+
 **NOTE** Remember that if you include any of the types from the -sys crate in the public interface
 of your main library crate, changing the dependency on the -sys crate to a new
 major version still constitutes a breaking change for your main library!
-If your crate instead produces a library file that you intend others to
+
+- If your crate instead produces a library file that you intend others to
 use through FFI, you should also publish a C header file for its interface
 to make it easier to generate native bindings to your library from other
 languages. However, that C header file then needs to be kept up to date as
@@ -4014,11 +4106,11 @@ this task: cbindgen. Like bindgen, cbindgen is a build tool, and it also comes
 as both a binary and a library for use in build scripts. Instead of taking
 in a C header file and producing Rust, it takes Rust in and produces a C
 header file. Since the C header file represents the main computer-readable
-Foreign Function Interfaces 209
 description of your crate’s FFI, I recommend manually looking it over to
 make sure the autogenerated C code isn’t too unwieldy, though in general
 cbindgen tends to produce fairly reasonable code. If it doesn’t, file a bug!
-C++
+
+**C++**
 I’ve mainly focused on C in this chapter as it’s the language most commonly
 used to describe cross-language interfaces for libraries you can link against.
 Nearly every programming language provides some way to interact with C
@@ -4031,7 +4123,9 @@ are often lacking in ergonomics. For example, you generally have to manually
 call constructors, destructors, overloaded operators, and the like. Some C++
 features like template specialization also aren’t supported at all. If you do have
 to interface with C++, I recommend you give the cxx crate a try.
-Summary
+
+#### Summary
+
 In this chapter, we’ve covered how to use the extern keyword to call out of
 Rust into external code, as well as how to use it to make Rust code accessible
 to external code. We’ve also discussed how to align Rust types with types on
@@ -4056,15 +4150,17 @@ supercomputer or an embedded device with
 a single-
 core ARM processor with a clock speed of
 72MHz and 256KiB of memory.
-In this chapter, we’ll take a look at how you can use Rust in unorthodox
+
+- In this chapter, we’ll take a look at how you can use Rust in unorthodox
 environments, such as those without an operating system, or those that
 don’t even have the ability to dynamically allocate memory! Much of our
 discussion will focus on the #![no_std] attribute, but we’ll also investigate
-212 Chapter 12
 Rust’s alloc module, the Rust runtime (yes, Rust does technically have a
 runtime), and some of the tricks you have to play to write up a Rust binary
 for use in such an environment.
-Opting Out of the Standard Library
+
+#### Opting Out of the Standard Library
+
 As a language, Rust consists of multiple independent pieces. First there’s
 the compiler, which dictates the grammar of the Rust language and implements
 type checking, borrow checking, and the final conversion into
@@ -4075,7 +4171,8 @@ printing and reading user input, and so on. But std itself is also a composite,
 building on top of two other, more fundamental libraries called core
 and alloc. In fact, many of the types and functions in std are just re-exports
 from those two libraries.
-The core library sits at the bottom of the standard library pyramid and
+
+- The core library sits at the bottom of the standard library pyramid and
 contains any functionality that depends on nothing but the Rust language
 itself and the hardware the resulting program is running on—things like
 sorting algorithms, marker types, fundamental types such as Option and
@@ -4084,15 +4181,15 @@ compiler hints. The core library works as if the operating system does
 not exist, so there is no standard input, no filesystem, and no network.
 Similarly, there is no memory allocator, so types like Box, Vec, and HashMap
 are nowhere to be seen.
-Above core sits alloc, which holds all the functionality that depends
+- Above core sits alloc, which holds all the functionality that depends
 on dynamic memory allocation, such as collections, smart pointers, and
 dynamically allocated strings (String). We’ll get back to alloc in the next
 section.
-Most of the time, because std re-exports everything in core and
+- Most of the time, because std re-exports everything in core and
 alloc, developers do not need to know about the differences among the
 three libraries. This means that even though Option technically lives in
 core::option::Option, you can access it through std::option::Option.
-However, in an unorthodox environment, such as on an embedded
+- However, in an unorthodox environment, such as on an embedded
 device where there is no operating system, the distinction is crucial. While
 it’s fine to use an Iterator or to sort a list of numbers, an embedded device
 may simply have no meaningful way to access a file (as that requires a filesystem)
@@ -4100,15 +4197,14 @@ or print to the terminal (as that requires a terminal)—so there’s
 no File or println!. Furthermore, the device may have so little memory that
 dynamic memory allocation is a luxury you can’t afford, and thus anything
 that allocates memory on the fly is a no-go—say goodbye to Box and Vec.
-Rather than force developers to carefully avoid those basic constructs
+- Rather than force developers to carefully avoid those basic constructs
 in such environments, Rust provides a way to opt out of anything but the
 core functionality of the language: the #![no_std] attribute. This is a cratelevel
 attribute (#!) that switches the prelude (see the box on page 213) for
 the crate from std::prelude to core::prelude so that you don’t accidentally
 depend on anything outside of core that might not work in your target
 environment.
-Rust Without the Standard Library 213
-However, that is all the #![no_std] attribute does—it does not prevent
+- However, that is all the #![no_std] attribute does—it does not prevent
 you from bringing in the standard library explicitly with extern std. This
 may be surprising, as it means a crate marked #![no_std] may in fact not be
 compatible with a target environment that does not support std, but this
@@ -4119,12 +4215,13 @@ std that, when enabled, gives access to more sophisticated APIs and integrations
 with types that live in std. This allows crate authors to both supply the
 core implementation for constrained use cases and add bells and whistles
 for consumers on more standard platforms.
+
 **NOTE** Since features should be additive, prefer an std-enabling feature to an std-disabling
 one. Otherwise, if any crate in a consumer’s dependency graph enables the no-std
 feature, all consumers will be given access only to the bare-bones API without std support,
 which may then mean that APIs they depend on aren’t available, causing them
 to no longer compile.
-THE PRELUDE
+**THE PRELUDE**
 Have you ever wondered why there are some types and traits—like Box, Iterator,
 Option, and Clone—that are available in every Rust file without you needing to
 use them? Or why you don’t need to use any of the macros in the standard library
@@ -4135,7 +4232,9 @@ prelude into scope. The prelude modules themselves aren’t special beyond this
 auto-
 inclusion—they are merely collections of pub use statements for key types,
 traits, and macros that the Rust developers expect to be commonly used.
-Dynamic Memory Allocation
+
+#### Dynamic Memory Allocation
+
 As we discussed in Chapter 1, a machine has many different regions of
 memory, and each one serves a distinct purpose. There’s static memory for
 your program code and static variables, there’s the stack for function-local
@@ -4147,8 +4246,8 @@ find it used everywhere. Vec, String, Arc and Rc, and the collection types are
 all implemented in heap memory, which allows them to grow and shrink
 over time and to be returned from functions without the borrow checker
 complaining.
-214 Chapter 12
-Behind the scenes, the heap is really just a huge chunk of contiguous
+
+- Behind the scenes, the heap is really just a huge chunk of contiguous
 memory that is managed by an allocator. It’s the allocator that provides the
 illusion of distinct allocations in the heap, ensuring that those allocations do
 not overlap and that regions of memory that are no longer in use are reused.
@@ -4158,7 +4257,7 @@ you can override which allocator Rust will use through the GlobalAlloc trait
 combined with the #[global_allocator] attribute, which requires an implementation
 of an alloc method for allocating a new segment of memory and
 dealloc for returning a past allocation to the allocator to reuse.
-In environments without an operating system, the standard C library
+- In environments without an operating system, the standard C library
 is also generally not available, and so neither is the standard system allocator.
 For that reason, #![no_std] also excludes all types that rely on dynamic
 memory allocation. But since it’s entirely possible to implement a memory
@@ -4175,6 +4274,7 @@ Do keep in mind, though, that depending on alloc means your #![no_std]
 crate will no longer be usable by any program that disallows dynamic memory
 allocation, either because it doesn’t have an allocator or because it has
 too little memory to permit dynamic memory allocation in the first place.
+
 **NOTE** Some programming domains, like the Linux kernel, may allow dynamic memory
 allocation only if out-of-memory errors are handled gracefully (that is, without panicking).
 For such use cases, you’ll want to provide try_ versions of any methods you
@@ -4182,7 +4282,8 @@ expose that might allocate. The try_methods should use fallible methods of any i
 types (like the currently unstable Box::try_new or Vec::try_reserve) rather than ones
 that just panic (like Box::new or Vec::reserve) and propagate those errors out to the
 caller, who can then handle them appropriately.
-It might strike you as odd that it’s possible to write nontrivial crates that
+
+- It might strike you as odd that it’s possible to write nontrivial crates that
 use only core. After all, they can’t use collections, the String type, the network,
 or the filesystem, and they don’t even have a notion of time! The trick
 to core-only crates is to utilize the stack and static allocations. For example,
@@ -4194,38 +4295,47 @@ write to the next element in the (statically sized) array and increment a variab
 that tracks the number of elements. If the vector’s length ever reaches
 the static size, the next push fails. Listing 12-1 gives an example of such a
 heapless vector type implemented using const generics.
-Rust Without the Standard Library 215
+
+```rust
 struct ArrayVec<T, const N: usize> {
-values: [Option<T>; N],
-len: usize,
+  values: [Option<T>; N],
+  len: usize,
 }
 impl<T, const N: usize> ArrayVec<T, N> {
-fn try_push(&mut self, t: T) -> Result<(), T> {
-if self.len == N {
-return Err(t);
+  fn try_push(&mut self, t: T) -> Result<(), T> {
+  if self.len == N {
+    return Err(t);
+  }
+  self.values[self.len] = Some(t);
+    self.len += 1;
+    return Ok(());
+  }
 }
-self.values[self.len] = Some(t);
-self.len += 1;
-return Ok(());
-}
-}
+```
+
 Listing 12-1: A heapless vector type
-We make ArrayVec generic over both the type of its elements, T, and the
+
+- We make ArrayVec generic over both the type of its elements, T, and the
 maximum number of elements, N, and then represent the vector as an array
 of N optional Ts. This structure always stores N Option<T>, so it has a size known
 at compile time and can be stored on the stack, but it can still act like a vector
 by using runtime information to inform how we access the array.
+
 **NOTE** We could have implemented ArrayVec using [MaybeUninit<T>; N] to avoid the overhead
 of the Option, but that would require using unsafe code, which isn’t warranted
 for this example.
-The Rust Runtime
+
+#### The Rust Runtime
+
 You may have heard the claim that Rust doesn’t have a runtime. While
 that’s true at a high level—it doesn’t have a garbage collector, an interpreter,
 or a built-in user-level scheduler—it’s not really true in the strictest
 sense. Specifically, Rust does have some special code that runs before your
 main function and in response to certain special conditions in your code,
 which really is a form of bare-bones runtime.
-The Panic Handler
+
+##### The Panic Handler
+
 The first bit of such special code is Rust’s panic handler. When Rust code
 panics by invoking panic! or panic_any, the panic handler dictates what
 happens next. When the Rust runtime is available—as is the case on most
@@ -4235,10 +4345,10 @@ to standard error by default. It then either unwinds the current thread’s
 stack or aborts the process, depending on the panic setting chosen for current
 compilation (either through Cargo configuration or arguments passed
 directly to rustc).
-However, not all targets provide a panic handler. For example, most
+
+- However, not all targets provide a panic handler. For example, most
 embedded targets do not, as there isn’t necessarily a single implementation
 that makes sense across all the uses for such a target. For targets that don’t
-216 Chapter 12
 supply a panic handler, Rust still needs to know what to do when a panic
 occurs. To that end, we can use the #[panic_handler] attribute to decorate a
 single function in the program with the signature fn(&PanicInfo) -> !. That
@@ -4247,12 +4357,14 @@ information about the panic in the form of a core::panic::PanicInfo. What
 the function does with that information is entirely unspecified, but it can
 never return (as indicated by the ! return type). This is important, since the
 Rust compiler assumes that no code that follows a panic is run.
-There are many valid ways for a panic handler to avoid returning. The
+- There are many valid ways for a panic handler to avoid returning. The
 standard panic handler unwinds the thread’s stack and then terminates the
 thread, but a panic handler can also halt the thread using loop {}, abort the
 program, or do anything else that makes sense for the target platform, even
 as far as resetting the device.
-Program Initialization
+
+##### Program Initialization
+
 Contrary to popular belief, the main function is not the first thing that runs
 in a Rust program. Instead, the main symbol in a Rust binary actually points
 to a function in the standard library called lang_start. That function performs
@@ -4263,7 +4375,8 @@ main function, flushing standard output on program exit, and setting up signal
 handlers. The lang_start function in turn calls the main function defined
 in your crate, which then doesn’t need to think about how, for example,
 Windows and Linux differ in how command-line arguments are passed in.
-This arrangement works well on platforms where all of that setup is sensible
+
+- This arrangement works well on platforms where all of that setup is sensible
 and supported, but it presents a problem on embedded platforms where
 main memory may not even be accessible when the program starts. On such
 platforms, you’ll generally want to opt out of the Rust initialization code
@@ -4271,12 +4384,15 @@ entirely using the #![no_main] crate-level attribute. This attribute completely
 omits lang_start, meaning you as the developer must figure out how the program
 should be started, such as by declaring a function with #[export_name =
 "main"] that matches the expected launch sequence for the target platform.
+
 **NOTE** On platforms that truly run no code before they jump to the defined start symbol,
 like most embedded devices, the initial values of static variables may not even match
 what’s specified in the source code. In such cases, your initialization function will
 need to explicitly initialize the various static memory segments with the initial data
 values specified in your program binary.
-The Out-of-Memory Handler
+
+##### The Out-of-Memory Handler
+
 If you write a program that wishes to use alloc but is built for a platform
 that does not supply an allocator, you must dictate which allocator to use
 using the #[global_allocator] attribute mentioned earlier in the chapter.
@@ -4285,7 +4401,8 @@ Rust Without the Standard Library 217
 to allocate memory. Specifically, you need to define an out-of-memory handler
 to say what should happen if an infallible operation like Vec::push needs to
 allocate more memory, but the allocator cannot supply it.
-The default behavior of the out-of-memory handler on std-enabled
+
+- The default behavior of the out-of-memory handler on std-enabled
 platforms is to print an error message to standard error and then abort the
 process. However, on a platform that, for example, doesn’t have standard
 error, that obviously won’t work. At the time of writing, on such platforms
@@ -4294,12 +4411,15 @@ unstable attribute #[lang = "oom"]. Keep in mind that the handler should
 almost certainly prevent future execution, as otherwise the code that tried
 to allocate will continue executing without knowing that it did not receive
 the memory it asked for!
+
 **NOTE** By the time you read this, the out-of-memory handler may already have been stabilized
 under a permanent name (#[alloc_error_handler], most likely). Work is also underway
 to give the default std out-of-memory handler the same kind of “hook” functionality
 as Rust’s panic handler, so that code can change the out-of-memory behavior on
 the fly through a method like set_alloc_error_hook.
-Low-Level Memory Accesses
+
+#### Low-Level Memory Accesses
+
 In Chapter 10, we discussed the fact that the compiler is given a fair amount
 of leeway in how it turns your program statements into machine instructions,
 and that the CPU is allowed some wiggle room to execute instructions
@@ -4311,7 +4431,8 @@ location actually result in two CPU load instructions. This is by design.
 The language and hardware designers carefully specified what semantics
 programmers commonly expect from their code when it runs so that your
 code generally does what you expect it to.
-However, no_std programming sometimes takes you beyond the usual
+
+- However, no_std programming sometimes takes you beyond the usual
 border of “invisible optimizations.” In particular, you’ll often communicate
 with hardware devices through memory mapping, where the internal state
 of the device is made available in carefully chosen regions in memory. For
@@ -4319,16 +4440,15 @@ example, while your computer starts up, the memory address range 0xA0000–
 0xBFFFF maps to a crude graphics rendering pipeline; writes to individual
 bytes in that range will change particular pixels (or blocks, depending on
 the mode) on the screen.
-When you’re interacting with device-mapped memory, the device
+- When you’re interacting with device-mapped memory, the device
 may implement custom behavior for each memory access to that region of
 memory, so the assumptions your CPU and compiler make about regular
 memory loads and stores may no longer hold. For instance, it is common
 for hardware devices to have memory-mapped registers that are modified
-218 Chapter 12
 when they’re read, meaning the reads have side effects. In such cases, the
 compiler can’t safely elide a memory store operation if you read the same
 memory address twice in a row!
-A similar issue arises when program execution is suddenly diverted in
+- A similar issue arises when program execution is suddenly diverted in
 ways that aren’t represented in the code and thus that the compiler cannot
 expect. Execution might be diverted if there is no underlying operating
 system to handle processor exceptions or interrupts, or if a process
@@ -4342,7 +4462,7 @@ the compiler can’t predict these exceptional jumps, it also cannot plan for
 them to be oblivious to its optimizations, so these event handlers might
 actually observe instructions that have run in a different order than those
 in the original program code.
-To deal with these exceptional situations, Rust provides volatile memory
+- To deal with these exceptional situations, Rust provides volatile memory
 operations that cannot be elided or reordered with respect to other volatile
 operations. These operations take the form of std::ptr::read_volatile
 and std::ptr::write_volatile. Volatile operations are exactly the right fit
@@ -4355,10 +4475,12 @@ of one address and a store to a different address). The no-reordering guarantee
 also helps the exceptional execution situation, as long as any code
 that touches memory accessed in an exceptional context uses only volatile
 memory operations.
+
 **NOTE** There is also a std::sync::atomic::compiler_fence function that prevents the compiler
 from reordering non-volatile memory accesses. You’ll very rarely need a compiler
 fence, but its documentation is an interesting read.
-INCLUDING ASSEMBLY CODE
+
+**INCLUDING ASSEMBLY CODE**
 These days, you rarely need to drop down to writing assembly code to accomplish
 any given task. But for low-level hardware programming where you need
 to initialize CPUs at boot or issue strange instructions to manipulate memory
@@ -4366,8 +4488,8 @@ mappings, assembly code is still sometimes required. At the time of writing,
 there is an RFC and a mostly complete implementation of inline assembly syntax
 on nightly Rust, but nothing has been stabilized yet, so I won’t discuss the syntax
 in this book.
-Rust Without the Standard Library 219
-It’s still possible to write assembly on stable Rust—you just need to get a little
+
+- It’s still possible to write assembly on stable Rust—you just need to get a little
 creative. Specifically, remember build scripts from Chapter 11? Well, Cargo
 build scripts can emit certain special directives to standard output to augment
 Cargo’s standard build process, including cargo:rustc-link-lib=static=xyz
@@ -4380,7 +4502,9 @@ tool (usually ar). The project then emits those two Cargo directives, pointing a
 where it placed the static archive—probably in OUT_DIR—and we’re off to the
 races! If the target platform doesn’t change, you can even include the precompiled
 .a when publishing your crate so that consumers don’t need to rebuild it.
-Misuse-Resistant Hardware Abstraction
+
+#### Misuse-Resistant Hardware Abstraction
+
 Rust’s type system excels at encapsulating unsafe, hairy, and otherwise
 unpleasant code behind safe, ergonomic interfaces. Nowhere is that
 more important than in the infamously complex world of low-level systems
@@ -4394,12 +4518,16 @@ certain combinations of register values cannot occur at the same time, then
 create a single type whose type parameters indicate the current state of the
 relevant registers, and implement only legal transitions on it, like we did for
 the rocket example in Listing 3-2.
+
 **NOTE** Make sure to also review the advice from Chapter 3 on API design—all of that
 applies in the context of no_std programs as well!
-For example, consider a pair of registers where at most one register
+
+- For example, consider a pair of registers where at most one register
 should be “on” at any given point in time. Listing 12-2 shows how you can
 represent that in a (single-threaded) program in a way makes it impossible
 to write code that violates that invariant.
+
+```rust
 // raw register address -- private submodule
 mod registers;
 pub struct On;
@@ -4407,7 +4535,6 @@ pub struct Off;
 pub struct Pair<R1, R2>(PhantomData<(R1, R2)>);
 impl Pair<Off, Off> {
 pub fn get() -> Option<Self> {
-220 Chapter 12
 static mut PAIR_TAKEN: bool = false;
 if unsafe { PAIR_TAKEN } {
 None
@@ -4432,20 +4559,25 @@ Pair(PhantomData)
 }
 }
 // .. and inverse for Pair<Off, On>
+```
+
 Listing 12-2: Statically ensuring correct operation
-There are a few noteworthy patterns in this code. The first is that we
+
+- There are a few noteworthy patterns in this code. The first is that we
 ensure only a single instance of Pair ever exists by checking a private static
 Boolean in its only constructor and making all methods consume self. We
 then ensure that the initial state is valid and that only valid state transitions
 are possible to express, and therefore the invariant must hold globally.
-The second noteworthy pattern in Listing 12-2 is that we use PhantomData
+- The second noteworthy pattern in Listing 12-2 is that we use PhantomData
 to take advantage of zero-sized types and represent runtime information
 statically. That is, at any given point in the code the types tell us what the
 runtime state must be, and therefore we don’t need to track or check any
 state related to the registers at runtime. There’s no need to check that r2
 isn’t already on when we’re asked to enable r1, since the types prevent writing
 a program in which that is the case.
-Cross-Compilation
+
+#### Cross-Compilation
+
 Usually, you’ll write no_std programs on a computer with a full-fledged
 operating system running and all the niceties of modern hardware, but ultimately
 run it on a dinky hardware device with 93/4 bits of RAM and a sock
@@ -4453,14 +4585,15 @@ for a CPU. That calls for cross-compilation—you need to compile the code in
 your development environment, but compile it for the sock. That’s not the
 only context in which cross-compilation is important, though. For example,
 it’s increasingly common to have one build pipeline produce binary
-Rust Without the Standard Library 221
 artifacts for all consumer platforms rather than trying to have a build pipeline
 for every platform your consumers may be using, and that means using
 cross-compilation.
+
 **NOTE** If you’re actually compiling for something sock-like with limited memory, or even
 something as fancy as a potato, you may want to set the opt-level Cargo configuration
 to "s" to optimize for smaller binary sizes.
-Cross-compiling involves two platforms: the host platform and the target
+
+- Cross-compiling involves two platforms: the host platform and the target
 platform. The host platform is the one doing the compiling, and the target
 platform is the one that will eventually run the output of the compilation.
 We specify platforms as target triples, which take the form machine-vendor-
@@ -4473,12 +4606,14 @@ and doesn’t affect compilation in any meaningful way; it’s mostly irrelevant
 and can even be left out. The os part tells the compiler what format to use
 for the final binary artifacts, so a value of linux dictates Linux .so files, windows
 dictates Windows .dll files, and so on.
+
 **NOTE** By default, Cargo assumes that the target platform is the same as the host platform,
 which is why you generally never have to tell Cargo to, say, compile for Linux when
 you’re already on Linux. Sometimes you may want to use --target even if the CPU
 and OS of the target are the same, though, such as to target the musl implementation
 of libc.
-To tell Cargo to cross-compile, you simply pass it the --target <target
+
+- To tell Cargo to cross-compile, you simply pass it the --target <target
 triple>
 argument with your triple of choice. Cargo will then take care of
 forwarding that information to the Rust compiler so that it generates binary
@@ -4488,7 +4623,7 @@ all, the standard library contains a lot of conditional compilation directives
 (using #[cfg(...)]) so that the right system calls get invoked and the right
 architecture-specific implementations are used, so we can’t use the standard
 library for the host platform on the target.
-The target platform also dictates what components of the standard
+- The target platform also dictates what components of the standard
 library are available. For example, while x86_64-unknown-linux-gnu includes
 the full std library, something like thumbv7m-none-eabi does no, and doesn’t
 even define an allocator, so if you use alloc without defining one explicitly,
@@ -4499,8 +4634,8 @@ integration pipeline build your crate with --target thumbv7m-none-eabi,
 any attempt to access components from anything but core will trigger a build
 failure. Crucially, this will also check that your crate doesn’t accidentally
 bring in dependencies that themselves use items from std (or alloc).
-222 Chapter 12
-PLATFORM SUPPORT
+
+**PLATFORM SUPPORT**
 The standard Rust installer, Rustup, doesn’t install the standard library for all the
 target triples that Rust supports by default. That would be a waste of space and
 bandwidth. Instead, you have to use the command rustup target add to install
@@ -4509,12 +4644,15 @@ the standard library exists for your target platform, you’ll have to compile i
 source yourself by adding the rust-src Rustup component and using Cargo’s
 (currently unstable) build-std feature to also build std (and/or core and alloc)
 when building any crate.
-If your target is not supported by the Rust compiler—that is, if rustc doesn’t
+
+- If your target is not supported by the Rust compiler—that is, if rustc doesn’t
 even know about your target triple—you’ll have to go one step further and teach
 rustc about the properties of the triple using a custom target specification. How
 you do that is both currently unstable and beyond the scope of this book, but a
 search for “custom target specification json” is a good place to start.
-Summary
+
+#### Summary
+
 In this chapter, we’ve covered what lies beneath the standard library—or,
 more precisely, beneath std. We’ve gone over what you get with core, how
 you can extend your non-std reach with alloc, and what the (tiny) Rust runtime
@@ -4535,15 +4673,17 @@ code that wasn’t written by you. Whether this
 trend is good, bad, or a little of both is a subject of
 heavy debate, but either way, it’s a reality of today’s
 developer experience.
-In this brave new interdependent world, it’s more important than ever
+
+- In this brave new interdependent world, it’s more important than ever
 to have a solid grasp of what libraries and tools are available and to stay up
 to date on the latest and greatest of what the Rust community has to offer.
 This chapter is dedicated to how you can leverage, track, understand, and
 contribute back to the Rust ecosystem. Since this is the final chapter, in the
 closing section I’ll also provide some suggestions of additional resources
 you can explore to continue developing your Rust skills.
-224 Chapter 13
-What’s Out There?
+
+#### What’s Out There?
+
 Despite its relative youth, Rust already has an ecosystem large enough that
 it’s hard to keep track of everything that’s available. If you know what you
 want, you may be able to search your way to a set of appropriate crates and
@@ -4552,20 +4692,27 @@ repository to determine which may make for reasonable dependencies.
 However, there’s also a plethora of tools, crates, and general language features
 that you might not necessarily know to look for that could potentially
 save you countless hours and difficult design decisions.
-In this section, I’ll go through some of the tools, libraries, and Rust features
+
+- In this section, I’ll go through some of the tools, libraries, and Rust features
 I have found helpful over the years in the hopes that they may come
 in useful for you at some point too!
-Tools
+
+##### Tools
+
 First off, here are some Rust tools I find myself using regularly that you
 should add to your toolbelt:
-cargo-deny
+
+###### cargo-deny
+
 Provides a way to lint your dependency graph. At the time of writing,
 you can use cargo-deny to allow only certain licenses, deny-list crates or
 specific crate versions, detect dependencies with known vulnerabilities
 or that use Git sources, and detect crates that appear multiple times
 with different versions in the dependency graph. By the time you’re
 reading this, there may be even more handy lints in place.
-cargo-expand
+
+###### cargo-expand
+
 Expands macros in a given crate and lets you inspect the output, which
 makes it much easier to spot mistakes deep down in macro transcribers
 or procedural macros. cargo-expand is an invaluable tool when you’re
@@ -4576,16 +4723,19 @@ enabled. The tool presents an interface similar to that of Cargo itself
 (like cargo check, build, and test) but gives you the ability to run a given
 command with all possible combinations (the powerset) of the crate’s
 features.
-cargo-llvm-lines
+
+###### cargo-llvm-lines
+
 Analyzes the mapping from Rust code to the intermediate representation
 (IR) that’s passed to the part of the Rust compiler that actually
 generates machine code (LLVM), and tells you which bits of Rust code
 produce the largest IR. This is useful because a larger IR means longer
 compile times, so identifying what Rust code generates a bigger IR (due
-The Rust Ecosystem 225
 to, for example, monomorphization) can highlight opportunities for
 reducing compile times.
-cargo-outdated
+
+###### cargo-outdated
+
 Checks whether any of your dependencies, either direct or transitive,
 have newer versions available. Crucially, unlike cargo update, it even
 tells you about new major versions, so it’s an essential tool for checking
@@ -4593,53 +4743,71 @@ if you’re missing out on newer versions due to an outdated major
 version specifier. Just keep in mind that bumping the major version of
 a dependency may be a breaking change for your crate if you expose
 that dependency’s types in your interface!
-cargo-udeps
+
+###### cargo-udeps
+
 Identifies any dependencies listed in your Cargo.toml that are never actually
 used. Maybe you used them in the past but they’ve since become
 redundant, or maybe they should be moved to dev-dependencies; whatever
 the case, this tool helps you trim down bloat in your dependency
 closure.
-While they’re not specifically tools for developing Rust, I highly recommend
+
+- While they’re not specifically tools for developing Rust, I highly recommend
 fd and ripgrep too—they’re excellent improvements over their predecessors
 find and grep and also happen to be written in Rust themselves. I use
 both every day.
-Libraries
+
+##### Libraries
+
 Next up are some useful but lesser-known crates that I reach for regularly,
 and that I suspect I will continue to depend on for a long time:
-bytes
+
+###### bytes
+
 Provides an efficient mechanism for passing around subslices of a single
 piece of contiguous memory without having to copy or deal with lifetimes.
 This is great in low-level networking code where you may need
 multiple views into a single chunk of bytes, and copying is a no-no.
-criterion
+
+###### criterion
+
 A statistics-driven benchmarking library that uses math to eliminate
 noise from benchmark measurements and reliably detect changes in
 performance over time. You should almost certainly be using it if you’re
 including micro-benchmarks in your crate.
-cxx
+
+###### cxx
+
 Provides a safe and ergonomic mechanism for calling C++ code from
 Rust and Rust code from C++. If you’re willing to invest some time into
 declaring your interfaces more thoroughly in advance in exchange for
 much nicer cross-language compatibility, this library is well worth your
 attention.
-226 Chapter 13
-flume
+
+###### flume
+
 Implements a multi-producer, multi-consumer channel that is faster,
 more flexible, and simpler than the one included with the Rust standard
 library. It also supports both asynchronous and synchronous operation
 and so is a great bridge between those two worlds.
-hdrhistogram
+
+###### hdrhistogram
+
 A Rust port of the High Dynamic Range (HDR) histogram data structure,
 which provides a compact representation of histograms across a
 wide range of values. Anywhere you currently track averages or min/
 max values, you should most likely be using an HDR histogram instead;
 it can give you much better insight into the distribution of your metrics.
-heapless
+
+###### heapless
+
 Supplies data structures that do not use the heap. Instead, heapless’s
 data structures are all backed by static memory, which makes them
 perfect for embedded contexts or other situations in which allocation is
 undesirable.
-itertools
+
+###### itertools
+
 Extends the Iterator trait from the standard library with lots of new
 convenient methods for deduplication, grouping, and computing powersets.
 These extension methods can significantly reduce boilerplate in
@@ -4647,19 +4815,25 @@ code, such as where you manually implement some common algorithm
 over a sequence of values, like finding the min and max at the same
 time (Itertools::minmax), or where you use a common pattern like checking
 that an iterator has exactly one item (Itertools::exactly_one).
-nix
+
+###### nix
+
 Provides idiomatic bindings to system calls on Unix-like systems,
 which allows for a much better experience than trying to cobble
 together the C-compatible FFI types yourself when working with
 something like libc directly.
-pin-project
+
+###### pin-project
+
 Provides macros that enforce the pinning safety invariants for annotated
 types, which in turn provide a safe pinning interface to those
 types. This allows you to avoid most of the hassle of getting Pin and
 Unpin right for your own types. There’s also pin-project-lite, which
 avoids the (currently) somewhat heavy dependency on the procedural
 macro machinery at the cost of slightly worse ergonomics.
-ring
+
+###### ring
+
 Takes the good parts from the cryptography library BoringSSL,
 written in C, and brings them to Rust through a fast, simple, and
 The Rust Ecosystem 227
@@ -4667,49 +4841,64 @@ hard-to-misuse interface. It’s a great starting point if you need to use
 cryptography in your crate. You’ve already most likely come across this
 in the rustls library, which uses ring to provide a modern, secure-bydefault
 TLS stack.
-slab
+
+###### slab
+
 Implements an efficient data structure to use in place of HashMap<Token, T>,
 where Token is an opaque type used only to differentiate between entries in
 the map. This kind of pattern comes up a lot when managing resources,
 where the set of current resources must be managed centrally but individual
 resources must also be accessible somehow.
-static_assertions
+
+###### static_assertions
+
 Provides static assertions—that is, assertions that are evaluated at, and
 thus may fail at, compile time. You can use it to assert things like that
 a type implements a given trait (like Send) or is of a given size. I highly
 recommend adding these kinds of assertions for code where those
 guarantees are likely to be important.
-structopt
+
+###### structopt
+
 Wraps the well-known argument parsing library clap and provides a way
 to describe your application’s command line interface entirely using the
 Rust type system (plus macro annotations). When you parse your application’s
 arguments, you get a value of the type you defined, and you
 thus get all the type checking benefits, like exhaustive matching and
 IDE auto-complete.
-thiserror
+
+###### thiserror
+
 Makes writing custom enumerated error types, like the ones we discussed
 in Chapter 4, a joy. It takes care of implementing the recommended traits
 and following the established conventions and leaves you to define just
 the critical bits that are unique to your application.
-tower
+
+###### tower
+
 Effectively takes the function signature async fn(Request) -> Response and
 implements an entire ecosystem on top of it. At its core is the Service
 trait, which represents a type that can turn a request into a response
 (something I suspect may make its way into the standard library one
 day). This is a great abstraction to build anything that looks like a service
 on top of.
-tracing
+
+###### tracing
+
 Provides all the plumbing needed to efficiently trace the execution of
 your applications. Crucially, it is agnostic to the types of events you’re
 tracing and what you want to do with those events. This library can be
-228 Chapter 13
 used for logging, metrics collection, debugging, profiling, and obviously
 tracing, all with the same machinery and interfaces.
-Rust Tooling
+
+##### Rust Tooling
+
 The Rust toolchain has a few features up its sleeve that you may not know
 to look for. These are usually for very specific use cases, but if they match
 yours, they can be lifesavers!
-Rustup
+
+###### Rustup
+
 Rustup, the Rust toolchain installer, does its job so efficiently that it tends
 to fade into the background and get forgotten about. You’ll occasionally
 use it to update your toolchain, set a directory override, or install a component,
@@ -4722,11 +4911,14 @@ So, cargo +nightly miri will run Miri using the nightly toolchain, and
 cargo +1.53.0 check will check if the code compiles with Rust 1.53.0. The latter
 comes in particularly handy for checking that you haven’t broken your
 minimum supported Rust version contract.
-Rustup also has a neat subcommand, doc, that opens a local copy of the
+
+- Rustup also has a neat subcommand, doc, that opens a local copy of the
 Rust standard library documentation for the current version of the Rust
 compiler in your browser. This is invaluable if you’re developing on the go
 without an internet connection!
-Cargo
+
+###### Cargo
+
 Cargo also has some handy features that aren’t always easy to discover.
 The first of these is cargo tree, a Cargo subcommand built right into Cargo
 itself for inspecting a crate’s dependency graph. This command’s primary
@@ -4740,7 +4932,8 @@ dependencies. This is invaluable if you want to eliminate a dependency, or
 a particular version of a dependency, and wonder why it still keeps being
 pulled in. You can also pass the -e features option to include information
 about why each Cargo feature of the crate in question is enabled.
-Speaking of Cargo subcommands, it’s really easy to write your own,
+
+- Speaking of Cargo subcommands, it’s really easy to write your own,
 whether for sharing with other people or just for your own local development.
 When Cargo is invoked with a subcommand it doesn’t recognize, it
 checks whether a program by the name cargo-$subcommand exists. If it does,
@@ -4749,7 +4942,7 @@ The Rust Ecosystem 229
 on the command line—so, cargo foo bar will invoke cargo-foo with the argument
 bar. Cargo will even integrate this command with cargo help by translating
 cargo help foo into a call to cargo-foo --help.
-As you work on more Rust projects, you may notice that Cargo (and
+- As you work on more Rust projects, you may notice that Cargo (and
 Rust more generally) isn’t exactly forgiving when it comes to disk space.
 Each project gets its own target directory for its compilation artifacts, and
 over time you end up accumulating several identical copies of compiled
@@ -4764,13 +4957,15 @@ shared artifacts to go in, and Cargo will take care of the rest. No more target
 directories in sight! Just make sure you clean out that directory every
 now and again too, and be aware that cargo clean will now clean all of your
 projects’ build artifacts.
+
 **NOTE** Using a shared build directory can cause problems for projects that assume that compiler
 artifacts will always be under the target/ subdirectory, so watch out for that.
 Also note that if a project does use different compiler flags, you’ll end up recompiling
 affected dependencies every time you move into or out of that project. In such cases,
 you’re best off overriding the target directory in that project’s Cargo configuration to a
 distinct location.
-Finally, if you ever feel like Cargo is taking a suspiciously long time to
+
+- Finally, if you ever feel like Cargo is taking a suspiciously long time to
 build your crate, you can reach for the currently unstable Cargo -Ztimings
 flag. Running Cargo with that flag outputs information about how long it
 took to process each crate, how long build scripts took to run, what crates
@@ -4782,7 +4977,9 @@ instead. If you want to dive even deeper, there’s also rustc -Ztime-passes,
 which emits information about where time is spent inside of the compiler
 for each crate—though that information is likely only useful if you’re looking
 to contribute to the compiler itself.
-rustc
+
+###### rustc
+
 The Rust compiler also has some lesser-known features that can prove useful
 to enterprising developers. The first is the currently unstable -Zprinttype-
 sizes argument, which prints the sizes of all the types in the current
@@ -4790,7 +4987,6 @@ crate. This produces a lot of information for all but the tiniest crates but
 is immensely valuable when trying to determine the source of unexpected
 time spent in calls to memcpy or to find ways to reduce memory use when allocating
 lots of objects of a particular type. The -Zprint-type-sizes argument
-230 Chapter 13
 also displays the computed alignment and layout for each type, which may
 point you to places where turning, say, a usize into a u32 could have a significant
 impact on a type’s in-memory representation. After you debug a
@@ -4798,12 +4994,14 @@ particular type’s size, alignment, and layout, I recommend adding static
 assertions to make sure that they don’t regress over time. You may also be
 interested in the variant_size_differences lint, which issues a warning if a
 crate contains enum types whose variants significantly differ in size.
+
 **NOTE** To call rustc with particular flags, you have a few options: you can either set them in
 the RUSTFLAGS environment variable or [build] rustflags in your .cargo/config.toml
 to have them apply to every invocation of rustc from Cargo, or you can use cargo
 rustc, which will pass any arguments you provide only to the rustc invocation for the
 current crate.
-If your profiling samples look weird, with stack frames reordered or
+
+- If your profiling samples look weird, with stack frames reordered or
 entirely missing, you could also try -Cforce-frame-pointers = yes. Frame pointers
 provide a more reliable way to unwind the stack—which is done a lot
 during profiling—at the cost of an extra register being used for function
@@ -4811,7 +5009,9 @@ calls. Even though stack unwinding should work fine with just regular debug
 symbols enabled (remember to set debug = true when using the release profile),
 that’s not always the case, and frame pointers may take care of any
 issues you do encounter.
-The Standard Library
+
+###### The Standard Library
+
 The Rust standard library is generally considered to be small compared
 to those of other programming languages, but what it lacks in breadth, it
 makes up for in depth; you won’t find a web server implementation or an
@@ -4823,7 +5023,9 @@ you avoid all that verbose boilerplate that can so easily arise otherwise. In
 this section, I’ll present some types, macros, functions, and methods from
 the standard library that you may not have come across before, but that can
 often simplify or improve (or both) your code.
-Macros and Functions
+
+###### Macros and Functions
+
 Let’s start off with a few free-standing utilities. First up is the write! macro,
 which lets you use format strings to write into a file, a network socket, or anything
 else that implements Write. You may already be familiar with it—but
@@ -4831,19 +5033,21 @@ one little-known feature of write! is that it works with both std::io::Write and
 std::fmt::Write, which means you can use it to write formatted text directly into
 a String. That is, you can write use std::fmt::Write; write!(&mut s, "{}+1={}", x,
 x + 1); to append the formatted text to the String s!
-The iter::once function takes any value and produces an iterator that
+
+- The iter::once function takes any value and produces an iterator that
 yields that value once. This comes in handy when calling functions that take
-The Rust Ecosystem 231
 iterators if you don’t want to allocate, or when combined with Iterator::chain
 to append a single item to an existing iterator.
-We briefly talked about mem::replace in Chapter 1, but it’s worth bringing
+- We briefly talked about mem::replace in Chapter 1, but it’s worth bringing
 up again in case you missed it. This function takes an exclusive reference
 to a T and an owned T, swaps the two so that the referent is now the
 owned T, and returns ownership of the previous referent. This is useful
 when you need to take ownership of a value in a situation where you have
 only an exclusive reference, such as in implementations of Drop. See also
 mem::take for when T: Default.
-Types
+
+###### Types
+
 Next, let’s look at some handy standard library types. The BufReader and
 BufWriter types are a must for I/O operations that issue many small read or
 write calls to the underlying I/O resource. These types wrap the respective
@@ -4852,7 +5056,8 @@ they additionally buffer the operations to the I/O resource such that many
 small reads do only one large read, and many small writes do only one large
 write. This can significantly improve performance as you don’t have to cross
 the system call barrier into the operating system as often.
-The Cow type, mentioned in Chapter 3, is useful when you want flexibility
+
+- The Cow type, mentioned in Chapter 3, is useful when you want flexibility
 in what types you hold or need flexibility in what you return. You’ll
 rarely use Cow as a function argument (recall that you should let the caller
 allocate if necessary), but it’s invaluable as a return type as it allows you
@@ -4860,11 +5065,16 @@ to accurately represent the return types of functions that may or may not
 allocate. It’s also a perfect fit for types that can be used as inputs or outputs,
 such as core types in RPC-like APIs. Say we have a type EntityIdentifier like
 in Listing 13-1 that is used in an RPC service interface.
+
+```rust
 struct EntityIdentifier {
 namespace: String,
 name: String,
 }
+```
+
 Listing 13-1: A representation of a combined input/output type that requires allocation
+
 Now imagine two methods: get_entity takes an EntityIdentifier as an
 argument, and find_by returns an EntityIdentifier based on some search
 parameters. The get_entity method requires only a reference since the
@@ -4878,27 +5088,33 @@ instead introduce a separate type for get_entity, EntityIdenifierRef, that
 holds only &str types, but then we’d have two types to represent one thing.
 Cow to the rescue! Listing 13-2 shows an EntityIdentifier that instead holds
 Cows internally.
-232 Chapter 13
+
+```rust
 struct EntityIdentifier<'a> {
 namespace: Cow<'a, str>,
 name: Cow<'a str>,
 }
+```
+
 Listing 13-2: A representation of a combined input/output type that does not require
 allocation
-With this construction, get_entity can take any EntityIdentifier<'_>,
+
+- With this construction, get_entity can take any EntityIdentifier<'_>,
 which allows the caller to use just references to call the method. And find_
 by can return EntityIdentifier<'static>, where all the fields are Cow::Owned.
 One type shared across both interfaces, with no unnecessary allocation
 requirements!
+
 **NOTE** If you implement a type this way, I recommend you also provide an into_owned
 method that turns an <'a> instance into a <'static> instance by calling Cow::into_
 owned on all the fields. Otherwise, users will have no way to make longer-lasting
 clones of your type when all they have is an <'a>.
-The std::sync::Once type is a synchronization primitive that lets you run
+
+- The std::sync::Once type is a synchronization primitive that lets you run
 a given piece of code exactly once, at initialization time. This is great for
 initialization that’s part of an FFI where the library on the other side of the
 FFI boundary requires that the initialization is performed only once.
-The VecDeque type is an oft-neglected member of std::collections that
+- The VecDeque type is an oft-neglected member of std::collections that
 I find myself reaching for surprisingly often—basically, whenever I need
 a stack or a queue. Its interface is similar to that of a Vec, and like Vec its
 in-memory representation is a single chunk of memory. The difference is
@@ -4908,56 +5124,62 @@ the VecDeque, meaning it can be used as a stack, as a queue, or even both at
 the same time. The cost you pay is that the values are no longer necessarily
 contiguous in memory (they may have wrapped around), which means that
 VecDeque<T> does not implement AsRef<[T]>.
-Methods
+
+###### Methods
+
 Let’s round off with a rapid-fire look at some neat methods. First up is
 Arc::make_mut, which takes a &mut Arc<T> and gives you a &mut T. If the Arc is
 the last one in existence, it gives you the T that was behind the Arc; otherwise,
 it allocates a new Arc<T> that holds a clone of the T, swaps that in for
 the currently referenced Arc, and then gives &mut to the T in the new singleton
 Arc.
-The Clone::clone_from method is an alternative form of .clone() that
+
+- The Clone::clone_from method is an alternative form of .clone() that
 lets you reuse an instance of the type you clone rather than allocate a new
 one. In other words, if you already have an x: T, you can do x.clone_from(y)
 rather than x = y.clone(), and you might save yourself some allocations.
-std::fmt::Formatter::debug_*is by far the easiest way to implement Debug
+- std::fmt::Formatter::debug_*is by far the easiest way to implement Debug
 yourself if #[derive(Debug)] won’t work for your use case, such as if you want
 to include only some fields or expose information that isn’t exposed by the
-The Rust Ecosystem 233
 Debug implementations of your type’s fields. When implementing the fmt
 method of Debug, simply call the appropriate debug_method on the Formatter
 that’s passed in (debug_struct or debug_map, for example), call the included
 methods on the resulting type to fill in details about the type (like field to
 add a field or entries to add a key/value entry), and then call finish.
-Instant::elapsed returns the Duration since an Instant was created. This
+- Instant::elapsed returns the Duration since an Instant was created. This
 is much more concise than the common approach of creating a new Instant
 and subtracting the earlier instance.
-Option::as_deref takes an Option<P> where P: Deref and returns
+- Option::as_deref takes an Option<P> where P: Deref and returns
 Option<&P::Target> (there’s also an as_deref_mut method). This simple operation
 can make functional transformation chains that operate on Option
 much cleaner by avoiding the inscrutable .as_ref().map(|r| &*_r).
-Ord::clamp lets you take any type that implements Ord and clamp it
+- Ord::clamp lets you take any type that implements Ord and clamp it
 between two other values of a given range. That is, given a lower limit min
 and an upper limit max, x.clamp(min, max) returns min if x is less than min, max
 if x is greater than max, and x otherwise.
-Result::transpose and its counterpart Option::transpose invert types that
+- Result::transpose and its counterpart Option::transpose invert types that
 nest Result and Option. That is, transposing a Result<Option<T>, E> gives an
 Option<Result<T, E>>, and vice versa. When combined with ?, this operation
 can make for cleaner code when working with Iterator::next and similar
 methods in fallible contexts.
-Vec::swap_remove is Vec::remove’s faster twin. Vec::remove preserves the
+- Vec::swap_remove is Vec::remove’s faster twin. Vec::remove preserves the
 order of the vector, which means that to remove an element in the middle,
 it must shift all the later elements in the vector down by one. This can be
 very slow for large vectors. Vec::swap_remove, on the other hand, swaps the
 to-be-removed element with the last element and then truncates the vector’s
 length by one, which is a constant-time operation. Be aware, though, that it
 will shuffle your vector around and thus invalidate old indexes!
-Patterns in the Wild
+
+#### Patterns in the Wild
+
 As you start exploring codebases that aren’t your own, you’ll likely come
 across a couple of common Rust patterns that we haven’t discussed in the
 book so far. Knowing about them will make it easier to recognize them, and
 thus understand their purpose, when you do encounter them. You may even
 find use for them in your own codebase one day!
-Index Pointers
+
+##### Index Pointers
+
 Index pointers allow you to store multiple references to data within a data
 structure without running afoul of the borrow checker. For example, if you
 want to store a collection of data so that it can be efficiently accessed in
@@ -4967,19 +5189,19 @@ multiple times too. You could use Arc or Rc, but they use dynamic reference
 counting that introduces unnecessary overhead, and the extra bookkeeping
 requires you to store additional bytes per entry. You could use references,
 but the lifetimes become difficult if not impossible to manage because the
-234 Chapter 13
 data and the references live in the same data structure (it’s a self-referential
 data structure, as we discussed in Chapter 8). You could use raw pointers
 combined with Pin to ensure the pointers remain valid, but that introduces
 a lot of complexity as well as unsafety you then need to carefully consider.
-Most crates use index pointers—or, as I like to call them, indeferences—
+
+- Most crates use index pointers—or, as I like to call them, indeferences—
 instead. The idea is simple: store each data entry in some indexable data
 structure like a Vec, and then store just the index in a derived data structure.
 To then perform an operation, first use the derived data structure
 to efficiently find the data index, and then use the index to retrieve the
 referenced data. No lifetimes needed—and you can even have cycles in the
 derived data representation if you wish!
-The indexmap crate, which provides a HashMap implementation where the
+- The indexmap crate, which provides a HashMap implementation where the
 iteration order matches the map insertion order, provides a good example
 of this pattern. The implementation has to store the keys in two places,
 both in the map of keys to values and in the list of all the keys, but it obviously
@@ -4990,20 +5212,22 @@ over all the elements of the map, it just walks the Vec. To look up a given
 key, it hashes that key, looks that hash up in the mapping, which yields the
 key’s index in the Vec (the index pointer), and then uses that to get the key’s
 value from the Vec.
-The petgraph crate, which implements graph data structures and algorithms,
+- The petgraph crate, which implements graph data structures and algorithms,
 also uses this pattern. The crate stores one Vec of all node values
 and another of all edge values and then only ever uses the indexes into
 those Vecs to refer to a node or edge. So, for example, the two nodes associated
 with an edge are stored in that edge simply as two u32s, rather than as
 references or reference-counted values.
-The trick lies in how you support deletions. To delete a data entry, you
+- The trick lies in how you support deletions. To delete a data entry, you
 first need to search for its index in all of the derived data structures and
 remove the corresponding entries, and then you need to remove the data
 from the root data store. If the root data store is a Vec, removing the entry
 will also change the index of one other data entry (when using swap_remove),
 so you then need to go update all the derived data structures to reflect the
 new index for the entry that moved.
-Drop Guards
+
+##### Drop Guards
+
 Drop guards provide a simple but reliable way to ensure that a bit of code
 runs even in the presence of panics, which is often essential in unsafe code.
 An example is a function that takes a closure f: FnOnce and executes it under
@@ -5012,11 +5236,13 @@ in Chapter 10) to set a Boolean from false to true, calls f, and then
 sets the Boolean back to false to end the mutual exclusion. But consider
 what happens if f panics—the function will never get to run its cleanup, and
 no other call will be able to enter the mutual exclusion section ever again.
-It’s possible to work around this using catch_unwind, but drop guards
+
+- It’s possible to work around this using catch_unwind, but drop guards
 provide an alternative that is often more ergonomic. Listing 13-3 shows
-The Rust Ecosystem 235
 how, in our current example, we can use a drop guard to ensure the
 Boolean always gets reset.
+
+```rust
 fn mutex(lock: &AtomicBool, f: impl FnOnce()) {
 // .. while lock.compare_exchange(false, true).is_err() ..
 struct DropGuard<'a>(&'a AtomicBool);
@@ -5028,7 +5254,10 @@ lock.store(true, Ordering::Release);
 let _guard = DropGuard(lock);
 f();
 }
+```
+
 Listing 13-3: Using a drop guard to ensure code gets run after an unwinding panic
+
 We introduce the local type DropGuard that implements Drop and place
 the cleanup code in its implementation of Drop::drop. Any necessary state
 can be passed in through the fields of DropGuard. Then, we construct an
@@ -5036,14 +5265,17 @@ instance of the guard type just before we call the function that might
 panic, which is f here. When f returns, whether due to a panic or because
 it returns normally, the guard is dropped, its destructor runs, the lock is
 released, and all is well.
-It’s important that the guard is assigned to a variable that is dropped
+
+- It’s important that the guard is assigned to a variable that is dropped
 at the end of the scope, after the user-provided code has been executed.
 This means that even though we never refer to the guard’s variable again, it
 needs to be given a name, as let _ = DropGuard(lock) would drop the guard
 immediately—before the user-provided code even runs!
+
 **NOTE** Like catch_unwind, drop guards work only when panics unwind. If the code is compiled
 with panic=abort, no code gets to run after the panic.
-This pattern is frequently used in conjunction with thread locals,
+
+- This pattern is frequently used in conjunction with thread locals,
 when library code may wish to set the thread local state so that it’s valid
 only for the duration of the execution of the closure, and thus needs to
 be cleared afterwards. For example, at the time of writing, Tokio uses this
@@ -5053,13 +5285,15 @@ through function signatures that are visible to users. It’d be no good if the
 thread local state continued to indicate that a particular executor thread
 was active even after Future::poll returned due to a panic, so Tokio uses a
 drop guard to ensure that the thread local state is reset.
+
 **NOTE** You’ll often see Cell or Rc<RefCell> used in thread locals. This is because thread
 locals are accessible only through shared references, since a thread might access a
 thread local again that it is already referencing somewhere higher up in the call stack.
 Both types provide interior mutability without incurring much overhead because
 they’re intended only for single-threaded use, and so are ideal for this use case.
-236 Chapter 13
-Extension Traits
+
+##### Extension Traits
+
 Extension traits allow crates to provide additional functionality to types
 that implement a trait from a different crate. For example, the itertools
 crate provides an extension trait for Iterator, which adds a number of convenient
@@ -5067,17 +5301,20 @@ shortcuts for common (and not so common) iterator operations. As
 another example, tower provides ServiceExt, which adds several more ergonomic
 operations to wrap the low-level interface in the Service trait from
 tower-service.
-Extension traits tend to be useful either when you do not control the
+
+- Extension traits tend to be useful either when you do not control the
 base trait, as with Iterator, or when the base trait lives in a crate of its own
 so that it rarely sees breaking releases and thus doesn’t cause unnecessary
 ecosystem splits, as with Service.
-An extension trait extends the base trait it is an extension of (trait
+- An extension trait extends the base trait it is an extension of (trait
 ServiceExt: Service) and consists solely of provided methods. It also comes
 with a blanket implementation for any T that implements the base trait
 (impl<T> ServiceExt for T where T: Service {}). Together, these conditions
 ensure that the extension trait’s methods are available on anything that
 implements the base trait.
-Crate Preludes
+
+##### Crate Preludes
+
 In Chapter 12, we talked about the standard library prelude that makes a
 number of types and traits automatically available without you having to
 write any use statements. Along similar lines, crates that export multiple
@@ -5090,19 +5327,26 @@ use somecrate::prelude::_ to files that want to use the crate in question. The *
 is a glob import and tells Rust to use all publicly available items from the indicated
 module. This can save quite a bit of typing when the crate has a lot of
 items you’ll usually need to name.
+
 **NOTE** Items used through* have lower precedence than items that are used explicitly by
 name. This is what allows you to define items in your own crate that overlap with
 what’s in the standard library prelude without having to specify which one to use.
-Preludes are also great for crates that expose a lot of extension traits,
+
+- Preludes are also great for crates that expose a lot of extension traits,
 since trait methods can be called only if the trait that defines them is in
 scope. For example, the diesel crate, which provides ergonomic access to
 relational databases, makes extensive use of extension traits so you can
 write code like:
+
+```rust
+
 posts.filter(published.eq(true)).limit(5).load::<Post>(&connection)
+```
+
 This line will work only if all the right traits are in scope, which the prelude
 takes care of.
-The Rust Ecosystem 237
-In general, you should be careful when adding glob imports to your
+
+- In general, you should be careful when adding glob imports to your
 code, as they can potentially turn additions to the indicated module into
 backward-incompatible changes. For example, if someone adds a new trait
 to a module you glob-import from, and that new trait makes a method foo
@@ -5117,19 +5361,22 @@ is that minor releases are allowed to require minimally invasive changes to
 dependents, like having to add type annotations in edge cases, because otherwise
 a large fraction of changes would require new major versions despite
 being very unlikely to actually break any consumers.
-Specifically in the case of preludes, using glob imports is usually fine
+- Specifically in the case of preludes, using glob imports is usually fine
 when recommended by the vending crate, since its maintainers know that
 their users will use glob imports for the prelude module and thus will take
 that into account when deciding whether a change requires a major version
 bump.
-Staying Up to Date
+
+#### Staying Up to Date
+
 Rust, being such a young language, is evolving rapidly. The language itself,
 the standard library, the tooling, and the broader ecosystem are all still in
 their infancy, and new developments happen every day. While staying on
 top of all the changes would be infeasible, it’s worth your time to keep up
 with significant developments so that you can take advantage of the latest
 and greatest features in your projects.
-For monitoring improvements to Rust itself, including new language
+
+- For monitoring improvements to Rust itself, including new language
 features, standard library additions, and core tooling upgrades, the official
 Rust blog at <https://blog.rust-lang.org/> is a good, low-volume place to start. It
 mainly features announcements for each new Rust release. I recommend
@@ -5143,10 +5390,11 @@ just what you need two weeks from now. For a less frequently updated news
 source, check in on The Edition Guide at <https://doc.rust-lang.org/edition-guide/>,
 which outlines what’s new in each Rust edition. Rust editions tend to be
 released every three years.
+
 **NOTE** Clippy is often able to tell you when you can take advantage of a new language or
 standard library feature—always enable Clippy!
-238 Chapter 13
-If you’re curious about how Rust itself is developed, you may also want
+
+- If you’re curious about how Rust itself is developed, you may also want
 to subscribe to the Inside Rust blog at <https://blog.rust-lang.org/inside-rust/>. It
 includes updates from the various Rust teams, as well as incident reports,
 larger change proposals, edition planning information, and the like. To get
@@ -5158,7 +5406,7 @@ check in with the group wherever it meets and ask how you may be able to
 help. You can also join the community discussion about Rust internals over
 at <https://internals.rust-lang.org/>; this is another great way to get insight into
 the thought that goes into every part of Rust’s design and development.
-As is the case for most programming languages, much of Rust’s value
+- As is the case for most programming languages, much of Rust’s value
 is derived from its community. Not only do the members of the Rust community
 constantly develop new work-saving crates and discover new Rustspecific
 techniques and design patterns, but they also collectively and
@@ -5169,13 +5417,13 @@ in thousands of comment threads, blog posts, and Twitter and Discord conversatio
 Dipping into these discussions even just once in a while is almost
 guaranteed to show you new things about a language feature, a technique,
 or a crate that you didn’t already know.
-The Rust community lives in a lot of places, but some good places to
+- The Rust community lives in a lot of places, but some good places to
 start are the Users forum (<https://users.rust-lang.org/>), the Rust subreddit
 (<https://www.reddit.com/r/rust/>), the Rust Community Discord (<https://discord>
 .gg/rust-lang-community), and the Rust Twitter account (<https://twitter.com/>
 rustlang). You don’t have to engage with all of these, or all of the time—
 pick one you like the vibe of, and check in occasionally!
-A great single location for staying up to date with ongoing developments
+- A great single location for staying up to date with ongoing developments
 is the This Week in Rust blog (<https://this-week-in-rust.org/>), a “weekly summary
 of [Rust’s] progress and community.” It links to official announcements and
 changelogs as well as popular community discussions and resources, interesting
@@ -5187,18 +5435,22 @@ and clicking occasional links that appear interesting is a good way to keep a
 steady stream of new Rust knowledge trickling into your brain.
 **NOTE** Want to look up when a particular feature landed on stable? Can I Use…
 (<https://caniuse.rs/>) has you covered.
-What Next?
+
+#### What Next?
+
 So, you’ve read this book front to back, absorbed all the knowledge it
 imparts, and are still hungry for more? Great! There are a number of other
-The Rust Ecosystem 239
 excellent resources out there for broadening and deepening your knowledge and understanding of Rust, and in this very final section I’ll give you a survey of some of my favorites so that you can keep learning. I’ve divided them into subsections based on how different people prefer to learn so that you can find resources that’ll work for you.
+
 **NOTE** A challenge with learning on your own, especially in the beginning, is that progress
 is hard to perceive. Implementing even the simplest of things can take an outsized
 amount of time when you have to constantly refer to documentation and other
 resources, ask for help, or debug to learn how some aspect of Rust works. All of that
 non-coding work can make it seem like you’re treading water and not really improving. But you’re learning, which is progress in and of itself—it’s just harder to notice
 and appreciate.
-Learn by Watching
+
+##### Learn by Watching
+
 Watching experienced developers code is essentially a life hack to remedy
 the slow starting phase of solo learning. It allows you to observe the process of designing and building while utilizing someone else’s experience.
 Listening to experienced developers articulate their thinking and explain
@@ -5206,38 +5458,41 @@ tricky concepts or techniques as they come up can be an excellent alternative to
 variety of auxiliary knowledge like debugging techniques, design patterns,
 and best practices. Eventually you will have to sit down and do things yourself—it’s the only way to check that you actually understand what you’ve
 observed—but piggybacking on the experience of others will almost certainly make the early stages more pleasant. And if the experience is interactive, that’s even better!
-So, with that said, here are some Rust video channels that I recommend:
-Perhaps unsurprisingly, my own channel: <https://www.youtube.com/c/>
+
+- So, with that said, here are some Rust video channels that I recommend:
+- - Perhaps unsurprisingly, my own channel: <https://www.youtube.com/c/>
 JonGjengset/. I have a mix of long-form coding videos and short(er) code-
 based theory/concept explanation videos, as well as occasional videos
 that dive into interesting Rust coding stories.
-The Awesome Rust Streaming listing: <https://github.com/jamesmunns/awesome-rust-streaming/>. This resource lists a wide variety of developers
+- - The Awesome Rust Streaming listing: <https://github.com/jamesmunns/awesome-rust-streaming/>. This resource lists a wide variety of developers
 who stream Rust coding or other Rust content.
-The channel of Tim McNamara, the author of Rust in Action: https://
+- - The channel of Tim McNamara, the author of Rust in Action: https://
 <www.youtube.com/c/timClicks/>. Tim’s channel, like mine, splits its time
 between implementation and theory, though Tim has a particular
-knack for creative visual projects, which makes for fun viewing.
+- - knack for creative visual projects, which makes for fun viewing.
 Jonathan Turner’s Systems with JT channel: <https://www.youtube.com/c/>
 SystemswithJT/. Jonathan’s videos document their work on Nushell, their take on a “new type of shell,” providing a great sense of what it’s
 like to work on a nontrivial existing codebase.
-Ryan Levick’s channel: <https://www.youtube.com/c/RyanLevicksVideos/>. Ryan mainly posts videos that tackle particular Rust concepts and walks
-240 Chapter 13
+- - Ryan Levick’s channel: <https://www.youtube.com/c/RyanLevicksVideos/>. Ryan mainly posts videos that tackle particular Rust concepts and walks
 through them using concrete code examples, but he also occasionally
 does implementation videos (like FFI for Microsoft Flight Simulator!)
 and deep dives into how well-known crates work under the hood.
-Given that I make Rust videos, it should come as no surprise that I am
+- Given that I make Rust videos, it should come as no surprise that I am
 a fan of this approach to teaching. But this kind of receptive or interactive
 learning doesn’t have to come in the form of videos. Another great avenue
 for learning from experienced developers is pair programming. If you have
 a colleague or friend with expertise in a particular aspect of Rust you’d like
 to learn, ask if you can do a pair-programming session with them to solve a
 problem together!
-Learn by Doing
+
+##### Learn by Doing
+
 Since your ultimate goal is to get better at writing Rust, there’s no substitute
 for programming experience. No matter what or how many resources you
 learn from, you need to put that learning into practice. However, finding a
 good place to start can be tricky, so here I’ll give some suggestions.
-Before I dive into the list, I want to provide some general guidance on
+
+- Before I dive into the list, I want to provide some general guidance on
 how to pick projects. First, choose a project that you care about, without
 worrying too much whether others care about it. While there are plenty
 of popular and established Rust projects out there that would love to have
@@ -5248,7 +5503,7 @@ a chore. The very best targets are projects that you use yourself and have
 experienced problems with—go fix them! Nothing is more satisfying than
 getting rid of a long-standing personal nuisance while also contributing
 back to the community.
-Okay, so back to project suggestions. First and foremost, consider contributing
+- Okay, so back to project suggestions. First and foremost, consider contributing
 to the Rust compiler and its associated tools. It’s a high-quality
 codebase with good documentation and an endless supply of issues (you
 probably know of some yourself), and there are several great mentors who
@@ -5256,7 +5511,7 @@ can provide outlines for how to approach solving issues. If you look through
 the issue tracker for issues marked E-easy or E-mentor, you’ll likely find a
 good candidate quickly. As you gain more experience, you can keep leveling
 up to contribute to trickier parts.
-If that’s not your cup of tea, I recommend finding something you use
+- If that’s not your cup of tea, I recommend finding something you use
 frequently that’s written in another language and porting it to Rust—not
 necessarily with the intention of replacing the original library or tool, but
 just because the experience will allow you to focus on writing Rust without
@@ -5265,10 +5520,9 @@ If it turns out well, the fact that it already exists suggests that someone
 else also needed it, so there may be a wider audience for your port too! Data
 structures and command-line tools often make for great porting subjects,
 but find a niche that appeals to you.
-Should you be more of a “build it from scratch” kind of person, I recommend
+- Should you be more of a “build it from scratch” kind of person, I recommend
 looking back at your own development experience so far and thinking
 about similar code you’ve ended up writing in multiple projects (whether
-The Rust Ecosystem 241
 in Rust or in other languages). Such repetition tends to be a good signal
 that something is reusable and could be turned into a library. If nothing
 comes to mind, David Tolnay maintains a list of smaller utility crates that
@@ -5277,19 +5531,22 @@ that may provide a source of inspiration. If you’re looking for
 something more substantial and ambitious, there’s also the Not Yet Awesome
 list at <https://github.com/not-yet-awesome-rust/not-yet-awesome-rust/> that lists
 things that should exist in Rust but don’t (yet).
-Learn by Reading
+
+##### Learn by Reading
+
 Although the state of affairs is constantly improving, finding good Rust
 reading material beyond the beginner level can still be tricky. Here’s a collection
 of pointers to some of my favorite resources that continue to teach
 me new things or serve as good references when I have particularly niche or
 nuanced questions.
-First, I recommend looking through the official virtual Rust books
+
+- First, I recommend looking through the official virtual Rust books
 linked from <https://www.rust-lang.org/learn/>. Some, like the Cargo book, are
 more reference-like while others, like the Embedded book, are more guidelike,
 but they’re all deep sources of solid technical information about their
 respective topics. The Rustonomicon (<https://doc.rust-lang.org/nomicon/>), in particular,
 is a lifesaver when you’re writing unsafe code.
-Two more books that are worth checking out are the Guide to rustc
+- Two more books that are worth checking out are the Guide to rustc
 Development (<https://rustc-dev-guide.rust-lang.org/>) and the Standard Library
 Developers Guide (<https://std-dev-guide.rust-lang.org/>). These are fantastic
 resources if you’re curious about how the Rust compiler does what it does
@@ -5300,12 +5557,14 @@ API Guidelines (<https://rust-lang.github.io/api-guidelines/>) in the book, but 
 Rust Unsafe Code Guidelines Reference is also available (<https://rust-lang.github>
 .io/unsafe-code-guidelines/), and by the time you read this book there may
 be more.
+
 **NOTE** One of the resources listed at <https://www.rust-lang.org/learn/> is the Rust
 Reference, which is essentially a full specification for the Rust language. While parts
 of it are quite dry, like the exact grammar used for parsing or basics about the inmemory
 representations of the primitive types, some of it is fascinating reading, like
 the section on type layout and the enumeration of behavior considered undefined.
-There are also a number of unofficial virtual Rust books that are
+
+- There are also a number of unofficial virtual Rust books that are
 enormously valuable collections of experience and knowledge. The Little
 Book of Rust Macros (<https://veykril.github.io/tlborm/>), for example, is indispensable
 if you want to write nontrivial declarative macros, and The Rust
@@ -5313,12 +5572,11 @@ Performance Book (<https://nnethercote.github.io/perf-book/>) is filled with tip
 tricks for improving the performance of Rust code both at the micro and
 the macro level. Other great resources include the Rust Fuzz Book (https://
 rust-fuzz.github.io/book/), which explores fuzz testing in more detail, and
-242 Chapter 13
 the Rust Cookbook (<https://rust-lang-nursery.github.io/rust-cookbook/>), which suggests
 idiomatic solutions to common programming tasks. There’s even a
 resource for finding more books, The Little Book of Rust Books (<https://lborb>.
 github.io/book/unofficial.html)!
-If you prefer more hands-on reading, the Tokio project has published
+- If you prefer more hands-on reading, the Tokio project has published
 mini-redis (<https://github.com/tokio-rs/mini-redis/>), an incomplete but idiomatic
 implementation of a Redis client and server that’s extremely well documented
 and specifically written to serve as a guide to writing asynchronous
@@ -5331,18 +5589,20 @@ the whole operating system stack in great detail while teaching you good
 Rust patterns in the process. I also highly recommend Amos’s collection of
 articles (<https://fasterthanli.me/tags/rust/>) if you want a wide sampling of interesting
 deep dives written in a conversational style.
-When you feel more confident in your Rust abilities and need more of
+- When you feel more confident in your Rust abilities and need more of
 a quick reference than a long tutorial, I’ve found the Rust Language Cheat
 Sheet (<https://cheats.rs/>) great for looking things up quickly. It also provides
 very nice visual explanations for most topics, so even if you’re looking up
 something you’re not intimately familiar with already, the explanations are
 pretty approachable.
-And finally, if you want to put all of your Rust understanding to the
+- And finally, if you want to put all of your Rust understanding to the
 test, go give David Tolnay’s Rust Quiz (<https://dtolnay.github.io/rust-quiz/>) a try.
 There are some real mind-benders in there, but each question comes with
 a thorough explanation of what’s going on, so even if you get one wrong,
 you’ll have learned from the experience!
-Learn by Teaching
+
+##### Learn by Teaching
+
 My experience has been that the best way to learn something well and
 thoroughly, by far, is to try to teach it to others. I have learned an enormous
 amount from writing this book, and I learn new things every time
@@ -5356,10 +5616,13 @@ someone who doesn’t already understand the topic—in doing so, you also
 give back to the community so that the next you that comes along has a
 slightly easier time getting up to speed. Teaching is a humbling and deeply
 educational experience, and I cannot recommend it highly enough.
+
 **NOTE** Whether you’re looking to teach or be taught, make sure to visit Awesome Rust
 Mentors (<https://rustbeginners.github.io/awesome-rust-mentors/>).
 The Rust Ecosystem 243
-Summary
+
+#### Summary
+
 In this chapter, we’ve covered Rust beyond what exists in your local workspace.
 We surveyed useful tools, libraries, and Rust features; looked at how
 to stay up to date as the ecosystem continues to evolve; and then discussed
