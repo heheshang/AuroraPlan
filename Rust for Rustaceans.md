@@ -2362,12 +2362,11 @@ loop { if let Poll::Ready(r) = expr.poll() { break r } else { yield } }
 
 ```
 
-清单8-12：更准确的<expr>.await展开
+清单8-12：更准确的`<expr>.await`展开
 
 - match 1是一种简洁的写法，不仅可以确保展开后仍然是有效的表达式，还可以将表达式结果移动到一个变量中，然后我们可以将其固定在堆栈上。除此之外，主要的新添加是对Pin::new_unchecked的调用2。这个调用是安全的，因为为了对包含的异步块进行轮询，它必须已经被固定，这是由于Future::poll的签名。而且，我们已经对异步块进行了轮询，以达到对Pin::new_unchecked的调用，所以生成器状态是固定的。由于固定存储在对应于异步块的生成器中（必须如此才能正确恢复yield），我们知道固定将不会再次移动。此外，在循环中，除了通过Pin访问固定之外，无法访问固定，因此没有代码能够从固定的值中移动出来。因此，我们满足了Pin::new_unchecked的所有安全要求，代码是安全的。
 
 #### Going to Sleep
-
 
 We went pretty deep into the weeds with Pin, but now that we’re out the
 other side, there is another issue around futures that may have been making
@@ -2477,13 +2476,14 @@ async fn server(socket: TcpListener) -> Result<()> {
 }
 
 ```
+
 清单8-15：使用手动执行器处理连接
 
 - 这至少可以同时处理多个连接，但是它非常复杂。而且效率不高，因为现在的代码在已有连接和接受新连接之间来回切换。它必须每次都检查每个连接，因为它不知道哪些连接可以取得进展（如果有的话）。它也不能在任何时候等待，因为那样会阻止其他future取得进展。你可以实现自己的唤醒器，以确保代码只轮询可以取得进展的future，但最终这将走向开发自己的迷你执行器的道路。
 - 只使用一个任务来处理服务器的所有客户端连接的另一个缺点是服务器最终变成了单线程。只有一个任务，并且为了轮询它，代码必须持有对任务的Future的独占引用（poll接受Pin<&mut Self>），这只能由一个线程持有。
 - 解决方案是将每个客户端future作为自己的任务，并由执行器在任务之间进行多路复用。你可以通过生成future来实现这一点。执行器将继续在服务器future上阻塞，但如果无法在该future上取得进展，它将在后台使用执行机制来在其他任务上取得进展。最重要的是，如果执行器是多线程的，并且你的客户端futures是Send的，它可以并行运行它们，因为它可以同时持有对不同任务的&muts。清单8-16展示了这可能是什么样子。
 
-```rust 
+```rust
 
 async fn server(socket: TcpListener) -> Result<()> {
   while let Some(stream) = socket.accept().await? {
@@ -2495,6 +2495,7 @@ async fn server(socket: TcpListener) -> Result<()> {
 }
 
 ```
+
 清单8-16：生成Future以创建更多可以同时轮询的任务
 
 - 当你生成一个Future并将其作为任务时，它有点像生成一个线程。Future在后台继续运行，并与执行器给定的任何其他任务并发地进行多路复用。然而，与生成的线程不同，生成的任务仍然依赖于执行器的轮询。如果执行器停止运行，要么因为你放弃了它，要么因为你的代码不再运行执行器的代码，那些生成的任务将停止取得进展。在服务器示例中，想象一下，如果主服务器Future由于某种原因解析。由于执行器已经将控制权返回给你的代码，它无法继续做任何事情。多线程执行器通常会生成后台线程，即使执行器将控制权返回给用户的代码，它们仍然会继续轮询任务，但并非所有执行器都会这样做，所以在依赖这种行为之前，请检查你的执行器！
@@ -2541,6 +2542,7 @@ impl<T> SomeType<T> {
   }
 }
 ```
+
 清单9-2：包含不安全代码的安全方法
 
 - 这两个清单在使用unsafe方面有所不同，因为它们体现了不同的约定。decr要求调用者在调用该方法时要小心，而as_ref则假设调用者在调用其他不安全方法（如decr）时已经小心了。为了理解这一点，想象一下SomeType实际上是一个类似Rc的引用计数类型。尽管decr只是减少一个数字，但这个减少可能通过安全方法as_ref触发未定义行为。如果你调用decr，然后丢弃给定T的倒数第二个Rc，引用计数将降为零，T将被丢弃 - 但程序可能仍然在最后一个Rc上调用as_ref，并得到一个悬空引用。
@@ -2559,12 +2561,12 @@ impl<T> SomeType<T> {
 ##### Juggling Raw Pointers
 
 - 使用unsafe的最基本的原因之一是处理Rust的原始指针类型：*const T和*mut T。你应该将它们视为与&T和&mut T更或多或少相似，只是它们没有生命周期，并且不受与其&对应的相同有效性规则的约束，我们将在本章后面讨论。这些类型通常被称为指针和原始指针，主要是因为许多开发人员本能地将引用称为指针，并且将它们称为原始指针可以更清楚地区分。
-- 由于*比&适用的规则较少，即使在不安全块之外，您也可以将引用转换为指针。只有当您想要从*转换为&时，才需要使用不安全块。通常，您会将指针转换回引用，以便对指向的数据进行有用的操作，例如读取或修改其值。因此，常用于指针的操作是unsafe { &_ptr }（或 &mut_）。代码中的*可能看起来很奇怪，因为代码只是构造一个引用，而不是解引用指针，但如果您查看类型，它就有意义；如果您有一个*mut T并且想要一个&mut T，那么&mut ptr只会给您一个&mut _mut T。您需要_来指示您想要的是指针ptr所指向的可变引用。
+- 由于_比&适用的规则较少，即使在不安全块之外，您也可以将引用转换为指针。只有当您想要从_转换为&时，才需要使用不安全块。通常，您会将指针转换回引用，以便对指向的数据进行有用的操作，例如读取或修改其值。因此，常用于指针的操作是unsafe { &_ptr }（或 &mut_）。代码中的*可能看起来很奇怪，因为代码只是构造一个引用，而不是解引用指针，但如果您查看类型，它就有意义；如果您有一个*mut T并且想要一个&mut T，那么&mut ptr只会给您一个&mut _mut T。您需要_来指示您想要的是指针ptr所指向的可变引用。
 
 **POINTER TYPES**
-你可能想知道*mut T、*const T和std::ptr::NonNull<T>之间的区别是什么。嗯，确切的规范还在制定中，但*mut T和*const T/NonNull<T>之间的主要实际区别是*mut T在T上是不变的（参见第1章的“生命周期的变化”），而另外两个是协变的。正如名称所示，*const T和NonNull<T>主要的区别在于NonNull<T>不允许是空指针，而*const T允许。
+你可能想知道*mut T、*const T和`std::ptr::NonNull<T>`之间的区别是什么。嗯，确切的规范还在制定中，但*mut T和`*const T/NonNull<T>`之间的主要实际区别是*mut T在T上是不变的（参见第1章的“生命周期的变化”），而另外两个是协变的。正如名称所示，*const T和`NonNull<T>`主要的区别在于`NonNull<T>`不允许是空指针，而*const T允许。
 
-- 在选择这些类型之间时，我给出的最佳建议是根据直觉选择，如果你能够命名相关的生命周期，你会选择使用&mut还是&。如果你会选择使用&，并且你知道指针永远不会为空，那么使用NonNull<T>。它受益于一种称为niche优化的酷炫优化：基本上，由于编译器知道该类型永远不会为空，它可以利用这个信息来表示像Option<NonNull<T>>这样的类型，而不需要额外的开销，因为None情况可以通过将NonNull设置为null指针来表示！空指针值是NonNull<T>类型中的一个niche。如果指针可能为空，使用*const T。如果你会选择使用&mut T，使用*mut T。
+- 在选择这些类型之间时，我给出的最佳建议是根据直觉选择，如果你能够命名相关的生命周期，你会选择使用&mut还是&。如果你会选择使用&，并且你知道指针永远不会为空，那么使用`NonNull<T>`。它受益于一种称为niche优化的酷炫优化：基本上，由于编译器知道该类型永远不会为空，它可以利用这个信息来表示像`Option<NonNull<T>>`这样的类型，而不需要额外的开销，因为None情况可以通过将NonNull设置为null指针来表示！空指针值是`NonNull<T>`类型中的一个niche。如果指针可能为空，使用*const T。如果你会选择使用&mut T，使用*mut T。
 
 ##### Unrepresentable Lifetimes
 
@@ -2586,7 +2588,7 @@ struct Parsed {
 清单9-3：尝试命名自引用引用的生命周期，但失败了
 
 - Person内部的引用希望引用存储在Parsed中的字节数据，但我们无法为该引用从Parsed中分配生命周期。它既不是'static，也不是类似'self（不存在的），因为如果移动Parsed，引用将不再有效。
-- 由于指针没有生命周期，它们可以绕过这个问题，因为您不需要能够命名生命周期。相反，您只需要确保在使用指针时它仍然有效，这就是当您编写 unsafe { &*ptr } 时所做的。在清单9-3的示例中，Person将存储一个 *const str，然后在适当的时候将其不安全地转换为 &str，以确保指针仍然有效。
+- 由于指针没有生命周期，它们可以绕过这个问题，因为您不需要能够命名生命周期。相反，您只需要确保在使用指针时它仍然有效，这就是当您编写 unsafe { &*ptr } 时所做的。在清单9-3的示例中，Person将存储一个*const str，然后在适当的时候将其不安全地转换为 &str，以确保指针仍然有效。
 - 类似的问题也出现在像Arc这样的类型中，它具有指向某个值的指针，该值在某个时期内被多个引用共享，但该时期只有在运行时最后一个Arc被丢弃时才知道。这个指针有点像'static，但实际上并不是——就像在自引用的情况下一样，当最后一个Arc引用消失时，指针将不再有效，因此生命周期更像是'self。在Arc的近亲Weak中，生命周期也是“当最后一个Arc消失时”，但由于Weak不是Arc，生命周期甚至与'self都没有关联。因此，Arc和Weak都在内部使用原始指针。
 
 ##### 指针算术
@@ -2631,9 +2633,7 @@ struct Parsed {
 
 ##### ManuallyDrop::drop
 
-
 ManuallyDrop类型是围绕类型T的包装类型，当ManuallyDrop被丢弃时，不会丢弃T。换句话说，它将外部类型（ManuallyDrop）的丢弃与内部类型（T）的丢弃分离开来。它通过DerefMut<Target = T>实现对T的安全访问，但也提供了一个drop方法（与Drop trait的drop方法分开），用于丢弃包装的T而不丢弃ManuallyDrop。也就是说，尽管丢弃了T，但drop函数采用&mut self的形式，因此将ManuallyDrop留在原地。如果您必须显式丢弃一个无法移动的值，例如在Drop trait的实现中，这将非常有用。一旦该值被丢弃，再次尝试访问T将不再安全，这就是为什么调用drop是不安全的原因——它断言T将永远不会再次被访问。
-
 
 ##### std::ptr::drop_in_place
 
@@ -2696,7 +2696,6 @@ pub unsafe trait GlobalAlloc {
 
 ##### Surprisingly Not Unpin
 
-
 - Unpin特性并不是不安全的，这让许多Rust开发者感到惊讶。即使在阅读第8章之后，这可能对你来说也是个惊喜。毕竟，该特性应该确保自引用类型在被移动后不会失效（也就是在它们被放入Pin之后）。因此，Unpin可以安全地从Pin中移除类型，这似乎有些奇怪。
 - Unpin不是不安全特性的主要原因有两个。首先，这是不必要的。为你控制的类型实现Unpin并不意味着你可以安全地固定或解固一个!Unpin类型；这仍然需要通过调用Pin::new_unchecked或Pin::get_unchecked_mut来进行不安全操作。其次，对于你控制的任何类型，已经有一种安全的方法可以解固它：Drop特性！当你为一个类型实现Drop时，即使你的类型之前存储在一个Pin中并且是!Unpin的，你仍然可以通过&mut self来访问它，而不需要任何不安全操作。Pin::new_unchecked的不变量必须得到维护，以便首先创建这样一个!Unpin类型的Pin。
 
@@ -2747,7 +2746,7 @@ Rust对其引用类型可以持有的值非常严格。具体来说，引用不�
 
 Rust的一些原始类型对其可以持有的值有限制。例如，bool被定义为1字节大小，但只允许持有值0x00或0x01，而char不允许持有代理项或大于char::MAX的值。大多数Rust的原始类型，事实上大多数Rust的类型，也不能从未初始化的内存构造出来。这些限制可能看起来是任意的，但实际上往往源于需要启用否则不可能的优化。
 
-- 这一点在我们之前讨论指针类型时简要提到的niche优化是一个很好的例子。简而言之，niche优化在某些情况下将枚举的鉴别值隐藏在封装类型中。例如，由于引用永远不可能是全零，Option<&T>可以使用全零表示None，从而避免额外的字节（加上填充）来存储鉴别字节。编译器可以以相同的方式优化布尔值，并且可能进一步优化。考虑类型Option<Option<bool>>。由于编译器知道bool只能是0x00或0x01，它可以自由地使用0x02表示Some(None)，并使用0x03表示None。非常好和整洁！但是，如果有人将字节0x03视为布尔值，并将该值放入以这种方式优化的Option<Option<bool>>中，将会发生糟糕的事情。
+- 这一点在我们之前讨论指针类型时简要提到的niche优化是一个很好的例子。简而言之，niche优化在某些情况下将枚举的鉴别值隐藏在封装类型中。例如，由于引用永远不可能是全零，Option<&T>可以使用全零表示None，从而避免额外的字节（加上填充）来存储鉴别字节。编译器可以以相同的方式优化布尔值，并且可能进一步优化。考虑类型`Option<Option<bool>>`。由于编译器知道bool只能是0x00或0x01，它可以自由地使用0x02表示Some(None)，并使用0x03表示None。非常好和整洁！但是，如果有人将字节0x03视为布尔值，并将该值放入以这种方式优化的`Option<Option<bool>>`中，将会发生糟糕的事情。
 - 值得重申的是，Rust编译器当前是否实现了这种优化并不重要。重要的是它是允许的，因此您编写的任何不安全代码必须符合该约定，否则如果行为发生变化，可能会在以后遇到错误。
 
 ###### Owned Pointer Types
@@ -2790,7 +2789,7 @@ fn fill(gen: impl FnMut() -> Option<u8>) {
 
 - 确保使用不安全操作的代码是安全的一个重要但经常被忽视的方面是，代码必须准备好处理 panic。特别是，正如我们在第5章中简要讨论过的那样，Rust在大多数平台上的默认 panic 处理程序不会在 panic 时崩溃程序，而是会展开当前线程。展开 panic 会有效地丢弃当前作用域中的所有内容，从当前函数返回，丢弃包围函数作用域中的所有内容，依此类推，一直到当前线程的第一个栈帧为止。如果您在不安全代码中没有考虑到展开，可能会遇到麻烦。例如，考虑清单 9-6 中的代码，它试图一次性高效地将多个值推入 Vec 中。
 
-```rust 
+```rust
 
 
 impl<T: Default> Vec<T> {
@@ -2807,6 +2806,7 @@ impl<T: Default> Vec<T> {
   }
 }
 ```
+
 清单 9-6：使用默认值填充向量的看似安全的方法
 
 - 如果调用 T::default 引发 panic，那么这段代码会发生什么呢？首先，fill_default 将丢弃所有的局部值（只是整数），然后返回。调用者也会做同样的操作。在堆栈的某个位置，我们到达了 Vec 的所有者。当所有者丢弃向量时，我们就有了一个问题：向量的长度现在表示我们拥有比实际生成的 T 更多的 T，这是由于调用 set_len 导致的。例如，如果第一次调用 T::default 在我们打算填充八个元素时引发 panic，那么 Vec::drop 将在实际包含未初始化内存的八个 T 上调用 drop！
@@ -2818,7 +2818,7 @@ impl<T: Default> Vec<T> {
 
 正如我们在第2章中讨论的那样，即使两个不同的类型都是#[repr(Rust)]，它们在内存中的表示方式可能也不同，即使它们具有相同类型和相同顺序的字段。这意味着在两个不同类型之间进行类型转换是否安全并不总是明显的。事实上，Rust甚至不能保证具有相同布局的泛型参数的单个类型的两个实例在内存中的表示方式相同。例如，在清单9-7中，A和B不能保证具有相同的内存表示。
 
-```rust 
+```rust
 
 struct Foo<T> {
   one: bool,
@@ -2854,6 +2854,7 @@ impl SneakyTrait for PhantomData<i8> {
   type Sneaky = [u8; 1024];
 }
 ```
+
 清单 9-8：包装类型使得类型转换变得困难。
 
 - 这并不意味着在 Rust 中你永远不能进行类型转换。当你控制涉及的所有类型及其 trait 实现时，或者类型是 #[repr(C)] 时，情况会变得更容易。你只需要意识到 Rust 对内存表示几乎没有提供任何保证，并相应地编写代码！
@@ -2868,6 +2869,7 @@ let mut x = true;
 let foo = Foo(&mut x);
 x = false;
 ```
+
 清单 9-9：Foo的实现决定了这段代码是否应该编译
 
 - 在不知道Foo的定义的情况下，你能否判断这段代码是否应该编译？当我们设置x = false时，仍然有一个foo挂在那里，它将在作用域结束时被丢弃。我们知道foo包含了对x的可变借用，这意味着修改x所需的可变借用是非法的。但是允许它有什么问题呢？事实证明，只有当Foo实现了Drop时，允许修改x才会有问题——如果Foo没有实现Drop，那么我们知道Foo在最后一次使用后不会再触及对x的引用。由于最后一次使用在我们需要独占引用进行赋值之前，我们可以允许这段代码！另一方面，如果Foo实现了Drop，我们不能允许这段代码，因为Drop实现可能使用对x的引用。
@@ -2885,14 +2887,14 @@ x = false;
 清单 9-10：Foo和Bar的实现决定了这段代码是否应该编译
 
 - 再次，在不知道Foo和Bar的定义的情况下，你能否判断这段代码是否应该编译？让我们考虑一下如果Foo实现了Drop但Bar没有实现Drop的情况，因为这是最有趣的情况。通常情况下，当一个Bar超出作用域或被丢弃时，它仍然需要丢弃Foo，这意味着代码应该被拒绝，原因与之前相同：Foo::drop可能会访问对x的引用。然而，Bar可能根本不直接包含Foo，而是只包含一个PhantomData<Foo<'a>>或者一个&'static Foo<'a>，在这种情况下，代码实际上是可以的——即使Bar被丢弃，Foo::drop也不会被调用，对x的引用也不会被访问。这是我们希望编译器接受的代码，因为人类可以确定这是可以的，即使编译器很难检测到这一点。
-- 我们刚刚讨论的逻辑就是drop检查。通常情况下，它不会对不安全代码产生太大影响，因为其默认行为与用户的期望相符，但有一个重要的例外：悬垂的泛型参数。想象一下，你正在实现自己的Box<T>类型，并且有人像我们在清单9-9中所做的那样将一个&mut x放入其中。你的Box类型需要实现Drop来释放内存，但它在除了丢弃之外不会访问T。由于丢弃一个&mut不会做任何事情，所以在最后一次访问Box之后但在其被丢弃之前，代码可以完全放心地再次访问&mut x！为了支持这样的类型，Rust有一个不稳定的功能叫做dropck_eyepatch（因为它使得drop检查部分失效）。这个功能很可能永远保持不稳定，并且只作为一个临时的逃生通道，直到找到一个合适的机制。dropck_eyepatch功能添加了一个#[may_dangle]属性，你可以在类型的Drop实现中为泛型生命周期和类型添加作为前缀，告诉drop检查机制在丢弃之后不会再使用注解的生命周期或类型。你可以这样使用它：
+- 我们刚刚讨论的逻辑就是drop检查。通常情况下，它不会对不安全代码产生太大影响，因为其默认行为与用户的期望相符，但有一个重要的例外：悬垂的泛型参数。想象一下，你正在实现自己的`Box<T>`类型，并且有人像我们在清单9-9中所做的那样将一个&mut x放入其中。你的Box类型需要实现Drop来释放内存，但它在除了丢弃之外不会访问T。由于丢弃一个&mut不会做任何事情，所以在最后一次访问Box之后但在其被丢弃之前，代码可以完全放心地再次访问&mut x！为了支持这样的类型，Rust有一个不稳定的功能叫做dropck_eyepatch（因为它使得drop检查部分失效）。这个功能很可能永远保持不稳定，并且只作为一个临时的逃生通道，直到找到一个合适的机制。dropck_eyepatch功能添加了一个#[may_dangle]属性，你可以在类型的Drop实现中为泛型生命周期和类型添加作为前缀，告诉drop检查机制在丢弃之后不会再使用注解的生命周期或类型。你可以这样使用它：
 
 ```rust
 
 unsafe impl<#[may_dangle] T> Drop for ..
 ```
 
-- 这个逃生通道允许类型声明一个给定的泛型参数在 Drop 中不被使用，这使得像 Box<&mut T> 这样的用例成为可能。然而，如果你的 Box<T> 持有一个原始堆指针 *mut T，并且使用 #[may_dangle] 允许 T 悬垂，那么就会引入一个新的问题。具体来说，*mut T 会让 Rust 的 drop 检查认为你的 Box<T> 不拥有 T，因此也不会调用 T::drop。结合 may_dangle 断言，在 Box<T> 被丢弃时不访问 T，drop 检查现在会认为拥有一个 Box<T>，其中 T 不会在 Box 被丢弃之前存活（就像清单 9-10 中我们缩短的 &mut x）。但事实并非如此，因为我们确实调用了 T::drop，它可能会访问到 x 的引用。幸运的是，修复很简单：我们添加一个 PhantomData<T>，告诉 drop 检查即使 Box<T> 不持有任何 T，并且在丢弃时不会访问 T，它仍然拥有一个 T，并且在 Box 被丢弃时会丢弃一个 T。清单 9-11 展示了我们假设的 Box 类型的样子。
+- 这个逃生通道允许类型声明一个给定的泛型参数在 Drop 中不被使用，这使得像 Box<&mut T> 这样的用例成为可能。然而，如果你的 `Box<T>` 持有一个原始堆指针 *mut T，并且使用 #[may_dangle] 允许 T 悬垂，那么就会引入一个新的问题。具体来说，*mut T 会让 Rust 的 drop 检查认为你的 `Box<T>` 不拥有 T，因此也不会调用 T::drop。结合 may_dangle 断言，在 `Box<T>` 被丢弃时不访问 T，drop 检查现在会认为拥有一个`Box<T>`，其中 T 不会在 Box 被丢弃之前存活（就像清单 9-10 中我们缩短的 &mut x）。但事实并非如此，因为我们确实调用了 T::drop，它可能会访问到 x 的引用。幸运的是，修复很简单：我们添加一个 `PhantomData<T>`，告诉 drop 检查即使 `Box<T>` 不持有任何 T，并且在丢弃时不会访问 T，它仍然拥有一个 T，并且在 Box 被丢弃时会丢弃一个 T。清单 9-11 展示了我们假设的 Box 类型的样子。
 
 ```rust
 
@@ -2906,9 +2908,9 @@ unsafe impl<#[may_dangle] T> for Box<T> { /_ ... _/ }
 
 清单 9-11：Box 的定义在 drop 检查方面具有最大的灵活性
 
-- 这种交互是微妙且容易被忽视的，但它只会在使用不稳定的#[may_dangle]属性时出现。希望这个小节能作为一个警告，以便当你将来在代码中看到不安全的impl Drop时，你会知道要寻找PhantomData<T>！
+- 这种交互是微妙且容易被忽视的，但它只会在使用不稳定的#[may_dangle]属性时出现。希望这个小节能作为一个警告，以便当你将来在代码中看到不安全的impl Drop时，你会知道要寻找`PhantomData<T>`！
 
-**注意** 关于 Drop 的不安全代码的另一个考虑是确保在 self 被丢弃后，仍然让 T 继续存在的 Type<T>。例如，如果你正在实现延迟垃圾回收，你还需要添加 T: 'static。否则，如果 T = WriteOnDrop<&mut U>，后续对 T 的访问或丢弃可能会触发未定义行为！
+**注意** 关于 Drop 的不安全代码的另一个考虑是确保在 self 被丢弃后，仍然让 T 继续存在的 `Type<T>`。例如，如果你正在实现延迟垃圾回收，你还需要添加 T: 'static。否则，如果 T = WriteOnDrop<&mut U>，后续对 T 的访问或丢弃可能会触发未定义行为！
 
 #### Coping with Fear
 
@@ -2947,14 +2949,13 @@ unsafe impl<#[may_dangle] T> for Box<T> { /_ ... _/ }
 - 这个论点是可以理解的——Rust代码的安全性确实依赖于所有传递的不安全代码的安全性。而且，如果其中一些不安全代码是不正确的，它可能对整个程序的安全性产生影响。然而，这个论点忽略了一个事实，即所有成功的安全语言都提供了一种语言扩展的机制，这些扩展在（安全的）表面语言中无法表达，通常以C或汇编的形式编写的代码。就像Rust依赖于其不安全代码的正确性一样，那些语言的安全性依赖于这些扩展的正确性。
 - Rust的不同之处在于它没有单独的扩展语言，而是允许以一种类似于Rust的方言（不安全的Rust）编写扩展。这使得安全代码和不安全代码之间的集成更加紧密，从而减少了由于两者之间的接口不匹配或开发人员只熟悉其中一种而导致的错误的可能性。这种更紧密的集成还使得更容易编写分析不安全代码与安全代码交互正确性的工具，例如Miri。由于不安全的Rust在任何不是显式不安全的操作中仍然受到借用检查器的限制，因此仍然存在许多安全检查，而在开发人员必须转向像C这样的语言时则不存在。
 
-
 #### Summary
 
 在本章中，我们已经介绍了使用unsafe关键字所带来的能力，以及通过利用这些能力所承担的责任。我们还讨论了编写不安全的unsafe代码的后果，以及你应该将unsafe视为一种向编译器发誓的方式，即你已经手动检查了所指示的代码仍然是安全的。在下一章中，我们将深入探讨Rust中的并发性，并了解如何让你闪亮的新计算机上的所有核心朝着同一个方向努力！
 
 ### 10 CONCURRENCY (AND PARALLELISM)
 
-通过本章，我希望为您提供所有关于并发的信息和工具，以便您能够在Rust程序中有效地利用并发，为您的库实现并发使用的支持，并正确使用Rust的并发原语。我不会直接教您如何实现并发数据结构或编写高性能的并发应用程序。相反，我的目标是给您足够的了解底层机制，以便您能够自己使用它们来满足您的需求。 
+通过本章，我希望为您提供所有关于并发的信息和工具，以便您能够在Rust程序中有效地利用并发，为您的库实现并发使用的支持，并正确使用Rust的并发原语。我不会直接教您如何实现并发数据结构或编写高性能的并发应用程序。相反，我的目标是给您足够的了解底层机制，以便您能够自己使用它们来满足您的需求。
 
 - 并发有三种形式：单线程并发（如我们在第8章中讨论的async/await），单核多线程并发和多核并发，后者可以实现真正的并行处理。每种形式都允许以不同的方式交错执行程序中的并发任务。如果考虑操作系统调度和抢占的细节，甚至还有更多的子形式，但我们不会深入探讨这些。
 - 在类型级别上，Rust只表示并发的一个方面：多线程。一个类型要么可以安全地被多个线程使用，要么不可以。即使你的程序有多个线程（因此是并发的），但只有一个核心（因此不是并行的），Rust必须假设如果有多个线程，可能存在并行性。我们将讨论的大多数类型和技术都适用于两个线程实际上是否并行执行，因此为了保持语言简单，我将在本章中使用“并发”一词来表示“事物几乎同时运行”。当区分重要时，我会明确指出。
@@ -3014,6 +3015,7 @@ Rust有三种常见的并发模式：共享内存并发、工作池和actor模�
 ##### Shared Memory
 
 共享内存并发在概念上非常简单：线程通过操作彼此共享的内存区域来进行协作。这可以采用由互斥锁保护的状态的形式，或者存储在支持多线程并发访问的哈希映射中。许多线程可以在不相交的数据片段上执行相同的任务，例如，如果许多线程在Vec的不相交子范围上执行某个函数，或者它们可以执行需要一些共享状态的不同任务，例如在数据库中，一个线程处理用户对表的查询，而另一个线程在后台优化用于存储该表的数据结构。
+
 - 当使用共享内存并发时，你选择的数据结构非常重要，特别是如果涉及的线程需要密切合作。普通的互斥锁可能无法扩展到非常小的核心数量之外，读写锁可能允许更多并发读取，但写入速度较慢，分片的读写锁可能允许完全可扩展的读取，但写入会产生很大的干扰。同样，一些并发哈希映射可能追求全面的性能表现，而其他一些则专注于例如并发读取而写入很少的情况。总的来说，在共享内存并发中，你希望使用专门为接近目标用例的数据结构，这样你就可以利用优化，以在你的应用程序关心的性能方面进行权衡，而不关心其他方面。
 - 共享内存并发适用于需要多个线程共同更新某个共享状态的情况，而这种更新方式不可交换。也就是说，如果一个线程需要使用某个函数f更新状态s，而另一个线程需要使用某个函数g更新状态，且f(g(s)) != g(f(s))，那么共享内存并发可能是必要的。如果不是这种情况，其他两种模式可能更适合，因为它们往往会导致更简单和更高效的设计。
 **注意** 一些问题有已知的算法，可以在没有使用锁的情况下提供并发的共享内存操作。随着核心数量的增加，这些无锁算法可能比基于锁的算法更具扩展性，尽管它们通常由于复杂性而具有较慢的每个核心性能。在性能问题上，始终先进行基准测试，然后寻找替代解决方案。
@@ -3021,6 +3023,7 @@ Rust有三种常见的并发模式：共享内存并发、工作池和actor模�
 ##### Worker Pools
 
 在工作池模型中，许多相同的线程从共享的作业队列中接收作业，然后完全独立地执行它们。例如，Web服务器通常有一个处理传入连接的工作池，而用于异步代码的多线程运行时通常使用工作池来集体执行应用程序的所有Future任务（或者更准确地说，是顶级任务）。
+
 - 共享内存并发和工作池之间的界限通常很模糊，因为工作池倾向于使用共享内存并发来协调它们从队列中获取作业以及如何将未完成的作业返回到队列中。例如，假设您正在使用数据并行库rayon在并行中对向量的每个元素执行某个函数。在幕后，rayon会启动一个工作池，将向量分割成子范围，然后将子范围分配给工作池中的线程。当工作池中的线程完成一个范围时，rayon会安排它开始处理下一个未处理的子范围。向量在所有工作线程之间共享，并且线程通过支持工作窃取的共享内存队列类似的数据结构进行协调。
 - 工作窃取是大多数工作池的关键特性。基本原理是，如果一个线程提前完成了工作，并且没有更多未分配的工作可用，那么该线程可以窃取已经分配给其他工作线程但尚未开始的任务。并不是所有的任务完成所需的时间都相同，因此即使每个工作线程都分配了相同数量的任务，有些工作线程可能会比其他工作线程更快地完成任务。这些提前完成的线程不应该坐在那里等待那些执行时间较长的任务完成，而是应该帮助那些落后的线程，以便整个操作能够更早地完成。
 - 实现支持这种工作窃取的数据结构并不容易，因为线程不断尝试从彼此那里窃取工作会带来显著的开销，但这个特性对于高性能的工作池至关重要。如果你发现自己需要一个工作池，通常最好使用一个已经经过大量工作的工作池，或者至少重用现有工作池的数据结构，而不是从头开始编写一个。
@@ -3033,6 +3036,7 @@ Rust有三种常见的并发模式：共享内存并发、工作池和actor模�
 ##### Actors
 
 Acotor并发模型在许多方面与工作池模型相反。工作池有许多相同的线程共享一个作业队列，而Acotor模型有许多单独的作业队列，每个队列对应一个作业“主题”。每个作业队列都输入到特定的Acotor中，该Acotor处理与应用程序状态的一个子集相关的所有作业。该状态可以是数据库连接、文件、度量收集数据结构或任何其他您可以想象到许多线程可能需要访问的结构。无论是什么，一个单独的Acotor拥有该状态，如果某个任务想要与该状态交互，它需要向拥有的Acotor发送一条消息，总结它希望执行的操作。当拥有的Acotor接收到该消息时，它执行指定的操作，并向询问的任务返回操作的结果（如果相关）。由于Acotor具有对其内部资源的独占访问权，除了消息传递所需的同步机制外，不需要任何锁或其他同步机制。
+
 - Acotor模式的一个关键点是Acotor之间相互通信。例如，负责日志记录的Acotor如果需要写入文件和数据库表，它可能会向负责每个操作的Acotor发送消息，要求它们执行相应的操作，然后继续处理下一个日志事件。通过这种方式，Acotor模型更像是一个网络，而不是一个轮子上的辐条——用户对Web服务器的请求可能从一个负责该连接的Acotor开始，但在满足用户请求之前，可能会传递给系统中更深层次的Acotor产生数十、数百甚至数千条消息。
 - Acotor模型并不要求每个Acotor都拥有自己的线程。相反，大多数Acotor系统建议应该有大量的Acotor，因此每个Acotor应该映射到一个任务而不是一个线程。毕竟，Acotor只在执行时需要对其封装的资源进行独占访问，并不关心它们是否在自己的线程上。事实上，Acotor模型经常与工作池模型结合使用——例如，使用多线程异步运行时Tokio的应用程序可以为每个Acotor生成一个异步任务，然后Tokio将每个Acotor的执行作为其工作池中的一个作业。因此，给定Acotor的执行可能会在工作池中的线程之间移动，因为Acotor进行暂停和恢复，但每次Acotor执行时，它都保持对其封装资源的独占访问。
 - Acotor并发模型非常适合当您有许多相对独立的资源，并且在每个资源内部几乎没有或根本没有并发机会的情况下。例如，操作系统可能对每个硬件设备都有一个负责的Acotor，而Web服务器可能对每个后端数据库连接都有一个Acotor。如果您只需要少数Acotor，工作在Acotor之间的工作不均衡，或者某些Acotor变得很大，那么Acotor模型可能效果不佳，在这些情况下，您的应用程序可能会受到系统中单个Acotor执行速度的瓶颈限制。由于每个Acotor都希望对其所在的世界片段拥有独占访问权，因此您无法轻松地并行执行该瓶颈Acotor的执行。
@@ -3047,12 +3051,14 @@ Acotor并发模型在许多方面与工作池模型相反。工作池有许多�
 
 **异步同步原语**
 大多数用于阻塞代码的同步原语（例如std::sync）也有异步版本。存在异步通道、互斥锁、读写锁、屏障和各种其他类似构造的异步变体。我们需要这些原语，因为如第8章所讨论的，在Future内部阻塞会阻塞执行器可能需要执行的其他工作，因此是不可取的。
+
 - 然而，这些原语的异步版本通常比它们的同步对应版本慢，因为需要额外的机制来执行必要的唤醒操作。因此，在异步上下文中，即使使用不会阻塞执行器的情况下，您可能仍希望使用同步的同步原语。例如，虽然通常获取互斥锁可能会阻塞很长时间，但对于一个特定的互斥锁来说，这可能并不是真实的情况，也许它只会很少地被获取，并且只会在很短的时间内被获取。在这种情况下，阻塞一段时间直到互斥锁再次可用可能实际上不会引起任何问题。您需要确保在持有MutexGuard时不要放弃或执行其他长时间运行的操作，但除此之外，您不应该遇到问题。
 - 然而，像这样的优化总是要先进行测量，只有在同步原语带来显著性能改进时才选择同步原语。如果没有带来性能改进，那么在异步上下文中使用同步原语引入的额外问题可能不值得。
 
 #### Lower-Level Concurrency
 
 标准库提供了std::sync::atomic模块，该模块提供了访问底层CPU原语的功能，高级构造如通道和互斥锁都是基于这些原语构建的。这些原语以原子类型的形式提供，名称以Atomic开头，例如AtomicUsize、AtomicI32、AtomicBool、AtomicPtr等，还有Ordering类型和两个名为fence和compiler_fence的函数。在接下来的几节中，我们将逐个讨论这些内容。
+
 - 这些类型是用于构建需要在线程之间进行通信的任何代码的基本组件。互斥锁、通道、屏障、并发哈希表、无锁栈以及所有其他同步构造最终都依赖于这几个基本原语来完成它们的工作。它们也可以单独使用，用于轻量级线程之间的协作，其中重量级的同步（如互斥锁）是过度的——例如，用于递增共享计数器或将共享布尔值设置为true。
 - 原子类型是特殊的，因为它们在多个线程尝试并发访问时具有定义好的语义。这些类型都支持（大部分）相同的API：load、store、fetch_*和compare_exchange。在本节的其余部分，我们将看看它们的作用、如何正确使用它们以及它们的用途。但首先，我们必须讨论低级内存操作和内存顺序。
 
@@ -3071,6 +3077,7 @@ Rust的原子类型之所以被称为原子类型，是因为它们可以以原�
 - CPU只能以原子方式访问特定大小的值，因此只有少数几种原子类型，它们都位于atomic模块中。每种原子类型都是CPU支持原子访问的大小之一，有多个变体，用于区分值是否为有符号以及区分原子usize和指针（指针与usize大小相同）。此外，原子类型具有显式的加载和存储值的方法，以及一些稍后会介绍的更复杂的方法，以便程序员编写的代码与生成的CPU指令之间的映射更清晰。例如，AtomicI32::load执行对有符号32位值的单个加载，而AtomicPtr::store执行对指针大小（在64位平台上为64位）值的单个存储。
 
 ##### Memory Ordering
+
 大多数原子类型的方法都接受一个Ordering类型的参数，该参数决定了原子操作所受到的内存顺序限制。在不同的线程中，对原子值的加载和存储可能会被编译器和CPU按照每个原子操作所请求的内存顺序进行交错。在接下来的几节中，我们将看到一些示例，说明控制顺序对于获得预期的语义在编译器和CPU中是重要且必要的。
 
 - 内存顺序经常让人感到反直觉，因为我们人类习惯从上到下阅读程序，并想象它们按行执行 - 但这不是代码在硬件上实际执行的方式。内存访问可以重新排序，甚至完全省略，并且一个线程上的写入可能不会立即对其他线程可见，即使程序顺序中的后续写入已经被观察到。
@@ -3091,6 +3098,7 @@ enum Ordering {
 }
 
 ```
+
 列表10-1：Ordering的定义
 
 - 每个变体对从源代码到执行语义的映射施加了不同的限制，我们将在本节的其余部分逐个探讨每个变体。
@@ -3099,7 +3107,7 @@ enum Ordering {
 
 松散顺序实际上对于并发访问值没有提供任何保证，除了访问是原子的。特别是，松散顺序不会对不同线程之间的内存访问的相对顺序提供任何保证。这是最弱的内存顺序形式。列表10-2展示了一个简单的程序，其中两个线程使用Ordering::Relaxed访问两个原子变量。
 
-```rust 
+```rust
 
 static X: AtomicBool = AtomicBool::new(false);
 static Y: AtomicBool = AtomicBool::new(false);
@@ -3113,6 +3121,7 @@ let t2 = spawn(|| {
 });
 
 ```
+
 代码清单10-2：使用Ordering::Relaxed的两个竞争线程
 
 - 查看作为t2生成的线程，您可能会期望r2永远不会为true，因为在读取X之后，直到同一线程将true分配给Y的行之后，所有值都为false。然而，使用松散的内存顺序，这种结果是完全可能的。原因是CPU允许重新排序涉及的加载和存储操作。让我们详细说明一下发生了什么，以使r2 = true成为可能。
@@ -3134,7 +3143,7 @@ let t2 = spawn(|| {
 
 - 为了了解这些内存顺序如何改变事物，代码清单10-3再次显示了代码清单10-2，但将内存顺序更改为Acquire和Release。
 
-```rust 
+```rust
 
 static X: AtomicBool = AtomicBool::new(false);
 static Y: AtomicBool = AtomicBool::new(false);
@@ -3147,6 +3156,7 @@ let t2 = spawn(|| {
 2 Y.store(true, Ordering::Release)
 });
 ```
+
 代码清单10-3：使用Acquire/Release内存顺序的代码清单10-2
 
 - 这些额外的限制意味着t2不再可能看到r2 = true。要理解原因，请考虑代码清单10-2中奇怪结果的主要原因：1和2的重新排序。第一个限制，对具有Ordering::Release的存储的限制，规定我们不能将1移动到2之下，所以一切都很好！
@@ -3158,7 +3168,7 @@ let t2 = spawn(|| {
 
 顺序一致性内存顺序（Ordering::SeqCst）是我们可以访问的最强内存顺序。它的确切保证有些难以确定，但总体上，它要求不仅每个线程都能看到与Acquire/Release一致的结果，而且所有线程都能看到彼此相同的顺序。这与Acquire和Release的行为形成对比最能体现出来。具体而言，Acquire/Release内存顺序不能保证如果两个线程A和B原子地加载由另外两个线程X和Y写入的值，A和B将以一致的模式看到X相对于Y的写入时间。这相当抽象，所以请考虑列表10-4中的示例，它展示了Acquire/Release内存顺序可能产生意外结果的情况。之后，我们将看到顺序一致性内存顺序如何避免这种特定的意外结果。
 
-```rust 
+```rust
 
 static X: AtomicBool = AtomicBool::new(false);
 static Y: AtomicBool = AtomicBool::new(false);
@@ -3180,6 +3190,7 @@ while (!Y.load(Ordering::Acquire)) {}
 Z.fetch_add(1, Ordering::Relaxed); }
 });
 ```
+
 代码清单10-4：使用Acquire/Release内存顺序的奇怪结果
 
 - 两个线程t1和t2分别将X和Y设置为true。线程t3等待X变为true；一旦X为true，它检查Y是否为true，如果是，则将1添加到Z中。线程t4则等待Y变为true，然后检查X是否为true，如果是，则将1添加到Z中。现在的问题是：在所有线程终止后，Z可能的值是什么？在展示答案之前，请根据前一节中Release和Acquire内存顺序的定义尝试自己解决这个问题。
@@ -3196,7 +3207,7 @@ Z.fetch_add(1, Ordering::Relaxed); }
 
 除了load和store之外，Rust的所有原子类型都提供了一个名为compare_exchange的方法。该方法用于原子地和有条件地替换一个值。您提供compare_exchange方法的最后一个观察到的原子变量的值以及您希望用来替换原始值的新值，它只会在您最后观察到的值仍然与您观察到的值相同时才进行替换。为了理解为什么这很重要，请看一下代码清单10-5中的（错误的）互斥锁实现。该实现使用静态原子变量LOCK来跟踪锁是否被持有。我们使用布尔值true来表示锁被持有。要获取锁，线程等待LOCK为false，然后再次将其设置为true；然后它进入其临界区并在完成工作（f）后将LOCK设置为false以释放锁。
 
-```rust 
+```rust
 
 static LOCK: AtomicBool = AtomicBool::new(false);
 fn mutex(f: impl FnOnce()) {
@@ -3211,6 +3222,7 @@ f();
 LOCK.store(false, Ordering::Release);
 }
 ```
+
 代码清单10-5：一个错误的互斥锁实现
 
 这个实现大部分都是正确的，但是有一个严重的缺陷 - 两个线程可能同时看到LOCK == false，并且都离开while循环。然后它们都将LOCK设置为true，并且都进入了临界区，这正是mutex函数应该防止的！
@@ -3242,6 +3254,7 @@ f();
 LOCK.store(false, Ordering::Release);
 }
 ```
+
 代码清单10-6：互斥锁的修正实现
 
 - 这次我们在循环中使用compare_exchange，并通过compare_exchange的第一个和第二个参数来检查锁当前是否未被持有，并在适当的情况下存储true以获取锁。可以将调用解读为“仅在当前值为false时存储true”。compare_exchange方法返回一个Result，表示值是否成功更新（Ok）或无法更新（Err）。无论哪种情况，它都返回当前值。对于AtomicBool来说，这并不太有用，因为如果操作失败，我们知道值必须是什么，但对于AtomicI32之类的类型，更新后的当前值将让您快速重新计算要存储的值，然后无需再次加载即可尝试。
@@ -3285,6 +3298,7 @@ LOCK.store(false, Ordering::Release);
 ##### 编写压力测试
 
 作为作者，您对代码中可能隐藏的错误有很多了解，但并不一定知道这些错误是什么（至少目前还不知道）。编写压力测试是发现一些隐藏错误的好方法。压力测试不一定执行复杂的步骤，而是让许多线程并行执行相对简单的操作。
+
 - 例如，如果您正在编写一个并发哈希映射，一个压力测试可能是让N个线程插入或更新键，M个线程读取键，以使这些M+N个线程很可能经常选择相同的键。这样的测试不测试特定的结果或值，而是尝试触发操作的许多可能交错，希望错误的交错可能会显露出来。
 - 压力测试在许多方面类似于模糊测试；而模糊测试会为给定函数生成许多随机输入，压力测试则生成许多随机的线程和内存访问调度。与模糊测试器一样，压力测试只能检测到代码中的断言；它们无法告诉您不会以易于发现的方式（如断言失败或其他类型的恐慌）表现出来的错误。因此，建议在低级并发代码中添加断言，或者如果您担心特别热的循环中的运行时成本，可以使用debug_assert_。
 
@@ -3601,7 +3615,7 @@ pub fn start() -> EventLoop {
 - 不透明指针在FFI边界上实际上起到了类型的可见性修饰符的作用-由于方法签名不会说明指针指向的内容，调用者只能按原样传递指针，并使用任何可用的FFI方法来提供对所引用数据的可见性。不幸的是，由于一个*mut c_void与另一个*mut c_void是无法区分的，因此用户可以从一个FFI方法返回的不透明指针直接传递给期望指向不同不透明类型的方法。
 - 在Rust中，我们可以做得更好。为了减轻这种指针类型混淆的问题，我们可以避免在FFI中直接使用_mut c_void作为不透明指针，即使实际接口需要一个void_，而是为每个不同的不透明类型构造不同的空类型。例如，在代码清单11-9中，我使用了两个不同的不透明指针类型，它们不能混淆。
 
-```rust 
+```rust
 # [non_exhaustive] #[repr(transparent)] pub struct Foo(c_void)
 
 # [non_exhaustive] #[repr(transparent)] pub struct Bar(c_void)
@@ -3704,9 +3718,9 @@ impl<T, const N: usize> ArrayVec<T, N> {
 
 清单12-1：一个无堆向量类型
 
-- 我们使ArrayVec对其元素的类型T和最大元素数量N进行泛型化，然后将向量表示为N个可选的T数组。这个结构总是存储N个Option<T>，因此它在编译时具有已知的大小，并且可以存储在堆栈上，但是它仍然可以像向量一样使用运行时信息来确定如何访问数组。
+- 我们使ArrayVec对其元素的类型T和最大元素数量N进行泛型化，然后将向量表示为N个可选的T数组。这个结构总是存储N个`Option<T>`，因此它在编译时具有已知的大小，并且可以存储在堆栈上，但是它仍然可以像向量一样使用运行时信息来确定如何访问数组。
 
-**注意** 我们可以使用[MaybeUninit<T>; N]来实现ArrayVec，以避免Option的开销，但这将需要使用不安全的代码，这在这个示例中是不合适的。
+**注意** 我们可以使用`[MaybeUninit<T>; N]`来实现ArrayVec，以避免Option的开销，但这将需要使用不安全的代码，这在这个示例中是不合适的。
 
 #### The Rust Runtime
 
@@ -3809,7 +3823,7 @@ Pair(PhantomData)
 
 **注意** 默认情况下，Cargo假设目标平台与主机平台相同，这就是为什么通常不需要告诉Cargo在Linux上编译Linux的原因。但是，有时您可能希望即使目标的CPU和操作系统相同，也使用--target，例如针对libc的musl实现。
 
-- 要告诉Cargo进行交叉编译，只需使用您选择的三元组作为--target <target triple>参数传递给它。然后，Cargo将负责将该信息转发给Rust编译器，以便生成适用于给定目标平台的二进制文件。Cargo还会确保使用适当版本的标准库-毕竟，标准库包含许多条件编译指令（使用#[cfg(...)]），以便调用正确的系统调用并使用正确的特定于体系结构的实现，因此我们不能在目标上使用主机平台的标准库。
+- 要告诉Cargo进行交叉编译，只需使用您选择的三元组作为--`target <target triple>`参数传递给它。然后，Cargo将负责将该信息转发给Rust编译器，以便生成适用于给定目标平台的二进制文件。Cargo还会确保使用适当版本的标准库-毕竟，标准库包含许多条件编译指令（使用#[cfg(...)]），以便调用正确的系统调用并使用正确的特定于体系结构的实现，因此我们不能在目标上使用主机平台的标准库。
 - 目标平台还决定了标准库的哪些组件可用。例如，x86_64-unknown-linux-gnu包括完整的std库，而thumbv7m-none-eabi之类的库则不包括，甚至不定义分配器，因此如果您在没有显式定义分配器的情况下使用alloc，将会出现构建错误。这对于测试您编写的代码是否实际上不需要std非常有用（请记住，即使使用#![no_std]，您仍然可以使用std::，因为no_std仅放弃了std预导入）。如果您的持续集成流水线使用--target thumbv7m-none-eabi构建您的crate，任何尝试访问除core之外的组件都将触发构建失败。关键是，这也将检查您的crate是否意外地引入了使用std（或alloc）的依赖项。
 
 **平台支持**
@@ -4001,18 +4015,18 @@ name: Cow<'a str>,
 **注意** 如果您以这种方式实现类型，我建议您还提供一个into_owned方法，该方法通过在所有字段上调用Cow::into_owned将<'a>实例转换为<'static>实例。否则，当用户只有<'a>时，他们将无法对您的类型进行更长时间的克隆。
 
 - std::sync::Once类型是一种同步原语，它允许您在初始化时仅运行给定的代码一次。这对于作为FFI的一部分的初始化非常有用，其中FFI边界的另一侧的库要求仅执行一次初始化。
-- VecDeque类型是std::collections中经常被忽视的成员，但我发现自己经常使用它-基本上，每当我需要一个堆栈或队列时。它的接口类似于Vec，就像Vec一样，它的内存表示是一个单一的内存块。不同之处在于VecDeque同时跟踪实际数据的开始和结束，这允许从VecDeque的任一侧进行常数时间的推入和弹出，这意味着它可以用作堆栈、队列，甚至同时用作两者。您需要付出的代价是值不再必须在内存中连续（它们可能已经环绕），这意味着VecDeque<T>不实现AsRef<[T]>。
+- VecDeque类型是std::collections中经常被忽视的成员，但我发现自己经常使用它-基本上，每当我需要一个堆栈或队列时。它的接口类似于Vec，就像Vec一样，它的内存表示是一个单一的内存块。不同之处在于VecDeque同时跟踪实际数据的开始和结束，这允许从VecDeque的任一侧进行常数时间的推入和弹出，这意味着它可以用作堆栈、队列，甚至同时用作两者。您需要付出的代价是值不再必须在内存中连续（它们可能已经环绕），这意味着`VecDeque<T>`不实现AsRef<[T]>。
 
 ###### 方法
 
-让我们快速浏览一些不错的方法。首先是Arc::make_mut，它接受一个&mut Arc<T>并给出一个&mut T。如果Arc是存在的最后一个，它会给出Arc后面的T；否则，它会分配一个新的Arc<T>，其中包含T的克隆，将其交换到当前引用的Arc中，然后给出新单例Arc中的T的&mut。
+让我们快速浏览一些不错的方法。首先是Arc::make_mut，它接受一个`&mut Arc<T>`并给出一个&mut T。如果Arc是存在的最后一个，它会给出Arc后面的T；否则，它会分配一个新的`Arc<T>`，其中包含T的克隆，将其交换到当前引用的Arc中，然后给出新单例Arc中的T的&mut。
 
 - Clone::clone_from方法是.clone()的另一种形式，它允许您重用克隆的类型实例而不是分配一个新的实例。换句话说，如果您已经有一个x: T，您可以使用x.clone_from(y)而不是x = y.clone()，这样您可能会节省一些分配。
 - std::fmt::Formatter::debug_*是实现Debug的最简单的方法，如果#[derive(Debug)]对您的用例不起作用，比如如果您只想包含一些字段或公开类型字段的Debug实现中没有公开的信息。在实现Debug的fmt方法时，只需调用传入的Formatter上的适当的debug_*方法（例如debug_struct或debug_map），调用结果类型上的包含的方法来填充有关类型的详细信息（例如field添加字段或entries添加键/值条目），然后调用finish。
 - Instant::elapsed返回自创建Instant以来的Duration。这比常见的方法更简洁，常见的方法是创建一个新的Instant并减去较早的实例。
-- Option::as_deref接受一个Option<P>，其中P: Deref，并返回Option<&P::Target>（还有一个as_deref_mut方法）。这个简单的操作可以通过避免晦涩的.as_ref().map(|r| &*_r)来使在Option上操作的函数式转换链更加清晰。
+- Option::as_deref接受一个`Option<P>`，其中P: Deref，并返回Option<&P::Target>（还有一个as_deref_mut方法）。这个简单的操作可以通过避免晦涩的.as_ref().map(|r| &*_r)来使在Option上操作的函数式转换链更加清晰。
 - Ord::clamp允许您获取任何实现Ord的类型，并将其夹在给定范围的两个其他值之间。也就是说，给定下限min和上限max，x.clamp(min, max)如果x小于min，则返回min，如果x大于max，则返回max，否则返回x。
-- Result::transpose及其对应的Option::transpose反转嵌套Result和Option的类型。也就是说，将Result<Option<T>, E>转置为Option<Result<T, E>>，反之亦然。与?结合使用时，在处理具有Iterator::next和类似方法的可能失败的上下文中，此操作可以使代码更清晰。
+- Result::transpose及其对应的Option::transpose反转嵌套Result和Option的类型。也就是说，将`Result<Option<T>``, E>转置为`Option<Result<T, E>>`，反之亦然。与?结合使用时，在处理具有Iterator::next和类似方法的可能失败的上下文中，此操作可以使代码更清晰。
 - Vec::swap_remove是Vec::remove的更快版本。Vec::remove保留向量的顺序，这意味着要删除中间的元素，必须将向量中的所有后续元素向下移动一个位置。对于大型向量，这可能非常慢。另一方面，Vec::swap_remove将要删除的元素与最后一个元素交换，然后将向量的长度减少一，这是一个常数时间的操作。但请注意，它会重新排列您的向量，从而使旧索引无效！
 
 #### 实际应用中的模式
@@ -4061,14 +4075,14 @@ f();
 
 - 这种模式通常与线程局部变量一起使用，当库代码可能希望设置线程局部状态，以便仅在闭包执行期间有效，并且在之后需要清除时。例如，在撰写本文时，Tokio使用此模式为像TcpStream这样的叶资源提供有关调用Future::poll的执行器的信息，而无需通过对用户可见的函数签名传播该信息。如果线程局部状态在Future::poll由于panic返回后仍然指示特定执行器线程处于活动状态，那将是不好的，因此Tokio使用drop guard确保线程局部状态被重置。
 
-**注意** 您经常会看到在线程局部变量中使用Cell或Rc<RefCell>。这是因为线程局部变量仅通过共享引用访问，因为线程可能再次访问它已经在调用堆栈中的某个更高位置引用的线程局部变量。这两种类型提供了内部可变性，而不会产生太多开销，因为它们仅用于单线程使用，因此非常适合此用例。
+**注意** 您经常会看到在线程局部变量中使用Cell或`Rc<RefCell>`。这是因为线程局部变量仅通过共享引用访问，因为线程可能再次访问它已经在调用堆栈中的某个更高位置引用的线程局部变量。这两种类型提供了内部可变性，而不会产生太多开销，因为它们仅用于单线程使用，因此非常适合此用例。
 
 ##### 扩展特性
 
 扩展特性允许crate为实现来自不同crate的trait的类型提供附加功能。例如，itertools crate为Iterator提供了一个扩展特性，其中添加了许多方便的常用（和不常用）迭代器操作。作为另一个例子，tower提供了ServiceExt，它为tower-service中的Service trait添加了几个更符合人体工程学的操作。
 
 - 扩展特性通常在您无法控制基本trait的情况下非常有用，就像Iterator一样，或者当基本trait位于自己的crate中时，因此很少发生破坏性发布，从而不会导致不必要的生态系统分裂，就像Service一样。
-- 扩展特性扩展了它所扩展的基本trait（trait ServiceExt: Service），仅由提供的方法组成。它还提供了对任何实现基本trait的T的全局实现（impl<T> ServiceExt for T where T: Service {}）。这些条件共同确保扩展特性的方法在任何实现基本trait的内容上都可用。
+- 扩展特性扩展了它所扩展的基本trait（trait ServiceExt: Service），仅由提供的方法组成。它还提供了对任何实现基本trait的T的全局实现（`impl<T> ServiceExt for T where T: Service {}`）。这些条件共同确保扩展特性的方法在任何实现基本trait的内容上都可用。
 
 ##### Crate预导入
 
@@ -4112,179 +4126,48 @@ Rust作为一门年轻的语言，正在快速发展。语言本身、标准库�
 
 观看经验丰富的开发者编码实际上是解决独立学习初始阶段的一种生活技巧。它让您能够观察设计和构建过程，同时利用他人的经验。倾听经验丰富的开发者在遇到问题时表达他们的思考并解释棘手的概念或技术，可以是解决问题的绝佳替代方法。您还将学到各种辅助知识，如调试技巧、设计模式和最佳实践。最终，您将不得不坐下来自己动手做事——这是检查您是否真正理解所观察到的内容的唯一方式——但依赖他人的经验几乎肯定会使早期阶段更加愉快。如果这种经验是互动的，那就更好了！
 
-- So, with that said, here are some Rust video channels that I recommend:
-- - Perhaps unsurprisingly, my own channel: <https://www.youtube.com/c/>
-JonGjengset/. I have a mix of long-form coding videos and short(er) code-
-based theory/concept explanation videos, as well as occasional videos
-that dive into interesting Rust coding stories.
-- - The Awesome Rust Streaming listing: <https://github.com/jamesmunns/awesome-rust-streaming/>. This resource lists a wide variety of developers
-who stream Rust coding or other Rust content.
-- - The channel of Tim McNamara, the author of Rust in Action: https://
-<www.youtube.com/c/timClicks/>. Tim’s channel, like mine, splits its time
-between implementation and theory, though Tim has a particular
-- - knack for creative visual projects, which makes for fun viewing.
-Jonathan Turner’s Systems with JT channel: <https://www.youtube.com/c/>
-SystemswithJT/. Jonathan’s videos document their work on Nushell, their take on a “new type of shell,” providing a great sense of what it’s
-like to work on a nontrivial existing codebase.
-- - Ryan Levick’s channel: <https://www.youtube.com/c/RyanLevicksVideos/>. Ryan mainly posts videos that tackle particular Rust concepts and walks
-through them using concrete code examples, but he also occasionally
-does implementation videos (like FFI for Microsoft Flight Simulator!)
-and deep dives into how well-known crates work under the hood.
-- Given that I make Rust videos, it should come as no surprise that I am
-a fan of this approach to teaching. But this kind of receptive or interactive
-learning doesn’t have to come in the form of videos. Another great avenue
-for learning from experienced developers is pair programming. If you have
-a colleague or friend with expertise in a particular aspect of Rust you’d like
-to learn, ask if you can do a pair-programming session with them to solve a
-problem together!
+- 那么，说了这么多，这里是一些我推荐的Rust视频频道：
+- - 或许不出所料，我的频道：<https://www.youtube.com/c/JonGjengset/>。我有一系列长篇编码视频和短一些的基于代码的理论/概念解释视频，还偶尔会深入探讨有趣的Rust编码故事。
+- - 令人惊喜的Rust直播清单：<https://github.com/jamesmunns/awesome-rust-streaming/>。这个资源列出了各种各样的开发者，他们直播Rust编码或其他Rust内容。
+- - Tim McNamara的频道，他是《Rust in Action》的作者：<https://www.youtube.com/c/timClicks/>。Tim的频道，就像我的频道一样，将时间分配给实现和理论，不过Tim特别擅长创造性的视觉项目，这让观看变得有趣。
+- - Jonathan Turner的Systems with JT频道：<https://www.youtube.com/c/SystemswithJT/>。Jonathan的视频记录了他们在Nushell上的工作，这是他们对“新型shell”的理解，提供了对在一个非平凡的现有代码库上工作的感觉。
+- - Ryan Levick的频道：<https://www.youtube.com/c/RyanLevicksVideos/>。Ryan主要发布解释特定Rust概念并使用具体的代码示例进行讲解的视频，但他偶尔也会做实现视频（比如针对Microsoft Flight Simulator的FFI！）以及深入探讨知名crate在内部如何工作。
+- 鉴于我制作Rust视频，毫不奇怪我喜欢这种教学方法。但这种接受或互动式学习不一定只能通过视频来实现。从经验丰富的开发者那里学习的另一个绝佳途径是结对编程。如果您有一个在Rust的某个方面有专业知识的同事或朋友，您可以询问是否可以与他们一起进行结对编程会话，共同解决问题！
 
 ##### Learn by Doing
 
-Since your ultimate goal is to get better at writing Rust, there’s no substitute
-for programming experience. No matter what or how many resources you
-learn from, you need to put that learning into practice. However, finding a
-good place to start can be tricky, so here I’ll give some suggestions.
+由于您的最终目标是提高Rust编程能力，没有什么比实际编程经验更重要的了。无论您从哪里学习，学习多少资源，都需要将所学知识付诸实践。然而，找到一个好的起点可能有些棘手，因此在这里我将提供一些建议。
 
-- Before I dive into the list, I want to provide some general guidance on
-how to pick projects. First, choose a project that you care about, without
-worrying too much whether others care about it. While there are plenty
-of popular and established Rust projects out there that would love to have
-you as a contributor, and it’s fun to be able to say “I contributed to the wellknown
-library X,” your first priority must be your own interest. Without
-concrete motivation, you’ll quickly lose steam and find contributing to be
-a chore. The very best targets are projects that you use yourself and have
-experienced problems with—go fix them! Nothing is more satisfying than
-getting rid of a long-standing personal nuisance while also contributing
-back to the community.
-- Okay, so back to project suggestions. First and foremost, consider contributing
-to the Rust compiler and its associated tools. It’s a high-quality
-codebase with good documentation and an endless supply of issues (you
-probably know of some yourself), and there are several great mentors who
-can provide outlines for how to approach solving issues. If you look through
-the issue tracker for issues marked E-easy or E-mentor, you’ll likely find a
-good candidate quickly. As you gain more experience, you can keep leveling
-up to contribute to trickier parts.
-- If that’s not your cup of tea, I recommend finding something you use
-frequently that’s written in another language and porting it to Rust—not
-necessarily with the intention of replacing the original library or tool, but
-just because the experience will allow you to focus on writing Rust without
-having to spend too much time coming up with all the functionality yourself.
-If it turns out well, the fact that it already exists suggests that someone
-else also needed it, so there may be a wider audience for your port too! Data
-structures and command-line tools often make for great porting subjects,
-but find a niche that appeals to you.
-- Should you be more of a “build it from scratch” kind of person, I recommend
-looking back at your own development experience so far and thinking
-about similar code you’ve ended up writing in multiple projects (whether
-in Rust or in other languages). Such repetition tends to be a good signal
-that something is reusable and could be turned into a library. If nothing
-comes to mind, David Tolnay maintains a list of smaller utility crates that
-other Rust developers have requested at <https://github.com/dtolnay/request-forimplementation/>
-that may provide a source of inspiration. If you’re looking for
-something more substantial and ambitious, there’s also the Not Yet Awesome
-list at <https://github.com/not-yet-awesome-rust/not-yet-awesome-rust/> that lists
-things that should exist in Rust but don’t (yet).
+- 在我列出列表之前，我想提供一些关于如何选择项目的一般指导。首先，选择一个您关心的项目，不要过多担心其他人是否关心它。虽然有很多受欢迎和成熟的Rust项目希望您作为贡献者加入，而且能够说“我为知名库X做出了贡献”很有趣，但您的首要任务必须是自己的兴趣。如果没有具体的动力，您很快就会失去动力，发现贡献变成了一种负担。最好的目标是您自己使用并且遇到问题的项目——去解决它们！没有什么比解决长期存在的个人困扰并向社区做出贡献更令人满意的了。
+- 好了，回到项目建议。首先，考虑为Rust编译器及其相关工具做出贡献。这是一个高质量的代码库，有良好的文档和无尽的问题（您可能自己就知道一些），并且有几位优秀的导师可以提供解决问题的方法。如果您浏览标记为E-easy或E-mentor的问题跟踪器，很快就能找到一个合适的候选项目。随着经验的增加，您可以继续提升，贡献给更棘手的部分。
+- 如果那不是您的菜，我建议找到您经常使用的其他语言编写的东西，并将其移植到Rust中——不一定是为了取代原始库或工具，而是因为这种经验将使您能够专注于编写Rust，而无需花费太多时间来实现所有功能。如果效果不错，它已经存在的事实表明其他人也需要它，因此您的移植可能会有更广泛的受众！数据结构和命令行工具通常是很好的移植对象，但找到一个吸引您的利基。
+- 如果您更喜欢“从零开始构建”的方式，我建议回顾一下您迄今为止的开发经验，并思考您在多个项目中编写过的类似代码（无论是在Rust还是其他语言中）。这种重复往往是一个很好的信号，表明某些东西是可重用的，可以转化为库。如果脑海中没有想法，David Tolnay维护了一个其他Rust开发人员在<https://github.com/dtolnay/request-for-implementation/>上请求的较小实用程序crate列表，这可能会给您提供灵感。如果您正在寻找更实质性和雄心勃勃的项目，还有一个尚未完善的列表<https://github.com/not-yet-awesome-rust/not-yet-awesome-rust/>，列出了Rust中应该存在但尚不存在的东西。
 
-##### Learn by Reading
+##### 通过阅读学习
 
-Although the state of affairs is constantly improving, finding good Rust
-reading material beyond the beginner level can still be tricky. Here’s a collection
-of pointers to some of my favorite resources that continue to teach
-me new things or serve as good references when I have particularly niche or
-nuanced questions.
+尽管情况不断改善，但在初学者水平之上找到好的Rust阅读材料仍然有些棘手。这里是一些我最喜欢的资源的指引，它们不断教给我新的东西，或者在我遇到特定的细微问题时作为良好的参考。
 
-- First, I recommend looking through the official virtual Rust books
-linked from <https://www.rust-lang.org/learn/>. Some, like the Cargo book, are
-more reference-like while others, like the Embedded book, are more guidelike,
-but they’re all deep sources of solid technical information about their
-respective topics. The Rustonomicon (<https://doc.rust-lang.org/nomicon/>), in particular,
-is a lifesaver when you’re writing unsafe code.
-- Two more books that are worth checking out are the Guide to rustc
-Development (<https://rustc-dev-guide.rust-lang.org/>) and the Standard Library
-Developers Guide (<https://std-dev-guide.rust-lang.org/>). These are fantastic
-resources if you’re curious about how the Rust compiler does what it does
-or how the standard library is designed, or if you want some pointers before
-you try your hand at contributing to Rust itself. The official Rust guidelines
-are also a treasure trove of information; I’ve already mentioned the Rust
-API Guidelines (<https://rust-lang.github.io/api-guidelines/>) in the book, but a
-Rust Unsafe Code Guidelines Reference is also available (<https://rust-lang.github>
-.io/unsafe-code-guidelines/), and by the time you read this book there may
-be more.
+- 首先，我建议浏览从<https://www.rust-lang.org/learn/>链接的官方虚拟Rust书籍。其中一些，如Cargo书籍，更像是参考书，而其他一些，如嵌入式书籍，更像是指南，但它们都是关于各自主题的深入的可靠技术信息来源。特别是Rustonomicon（<https://doc.rust-lang.org/nomicon/>），在编写不安全代码时是一个救命稻草。
+- 还有两本值得一读的书，分别是《Guide to rustc Development》（<https://rustc-dev-guide.rust-lang.org/>）和《Standard Library Developers Guide》（<https://std-dev-guide.rust-lang.org/>）。如果您想了解Rust编译器的工作原理或标准库的设计，或者在尝试为Rust本身做出贡献之前需要一些指导，这些都是绝佳的资源。官方的Rust指南也是一宝库，我已经在本书中提到了Rust API指南（<https://rust-lang.github.io/api-guidelines/>），但还有一个Rust不安全代码指南参考（<https://rust-lang.github.io/unsafe-code-guidelines/>），当您阅读本书时，可能会有更多的资源。
+**注意** <https://www.rust-lang.org/learn/>列出的资源之一是Rust参考，它本质上是Rust语言的完整规范。虽然其中的一些部分非常枯燥，比如用于解析的确切语法或有关原始类型的内存表示的基础知识，但其中的一些部分非常有趣，比如类型布局部分和行为定义的枚举。
 
-**NOTE** One of the resources listed at <https://www.rust-lang.org/learn/> is the Rust
-Reference, which is essentially a full specification for the Rust language. While parts
-of it are quite dry, like the exact grammar used for parsing or basics about the inmemory
-representations of the primitive types, some of it is fascinating reading, like
-the section on type layout and the enumeration of behavior considered undefined.
+- 还有许多非官方的虚拟Rust书籍，它们是宝贵的经验和知识的集合。例如，《The Little Book of Rust Macros》（<https://veykril.github.io/tlborm/>）是不可或缺的，如果您想编写非平凡的声明宏，而《The Rust Performance Book》（<https://nnethercote.github.io/perf-book/>）则充满了改进Rust代码性能的技巧和诀窍，无论是在微观还是宏观层面上。其他很棒的资源包括《Rust Fuzz Book》（<https://rust-fuzz.github.io/book/>），它更详细地探讨了模糊测试，以及《Rust Cookbook》（<https://rust-lang-nursery.github.io/rust-cookbook/>），它提供了常见编程任务的惯用解决方案。甚至还有一个用于查找更多书籍的资源，《The Little Book of Rust Books》（<https://lborb.github.io/book/unofficial.html>）！
+- 如果您更喜欢更实践性的阅读，Tokio项目发布了mini-redis（<https://github.com/tokio-rs/mini-redis/>），这是一个不完整但符合惯例的Redis客户端和服务器实现，文档非常详细，专门编写成指南，以指导编写异步代码。如果您更喜欢数据结构，那么《Learn Rust with Entirely Too Many Linked Lists》（<https://rust-unofficial.github.io/too-many-lists/>）是一本启发性和有趣的读物，涉及到所有权和引用的许多复杂细节。如果您更接近硬件，Philipp Oppermann的《Writing an OS in Rust》（<https://os.phil-opp.com/>）详细介绍了整个操作系统堆栈，同时教授了良好的Rust模式。如果您想要更广泛的有趣深入的文章，我也强烈推荐Amos的文章集（<https://fasterthanli.me/tags/rust/>），以对话的方式进行了广泛的深入探讨。
+- 当您对自己的Rust能力更有信心，并且需要快速参考而不是长教程时，我发现Rust语言速查表（<https://cheats.rs/>）非常适合快速查找。它还提供了非常好的可视化解释，因此即使您查找的内容您并不熟悉，解释也很容易理解。
+- 最后，如果您想要将您对Rust的理解全部应用到实践中，可以尝试一下David Tolnay的Rust Quiz（<https://dtolnay.github.io/rust-quiz/>）。其中有一些真正令人费解的问题，但每个问题都有详细的解释，因此即使您回答错误，您也会从中学到东西！
 
-- There are also a number of unofficial virtual Rust books that are
-enormously valuable collections of experience and knowledge. The Little
-Book of Rust Macros (<https://veykril.github.io/tlborm/>), for example, is indispensable
-if you want to write nontrivial declarative macros, and The Rust
-Performance Book (<https://nnethercote.github.io/perf-book/>) is filled with tips and
-tricks for improving the performance of Rust code both at the micro and
-the macro level. Other great resources include the Rust Fuzz Book (https://
-rust-fuzz.github.io/book/), which explores fuzz testing in more detail, and
-the Rust Cookbook (<https://rust-lang-nursery.github.io/rust-cookbook/>), which suggests
-idiomatic solutions to common programming tasks. There’s even a
-resource for finding more books, The Little Book of Rust Books (<https://lborb>.
-github.io/book/unofficial.html)!
-- If you prefer more hands-on reading, the Tokio project has published
-mini-redis (<https://github.com/tokio-rs/mini-redis/>), an incomplete but idiomatic
-implementation of a Redis client and server that’s extremely well documented
-and specifically written to serve as a guide to writing asynchronous
-code. If you’re more of a data structures person, Learn Rust with Entirely Too
-Many Linked Lists (<https://rust-unofficial.github.io/too-many-lists/>) is an enlightening
-and fun read that gets into lots of gnarly details about ownership and
-references. If you’re looking for something closer to the hardware, Philipp
-Oppermann’s Writing an OS in Rust (<https://os.phil-opp.com/>) goes through
-the whole operating system stack in great detail while teaching you good
-Rust patterns in the process. I also highly recommend Amos’s collection of
-articles (<https://fasterthanli.me/tags/rust/>) if you want a wide sampling of interesting
-deep dives written in a conversational style.
-- When you feel more confident in your Rust abilities and need more of
-a quick reference than a long tutorial, I’ve found the Rust Language Cheat
-Sheet (<https://cheats.rs/>) great for looking things up quickly. It also provides
-very nice visual explanations for most topics, so even if you’re looking up
-something you’re not intimately familiar with already, the explanations are
-pretty approachable.
-- And finally, if you want to put all of your Rust understanding to the
-test, go give David Tolnay’s Rust Quiz (<https://dtolnay.github.io/rust-quiz/>) a try.
-There are some real mind-benders in there, but each question comes with
-a thorough explanation of what’s going on, so even if you get one wrong,
-you’ll have learned from the experience!
+##### 通过教学学习
 
-##### Learn by Teaching
+我的经验是，迄今为止，学习一样东西最好和最彻底的方法是尝试将其教给他人。我从写这本书中学到了很多东西，每次制作新的Rust视频或播客剧集时，我都会学到新的东西。因此，我衷心建议您尝试教授一些您从阅读本书中学到的东西，或者从现在开始学到的东西。它可以采取您喜欢的任何形式：面对面、写博客文章、发推文、制作视频或播客，或者进行演讲。重要的是，您尝试用自己的话语传达您新获得的知识给那些尚未理解该主题的人——通过这样做，您也回馈给社区，以便下一个您能更轻松地掌握知识。教学是一种令人谦卑和深入教育的经验，我无法推荐它的重要性。
 
-My experience has been that the best way to learn something well and
-thoroughly, by far, is to try to teach it to others. I have learned an enormous
-amount from writing this book, and I learn new things every time
-I make a new Rust video or podcast episode. So, I wholeheartedly recommend
-that you try your hand at teaching others about some of the things
-you’ve learned from reading this book or that you learn from here on out.
-It can take whatever form you prefer: in person, writing a blog post, tweeting,
-making a video or podcast, or giving a talk. The important thing is
-that you try to convey your newfound knowledge in your own words to
-someone who doesn’t already understand the topic—in doing so, you also
-give back to the community so that the next you that comes along has a
-slightly easier time getting up to speed. Teaching is a humbling and deeply
-educational experience, and I cannot recommend it highly enough.
+**注意** 无论您是想教授还是学习，请务必访问Awesome Rust Mentors（<https://rustbeginners.github.io/awesome-rust-mentors/>）。
+Rust生态系统 243
 
-**NOTE** Whether you’re looking to teach or be taught, make sure to visit Awesome Rust
-Mentors (<https://rustbeginners.github.io/awesome-rust-mentors/>).
-The Rust Ecosystem 243
+#### 总结
 
-#### Summary
+在本章中，我们介绍了超出您本地工作空间的Rust知识。我们调查了有用的工具、库和Rust特性；看了如何保持与生态系统的不断发展同步；然后讨论了您如何亲自动手并向生态系统做出贡献。最后，我们讨论了您可以继续学习Rust的下一步，现在本书已经结束了。至此，我们只能宣布：
 
-In this chapter, we’ve covered Rust beyond what exists in your local workspace.
-We surveyed useful tools, libraries, and Rust features; looked at how
-to stay up to date as the ecosystem continues to evolve; and then discussed
-how you can get your hands dirty and contribute back to the ecosystem
-yourself. Finally, we discussed where you can go next to continue your Rust
-journey now that this book has reached its end. And with that, there’s little
-more to do than to declare:
-
-```
+```rust
 
 }
 ```
