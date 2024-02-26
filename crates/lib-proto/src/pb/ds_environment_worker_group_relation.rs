@@ -167,8 +167,7 @@ pub mod ds_environment_worker_group_relation_service_client {
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/ds_environment_worker_group_relation.DsEnvironmentWorkerGroupRelationService/\
-                 ListDsEnvironmentWorkerGroupRelations",
+                "/ds_environment_worker_group_relation.DsEnvironmentWorkerGroupRelationService/ListDsEnvironmentWorkerGroupRelations",
             );
             let mut req = request.into_request();
             req.extensions_mut().insert(GrpcMethod::new(
@@ -186,8 +185,7 @@ pub mod ds_environment_worker_group_relation_service_client {
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/ds_environment_worker_group_relation.DsEnvironmentWorkerGroupRelationService/\
-                 GetDsEnvironmentWorkerGroupRelation",
+                "/ds_environment_worker_group_relation.DsEnvironmentWorkerGroupRelationService/GetDsEnvironmentWorkerGroupRelation",
             );
             let mut req = request.into_request();
             req.extensions_mut().insert(GrpcMethod::new(
@@ -205,8 +203,7 @@ pub mod ds_environment_worker_group_relation_service_client {
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/ds_environment_worker_group_relation.DsEnvironmentWorkerGroupRelationService/\
-                 CreateDsEnvironmentWorkerGroupRelation",
+                "/ds_environment_worker_group_relation.DsEnvironmentWorkerGroupRelationService/CreateDsEnvironmentWorkerGroupRelation",
             );
             let mut req = request.into_request();
             req.extensions_mut().insert(GrpcMethod::new(
@@ -224,8 +221,7 @@ pub mod ds_environment_worker_group_relation_service_client {
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/ds_environment_worker_group_relation.DsEnvironmentWorkerGroupRelationService/\
-                 UpdateDsEnvironmentWorkerGroupRelation",
+                "/ds_environment_worker_group_relation.DsEnvironmentWorkerGroupRelationService/UpdateDsEnvironmentWorkerGroupRelation",
             );
             let mut req = request.into_request();
             req.extensions_mut().insert(GrpcMethod::new(
@@ -243,8 +239,7 @@ pub mod ds_environment_worker_group_relation_service_client {
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/ds_environment_worker_group_relation.DsEnvironmentWorkerGroupRelationService/\
-                 DeleteDsEnvironmentWorkerGroupRelation",
+                "/ds_environment_worker_group_relation.DsEnvironmentWorkerGroupRelationService/DeleteDsEnvironmentWorkerGroupRelation",
             );
             let mut req = request.into_request();
             req.extensions_mut().insert(GrpcMethod::new(
@@ -357,24 +352,35 @@ pub mod ds_environment_worker_group_relation_service_server {
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
-                "/ds_environment_worker_group_relation.DsEnvironmentWorkerGroupRelationService/\
-                 ListDsEnvironmentWorkerGroupRelations" => {
+                "/ds_environment_worker_group_relation.DsEnvironmentWorkerGroupRelationService/ListDsEnvironmentWorkerGroupRelations" => {
                     #[allow(non_camel_case_types)]
-                    struct ListDsEnvironmentWorkerGroupRelationsSvc<T: DsEnvironmentWorkerGroupRelationService>(
+                    struct ListDsEnvironmentWorkerGroupRelationsSvc<
+                        T: DsEnvironmentWorkerGroupRelationService,
+                    >(
                         pub Arc<T>,
                     );
-                    impl<T: DsEnvironmentWorkerGroupRelationService>
-                        tonic::server::UnaryService<super::ListDsEnvironmentWorkerGroupRelationsRequest>
-                        for ListDsEnvironmentWorkerGroupRelationsSvc<T>
-                    {
+                    impl<
+                        T: DsEnvironmentWorkerGroupRelationService,
+                    > tonic::server::UnaryService<
+                        super::ListDsEnvironmentWorkerGroupRelationsRequest,
+                    > for ListDsEnvironmentWorkerGroupRelationsSvc<T> {
                         type Response = super::ListDsEnvironmentWorkerGroupRelationsResponse;
-                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::ListDsEnvironmentWorkerGroupRelationsRequest>,
+                            request: tonic::Request<
+                                super::ListDsEnvironmentWorkerGroupRelationsRequest,
+                            >,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
-                            let fut = async move { (*inner).list_ds_environment_worker_group_relations(request).await };
+                            let fut = async move {
+                                (*inner)
+                                    .list_ds_environment_worker_group_relations(request)
+                                    .await
+                            };
                             Box::pin(fut)
                         }
                     }
@@ -388,31 +394,48 @@ pub mod ds_environment_worker_group_relation_service_server {
                         let method = ListDsEnvironmentWorkerGroupRelationsSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
-                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
                     Box::pin(fut)
                 }
-                "/ds_environment_worker_group_relation.DsEnvironmentWorkerGroupRelationService/\
-                 GetDsEnvironmentWorkerGroupRelation" => {
+                "/ds_environment_worker_group_relation.DsEnvironmentWorkerGroupRelationService/GetDsEnvironmentWorkerGroupRelation" => {
                     #[allow(non_camel_case_types)]
-                    struct GetDsEnvironmentWorkerGroupRelationSvc<T: DsEnvironmentWorkerGroupRelationService>(
+                    struct GetDsEnvironmentWorkerGroupRelationSvc<
+                        T: DsEnvironmentWorkerGroupRelationService,
+                    >(
                         pub Arc<T>,
                     );
-                    impl<T: DsEnvironmentWorkerGroupRelationService>
-                        tonic::server::UnaryService<super::GetDsEnvironmentWorkerGroupRelationRequest>
-                        for GetDsEnvironmentWorkerGroupRelationSvc<T>
-                    {
+                    impl<
+                        T: DsEnvironmentWorkerGroupRelationService,
+                    > tonic::server::UnaryService<
+                        super::GetDsEnvironmentWorkerGroupRelationRequest,
+                    > for GetDsEnvironmentWorkerGroupRelationSvc<T> {
                         type Response = super::DsEnvironmentWorkerGroupRelation;
-                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::GetDsEnvironmentWorkerGroupRelationRequest>,
+                            request: tonic::Request<
+                                super::GetDsEnvironmentWorkerGroupRelationRequest,
+                            >,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
-                            let fut = async move { (*inner).get_ds_environment_worker_group_relation(request).await };
+                            let fut = async move {
+                                (*inner)
+                                    .get_ds_environment_worker_group_relation(request)
+                                    .await
+                            };
                             Box::pin(fut)
                         }
                     }
@@ -426,32 +449,48 @@ pub mod ds_environment_worker_group_relation_service_server {
                         let method = GetDsEnvironmentWorkerGroupRelationSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
-                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
                     Box::pin(fut)
                 }
-                "/ds_environment_worker_group_relation.DsEnvironmentWorkerGroupRelationService/\
-                 CreateDsEnvironmentWorkerGroupRelation" => {
+                "/ds_environment_worker_group_relation.DsEnvironmentWorkerGroupRelationService/CreateDsEnvironmentWorkerGroupRelation" => {
                     #[allow(non_camel_case_types)]
-                    struct CreateDsEnvironmentWorkerGroupRelationSvc<T: DsEnvironmentWorkerGroupRelationService>(
+                    struct CreateDsEnvironmentWorkerGroupRelationSvc<
+                        T: DsEnvironmentWorkerGroupRelationService,
+                    >(
                         pub Arc<T>,
                     );
-                    impl<T: DsEnvironmentWorkerGroupRelationService>
-                        tonic::server::UnaryService<super::CreateDsEnvironmentWorkerGroupRelationRequest>
-                        for CreateDsEnvironmentWorkerGroupRelationSvc<T>
-                    {
+                    impl<
+                        T: DsEnvironmentWorkerGroupRelationService,
+                    > tonic::server::UnaryService<
+                        super::CreateDsEnvironmentWorkerGroupRelationRequest,
+                    > for CreateDsEnvironmentWorkerGroupRelationSvc<T> {
                         type Response = super::DsEnvironmentWorkerGroupRelation;
-                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::CreateDsEnvironmentWorkerGroupRelationRequest>,
+                            request: tonic::Request<
+                                super::CreateDsEnvironmentWorkerGroupRelationRequest,
+                            >,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
-                            let fut =
-                                async move { (*inner).create_ds_environment_worker_group_relation(request).await };
+                            let fut = async move {
+                                (*inner)
+                                    .create_ds_environment_worker_group_relation(request)
+                                    .await
+                            };
                             Box::pin(fut)
                         }
                     }
@@ -465,32 +504,48 @@ pub mod ds_environment_worker_group_relation_service_server {
                         let method = CreateDsEnvironmentWorkerGroupRelationSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
-                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
                     Box::pin(fut)
                 }
-                "/ds_environment_worker_group_relation.DsEnvironmentWorkerGroupRelationService/\
-                 UpdateDsEnvironmentWorkerGroupRelation" => {
+                "/ds_environment_worker_group_relation.DsEnvironmentWorkerGroupRelationService/UpdateDsEnvironmentWorkerGroupRelation" => {
                     #[allow(non_camel_case_types)]
-                    struct UpdateDsEnvironmentWorkerGroupRelationSvc<T: DsEnvironmentWorkerGroupRelationService>(
+                    struct UpdateDsEnvironmentWorkerGroupRelationSvc<
+                        T: DsEnvironmentWorkerGroupRelationService,
+                    >(
                         pub Arc<T>,
                     );
-                    impl<T: DsEnvironmentWorkerGroupRelationService>
-                        tonic::server::UnaryService<super::UpdateDsEnvironmentWorkerGroupRelationRequest>
-                        for UpdateDsEnvironmentWorkerGroupRelationSvc<T>
-                    {
+                    impl<
+                        T: DsEnvironmentWorkerGroupRelationService,
+                    > tonic::server::UnaryService<
+                        super::UpdateDsEnvironmentWorkerGroupRelationRequest,
+                    > for UpdateDsEnvironmentWorkerGroupRelationSvc<T> {
                         type Response = super::DsEnvironmentWorkerGroupRelation;
-                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::UpdateDsEnvironmentWorkerGroupRelationRequest>,
+                            request: tonic::Request<
+                                super::UpdateDsEnvironmentWorkerGroupRelationRequest,
+                            >,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
-                            let fut =
-                                async move { (*inner).update_ds_environment_worker_group_relation(request).await };
+                            let fut = async move {
+                                (*inner)
+                                    .update_ds_environment_worker_group_relation(request)
+                                    .await
+                            };
                             Box::pin(fut)
                         }
                     }
@@ -504,32 +559,48 @@ pub mod ds_environment_worker_group_relation_service_server {
                         let method = UpdateDsEnvironmentWorkerGroupRelationSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
-                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
                     Box::pin(fut)
                 }
-                "/ds_environment_worker_group_relation.DsEnvironmentWorkerGroupRelationService/\
-                 DeleteDsEnvironmentWorkerGroupRelation" => {
+                "/ds_environment_worker_group_relation.DsEnvironmentWorkerGroupRelationService/DeleteDsEnvironmentWorkerGroupRelation" => {
                     #[allow(non_camel_case_types)]
-                    struct DeleteDsEnvironmentWorkerGroupRelationSvc<T: DsEnvironmentWorkerGroupRelationService>(
+                    struct DeleteDsEnvironmentWorkerGroupRelationSvc<
+                        T: DsEnvironmentWorkerGroupRelationService,
+                    >(
                         pub Arc<T>,
                     );
-                    impl<T: DsEnvironmentWorkerGroupRelationService>
-                        tonic::server::UnaryService<super::DeleteDsEnvironmentWorkerGroupRelationRequest>
-                        for DeleteDsEnvironmentWorkerGroupRelationSvc<T>
-                    {
+                    impl<
+                        T: DsEnvironmentWorkerGroupRelationService,
+                    > tonic::server::UnaryService<
+                        super::DeleteDsEnvironmentWorkerGroupRelationRequest,
+                    > for DeleteDsEnvironmentWorkerGroupRelationSvc<T> {
                         type Response = ();
-                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::DeleteDsEnvironmentWorkerGroupRelationRequest>,
+                            request: tonic::Request<
+                                super::DeleteDsEnvironmentWorkerGroupRelationRequest,
+                            >,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
-                            let fut =
-                                async move { (*inner).delete_ds_environment_worker_group_relation(request).await };
+                            let fut = async move {
+                                (*inner)
+                                    .delete_ds_environment_worker_group_relation(request)
+                                    .await
+                            };
                             Box::pin(fut)
                         }
                     }
@@ -543,21 +614,31 @@ pub mod ds_environment_worker_group_relation_service_server {
                         let method = DeleteDsEnvironmentWorkerGroupRelationSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(accept_compression_encodings, send_compression_encodings)
-                            .apply_max_message_size_config(max_decoding_message_size, max_encoding_message_size);
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
                         let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
                     Box::pin(fut)
                 }
-                _ => Box::pin(async move {
-                    Ok(http::Response::builder()
-                        .status(200)
-                        .header("grpc-status", "12")
-                        .header("content-type", "application/grpc")
-                        .body(empty_body())
-                        .unwrap())
-                }),
+                _ => {
+                    Box::pin(async move {
+                        Ok(
+                            http::Response::builder()
+                                .status(200)
+                                .header("grpc-status", "12")
+                                .header("content-type", "application/grpc")
+                                .body(empty_body())
+                                .unwrap(),
+                        )
+                    })
+                }
             }
         }
     }

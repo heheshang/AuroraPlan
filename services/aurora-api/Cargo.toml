@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 anyhow = { workspace = true }
 async-trait = { workspace = true }
-lib_common = { path = "../../crates/lib-common", package = "lib-common" , features = ["otel"]}
+lib_common = { path = "../../crates/lib-common", package = "lib-common" , features = ["default"]}
 lib_conifg = { path = "../../crates/lib-config", package = "lib-config" }
 lib_proto = { path = "../../crates/lib-proto", package = "lib-proto" }
 axum = { workspace = true }
@@ -28,7 +28,7 @@ tower = { workspace = true, features = ["full"] }
 tower-cookies = { workspace = true }
 tower-http = { workspace = true, features = ["fs", "trace"] }
 tracing.workspace = true
-typed-builder = "0.18.0"
+typed-builder = "0.18.1"
 uuid = { workspace = true, features = ["v4", "fast-rng"] }
 [dev-dependencies]
 anyhow = { workspace = true }

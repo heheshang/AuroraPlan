@@ -45,28 +45,32 @@
 // To be able to set the XrayPropagator
 use opentelemetry::global;
 #[cfg(feature = "otel")]
-// To configure certain options such as sampling rate
-use opentelemetry::sdk::trace as sdktrace;
-#[cfg(feature = "otel")]
 // For passing along the same XrayId across services
 use opentelemetry_aws::trace::XrayPropagator;
 #[cfg(feature = "otel")]
+// To configure certain options such as sampling rate
+use opentelemetry_sdk::trace as sdktrace;
+#[cfg(feature = "otel")]
 // The `Ext` traits are to allow the Registry to accept the
 // OpenTelemetry-specific types (such as `OpenTelemetryLayer`)
-use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, util::TryInitError, EnvFilter};
+use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 pub type Result<T> = std::result::Result<T, Error>;
 #[cfg(not(feature = "otel"))]
-pub fn setup_logger() -> Result<()> {
+pub fn setup_logger() -> anyhow::Result<()> {
     use std::env;
     env::set_var("RUST_LOG", "debug");
     env::set_var("RUST_BACKTRACE", "full");
-    // See https://docs.rs/tracing for more info
-    tracing_subscriber::fmt::try_init()
+    // See https://docs.rs/tracing for more info:w
+
+    match tracing_subscriber::fmt::try_init() {
+        Ok(_) => Ok(()),
+        Err(_) => anyhow::bail!("Failed to initialize tracing subscriber"),
+    }
 }
 
 #[cfg(feature = "otel")]
-pub fn setup_logger() -> std::result::Result<(), TryInitError> {
+pub fn setup_logger() -> anyhow::Result<()> {
     use std::env;
 
     println!("Setting up logger");
@@ -100,9 +104,13 @@ pub fn setup_logger() -> std::result::Result<(), TryInitError> {
 
     // Use the tracing subscriber `Registry`, or any other subscriber
     // that impls `LookupSpan`
-    tracing_subscriber::registry()
+    match tracing_subscriber::registry()
         .with(opentelemetry)
         .with(filter)
         .with(fmt::Layer::default().with_thread_names(true).with_thread_ids(true))
         .try_init()
+    {
+        Ok(_) => Ok(()),
+        Err(_) => anyhow::bail!("Failed to initialize tracing subscriber"),
+    }
 }

@@ -1,3 +1,4 @@
+[package]
 name = "aurora-tests"
 
 [workspace]
@@ -6,11 +7,11 @@ name = "aurora-tests"
 
 [[bin]]
 name = "aurora-tests-authenticator"
-path = "src/aurora_api/authenticator.rs"
+path = "src/api/authenticator.rs"
 
 [[bin]]
 name = "aurora-tests-rpc_client"
-path = "src/aurora_api/rpc_client.rs"
+path = "src/api/rpc_client.rs"
 
 [dependencies]
 # tokio = { workspace = true }

@@ -13,7 +13,7 @@ license.workspace = true
 [dependencies]
 anyhow.workspace = true
 
-lib_common = { path = "../../crates/lib-common", package = "lib-common" , features = ["otel"]}
+lib_common = { path = "../../crates/lib-common", package = "lib-common" , features = ["default"]}
 lib_conifg = { path = "../../crates/lib-config", package = "lib-config" }
 lib_proto = { path = "../../crates/lib-proto", package = "lib-proto" }
 lib_models = { path = "../../crates/lib-models", package = "lib-models" }
