@@ -105,7 +105,39 @@ impl DsEnvironmentService for AuroraRpcServer {
         &self,
         _req: tonic::Request<lib_proto::ds_environment::UpdateDsEnvironmentRequest>,
     ) -> std::result::Result<tonic::Response<lib_proto::ds_environment::DsEnvironment>, tonic::Status> {
-        Err(tonic::Status::unimplemented("not implemented"))
+        let code = _req.get_ref().clone().code;
+        let name = &_req.get_ref().clone().name.map_or("".to_string(), |v| v);
+        let config = &_req.get_ref().clone().config.map_or("".to_string(), |f| f);
+        let description = _req.get_ref().clone().description;
+        let worker_groups = _req.get_ref().clone().worker_groups;
+        let operator = _req.get_ref().clone().operator;
+        let res = t_ds_environment_relation::EnvironmentRelation::update_relation(
+            code,
+            name,
+            config,
+            description,
+            worker_groups,
+            operator,
+            &self.pool,
+        )
+        .await
+        .map_err(|_e| {
+            error!("update environment error: {:?}", _e);
+            tonic::Status::from_error(Box::<AuroraErrorInfo>::new(
+                Error::InternalServerErrorArgs(AuroraData::Null, None).into(),
+            ))
+        })?;
+        Ok(tonic::Response::new(ds_environment::DsEnvironment {
+            id: res.id.unwrap_or_default(),
+            name: res.name,
+            code: res.code.unwrap_or_default(),
+            operator: res.operator,
+            description: res.description,
+            worker_groups: res.worker_groups.unwrap_or_default().into_iter().collect(),
+            config: res.config,
+            create_time: Some(res.create_time.unwrap().to_string()),
+            update_time: Some(res.update_time.unwrap().to_string()),
+        }))
     }
 
     async fn delete_ds_environment(

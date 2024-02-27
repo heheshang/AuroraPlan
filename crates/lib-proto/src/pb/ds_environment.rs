@@ -103,16 +103,18 @@ pub struct CreateDsEnvironmentRequest {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct UpdateDsEnvironmentRequest {
-    #[prost(int64, tag = "2")]
+    #[prost(int64, tag = "1")]
     pub code: i64,
-    #[prost(string, optional, tag = "3")]
+    #[prost(string, optional, tag = "2")]
     pub name: ::core::option::Option<::prost::alloc::string::String>,
-    #[prost(string, optional, tag = "4")]
+    #[prost(string, optional, tag = "3")]
     pub config: ::core::option::Option<::prost::alloc::string::String>,
-    #[prost(string, optional, tag = "5")]
+    #[prost(string, optional, tag = "4")]
     pub description: ::core::option::Option<::prost::alloc::string::String>,
-    #[prost(string, repeated, tag = "7")]
+    #[prost(string, repeated, tag = "5")]
     pub worker_groups: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    #[prost(int32, tag = "6")]
+    pub operator: i32,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]

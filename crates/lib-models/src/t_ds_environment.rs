@@ -28,7 +28,7 @@ impl Model {
         .await?
         .is_some())
     }
-
+ 
     async fn insert(
         _name: &str,
         _config: &str,
@@ -90,7 +90,6 @@ impl Model {
             }
         }
     }
-
     async fn delete_by_code(_code: i64, transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>) -> Result<()> {
         sqlx::query!(
             r#"

@@ -45,8 +45,51 @@ impl From<EnvironmentRelationPage> for EnvironmentRelation {
 }
 
 impl EnvironmentRelation {
+    async fn update(
+        _code: i64,
+        _name: &str,
+        _config: &str,
+        _description: Option<String>,
+        _worker_groups: Vec<String>,
+        _operator: i32,
+        transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    ) -> Result<()> {
+        sqlx::query!(
+            r#"
+            update t_ds_environment set name = $1,config = $2,description = $3 where code = $4
+            "#,
+            _name,
+            _config,
+            _description,
+            _code
+        )
+        .execute(&mut **transaction)
+        .await?;
+        sqlx::query!(
+            r#"
+            delete from t_ds_environment_worker_group_relation where environment_code = $1
+            "#,
+            _code
+        )
+        .execute(&mut **transaction)
+        .await?;
+        for worker_group in _worker_groups {
+            sqlx::query!(
+                r#"
+                insert into t_ds_environment_worker_group_relation (environment_code,worker_group,operator)
+                values ($1,$2,$3)
+                "#,
+                _code,
+                worker_group,
+                _operator
+            )
+            .execute(&mut **transaction)
+            .await?;
+        }
+        Ok(())
+    }
     pub async fn find_by_code(_code: i64, pool: &PgPool) -> Result<Self> {
-        sqlx::query_as!(
+       let res =  sqlx::query_as!(
             Self,
             r#"
             select
@@ -58,7 +101,7 @@ impl EnvironmentRelation {
         )
         .fetch_one(pool)
         .await?;
-        todo!()
+        Ok(res)
     }
     pub async fn all(pool: &PgPool) -> Result<Vec<Self>> {
         let res = sqlx::query_as!(
@@ -108,5 +151,27 @@ impl EnvironmentRelation {
         let start = (page_num - 1) * page_size;
         let cur_page = page_num;
         Ok((items, total_page, total, start, cur_page)) // Ok(res.unwrap_or_default())
+    }
+
+    pub async fn update_relation(
+        _code: i64,
+        _name: &str,
+        _config: &str,
+        _description: Option<String>,
+        _worker_groups: Vec<String>,
+        _operator: i32,
+        pool: &PgPool,
+    ) -> Result<Self> {
+        let mut transtion = pool.begin().await?;
+        match Self::update(_code, _name, _config, _description, _worker_groups,_operator, &mut transtion).await {
+            Ok(_) => {
+                transtion.commit().await?;
+                Ok(Self::find_by_code(_code, pool).await?)
+            }
+            Err(e) => {
+                transtion.rollback().await?;
+                Err(e)
+            }
+        }
     }
 }

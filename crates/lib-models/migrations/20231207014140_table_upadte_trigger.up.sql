@@ -90,7 +90,6 @@ alter table public.t_ds_user alter column create_time set default current_timest
 alter table public.t_ds_worker_group alter column create_time set default current_timestamp;
 alter table public.t_ds_tenant alter column create_time set default current_timestamp;
 alter table public.v_ds_environment alter column create_time set default current_timestamp;
-alter table public.t_ds_environment_relation alter column create_time set default current_timestamp;
 
 
 alter table public.t_ds_access_token alter column update_time set default current_timestamp;
@@ -140,7 +139,6 @@ alter table public.t_ds_user alter column update_time set default current_timest
 alter table public.t_ds_worker_group alter column update_time set default current_timestamp;
 alter table public.t_ds_tenant alter column update_time set default current_timestamp;
 alter table public.v_ds_environment alter column update_time set default current_timestamp;
-alter table public.t_ds_environment_relation alter column update_time set default current_timestamp;
 
 
 
@@ -190,4 +188,3 @@ SELECT sqlx_manage_update_time('public.t_ds_udfs');
 SELECT sqlx_manage_update_time('public.t_ds_user');
 SELECT sqlx_manage_update_time('public.t_ds_worker_group');
 SELECT sqlx_manage_update_time('public.t_ds_tenant');
-SELECT sqlx_manage_update_time('public.t_ds_environment_relation');

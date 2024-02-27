@@ -47,6 +47,7 @@ pub async fn delete_environment(
     Ok(ApiResult::build(Some(())))
 }
 pub async fn update(cookies: Cookies, ctx: Ctx, param: Form<UpdateEnvironment>) -> Result<ApiResult<()>> {
+    info!("param: {:?}", param);
     let code = param.code;
     let description = param.description.clone();
     let name = &param.name;
@@ -58,11 +59,12 @@ pub async fn update(cookies: Cookies, ctx: Ctx, param: Form<UpdateEnvironment>) 
         .filter(|s| !s.is_empty())
         .map(|s| s.trim().to_string())
         .collect::<Vec<String>>();
+    let operator = ctx.user_id;
     info!(
-        "name: {},description: {:?} config: {},worker_groups: {:?}  ",
+        "operator:{} name: {},description: {:?} config: {},worker_groups: {:?}  ", operator,
         name, description, config, worker_groups
     );
-    model::environment::update(code, name, config, description, worker_groups).await?;
+    model::environment::update(code, name, config, description, worker_groups,operator).await?;
     Ok(ApiResult::build(Some(())))
 }
 

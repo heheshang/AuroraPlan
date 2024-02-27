@@ -125,7 +125,18 @@ server {
 ```
 ```shell
  docker run --add-host=myhost:172.18.0.1 -di --name=nginx -p 5174:80 -v /home/ssk/dist:/usr/share/nginx/html  -v /home/ssk/aurora-ui.conf:/etc/nginx/conf.d/aurora-ui.conf nginx
+ docker run --add-host=myhost:109.254.3.222 -di --name=nginx -p 5174:80 -v D:\\soft\\workspace\\rustworkspace\\AuroraPlan\\web\aurora-ui\\dist:/usr/share/nginx/html  -v D:\\soft\\workspace\\rustworkspace\\AuroraPlan\\ng-aurora-ui.conf:/etc/nginx/conf.d/aurora-ui.conf nginx
 ```
 ```shell
 pg_dump -U root -W -F p --clean  --if-exists  --inserts  -f dump.sql dolphinscheduler
+```
+```bash
+AuroraPlan> docker-compose -f  docker-compose-postgres.yml up dolphinscheduler-postgresql -d
+
+PS D:\soft\workspace\rustworkspace\AuroraPlan\crates\lib-models> sqlx database  create
+PS D:\soft\workspace\rustworkspace\AuroraPlan\crates\lib-models> sqlx migrate run
+Applied 20231206052828/migrate init setup (6.2568ms)
+Applied 20231206052930/migrate init (382.2138ms)
+Applied 20231206053033/migrate env view crate (5.4882ms)
+Applied 20231207014140/migrate table upadte trigger (19.4401ms)
 ```

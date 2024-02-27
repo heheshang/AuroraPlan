@@ -281,4 +281,5 @@
         "mojo": "mojo run"
     },
     "rust-analyzer.cargo.autoreload": true,
+    "files.autoSave": "afterDelay",
 }

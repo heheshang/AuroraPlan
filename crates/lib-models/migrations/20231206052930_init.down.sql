@@ -130,7 +130,6 @@ drop table if exists public.t_ds_version cascade;
 
 drop table if exists public.t_ds_worker_group cascade;
 
-drop table if exists public.t_ds_environment_relation cascade;
 
 ---
 drop sequence if exists public.t_ds_access_token_id_sequence  cascade;

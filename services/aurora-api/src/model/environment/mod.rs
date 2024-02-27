@@ -106,6 +106,7 @@ pub async fn update(
     config: &str,
     description: Option<String>,
     worker_groups: Vec<String>,
+    operator: i32,
 ) -> Result<()> {
     let client = _ds_environment_service_client().await?;
     let request = tonic::Request::new(UpdateDsEnvironmentRequest {
@@ -114,6 +115,7 @@ pub async fn update(
         config: Some(config.to_string()),
         description,
         worker_groups,
+        operator,
     });
     client
         .clone()
