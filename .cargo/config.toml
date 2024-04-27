@@ -37,3 +37,4 @@ registry = "https://code.aliyun.com/rustcc/crates.io-index.git"
 rustc-wrapper = "sccache"
 incremental = true
 #rustflags=["threads=4"]
+target-dir = "/tmp/target"
